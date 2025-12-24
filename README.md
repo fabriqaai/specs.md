@@ -162,8 +162,7 @@ The smallest iteration in AI-DLC, designed for rapid implementation. Unlike Spri
 | Type | Best For | Stages |
 |------|----------|--------|
 | **DDD Construction** | Complex business logic, domain modeling | Model → Design → ADR → Implement → Test |
-| **TDD Construction** | Well-defined interfaces, test-first | Test → Implement → Refactor |
-| **BDD Construction** | User-facing features, acceptance criteria | Scenario → Implement → Verify |
+| **Simple Construction** | UI, integrations, utilities | Spec → Implement → Test |
 | **Spike** | Research, exploration, unknowns | Explore → Document |
 
 ### Memory Bank
