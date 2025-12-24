@@ -6,6 +6,7 @@ specsmd implements the [AI-Driven Development Lifecycle (AI-DLC)](https://aws.am
 
 [![npm version](https://img.shields.io/npm/v/specsmd)](https://www.npmjs.com/package/specsmd)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Documentation](https://img.shields.io/badge/docs-specs.md-CD6B4D)](https://specs.md)
 
 <p align="center">
   <img src="assets/demo.gif" alt="specs.md demo" width="800" />
@@ -15,10 +16,15 @@ specsmd implements the [AI-Driven Development Lifecycle (AI-DLC)](https://aws.am
 
 ## Quick Start
 
+### Prerequisites
+
+- Node.js 18 or higher
+- An AI coding tool (Claude Code, Cursor, GitHub Copilot, or Google Antigravity)
+
 ### Installation
 
 > [!NOTE]
-> Do not use npm if you want to always get the latest version. Use the npx command below. 
+> Do not use npm if you want to always get the latest version. Use the npx command below.
 
 ```bash
 npx specsmd@latest install
@@ -29,8 +35,18 @@ The installer detects your AI coding tools (Claude Code, Cursor, GitHub Copilot)
 - Memory bank structure for context persistence
 - Slash commands for easy agent invocation
 
+### Verify Installation
+
+```bash
+# Check the manifest
+cat .specsmd/manifest.yaml
+
+# List installed agents
+ls .specsmd/aidlc/agents/
+```
+
 ### Initialize Your Project
-Open your AI Asisted Tool (Claude Code, Cursor, GitHub Copilot) and run the following commands:
+Open your AI Assisted Tool (Claude Code, Cursor, GitHub Copilot) and run the following commands:
 
 ```bash
 # Start the Master Agent
@@ -158,7 +174,8 @@ Project decisions that inform AI code generation. Standards ensure consistency a
 
 ---
 
-## Project Structure
+<details>
+<summary><h2>Project Structure</h2></summary>
 
 After installation:
 
@@ -186,9 +203,10 @@ memory-bank/                   # Created after project-init
 └── operations/                # Deployment context
 ```
 
----
+</details>
 
-## Agent Commands
+<details>
+<summary><h2>Agent Commands</h2></summary>
 
 ### Master Agent
 ```bash
@@ -239,6 +257,8 @@ memory-bank/                   # Created after project-init
 | `verify` | Verify deployment |
 | `monitor` | Set up monitoring |
 
+</details>
+
 ---
 
 ## Why specsmd?
@@ -271,7 +291,56 @@ Memory bank ensures AI agents have full project context across sessions. All art
 
 ---
 
-## FAQ
+## Troubleshooting
+
+<details>
+<summary><strong>Agent commands not recognized</strong></summary>
+
+Ensure specs.md is installed correctly:
+```bash
+ls .specsmd/aidlc/agents/
+```
+
+If the directory is empty or missing, reinstall:
+```bash
+npx specsmd@latest install
+```
+</details>
+
+<details>
+<summary><strong>Memory Bank artifacts missing</strong></summary>
+
+Check if the memory-bank directory exists:
+```bash
+ls memory-bank/
+```
+
+If missing, run project initialization:
+```
+/specsmd-master-agent
+> project-init
+```
+</details>
+
+<details>
+<summary><strong>Standards not being followed in generated code</strong></summary>
+
+Ensure standards are defined in `memory-bank/standards/`:
+- `tech-stack.md`
+- `coding-standards.md`
+- `architecture.md`
+
+If missing or incomplete, use the Master Agent to define them:
+```
+/specsmd-master-agent
+> project-init
+```
+</details>
+
+---
+
+<details>
+<summary><h2>FAQ</h2></summary>
 
 **Q: Agents don't seem to remember previous context?**
 Each agent invocation starts fresh. Agents read context from the Memory Bank at startup. Ensure artifacts are saved after each step.
@@ -285,12 +354,16 @@ AI-DLC is designed as a reimagination, not a retrofit. However, familiar concept
 **Q: What project types is this suited for?**
 specsmd is designed for building complex systems that demand architectural complexity, trade-off management, and scalability. Simpler systems may be better suited for low-code/no-code approaches.
 
+</details>
+
 ---
 
 ## Resources
 
+- [Documentation](https://specs.md)
 - [AI-DLC Specification (AWS)](https://aws.amazon.com/blogs/devops/ai-driven-development-life-cycle/)
-- [specs.md](https://specs.md)
+- [npm Package](https://www.npmjs.com/package/specsmd)
+- [GitHub Issues](https://github.com/fabriqaai/specsmd/issues)
 
 
 ---
