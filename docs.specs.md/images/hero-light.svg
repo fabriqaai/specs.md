@@ -74,6 +74,10 @@
           <rect width="130" height="28" rx="4" fill="#DCFCE7" stroke="#22C55E"/>
           <text x="65" y="18" font-family="system-ui, sans-serif" font-size="9" fill="#166534" text-anchor="middle">Simple Construction</text>
         </g>
+        <g transform="translate(280, 20)">
+          <rect width="130" height="28" rx="4" fill="#F1F5F9" stroke="#CBD5E1" stroke-dasharray="4 2"/>
+          <text x="65" y="18" font-family="system-ui, sans-serif" font-size="9" fill="#94A3B8" text-anchor="middle">Future Bolt Types...</text>
+        </g>
       </g>
     </g>
 

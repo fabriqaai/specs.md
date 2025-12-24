@@ -25,11 +25,11 @@ description: "Compare specs.md with AWS Kiro IDE"
 | **Methodology** | Formal AI-DLC phases and rituals | Kiro SDD workflow |
 | **Automation** | Skills + Templates | Agent Hooks + Steering |
 | **Context** | Memory Bank (persistent project knowledge) | requirements.md, design.md, tasks.md + steering files |
-| **AI Model** | Any (Claude, GPT, Gemini, etc.) | Claude Sonnet 4 |
-| **Pricing** | Free (open source) | Free preview → $19/mo (Pro), $39/mo (Pro+) |
+| **AI Model** | Any (Claude, GPT, Gemini, etc.) | Claude Sonnet 4.5 + Auto mode |
+| **Pricing** | Free (open source) | Free preview → $20/mo (Pro), $39/mo (Pro+), $200/mo (Power) |
 | **Spec Format** | Markdown + YAML | EARS notation for requirements |
 | **Lock-in** | None | Kiro IDE + Claude only |
-| **Maturity** | Production-ready | GA (July 2025) |
+| **Maturity** | Production-ready | Preview (July 2025) |
 
 ---
 
@@ -66,16 +66,17 @@ description: "Compare specs.md with AWS Kiro IDE"
 
 ### 2. AI Model Flexibility
 
-**Kiro**: Uses Claude Sonnet 4 only. No option to use GPT, Gemini, or other models.
+**Kiro**: Uses Claude Sonnet 4.5 with an "Auto" mode that mixes frontier models. No option to use GPT, Gemini, or bring your own API key.
 
 **specs.md**: Works with any AI model. Use whichever model works best for your use case.
 
 ### 3. Pricing Model
 
-**Kiro**:
-- Free preview (limited)
-- Pro: $19/month (1,000 agent interactions)
-- Pro+: $39/month (3,000 agent interactions)
+**Kiro** (revised August 2025):
+- Free: 50 vibe requests (no spec requests)
+- Pro: $20/month (225 vibe, 125 spec requests)
+- Pro+: $39/month (450 vibe, 250 spec requests)
+- Power: $200/month (2,250 vibe, 1,250 spec requests)
 
 **specs.md**:
 - Free (open source)
@@ -157,8 +158,9 @@ actions:
 | Tool | Cost |
 |------|------|
 | specs.md | $0 + API tokens |
-| Kiro Pro | $19/month (1000 interactions/mo) |
-| Kiro Pro+ | $39/month (3000 interactions/mo) |
+| Kiro Pro | $20/month (225 vibe + 125 spec/mo) |
+| Kiro Pro+ | $39/month (450 vibe + 250 spec/mo) |
+| Kiro Power | $200/month (2,250 vibe + 1,250 spec/mo) |
 
 ---
 
