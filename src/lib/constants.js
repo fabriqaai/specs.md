@@ -1,8 +1,9 @@
 
 // Theme Colors (extracted from specs.md pixel logo)
 const THEME_COLORS = {
-    primary: '#C47454',      // Salmon/terracotta brick fill
-    secondary: '#E8A085',    // Light salmon highlight
+    primary: '#C45050',      // Brick red fill
+    secondary: '#D86565',    // Coral red highlight
+    accent: '#EC8080',       // Light coral
     success: '#22c55e',      // Green
     error: '#ef4444',        // Red
     warning: '#f59e0b',      // Amber
