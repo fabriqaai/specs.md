@@ -1,0 +1,97 @@
+{
+  "$schema": "https://mintlify.com/docs.json",
+  "theme": "mint",
+  "name": "specs.md",
+  "description": "AI-native software development with multi-agent orchestration",
+  "logo": {
+    "dark": "/images/specs_md_pixel_logo.png",
+    "light": "/images/specs_md_pixel_logo.png"
+  },
+  "favicon": "/images/favicon.svg",
+  "colors": {
+    "primary": "#CD6B4D",
+    "light": "#D17A5E",
+    "dark": "#B85A3D"
+  },
+  "navbar": {
+    "links": [
+      {
+        "label": "GitHub",
+        "href": "https://github.com/fabriqaai/specsmd"
+      }
+    ],
+    "primary": {
+      "type": "button",
+      "label": "Get Started",
+      "href": "/getting-started/installation"
+    }
+  },
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Documentation",
+        "groups": [
+          {
+            "group": "Getting Started",
+            "pages": [
+              "index",
+              "getting-started/installation",
+              "getting-started/quick-start"
+            ]
+          },
+          {
+            "group": "Framework",
+            "pages": [
+              "architecture/flows"
+            ]
+          },
+          {
+            "group": "AI-DLC Flow",
+            "pages": [
+              "methodology/what-is-ai-dlc",
+              "methodology/ai-dlc-vs-agile",
+              "methodology/three-phases",
+              {
+                "group": "Concepts",
+                "pages": [
+                  "core-concepts/intents",
+                  "core-concepts/units",
+                  "core-concepts/bolts",
+                  "core-concepts/memory-bank",
+                  "core-concepts/standards"
+                ]
+              },
+              {
+                "group": "Agents",
+                "pages": [
+                  "agents/overview",
+                  "agents/master-agent",
+                  "agents/inception-agent",
+                  "agents/construction-agent",
+                  "agents/operations-agent"
+                ]
+              },
+              {
+                "group": "Guides",
+                "pages": [
+                  "guides/bolt-types"
+                ]
+              }
+            ]
+          },
+          {
+            "group": "Resources",
+            "pages": [
+              "faq"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "footer": {
+    "socials": {
+      "github": "https://github.com/fabriqaai/specsmd"
+    }
+  }
+}

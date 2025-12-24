@@ -1,0 +1,199 @@
+---
+title: FAQ
+description: Frequently asked questions about specs.md
+---
+
+## General
+
+<AccordionGroup>
+  <Accordion title="What is specs.md?">
+    specs.md is an implementation of the AI-Driven Development Lifecycle (AI-DLC) methodology. It provides markdown-based agents that work with your favorite AI coding tools (Claude Code, Cursor, GitHub Copilot) to guide software development from requirements through deployment.
+  </Accordion>
+
+  <Accordion title="What is AI-DLC?">
+    AI-DLC is a software development methodology developed by AWS where AI drives the conversation and humans validate. Unlike traditional Agile with week-long sprints, AI-DLC operates in "Bolts" - rapid iterations measured in hours or days.
+    
+    [Learn more about AI-DLC →](/methodology/what-is-ai-dlc)
+  </Accordion>
+
+  <Accordion title="What AI coding tools are supported?">
+    specs.md supports:
+    - **Claude Code** - Full support with slash commands
+    - **Cursor** - Full support with rules
+    - **GitHub Copilot** - Full support with agents
+    - **Google Antigravity** - Full support with agents
+  </Accordion>
+
+  <Accordion title="Is specs.md free?">
+    Yes, specs.md is open source under the MIT license. You can use it freely in personal and commercial projects.
+  </Accordion>
+</AccordionGroup>
+
+## Installation
+
+<AccordionGroup>
+  <Accordion title="How do I install specs.md?">
+    ```bash
+    npx specsmd@latest install
+    ```
+    
+    The installer automatically detects your AI coding tools and sets up the appropriate agents.
+    
+    [Full installation guide →](/getting-started/installation)
+  </Accordion>
+
+  <Accordion title="Should I install globally with npm?">
+    No. Always use `npx specsmd@latest install` to ensure you get the latest version. Global installation may result in using an outdated version.
+  </Accordion>
+
+  <Accordion title="What gets installed?">
+    specs.md creates a `.specsmd/` directory with:
+    - Agent definitions
+    - Skills and capabilities
+    - Templates for artifacts
+    - Memory bank schema
+    
+    It also creates tool-specific files (e.g., `.claude/commands/` for Claude Code).
+  </Accordion>
+</AccordionGroup>
+
+## Usage
+
+<AccordionGroup>
+  <Accordion title="Agents don't seem to remember previous context?">
+    Each agent invocation starts fresh. Agents read context from the Memory Bank at startup. 
+    
+    **Solution**: Ensure artifacts are saved after each step. The Memory Bank is how context persists between sessions.
+  </Accordion>
+
+  <Accordion title="How do I reset project state?">
+    To reset all artifacts, clear the `memory-bank/` directory:
+    ```bash
+    rm -rf memory-bank/
+    ```
+    
+    To remove specs.md entirely:
+    ```bash
+    rm -rf .specsmd/
+    rm -rf .claude/commands/specsmd-*  # For Claude Code
+    ```
+  </Accordion>
+
+  <Accordion title="Can I use specs.md with existing Agile workflows?">
+    AI-DLC is designed as a reimagination of development methodology, not a retrofit. However, familiar concepts (user stories, acceptance criteria) are retained to ease transition.
+    
+    You can use specs.md alongside existing Agile processes, treating Intents as Epics and Bolts as focused work items within sprints.
+  </Accordion>
+
+  <Accordion title="What project types is specs.md suited for?">
+    specs.md is designed for building complex systems that demand:
+    - Architectural complexity
+    - Trade-off management
+    - Scalability considerations
+    
+    Simpler systems may be better suited for low-code/no-code approaches or direct AI-assisted coding without the full methodology.
+  </Accordion>
+</AccordionGroup>
+
+## Methodology
+
+<AccordionGroup>
+  <Accordion title="What's the difference between Intents, Units, and Bolts?">
+    - **Intent**: High-level goal ("Build user authentication")
+    - **Unit**: Cohesive work element derived from Intent ("User Registration")
+    - **Bolt**: Smallest iteration, hours to days ("Registration Domain Model")
+    
+    [Learn more about core concepts →](/core-concepts/intents)
+  </Accordion>
+
+  <Accordion title="What are stage gates?">
+    Stage gates are human validation points within a bolt. You must approve each stage before proceeding to the next:
+    
+    1. Domain Model → **GATE** → Technical Design → **GATE** → etc.
+    
+    This catches errors early before they cascade downstream.
+  </Accordion>
+
+  <Accordion title="What bolt types are available?">
+    | Type | Use Case |
+    |------|----------|
+    | **DDD Construction** | Complex business logic |
+    | **TDD Construction** | Well-defined interfaces |
+    | **BDD Construction** | User-facing features |
+    | **Spike** | Research and exploration |
+  </Accordion>
+
+  <Accordion title="What is the Memory Bank?">
+    The Memory Bank is a file-based storage system for all project artifacts. It maintains context across agent sessions and provides traceability between requirements, designs, code, and tests.
+    
+    [Learn more about Memory Bank →](/core-concepts/memory-bank)
+  </Accordion>
+</AccordionGroup>
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Agent commands not recognized">
+    Ensure specs.md is installed correctly:
+    ```bash
+    ls .specsmd/aidlc/agents/
+    ```
+    
+    If the directory is empty or missing, reinstall:
+    ```bash
+    npx specsmd@latest install
+    ```
+  </Accordion>
+
+  <Accordion title="Memory Bank artifacts missing">
+    Check if the memory-bank directory exists:
+    ```bash
+    ls memory-bank/
+    ```
+    
+    If missing, run project initialization:
+    ```bash
+    /specsmd-master-agent
+    > project-init
+    ```
+  </Accordion>
+
+  <Accordion title="Standards not being followed in generated code">
+    Ensure standards are defined in `memory-bank/standards/`:
+    - `tech-stack.md`
+    - `coding-standards.md`
+    - `architecture.md`
+    
+    If missing or incomplete, use the Master Agent to define them:
+    ```bash
+    /specsmd-master-agent
+    > project-init
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Resources
+
+<CardGroup cols={2}>
+  <Card
+    title="AI-DLC Specification"
+    icon="aws"
+    href="https://aws.amazon.com/blogs/devops/ai-driven-development-life-cycle/"
+  >
+    Original AWS blog post defining AI-DLC
+  </Card>
+  <Card
+    title="GitHub Repository"
+    icon="github"
+    href="https://github.com/fabriqaai/specsmd"
+  >
+    Source code, issues, and contributions
+  </Card>
+  <Card
+    title="npm Package"
+    icon="npm"
+    href="https://www.npmjs.com/package/specsmd"
+  >
+    Package information and versions
+  </Card>
+</CardGroup>

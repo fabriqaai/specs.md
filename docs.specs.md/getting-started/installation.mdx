@@ -1,0 +1,91 @@
+---
+title: Installation
+description: Install specs.md and set up your development environment
+---
+
+## Prerequisites
+
+- Node.js 18 or higher
+- An AI coding tool (Claude Code, Cursor, GitHub Copilot, or Google Antigravity)
+
+## Install specs.md
+
+<Note>
+  Always use npx to get the latest version. Do not install globally with npm.
+</Note>
+
+```bash
+npx specsmd@latest install
+```
+
+The installer automatically detects your AI coding tools and sets up:
+
+<CardGroup cols={3}>
+  <Card title="Agent Definitions" icon="robot">
+    Specialized agents for each phase of development
+  </Card>
+  <Card title="Memory Bank" icon="database">
+    Persistent context storage structure
+  </Card>
+  <Card title="Slash Commands" icon="terminal">
+    Easy agent invocation commands
+  </Card>
+</CardGroup>
+
+## What Gets Installed
+
+After installation, you'll see the following structure:
+
+```
+.specsmd/
+├── manifest.yaml              # Installation manifest
+└── aidlc/                     # AI-DLC flow
+    ├── agents/                # Agent definitions
+    ├── skills/                # Agent capabilities
+    ├── templates/             # Artifact templates
+    │   └── standards/         # Standards facilitation guides
+    └── memory-bank.yaml       # Memory bank schema
+```
+
+## Tool-Specific Setup
+
+<Tabs>
+  <Tab title="Claude Code">
+    Slash commands are installed in `.claude/commands/`:
+    - `/specsmd-master-agent`
+    - `/specsmd-inception-agent`
+    - `/specsmd-construction-agent`
+    - `/specsmd-operations-agent`
+  </Tab>
+  <Tab title="Cursor">
+    Rules are installed in `.cursor/rules/` using `.mdc` format.
+  </Tab>
+  <Tab title="GitHub Copilot">
+    Agents are installed in `.github/agents/` using `.agent.md` format.
+  </Tab>
+  <Tab title="Google Antigravity">
+    Agents are installed in `.agent/workflows/`.
+  </Tab>
+</Tabs>
+
+## Verify Installation
+
+After installation, verify everything is set up correctly:
+
+```bash
+# Check the manifest
+cat .specsmd/manifest.yaml
+
+# List installed agents
+ls .specsmd/aidlc/agents/
+```
+
+## Next Steps
+
+<Card
+  title="Quick Start"
+  icon="arrow-right"
+  href="/getting-started/quick-start"
+>
+  Initialize your project and create your first Intent
+</Card>

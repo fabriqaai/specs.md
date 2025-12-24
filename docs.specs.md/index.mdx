@@ -1,0 +1,137 @@
+---
+title: Introduction
+description: A framework for spec-driven AI development with pluggable flows
+---
+
+
+<iframe
+  src="https://asciinema.org/a/763877/iframe?autoplay=1&loop=1&speed=1.5&t=2&rows=30"
+  title="specs.md demo"
+  style={{width: '100%', height: '560px', borderRadius: '12px', border: 'none'}}
+></iframe>
+
+<img
+  className="block dark:hidden"
+  src="/images/hero-light.svg"
+  alt="specs.md Framework Architecture"
+/>
+<img
+  className="hidden dark:block"
+  src="/images/hero-dark.svg"
+  alt="specs.md Framework Architecture"
+/>
+
+## What is specs.md?
+
+**specs.md** is a framework for spec-driven AI development that uses markdown-based agents to orchestrate your software development workflow. It supports pluggable development flows, with **AI-DLC (AI-Driven Development Lifecycle)** as the first implemented flow.
+
+<CardGroup cols={2}>
+  <Card
+    title="Quick Start"
+    icon="rocket"
+    href="/getting-started/quick-start"
+  >
+    Get up and running in minutes with your AI coding tool
+  </Card>
+  <Card
+    title="Architecture"
+    icon="sitemap"
+    href="/architecture/flows"
+  >
+    Understand the pluggable flow architecture
+  </Card>
+  <Card
+    title="Core Concepts"
+    icon="cube"
+    href="/core-concepts/intents"
+  >
+    Learn about Intents, Units, Bolts, and the Memory Bank
+  </Card>
+  <Card
+    title="Agents"
+    icon="robot"
+    href="/agents/overview"
+  >
+    Explore the four specialized agents that guide development
+  </Card>
+</CardGroup>
+
+## Framework Architecture
+
+specs.md is built as a **pluggable framework** where development methodologies are implemented as **flows**:
+
+```
+specs.md (Framework)
+├── Core (Memory Bank, Standards, Agents)
+└── Flows/
+    └── aidlc/          ← AI-DLC (first flow)
+    └── (future flows...)
+```
+
+<Info>
+  **AI-DLC** is the first implemented flow, based on the [AWS AI-Driven Development Lifecycle](https://aws.amazon.com/blogs/devops/ai-driven-development-life-cycle/) methodology. More flows can be added to support different development approaches.
+</Info>
+
+## Key Features
+
+<AccordionGroup>
+  <Accordion title="Pluggable Flows">
+    Development methodologies are implemented as flows. AI-DLC is the first flow, but the framework supports multiple approaches.
+  </Accordion>
+  <Accordion title="AI-Native Design">
+    Built from the ground up for AI-driven development. AI proposes plans, humans validate, AI executes.
+  </Accordion>
+  <Accordion title="Human Oversight as Loss Function">
+    Validation at each stage catches errors early before they cascade downstream. Each validation transforms artifacts into rich context for subsequent stages.
+  </Accordion>
+  <Accordion title="Design Techniques Built-In">
+    Domain-Driven Design (DDD) is integral to the Construction phase, addressing the "whitespace" in Agile that has led to quality issues.
+  </Accordion>
+  <Accordion title="Tool Agnostic">
+    Works with Claude Code, Cursor, GitHub Copilot, and other AI coding assistants. Markdown-based agents work anywhere.
+  </Accordion>
+</AccordionGroup>
+
+## AI-DLC Flow Overview
+
+The AI-DLC flow implements three sequential phases:
+
+| Phase | Purpose | Key Activities |
+|-------|---------|----------------|
+| **Inception** | What & Why | Requirements, Stories, Unit Decomposition, Bolt Planning |
+| **Construction** | How to Build | Domain Design, Logical Design, Code, Tests |
+| **Operations** | Deploy & Monitor | Build Artifacts, Deploy, Verify, Monitor |
+
+## Supported Tools
+
+| Tool | Status | Installation |
+|------|--------|--------------|
+| **Claude Code** | Full support | Slash commands in `.claude/commands/` |
+| **Cursor** | Full support | Rules in `.cursor/rules/` |
+| **GitHub Copilot** | Full support | Agents in `.github/agents/` |
+| **Google Antigravity** | Full support | Agents in `.agent/agents/` |
+
+## Get Started
+
+<Steps>
+  <Step title="Install specs.md">
+    ```bash
+    npx specsmd@latest install
+    ```
+  </Step>
+  <Step title="Initialize your project">
+    Run the Master Agent and type `project-init`
+  </Step>
+  <Step title="Create your first Intent">
+    Use the Inception Agent to capture what you want to build
+  </Step>
+</Steps>
+
+## Why specs.md?
+
+Traditional development methods were built for human-driven, long-running processes. **specs.md reimagines the development lifecycle** with AI as a central collaborator, enabling:
+
+- **Rapid cycles** measured in hours or days rather than weeks
+- **Complete planning upfront** through Mob Elaboration (weeks of work in hours)
+- **Persistent context** that AI can reference across sessions
+- **Structured artifacts** that build on each other progressively

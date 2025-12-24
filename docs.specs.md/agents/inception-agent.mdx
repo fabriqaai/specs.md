@@ -1,0 +1,257 @@
+---
+title: Inception Agent
+description: Captures intents, elaborates requirements, and decomposes into units
+---
+
+## Overview
+
+The **Inception Agent** handles the first phase of AI-DLC. It captures your high-level goals (Intents), elaborates them into detailed requirements, and decomposes them into manageable Units.
+
+## Invocation
+
+<Tabs>
+  <Tab title="Claude Code">
+    ```bash
+    /specsmd-inception-agent
+    ```
+  </Tab>
+  <Tab title="Cursor">
+    ```
+    @specsmd-inception-agent
+    ```
+  </Tab>
+  <Tab title="GitHub Copilot">
+    ```
+    @specsmd-inception-agent
+    ```
+  </Tab>
+</Tabs>
+
+## Commands
+
+| Command | Purpose |
+|---------|---------|
+| `intent-create` | Create a new intent |
+| `intent-list` | List all intents |
+| `requirements` | Elaborate intent requirements |
+| `context` | Define system context |
+| `units` | Decompose into units |
+| `story-create` | Create stories for a unit |
+| `bolt-plan` | Plan bolts for stories |
+| `review` | Review inception artifacts |
+
+## intent-create
+
+Creates a new intent from your high-level goal:
+
+```
+> intent-create
+> I want to build a user authentication system
+```
+
+The agent will:
+
+<Steps>
+  <Step title="Capture Goal">
+    Record your high-level intent description
+  </Step>
+  <Step title="Ask Clarifying Questions">
+    Minimize ambiguity through targeted questions
+  </Step>
+  <Step title="Generate Requirements">
+    Create user stories and non-functional requirements
+  </Step>
+  <Step title="Define Context">
+    Establish system boundaries and constraints
+  </Step>
+</Steps>
+
+### Example Session
+
+```
+User: intent-create
+
+Inception Agent: What would you like to build?
+
+User: A user authentication system with login, registration, 
+and password reset
+
+Inception Agent: I'll help you elaborate this intent. Let me 
+ask some clarifying questions:
+
+1. Should users be able to log in with social providers 
+   (Google, GitHub)?
+2. Do you need multi-factor authentication?
+3. What password requirements do you have?
+4. How long should sessions last?
+
+User: No social login for now, no MFA, standard password rules, 
+sessions should last 24 hours
+
+Inception Agent: Based on your answers, I've generated the 
+following requirements...
+
+[Shows generated requirements.md]
+
+Does this look correct? Should I adjust anything?
+```
+
+## requirements
+
+Elaborate or refine requirements for an existing intent:
+
+```
+> requirements user-authentication
+```
+
+Use this to:
+
+- Add new user stories
+- Refine acceptance criteria
+- Add non-functional requirements
+- Update priorities
+
+## context
+
+Define or update system context:
+
+```
+> context user-authentication
+```
+
+The agent helps you specify:
+
+- What's in scope vs out of scope
+- External interfaces
+- Technical constraints
+- Dependencies
+
+## units
+
+Decompose an intent into units:
+
+```
+> units user-authentication
+```
+
+The agent will:
+
+1. Analyze requirements and context
+2. Identify natural boundaries
+3. Propose unit structure
+4. Define interfaces between units
+5. Map dependencies
+
+### Example Output
+
+```
+Intent: User Authentication
+├── Unit: User Registration
+│   └── Stories: 3
+├── Unit: User Login  
+│   └── Stories: 2
+├── Unit: Password Management
+│   └── Stories: 3
+└── Unit: Session Management
+    └── Stories: 2
+
+Dependencies:
+- Login depends on Registration (user must exist)
+- Password Management depends on Session (must be logged in)
+```
+
+## story-create
+
+Create user stories for a specific unit:
+
+```
+> story-create user-authentication/user-registration
+```
+
+The agent generates stories with:
+
+- User story format (As a... I want... So that...)
+- Acceptance criteria
+- Edge cases
+- Test scenarios
+
+## bolt-plan
+
+Plan the bolts needed to implement stories:
+
+```
+> bolt-plan user-authentication/user-registration
+```
+
+The agent:
+
+1. Analyzes stories and their complexity
+2. Groups related stories
+3. Assigns bolt types (DDD, TDD, BDD, Spike)
+4. Orders bolts by dependencies
+5. Estimates duration
+
+### Example Output
+
+```
+Bolt Plan for User Registration:
+
+1. Bolt: Registration Domain Model (DDD Construction)
+   - Stories: US-001, US-002
+   - Duration: 2-4 hours
+   - Stages: Model → Design → Implement → Test
+
+2. Bolt: Email Validation (TDD Construction)  
+   - Stories: US-003
+   - Duration: 1-2 hours
+   - Stages: Test → Implement → Refactor
+
+3. Bolt: Welcome Email (BDD Construction)
+   - Stories: US-004
+   - Duration: 1-2 hours
+   - Stages: Scenario → Implement → Verify
+```
+
+## review
+
+Review all inception artifacts for an intent:
+
+```
+> review user-authentication
+```
+
+The agent checks for:
+
+- Completeness of requirements
+- Consistency between artifacts
+- Gaps in coverage
+- Potential issues
+
+## Workflow
+
+Typical Inception flow:
+
+```
+intent-create → requirements → context → units → story-create → bolt-plan → review
+```
+
+<Warning>
+  Complete each step before moving on. Incomplete inception leads to problems in construction.
+</Warning>
+
+## Best Practices
+
+<AccordionGroup>
+  <Accordion title="Be Specific">
+    Provide detailed answers to clarifying questions. Vague inputs lead to vague outputs.
+  </Accordion>
+  <Accordion title="Review Generated Artifacts">
+    Always review what the agent generates. Correct errors before moving forward.
+  </Accordion>
+  <Accordion title="Keep Units Focused">
+    If a unit feels too big, ask the agent to split it further.
+  </Accordion>
+  <Accordion title="Plan Before Building">
+    Don't skip to Construction. Good bolt plans save time later.
+  </Accordion>
+</AccordionGroup>

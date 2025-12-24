@@ -1,0 +1,209 @@
+---
+title: Memory Bank
+description: File-based storage for all project artifacts with full traceability
+---
+
+## What is the Memory Bank?
+
+The **Memory Bank** is a file-based storage system for all project artifacts. It maintains context across agent sessions and provides traceability between artifacts.
+
+<Info>
+  Unlike traditional documentation that gets stale, the Memory Bank is actively used by agents. It's the source of truth that agents read and write.
+</Info>
+
+## Why Memory Bank?
+
+<CardGroup cols={2}>
+  <Card title="Context Persistence" icon="database">
+    Agents reload context from Memory Bank each session. No more lost knowledge.
+  </Card>
+  <Card title="Traceability" icon="link">
+    Every artifact links to its source. Requirements → Design → Code → Tests.
+  </Card>
+  <Card title="Human Readable" icon="file-lines">
+    All files are Markdown. Review, edit, and version control with Git.
+  </Card>
+  <Card title="AI Accessible" icon="robot">
+    Structured format that agents can parse and update.
+  </Card>
+</CardGroup>
+
+## Structure
+
+After project initialization:
+
+```
+memory-bank/
+├── intents/                   # Your captured intents
+│   └── {intent-name}/
+│       ├── requirements.md
+│       ├── system-context.md
+│       └── units/
+│           └── {unit-name}/
+│               ├── unit-brief.md
+│               ├── stories/
+│               └── bolts/
+├── bolts/                     # Bolt execution records
+│   └── {bolt-id}/
+│       ├── domain-model.md
+│       ├── technical-design.md
+│       └── implementation/
+├── standards/                 # Project standards
+│   ├── tech-stack.md
+│   ├── coding-standards.md
+│   ├── architecture.md
+│   └── ux-guide.md
+└── operations/                # Deployment context
+    ├── environments.md
+    └── runbooks/
+```
+
+## Artifact Types
+
+### Standards
+
+Project-wide decisions that inform AI code generation:
+
+| File | Purpose |
+|------|---------|
+| `tech-stack.md` | Languages, frameworks, databases |
+| `coding-standards.md` | Formatting, naming, patterns |
+| `architecture.md` | System architecture decisions |
+| `ux-guide.md` | Design system, styling |
+| `api-conventions.md` | API style, versioning |
+
+### Intent Artifacts
+
+Captured requirements and context:
+
+| File | Purpose |
+|------|---------|
+| `requirements.md` | User stories, acceptance criteria, NFRs |
+| `system-context.md` | Boundaries, interfaces, constraints |
+| `units.md` | Unit decomposition overview |
+
+### Unit Artifacts
+
+Work breakdown within an intent:
+
+| File | Purpose |
+|------|---------|
+| `unit-brief.md` | Scope, interfaces, dependencies |
+| `stories/*.md` | Individual user stories |
+| `bolts/*/` | Bolt execution records |
+
+### Bolt Artifacts
+
+Implementation records:
+
+| File | Purpose |
+|------|---------|
+| `domain-model.md` | DDD artifacts |
+| `technical-design.md` | Architecture decisions |
+| `adr-*.md` | Architectural Decision Records |
+| `implementation/` | Generated code |
+| `tests/` | Test files |
+
+## Traceability
+
+Artifacts link to each other using references:
+
+```markdown
+# Technical Design: User Registration
+
+## Source
+- Intent: user-authentication
+- Unit: user-registration  
+- Story: US-001
+
+## Related ADRs
+- [ADR-001: Password Hashing Algorithm](./adr-001.md)
+
+## Implementation
+- [src/auth/registration.ts](../../src/auth/registration.ts)
+```
+
+## Agent Interaction
+
+Agents read and write to the Memory Bank:
+
+<Steps>
+  <Step title="Context Loading">
+    Agent reads relevant artifacts at session start
+  </Step>
+  <Step title="Work Execution">
+    Agent generates new artifacts during work
+  </Step>
+  <Step title="Artifact Storage">
+    Agent writes artifacts to Memory Bank
+  </Step>
+  <Step title="Reference Linking">
+    Agent updates cross-references
+  </Step>
+</Steps>
+
+## Version Control
+
+The Memory Bank is designed for Git:
+
+```bash
+# Track all artifacts
+git add memory-bank/
+
+# Meaningful commit messages
+git commit -m "feat(auth): Complete user registration bolt"
+
+# Review changes in PRs
+git diff memory-bank/intents/auth/
+```
+
+<Warning>
+  Commit Memory Bank changes along with code changes. This maintains the connection between decisions and implementation.
+</Warning>
+
+## Schema
+
+The Memory Bank follows a schema defined in `.specsmd/aidlc/memory-bank.yaml`:
+
+```yaml
+version: "1.0"
+structure:
+  intents:
+    pattern: "{intent-name}/"
+    required:
+      - requirements.md
+      - system-context.md
+    optional:
+      - units/
+  standards:
+    required:
+      - tech-stack.md
+      - coding-standards.md
+```
+
+## Best Practices
+
+<AccordionGroup>
+  <Accordion title="Keep Artifacts Current">
+    Update artifacts when decisions change. Stale documentation is worse than no documentation.
+  </Accordion>
+  <Accordion title="Use Consistent Formatting">
+    Follow the templates. Consistent structure helps agents parse content.
+  </Accordion>
+  <Accordion title="Link Generously">
+    Cross-reference related artifacts. Traceability prevents knowledge silos.
+  </Accordion>
+  <Accordion title="Version with Code">
+    Commit Memory Bank changes with related code. They belong together.
+  </Accordion>
+</AccordionGroup>
+
+## Next Steps
+
+<Card
+  title="Standards"
+  icon="arrow-right"
+  href="/core-concepts/standards"
+>
+  Learn about project standards that guide AI generation
+</Card>

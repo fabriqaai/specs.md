@@ -1,0 +1,254 @@
+---
+title: Choosing Bolt Types
+description: A practical guide to selecting the right bolt type for your work
+---
+
+## Overview
+
+The AI-DLC flow in specs.md provides three bolt types, each optimized for different types of work. Choosing the right bolt type ensures you have the appropriate level of rigor and structure for your task.
+
+```mermaid
+flowchart LR
+    subgraph DDD[DDD Construction]
+        D1[Complex domain logic]
+        D2[Business rules]
+        D3[5 stages - Most rigorous]
+    end
+
+    subgraph Simple[Simple Construction]
+        S1[UI, integrations]
+        S2[Utilities, CRUD]
+        S3[3 stages - Lightweight]
+    end
+
+    subgraph Spike[Spike]
+        SP1[Research, exploration]
+        SP2[Unknowns, prototypes]
+        SP3[2 stages - Flexible]
+    end
+
+    style DDD fill:#8B5CF6,stroke:#7C3AED,color:#fff
+    style Simple fill:#34D399,stroke:#10B981,color:#fff
+    style Spike fill:#FBBF24,stroke:#F59E0B,color:#fff
+```
+
+## Quick Decision Guide
+
+<Steps>
+  <Step title="Is this research or exploration?">
+    **Yes** → Use **Spike Bolt**
+
+    **No** → Continue to next question
+  </Step>
+  <Step title="Does it involve complex business logic or domain rules?">
+    **Yes** → Use **DDD Construction Bolt**
+
+    **No** → Continue to next question
+  </Step>
+  <Step title="Is it UI, integration, utility, or straightforward CRUD?">
+    **Yes** → Use **Simple Construction Bolt**
+  </Step>
+</Steps>
+
+---
+
+## DDD Construction Bolt
+
+<Card title="When to Use" icon="bullseye">
+  Complex domain logic requiring careful modeling and design decisions.
+</Card>
+
+### Best For
+
+- Core business logic with complex rules
+- Domain models with aggregates, entities, and value objects
+- Services that encode business knowledge
+- Features where incorrect logic has significant consequences
+- Bounded contexts with rich domain models
+
+### Stages
+
+| Stage | Purpose | Output |
+|-------|---------|--------|
+| **1. Domain Model** | Model business logic using DDD principles | Domain model document |
+| **2. Technical Design** | Apply patterns, define interfaces | Technical design document |
+| **3. ADR Analysis** | Document significant decisions | Architecture Decision Record |
+| **4. Code** | Generate production code | Implementation |
+| **5. Test** | Verify correctness | Test suite |
+
+### Example Use Cases
+
+<AccordionGroup>
+  <Accordion title="E-commerce Order Processing">
+    Orders involve complex state transitions, pricing rules, inventory checks, and payment processing. DDD helps model these business rules explicitly.
+  </Accordion>
+  <Accordion title="Financial Calculations">
+    Interest calculations, fee structures, and compliance rules require careful domain modeling to ensure correctness.
+  </Accordion>
+  <Accordion title="Booking Systems">
+    Availability rules, conflict detection, and reservation logic benefit from explicit domain modeling.
+  </Accordion>
+  <Accordion title="Workflow Engines">
+    State machines, transition rules, and approval chains require careful design.
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Simple Construction Bolt
+
+<Card title="When to Use" icon="feather">
+  Straightforward implementations that don't require extensive domain modeling.
+</Card>
+
+### Best For
+
+- Frontend pages and components
+- Simple CRUD endpoints
+- External API integrations
+- Utilities and helper modules
+- CLI commands and scripts
+- Configuration and setup code
+
+### Stages
+
+| Stage | Purpose | Output |
+|-------|---------|--------|
+| **1. Spec** | Define what to build | Specification document |
+| **2. Implement** | Write the code | Implementation |
+| **3. Test** | Verify the implementation | Test suite |
+
+### Example Use Cases
+
+<AccordionGroup>
+  <Accordion title="User Profile Page">
+    A React component displaying user information with edit capabilities. Clear requirements, no complex business logic.
+  </Accordion>
+  <Accordion title="REST API Integration">
+    Connecting to a third-party API with well-documented endpoints. Focus on correct integration, not domain modeling.
+  </Accordion>
+  <Accordion title="Admin Dashboard">
+    Data display and basic filtering. CRUD operations with straightforward UI.
+  </Accordion>
+  <Accordion title="CLI Tool">
+    A command-line utility for common operations. Clear inputs and outputs.
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Spike Bolt
+
+<Card title="When to Use" icon="flask">
+  Research and exploration when facing unknowns.
+</Card>
+
+### Best For
+
+- Technology evaluation
+- Proof of concept development
+- Investigating unfamiliar APIs or libraries
+- Performance benchmarking
+- Bug investigation with unclear causes
+- Architectural prototyping
+
+### Stages
+
+| Stage | Purpose | Output |
+|-------|---------|--------|
+| **1. Explore** | Research and prototype | Exploration notes, prototypes |
+| **2. Document** | Record findings | Spike report with recommendations |
+
+### Example Use Cases
+
+<AccordionGroup>
+  <Accordion title="Library Evaluation">
+    Comparing three charting libraries for a data visualization feature. Need to understand APIs, performance, and bundle sizes.
+  </Accordion>
+  <Accordion title="Performance Investigation">
+    API is slow but cause is unclear. Need to profile, identify bottlenecks, and propose solutions.
+  </Accordion>
+  <Accordion title="New Technology Assessment">
+    Evaluating whether to adopt GraphQL for an existing REST-based system.
+  </Accordion>
+  <Accordion title="Architecture Prototyping">
+    Testing if a microservices approach would solve current scaling issues.
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Comparison Table
+
+| Aspect | DDD Construction | Simple Construction | Spike |
+|--------|------------------|---------------------|-------|
+| **Stages** | 5 | 3 | 2 |
+| **Duration** | Hours to days | Hours | Hours |
+| **Documentation** | Extensive | Light | Research-focused |
+| **Design Rigor** | High | Low | None |
+| **Output** | Production code + artifacts | Production code | Findings + recommendations |
+| **Human Reviews** | 5 gate reviews | 3 gate reviews | 2 gate reviews |
+
+## Common Mistakes
+
+<Warning>
+  Choosing the wrong bolt type leads to either over-engineering simple tasks or under-designing complex ones.
+</Warning>
+
+### Over-Engineering (DDD for Simple Tasks)
+
+**Symptom**: Using DDD Construction for a simple settings page.
+
+**Problem**: Excessive ceremony for straightforward work. Domain modeling for CRUD operations wastes time without adding value.
+
+**Solution**: Use Simple Construction for UI, utilities, and integrations.
+
+### Under-Engineering (Simple for Complex Tasks)
+
+**Symptom**: Using Simple Construction for complex pricing logic.
+
+**Problem**: Skipping domain modeling leads to implicit business rules scattered in code. Bugs emerge as edge cases are missed.
+
+**Solution**: Use DDD Construction when business logic is non-trivial.
+
+### Skipping Spikes
+
+**Symptom**: Starting implementation without understanding the technology.
+
+**Problem**: Discovering fundamental issues late in development. Rework and wasted effort.
+
+**Solution**: Use Spike bolts to reduce uncertainty before committing to an approach.
+
+## Bolt Progression
+
+Often, work progresses through bolt types:
+
+```
+Spike → Simple or DDD Construction
+```
+
+1. **Spike**: Investigate unknowns, evaluate options
+2. **Construction**: Implement based on spike findings
+
+<Info>
+  It's common to run a Spike bolt first, then follow with a Construction bolt. The spike reduces risk by answering questions before committing to implementation.
+</Info>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card
+    title="Bolts Overview"
+    icon="arrow-right"
+    href="/core-concepts/bolts"
+  >
+    Core concepts and bolt mechanics
+  </Card>
+  <Card
+    title="Construction Agent"
+    icon="hammer"
+    href="/agents/construction-agent"
+  >
+    Learn how the agent executes bolts
+  </Card>
+</CardGroup>

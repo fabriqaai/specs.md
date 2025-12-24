@@ -1,0 +1,217 @@
+---
+title: Standards
+description: Project decisions that inform AI code generation
+---
+
+## What are Standards?
+
+**Standards** are project decisions that inform AI code generation. They ensure consistency across all generated code and documentation.
+
+<Info>
+  Standards are established during project initialization and guide every agent interaction. They're the "rules of the road" for your project.
+</Info>
+
+## Standard Types
+
+<CardGroup cols={2}>
+  <Card title="Tech Stack" icon="layer-group">
+    Languages, frameworks, databases, infrastructure
+  </Card>
+  <Card title="Coding Standards" icon="code">
+    Formatting, linting, naming, testing strategy
+  </Card>
+  <Card title="Architecture" icon="sitemap">
+    Architecture style, API design, state management
+  </Card>
+  <Card title="UX Guide" icon="palette">
+    Design system, styling, accessibility
+  </Card>
+</CardGroup>
+
+## Establishing Standards
+
+During project initialization:
+
+```bash
+/specsmd-master-agent
+> project-init
+```
+
+The Master Agent guides you through each standard category with facilitation guides.
+
+## Tech Stack Standard
+
+Defines your technology choices:
+
+```markdown
+# Tech Stack
+
+## Languages
+- **Primary**: TypeScript 5.x
+- **Secondary**: Python 3.11+ (for ML pipelines)
+
+## Frontend
+- **Framework**: React 18 with Next.js 14
+- **Styling**: Tailwind CSS
+- **State**: Zustand
+
+## Backend
+- **Runtime**: Node.js 20 LTS
+- **Framework**: Express.js
+- **ORM**: Prisma
+
+## Database
+- **Primary**: PostgreSQL 15
+- **Cache**: Redis 7
+- **Search**: Elasticsearch 8
+
+## Infrastructure
+- **Cloud**: AWS
+- **Containers**: Docker
+- **Orchestration**: ECS Fargate
+- **CI/CD**: GitHub Actions
+```
+
+## Coding Standards
+
+Defines how code should be written:
+
+```markdown
+# Coding Standards
+
+## Formatting
+- Use Prettier with default config
+- 2-space indentation
+- Single quotes for strings
+- Trailing commas in multiline
+
+## Naming Conventions
+- **Files**: kebab-case (user-service.ts)
+- **Classes**: PascalCase (UserService)
+- **Functions**: camelCase (getUserById)
+- **Constants**: SCREAMING_SNAKE_CASE (MAX_RETRIES)
+
+## Testing Strategy
+- **Unit Tests**: Vitest for business logic
+- **Integration Tests**: Supertest for APIs
+- **E2E Tests**: Playwright for critical paths
+- **Coverage Target**: 80% minimum
+
+## Error Handling
+- Use custom error classes extending BaseError
+- Always include error codes
+- Log errors with structured logging
+- Never expose internal errors to clients
+```
+
+## Architecture Standard
+
+Defines system design decisions:
+
+```markdown
+# Architecture
+
+## Style
+- **Pattern**: Clean Architecture
+- **API**: REST with OpenAPI 3.0
+- **Communication**: Synchronous HTTP, async via SQS
+
+## Layers
+1. **Presentation**: Controllers, DTOs
+2. **Application**: Use cases, services
+3. **Domain**: Entities, value objects, events
+4. **Infrastructure**: Repositories, external services
+
+## API Design
+- Resource-based URLs
+- HTTP methods for actions
+- JSON request/response bodies
+- Pagination with cursor-based approach
+
+## State Management
+- Server state: React Query
+- Client state: Zustand
+- Form state: React Hook Form
+```
+
+## UX Guide (Optional)
+
+Defines design system and styling:
+
+```markdown
+# UX Guide
+
+## Design System
+- Based on custom design tokens
+- Component library: shadcn/ui
+
+## Colors
+- Primary: #2563eb
+- Secondary: #64748b
+- Success: #10b981
+- Error: #ef4444
+
+## Typography
+- Headings: Inter, sans-serif
+- Body: Inter, sans-serif
+- Mono: JetBrains Mono
+
+## Spacing
+- Base unit: 4px
+- Scale: 4, 8, 12, 16, 24, 32, 48, 64
+
+## Accessibility
+- WCAG 2.1 AA compliance
+- Keyboard navigation required
+- Screen reader support
+- Color contrast 4.5:1 minimum
+```
+
+## How Standards Are Used
+
+Agents reference standards when generating code:
+
+<Steps>
+  <Step title="Context Loading">
+    Agent reads all standards from Memory Bank
+  </Step>
+  <Step title="Decision Making">
+    Standards inform architecture and design choices
+  </Step>
+  <Step title="Code Generation">
+    Generated code follows coding standards
+  </Step>
+  <Step title="Validation">
+    Output is checked against standards
+  </Step>
+</Steps>
+
+## Updating Standards
+
+Standards can evolve. To update:
+
+1. Edit the relevant file in `memory-bank/standards/`
+2. Commit the change with clear rationale
+3. Consider an ADR for significant changes
+4. Inform the team
+
+<Warning>
+  Changing standards affects all future code generation. Major changes should be documented in an ADR and reviewed by the team.
+</Warning>
+
+## Best Practices
+
+<AccordionGroup>
+  <Accordion title="Be Specific">
+    Vague standards lead to inconsistent code. "Use good naming" is useless. "Use camelCase for functions" is clear.
+  </Accordion>
+  <Accordion title="Document Rationale">
+    Explain why, not just what. Future team members will thank you.
+  </Accordion>
+  <Accordion title="Keep Current">
+    Update standards when the team adopts new practices. Outdated standards are ignored.
+  </Accordion>
+  <Accordion title="Start Simple">
+    You don't need every detail on day one. Add specifics as patterns emerge.
+  </Accordion>
+</AccordionGroup>

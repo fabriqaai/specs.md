@@ -1,0 +1,139 @@
+---
+title: Quick Start
+description: Get up and running with specs.md in minutes
+---
+
+## Initialize Your Project
+
+Open your AI coding tool and start the Master Agent:
+
+<Tabs>
+  <Tab title="Claude Code">
+    ```bash
+    /specsmd-master-agent
+    ```
+  </Tab>
+  <Tab title="Cursor">
+    Use the specs.md rule and type: `@specsmd-master-agent`
+  </Tab>
+  <Tab title="GitHub Copilot">
+    ```bash
+    @specsmd-master-agent
+    ```
+  </Tab>
+</Tabs>
+
+Then type:
+
+```
+project-init
+```
+
+This guides you through establishing:
+
+<Steps>
+  <Step title="Tech Stack">
+    Languages, frameworks, databases, infrastructure
+  </Step>
+  <Step title="Coding Standards">
+    Formatting, linting, naming, testing strategy
+  </Step>
+  <Step title="System Architecture">
+    Architecture style, API design, state management
+  </Step>
+  <Step title="UX Guide (Optional)">
+    Design system, styling, accessibility
+  </Step>
+  <Step title="API Conventions (Optional)">
+    API style, versioning, response formats
+  </Step>
+</Steps>
+
+## Create Your First Intent
+
+An **Intent** is your high-level goal:
+
+- "User authentication system"
+- "Product catalog with search"
+- "Payment processing integration"
+
+```bash
+/specsmd-inception-agent intent-create
+```
+
+The agent will:
+
+1. Ask clarifying questions to minimize ambiguity
+2. Elaborate into user stories and NFRs
+3. Define system context
+4. Decompose into loosely-coupled units
+
+## Plan and Execute Bolts
+
+```bash
+# Plan bolts for your stories
+/specsmd-inception-agent bolt-plan
+
+# Execute a bolt
+/specsmd-construction-agent bolt-start
+```
+
+Each bolt goes through validated stages:
+
+<CardGroup cols={2}>
+  <Card title="1. Domain Model" icon="diagram-project">
+    Model business logic using DDD principles
+  </Card>
+  <Card title="2. Technical Design" icon="compass-drafting">
+    Apply patterns and make architecture decisions
+  </Card>
+  <Card title="3. ADR Analysis" icon="file-lines">
+    Document significant decisions (optional)
+  </Card>
+  <Card title="4. Implement" icon="code">
+    Generate production code
+  </Card>
+  <Card title="5. Test" icon="vial">
+    Verify correctness with automated tests
+  </Card>
+</CardGroup>
+
+<Warning>
+  Human validation happens at each stage gate. This ensures errors are caught early before cascading downstream.
+</Warning>
+
+## Project Structure After Init
+
+```
+memory-bank/                   # Created after project-init
+├── intents/                   # Your captured intents
+│   └── {intent-name}/
+│       ├── requirements.md
+│       ├── system-context.md
+│       └── units/
+├── bolts/                     # Bolt execution records
+├── standards/                 # Project standards
+│   ├── tech-stack.md
+│   ├── coding-standards.md
+│   └── ...
+└── operations/                # Deployment context
+```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card
+    title="What is AI-DLC?"
+    icon="lightbulb"
+    href="/methodology/what-is-ai-dlc"
+  >
+    Understand the methodology behind specs.md
+  </Card>
+  <Card
+    title="Core Concepts"
+    icon="cube"
+    href="/core-concepts/intents"
+  >
+    Deep dive into Intents, Units, and Bolts
+  </Card>
+</CardGroup>

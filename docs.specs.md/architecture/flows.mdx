@@ -1,0 +1,154 @@
+---
+title: Pluggable Flows
+description: Understanding the specs.md flow architecture
+---
+
+## Framework Architecture
+
+specs.md is built as a **pluggable framework** where development methodologies are implemented as **flows**. This architecture allows different teams to use different development approaches while sharing the same core infrastructure.
+
+```mermaid
+flowchart TB
+    subgraph Framework[specs.md Framework]
+        subgraph Core[Core]
+            MB[Memory Bank]
+            ST[Standards]
+            AS[Agent System]
+            TM[Templates]
+            SC[Slash Commands]
+        end
+        subgraph Flows[Flows]
+            AIDLC[AI-DLC]
+            FF[Future Flows...]
+        end
+    end
+
+    style Framework fill:#1E293B,stroke:#334155,color:#fff
+    style Core fill:#0C4A6E,stroke:#0EA5E9,color:#fff
+    style Flows fill:#052E16,stroke:#22C55E,color:#fff
+    style AIDLC fill:#22C55E,stroke:#16A34A,color:#fff
+    style FF fill:#475569,stroke:#64748B,color:#fff,stroke-dasharray: 5 5
+```
+
+## What is a Flow?
+
+A **flow** is a complete development methodology implementation that includes:
+
+<CardGroup cols={2}>
+  <Card title="Phases" icon="diagram-project">
+    Sequential stages of development (e.g., Inception, Construction, Operations)
+  </Card>
+  <Card title="Agents" icon="robot">
+    Specialized AI agents for each phase
+  </Card>
+  <Card title="Templates" icon="file-code">
+    Structured artifacts and outputs
+  </Card>
+  <Card title="Bolt Types" icon="bolt">
+    Execution patterns for different work types
+  </Card>
+</CardGroup>
+
+## Core vs Flows
+
+### Core (Shared Infrastructure)
+
+The core provides foundational capabilities used by all flows:
+
+| Component | Purpose |
+|-----------|---------|
+| **Memory Bank** | File-based storage for all project artifacts |
+| **Standards** | Coding standards, conventions, and rules |
+| **Agent System** | Markdown-based agent definitions |
+| **Templates** | Reusable document and code templates |
+| **Slash Commands** | Integration with AI coding tools |
+
+### Flows (Methodology Implementations)
+
+Each flow implements a specific development approach:
+
+| Flow | Status | Description |
+|------|--------|-------------|
+| **AI-DLC** | Implemented | AI-Driven Development Lifecycle from AWS |
+| *(Future)* | Planned | Additional methodologies can be added |
+
+## AI-DLC Flow
+
+AI-DLC (AI-Driven Development Lifecycle) is the first flow implemented in specs.md. It implements the methodology developed by AWS.
+
+### Three Phases
+
+```mermaid
+flowchart TB
+    MA[Master Agent<br/>Orchestrates & Navigates] --> IA[Inception]
+    MA --> CA[Construction]
+    MA --> OA[Operations]
+
+    IA --> CA --> OA
+
+    style MA fill:#8B5CF6,stroke:#7C3AED,color:#fff
+    style IA fill:#818CF8,stroke:#6366F1,color:#fff
+    style CA fill:#34D399,stroke:#10B981,color:#fff
+    style OA fill:#FBBF24,stroke:#F59E0B,color:#fff
+```
+
+| Phase | Agent | Purpose |
+|-------|-------|---------|
+| **Inception** | Inception Agent | Capture intents, elaborate requirements, decompose into units |
+| **Construction** | Construction Agent | Execute bolts through validated stages |
+| **Operations** | Operations Agent | Deploy, verify, and monitor |
+
+### Bolt Types
+
+The AI-DLC flow supports three bolt types:
+
+| Type | Best For | Stages |
+|------|----------|--------|
+| **DDD Construction** | Complex domain logic, business rules | Model → Design → ADR → Code → Test |
+| **Simple Construction** | UI, integrations, utilities | Spec → Implement → Test |
+| **Spike** | Research, exploration, unknowns | Explore → Document |
+
+## Creating Custom Flows
+
+<Info>
+  Custom flow creation is a planned feature. The architecture is designed to support multiple flows, with AI-DLC as the reference implementation.
+</Info>
+
+A custom flow would include:
+
+1. **Flow Definition** - Metadata, phases, and configuration
+2. **Phase Agents** - Specialized agents for each phase
+3. **Bolt Types** - Custom execution patterns
+4. **Templates** - Artifacts specific to the methodology
+
+## Tool Integration
+
+Flows integrate with AI coding tools through the shared core:
+
+| Tool | Integration Method |
+|------|-------------------|
+| **Claude Code** | Slash commands in `.claude/commands/` |
+| **Cursor** | Rules in `.cursor/rules/` |
+| **GitHub Copilot** | Agents in `.github/agents/` |
+| **Google Antigravity** | Agents in `.agent/agents/` |
+
+All tools share the same Memory Bank and can work with any installed flow.
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card
+    title="AI-DLC Methodology"
+    icon="arrow-right"
+    href="/methodology/what-is-ai-dlc"
+  >
+    Deep dive into the AI-DLC flow
+  </Card>
+  <Card
+    title="Memory Bank"
+    icon="database"
+    href="/core-concepts/memory-bank"
+  >
+    Learn about the shared artifact storage
+  </Card>
+</CardGroup>

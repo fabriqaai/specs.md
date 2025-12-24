@@ -1,0 +1,96 @@
+---
+title: What is AI-DLC?
+description: Understanding the AI-Driven Development Lifecycle
+---
+
+## The AI-Driven Development Lifecycle
+
+AI-DLC is the first development flow implemented in specs.md. It's a reimagined software development methodology where **AI drives the conversation** and humans validate. Unlike traditional Agile where iterations span weeks, AI-DLC operates in **Bolts** - rapid iterations measured in hours or days.
+
+<Info>
+  AI-DLC was developed by AWS and documented in their [AI-Driven Development Life Cycle](https://aws.amazon.com/blogs/devops/ai-driven-development-life-cycle/) blog post. specs.md implements this methodology as a pluggable flow.
+</Info>
+
+## The Core Insight
+
+> "Traditional development methods were built for human-driven, long-running processes. AI-DLC reimagines the development lifecycle with AI as a central collaborator, enabling rapid cycles measured in hours or days rather than weeks."
+
+## Key Principles
+
+<CardGroup cols={2}>
+  <Card title="AI-Driven" icon="robot">
+    AI leads the conversation, proposes solutions, and generates artifacts. Humans validate and guide.
+  </Card>
+  <Card title="Rapid Iterations" icon="bolt">
+    Bolts replace Sprints. Complete meaningful work in hours, not weeks.
+  </Card>
+  <Card title="Stage Gates" icon="door-open">
+    Human validation at each stage catches errors before they cascade.
+  </Card>
+  <Card title="Design-First" icon="compass-drafting">
+    Domain-Driven Design is built into construction bolts, not an afterthought.
+  </Card>
+</CardGroup>
+
+## The Three Phases
+
+AI-DLC organizes work into three phases, each with a specialized agent:
+
+```mermaid
+flowchart TB
+    MA[Master Agent<br/>Orchestrates & Navigates] --> IA[Inception]
+    MA --> CA[Construction]
+    MA --> OA[Operations]
+
+    IA --> CA --> OA
+
+    style MA fill:#8B5CF6,stroke:#7C3AED,color:#fff
+    style IA fill:#818CF8,stroke:#6366F1,color:#fff
+    style CA fill:#34D399,stroke:#10B981,color:#fff
+    style OA fill:#FBBF24,stroke:#F59E0B,color:#fff
+```
+
+| Phase | Purpose | Key Outputs |
+|-------|---------|-------------|
+| **Inception** | Capture intents, elaborate requirements | User stories, NFRs, Unit definitions |
+| **Construction** | Execute bolts through validated stages | Domain models, Code, Tests |
+| **Operations** | Deploy, verify, and monitor | Deployment units, Runbooks |
+
+## Why AI-DLC?
+
+### The Problem with Traditional Methods
+
+Traditional Agile methods have "whitespace" - areas left undefined that lead to:
+
+- Inconsistent architecture decisions
+- Missing design documentation
+- Quality issues from skipped steps
+- Context loss between iterations
+
+### The AI-DLC Solution
+
+AI-DLC fills these gaps by:
+
+1. **Integrating design techniques** - DDD is integrated into construction bolts
+2. **Creating persistent artifacts** - Memory Bank maintains context
+3. **Enforcing stage gates** - Each validation point ensures quality
+4. **Enabling rapid iteration** - AI-powered decomposition and execution
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card
+    title="AI-DLC vs Agile"
+    icon="scale-balanced"
+    href="/methodology/ai-dlc-vs-agile"
+  >
+    Detailed comparison with traditional methods
+  </Card>
+  <Card
+    title="The Three Phases"
+    icon="diagram-project"
+    href="/methodology/three-phases"
+  >
+    Deep dive into Inception, Construction, Operations
+  </Card>
+</CardGroup>
