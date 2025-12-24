@@ -8,7 +8,6 @@ const path = require('path');
 
 const { THEME_COLORS } = require('./constants');
 
-// Theme Colors (Terracotta/Orange inspired by Claude Code)
 const THEME = THEME_COLORS;
 
 // Create gradient for logo
