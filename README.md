@@ -108,20 +108,18 @@ AI-DLC is a reimagined software development methodology where **AI drives the co
 
 specsmd provides four specialized agents that guide you through the entire development lifecycle:
 
-```
-                    ┌─────────────────┐
-                    │  Master Agent   │  Orchestrates & navigates
-                    └────────┬────────┘
-                             │
-        ┌────────────────────┼────────────────────┐
-        ▼                    ▼                    ▼
-┌───────────────┐   ┌───────────────┐   ┌───────────────┐
-│   Inception   │ → │ Construction  │ → │  Operations   │
-│     Agent     │   │     Agent     │   │     Agent     │
-└───────────────┘   └───────────────┘   └───────────────┘
-  Capture intent      Execute bolts      Deploy & monitor
-  Define units        Build & test       Verify & scale
-  Plan stories        Validate stages
+```mermaid
+flowchart TB
+    MA[Master Agent<br/>Orchestrates & Navigates] --> IA[Inception Agent]
+    MA --> CA[Construction Agent]
+    MA --> OA[Operations Agent]
+
+    IA --> CA --> OA
+
+    style MA fill:#8B5CF6,stroke:#7C3AED,color:#fff
+    style IA fill:#818CF8,stroke:#6366F1,color:#fff
+    style CA fill:#34D399,stroke:#10B981,color:#fff
+    style OA fill:#FBBF24,stroke:#F59E0B,color:#fff
 ```
 
 ### The Three Phases
