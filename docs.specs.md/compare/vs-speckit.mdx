@@ -5,7 +5,7 @@ description: "Compare specs.md (AI-DLC) with GitHub's Spec Kit toolkit"
 
 ## Overview
 
-**GitHub Spec Kit** is a lightweight, tool-agnostic toolkit with slash commands (`/specify`, `/plan`, `/tasks`) that structures prompts for your existing AI assistant.
+**GitHub Spec Kit** is a toolkit that provides agent prompts and slash commands (`/speckit.specify`, `/speckit.plan`, `/speckit.tasks`) for 15+ AI coding assistants including Claude Code, Cursor, GitHub Copilot, and Gemini CLI.
 
 **specs.md (AI-DLC)** is a full methodology implementation with phase-based agents, Mob rituals, and DDD integration.
 
@@ -19,15 +19,15 @@ description: "Compare specs.md (AI-DLC) with GitHub's Spec Kit toolkit"
 
 | Aspect | specs.md (AI-DLC) | Spec Kit |
 |--------|-------------------|----------|
-| **Type** | Full methodology | Lightweight toolkit |
+| **Type** | Full methodology | Toolkit + Agent Prompts |
 | **Target** | Complex systems requiring trade-offs | Small-medium projects |
-| **Approach** | Structured AI-DLC phases with methodology | Command-driven toolkit |
-| **Structure** | Intents → Units → Stories | Specify → Plan → Tasks |
-| **Agent Model** | Specialized phase agents | Tool-agnostic, single assistant |
-| **Design Integration** | DDD as core (not optional) | Constitution file only |
+| **Approach** | Structured AI-DLC phases with methodology | 4-phase workflow with agent prompts |
+| **Structure** | Intents → Units → Stories | Specify → Plan → Tasks → Implement |
+| **Agent Model** | 4 phase-based agents | Prompts for 15+ AI assistants |
+| **Design Integration** | DDD default (extensible via bolt types) | Constitution file |
 | **Rituals** | Mob Elaboration, Mob Construction | None |
-| **Memory** | Memory Bank (persistent context) | Constitution file |
-| **Customization** | Skills, templates, memory bank | Constitution file, scripts |
+| **Memory** | Memory Bank (persistent context) | Constitution file + .specify folder |
+| **Customization** | Skills, templates, memory bank | Constitution file, scripts, templates |
 | **Learning Curve** | Moderate | Low |
 
 ---
@@ -68,26 +68,27 @@ description: "Compare specs.md (AI-DLC) with GitHub's Spec Kit toolkit"
 
 ### 2. Conversation Direction
 
-**Spec Kit**: Human drives the conversation
+**Spec Kit**: Agent-driven via structured prompts
 ```
-Human: /speckit.specify
-Human: [provides description]
-AI: [generates specification]
+Human: /speckit.specify [high-level description]
+AI: [generates detailed specification with user journeys]
+AI: [asks clarifying questions via /speckit.clarify]
+Human: [validates and refines]
 ```
 
-**specs.md (AI-DLC)**: AI drives the conversation
+**specs.md (AI-DLC)**: AI drives with Mob rituals
 ```
 Human: [provides intent]
 AI: "I've analyzed your intent. Here are 3 Units I propose.
      I have 5 clarifying questions before we proceed..."
-Human: [validates, approves, or redirects]
+Human: [validates, approves, or redirects in Mob session]
 ```
 
 ### 3. Design Integration
 
-**Spec Kit**: No design methodology integration. The constitution file sets project principles but doesn't guide architectural decisions.
+**Spec Kit**: Constitution file sets project principles and constraints. Technical plan phase handles architecture decisions.
 
-**specs.md (AI-DLC)**: DDD is integral to the methodology. AI applies domain-driven design principles during decomposition, creating bounded contexts, aggregates, and domain models.
+**specs.md (AI-DLC)**: DDD is the default methodology. AI applies domain-driven design principles during decomposition, creating bounded contexts, aggregates, and domain models. Extensible via bolt types for BDD, TDD, or custom flows.
 
 ---
 
