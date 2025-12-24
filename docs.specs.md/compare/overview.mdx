@@ -72,15 +72,27 @@ Agile frameworks leave design techniques optional. AI-DLC integrates Domain-Driv
 
 **Extensible**: Use bolt types to add other methodologies like BDD, TDD, or model your own construction flow. DDD is the default, not a limitation.
 
-### 3. Reversed Conversation Direction
+### 3. Bolts: Batched Stories with Full Traceability
+
+Unlike other tools with variable iteration cycles, specs.md uses **Bolts**—planned batches of related stories executed together by an agent. Each Bolt follows DDD steps during execution, and artifacts created during construction provide full traceability of what was built and how.
+
+```
+Intent → Units → Stories → Bolt (batched stories)
+                              ↓
+                    DDD Construction Steps
+                              ↓
+                    Traceable Artifacts
+```
+
+### 4. Reversed Conversation Direction
 
 In AI-DLC, **AI initiates and directs conversations**. AI proposes breakdown, trade-offs, designs. Humans validate and approve. This is the opposite of most tools where humans prompt AI.
 
-### 4. Mob Rituals for Team Alignment
+### 5. Mob Rituals for Team Alignment
 
 Mob Elaboration (Inception) and Mob Construction condense weeks of sequential work into hours while achieving deep alignment between team and AI.
 
-### 5. Built for Complex Systems
+### 6. Built for Complex Systems
 
 <Warning>
 AI-DLC explicitly targets systems with "continuous functional adaptability, high architectural complexity, numerous trade-offs management, scalability, integration and customization requirements."
