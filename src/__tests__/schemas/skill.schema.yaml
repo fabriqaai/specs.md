@@ -1,0 +1,22 @@
+# Schema for skill files (*.md in skills/)
+name: skill
+description: Agent skill file template for specsmd
+file_pattern: "**/skills/**/*.md"
+
+required_sections:
+  - heading: "## Goal"
+  - heading: "## Input"
+  - heading: "## Process"
+
+optional_sections:
+  - heading: "## Role"
+  - heading: "## Progress Display"
+  - heading: "## Gates in This Skill"
+  - heading: "## Output"
+  - heading: "## Human Validation Point"
+  - heading: "## Transition"
+  - heading: "## Test Contract"
+
+rules:
+  min_content_length: 300
+  must_start_with_h1: true

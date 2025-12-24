@@ -1,0 +1,24 @@
+# Schema for context-config.yaml
+# Validates agent context loading configuration
+
+name: context-config
+description: Defines what context each agent should load on activation
+
+required_keys:
+  - agents
+
+nested_required:
+  # Construction agent is required (loads project standards)
+  agents:
+    - construction
+
+  # Construction agent must have these sections
+  agents.construction:
+    - description
+    - required_context
+    - on_missing_critical
+
+  # Error handling configuration
+  agents.construction.on_missing_critical:
+    - action
+    - message

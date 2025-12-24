@@ -1,0 +1,61 @@
+# Schema for memory-bank.yaml
+# Validates the memory bank configuration for AI-DLC flow
+
+name: memory-bank
+description: Memory bank configuration defining directory structure, naming conventions, and schema paths
+
+required_keys:
+  - structure
+  - schema
+  - conventions
+  - naming
+
+nested_required:
+  # Schema paths (source of truth for agents)
+  schema:
+    - intents
+    - units
+    - bolts
+    - standards
+    - stories
+    - story-index
+    - inception-log
+    - construction-log
+
+  # Schema ownership by agent
+  schema.ownership:
+    - inception
+    - construction
+    - operations
+
+  # Timestamp conventions
+  conventions:
+    - timestamps
+
+  conventions.timestamps:
+    - format
+    - pattern
+    - example
+
+  # Naming conventions for each artifact type
+  naming:
+    - intents
+    - units
+    - stories
+    - bolts
+
+  naming.intents:
+    - format
+    - example
+
+  naming.units:
+    - format
+    - example
+
+  naming.stories:
+    - format
+    - example
+
+  naming.bolts:
+    - format
+    - example

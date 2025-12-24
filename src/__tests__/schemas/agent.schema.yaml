@@ -1,0 +1,20 @@
+# Schema for agent definition files
+# Validates agent markdown templates in flows/aidlc/agents/
+
+name: agent
+description: Agent definition template for specsmd AI-DLC flow
+file_pattern: "**/agents/*.md"
+
+required_sections:
+  - heading: "## Persona"
+  - heading: "## Skills"
+
+optional_sections:
+  - heading: "## On Activation"
+  - heading: "## Default Flow"
+  - heading: "## Workflow"
+  - heading: "## Begin"
+
+rules:
+  min_content_length: 500
+  must_start_with_h1: true

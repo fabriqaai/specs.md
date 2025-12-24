@@ -1,0 +1,345 @@
+# Standards Catalog
+# Defines what standards exist, their decisions, and relationships.
+# Each standard has a facilitation guide in templates/standards/
+
+standards:
+  tech-stack:
+    description: Core technology choices for the project
+    facilitation: templates/standards/tech-stack.guide.md
+    output_path: standards/tech-stack.md
+    importance: critical
+    sections:
+      - header: Overview
+        type: static
+        content: "Core technology decisions for this project."
+      - type: from_decisions
+    decisions:
+      - id: languages
+        display_name: Languages
+        category: core
+        importance: critical
+        depends_on: []
+
+      - id: framework
+        display_name: Framework
+        category: core
+        importance: critical
+        depends_on: [languages]
+
+      - id: authentication
+        display_name: Authentication
+        category: security
+        importance: high
+        optional: true
+        depends_on: [framework]
+
+      - id: infrastructure
+        display_name: Infrastructure & Deployment
+        category: deployment
+        importance: high
+        depends_on: [framework]
+
+      - id: package_manager
+        display_name: Package Manager
+        category: tooling
+        importance: medium
+        depends_on: [languages]
+
+  data-stack:
+    description: Database and data persistence choices
+    facilitation: templates/standards/data-stack.guide.md
+    output_path: standards/data-stack.md
+    importance: high
+    depends_on_standards: [tech-stack]
+    sections:
+      - header: Overview
+        type: static
+        content: "Database and data persistence decisions for this project."
+      - type: from_decisions
+    decisions:
+      - id: database
+        display_name: Database
+        category: data
+        importance: high
+        depends_on: []
+
+      - id: orm
+        display_name: ORM / Database Client
+        category: data
+        importance: medium
+        depends_on: [database]
+
+  coding-standards:
+    description: Code style, patterns, and quality standards
+    facilitation: templates/standards/coding-standards.guide.md
+    output_path: standards/coding-standards.md
+    importance: critical
+    depends_on_standards: [tech-stack]
+    sections:
+      - header: Overview
+        type: static
+        content: "Code style and quality standards for this project."
+      - type: from_decisions
+    decisions:
+      - id: formatting
+        display_name: Code Formatting
+        category: style
+        importance: high
+        depends_on: []
+
+      - id: linting
+        display_name: Linting Rules
+        category: quality
+        importance: high
+        depends_on: []
+
+      - id: naming_conventions
+        display_name: Naming Conventions
+        category: style
+        importance: high
+        depends_on: []
+
+      - id: file_organization
+        display_name: File & Folder Organization
+        category: structure
+        importance: high
+        depends_on: []
+
+      - id: testing_strategy
+        display_name: Testing Strategy
+        category: quality
+        importance: critical
+        depends_on: []
+
+      - id: error_handling
+        display_name: Error Handling Patterns
+        category: patterns
+        importance: high
+        depends_on: []
+
+      - id: logging
+        display_name: Logging Standards
+        category: observability
+        importance: medium
+        depends_on: []
+
+  system-architecture:
+    description: High-level system design and architectural patterns
+    facilitation: templates/standards/system-architecture.guide.md
+    output_path: standards/system-architecture.md
+    importance: high
+    optional: true
+    depends_on_standards: [tech-stack]
+    sections:
+      - header: Overview
+        type: static
+        content: "High-level architectural decisions and patterns."
+      - type: from_decisions
+    decisions:
+      - id: architecture_style
+        display_name: Architecture Style
+        category: structure
+        importance: critical
+        depends_on: []
+
+      - id: api_design
+        display_name: API Design
+        category: communication
+        importance: high
+        optional: true
+        depends_on: []
+
+      - id: state_management
+        display_name: State Management
+        category: data
+        importance: high
+        optional: true
+        depends_on: []
+
+      - id: caching_strategy
+        display_name: Caching Strategy
+        category: performance
+        importance: medium
+        optional: true
+        depends_on: []
+
+      - id: security_patterns
+        display_name: Security Patterns
+        category: security
+        importance: high
+        depends_on: []
+
+  ux-guide:
+    description: UI/UX patterns and design system choices
+    facilitation: templates/standards/ux-guide.guide.md
+    output_path: standards/ux-guide.md
+    importance: medium
+    optional: true
+    depends_on_standards: [tech-stack]
+    sections:
+      - header: Overview
+        type: static
+        content: "UI/UX standards and design system choices."
+      - type: from_decisions
+    decisions:
+      - id: design_system
+        display_name: Design System / Component Library
+        category: ui
+        importance: high
+        depends_on: []
+
+      - id: styling_approach
+        display_name: Styling Approach
+        category: ui
+        importance: high
+        depends_on: []
+
+      - id: accessibility
+        display_name: Accessibility Standards
+        category: compliance
+        importance: high
+        depends_on: []
+
+      - id: responsive_strategy
+        display_name: Responsive Design Strategy
+        category: ui
+        importance: medium
+        depends_on: []
+
+  api-conventions:
+    description: API design conventions and standards
+    facilitation: templates/standards/api-conventions.guide.md
+    output_path: standards/api-conventions.md
+    importance: medium
+    optional: true
+    depends_on_standards: [tech-stack]
+    sections:
+      - header: Overview
+        type: static
+        content: "API design conventions and response formats."
+      - type: from_decisions
+    decisions:
+      - id: api_style
+        display_name: API Style
+        category: design
+        importance: critical
+        depends_on: []
+
+      - id: versioning
+        display_name: API Versioning
+        category: design
+        importance: medium
+        depends_on: []
+
+      - id: response_format
+        display_name: Response Format
+        category: format
+        importance: high
+        depends_on: []
+
+      - id: error_format
+        display_name: Error Response Format
+        category: format
+        importance: high
+        depends_on: []
+
+      - id: pagination
+        display_name: Pagination Strategy
+        category: design
+        importance: medium
+        optional: true
+        depends_on: []
+
+# Project type presets - determines which standards to create and how to decompose units
+project_types:
+  full-stack-web:
+    description: Full-stack web application
+    required_standards:
+      - tech-stack
+      - data-stack
+      - coding-standards
+    recommended_standards:
+      - system-architecture
+      - ux-guide
+      - api-conventions
+    # Unit decomposition structure
+    unit_structure:
+      backend:
+        enabled: true
+        decomposition: domain-driven
+        default_bolt_type: ddd-construction-bolt
+        description: Backend services using DDD decomposition
+      frontend:
+        enabled: true
+        decomposition: feature-based
+        default_bolt_type: simple-construction-bolt
+        naming_pattern: "{intent}-ui"
+        description: Frontend application (pages, components, state)
+
+  backend-api:
+    description: Backend API service
+    required_standards:
+      - tech-stack
+      - data-stack
+      - coding-standards
+    recommended_standards:
+      - system-architecture
+      - api-conventions
+    unit_structure:
+      backend:
+        enabled: true
+        decomposition: domain-driven
+        default_bolt_type: ddd-construction-bolt
+        description: Backend services using DDD decomposition
+      frontend:
+        enabled: false
+
+  frontend-app:
+    description: Frontend application (SPA/SSR)
+    required_standards:
+      - tech-stack
+      - coding-standards
+    recommended_standards:
+      - ux-guide
+    unit_structure:
+      backend:
+        enabled: false
+      frontend:
+        enabled: true
+        decomposition: feature-based
+        default_bolt_type: simple-construction-bolt
+        description: Frontend application (pages, components, state)
+
+  cli-tool:
+    description: Command-line tool
+    required_standards:
+      - tech-stack
+      - coding-standards
+    recommended_standards: []
+    unit_structure:
+      backend:
+        enabled: false
+      frontend:
+        enabled: false
+      cli:
+        enabled: true
+        decomposition: command-based
+        default_bolt_type: simple-construction-bolt
+        description: CLI commands and handlers
+
+  library:
+    description: Reusable library/package
+    required_standards:
+      - tech-stack
+      - coding-standards
+    recommended_standards:
+      - data-stack
+      - api-conventions
+    unit_structure:
+      backend:
+        enabled: true
+        decomposition: module-based
+        default_bolt_type: simple-construction-bolt
+        description: Library modules and public API
+      frontend:
+        enabled: false

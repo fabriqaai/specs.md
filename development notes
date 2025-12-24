@@ -1,0 +1,38 @@
+Captured: Must for MVP → (1) list/search products, (2) product detail. Category browsing and search are post-MVP.
+Next step: define system context and boundaries for this intent.
+Type context to proceed, or menu to return to the inception menu.
+
+Intent Created: 001-product-catalog-for-ecommerce
+Goal: Product catalog for ecommerce (browse/search products, detail pages, categories)
+Type: green-field
+Location: memory-bank/intents/001-product-catalog-for-ecommerce/
+Files created:
+requirements.md (draft)
+inception-log.md (progress tracker)
+#	Action	Description
+1	requirements	[Recommended] Gather detailed requirements
+2	context	Define system context and boundaries
+3	menu	Return to inception menu
+Type a number to continue.
+
+
+
+
++++construction agent pickedup the first bolt instead of asking which one to start. when there are two intents and multiple units under the first intent, it should ask which one to start.
+even if that is the only one it should start because of dependencies it should still ask which one to start.
+
++++inception agetn did not plan bolt. when I forced it only created bolt-plan.md and when i forced it only created bolt folder with readme in them.
+
+
+suggest a git commmit after each bolt. once bolt is committed. get the commitid and include that in bolt.md and make another commit for updating bolt.md with commitid. or we tag the first commit with boltid and we would not need to update bolt.md.write 
+
+
+
+
+
+DO NOT might be confusing should we use NEVER instead?
+
+
+
+bolt start 
+termis like Checkpoint 1 2 3 should be replace with meaningful names

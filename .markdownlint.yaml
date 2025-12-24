@@ -1,0 +1,143 @@
+# Markdownlint configuration for specsmd
+# See: https://github.com/DavidAnson/markdownlint/blob/main/doc/Rules.md
+
+# Default: enable all rules
+default: true
+
+# MD001 - Heading levels should only increment by one level at a time
+MD001: true
+
+# MD003 - Heading style (ATX style with # prefix)
+MD003:
+  style: atx
+
+# MD004 - Unordered list style (consistent)
+MD004:
+  style: consistent
+
+# MD007 - Unordered list indentation
+MD007:
+  indent: 2
+
+# MD009 - Trailing spaces
+MD009:
+  br_spaces: 2
+  strict: false
+
+# MD010 - Hard tabs
+MD010:
+  code_blocks: false
+
+# MD012 - Multiple consecutive blank lines
+MD012:
+  maximum: 2
+
+# MD013 - Line length (disabled for specs - they often have long lines)
+MD013: false
+
+# MD022 - Headings should be surrounded by blank lines
+MD022:
+  lines_above: 1
+  lines_below: 1
+
+# MD024 - Multiple headings with the same content (allow for repeated section names)
+MD024:
+  siblings_only: true
+
+# MD025 - Single top-level heading in the document
+MD025: true
+
+# MD026 - Trailing punctuation in heading
+MD026:
+  punctuation: ".,;:!"
+
+# MD028 - Blank line inside blockquote
+MD028: false
+
+# MD029 - Ordered list item prefix
+MD029:
+  style: ordered
+
+# MD030 - Spaces after list markers
+MD030:
+  ul_single: 1
+  ol_single: 1
+  ul_multi: 1
+  ol_multi: 1
+
+# MD031 - Fenced code blocks should be surrounded by blank lines
+MD031: true
+
+# MD032 - Lists should be surrounded by blank lines
+MD032: true
+
+# MD033 - Inline HTML (allow for special cases)
+MD033:
+  allowed_elements:
+    - br
+    - details
+    - summary
+    - kbd
+    - sub
+    - sup
+
+# MD034 - Bare URL used
+MD034: true
+
+# MD035 - Horizontal rule style
+MD035:
+  style: "---"
+
+# MD036 - Emphasis used instead of a heading (disabled - we use bold for emphasis)
+MD036: false
+
+# MD037 - Spaces inside emphasis markers
+MD037: true
+
+# MD038 - Spaces inside code span elements
+MD038: true
+
+# MD039 - Spaces inside link text
+MD039: true
+
+# MD040 - Fenced code blocks should have a language specified
+MD040: true
+
+# MD041 - First line should be a top-level heading
+MD041:
+  level: 1
+
+# MD042 - No empty links
+MD042: true
+
+# MD044 - Proper names should have correct capitalization
+MD044:
+  names:
+    - specsmd
+    - AI-DLC
+    - TypeScript
+    - JavaScript
+  code_blocks: false
+  html_elements: false
+
+# MD046 - Code block style
+MD046:
+  style: fenced
+
+# MD047 - Files should end with a single newline
+MD047: true
+
+# MD048 - Code fence style
+MD048:
+  style: backtick
+
+# MD049 - Emphasis style
+MD049:
+  style: asterisk
+
+# MD050 - Strong style
+MD050:
+  style: asterisk
+
+# MD060 - Table column style (disabled - cosmetic, doesn't affect rendering)
+MD060: false

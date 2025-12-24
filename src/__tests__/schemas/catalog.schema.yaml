@@ -1,0 +1,60 @@
+# Schema for catalog.yaml
+# Validates standards catalog configuration
+
+name: catalog
+description: Standards catalog defining available standards, decisions, and project type presets
+
+required_keys:
+  - standards
+  - project_types
+
+nested_required:
+  # Required standards (tech-stack and coding-standards are critical)
+  standards:
+    - tech-stack
+    - coding-standards
+
+  # tech-stack standard structure
+  standards.tech-stack:
+    - description
+    - facilitation
+    - output_path
+    - importance
+    - decisions
+
+  # coding-standards standard structure
+  standards.coding-standards:
+    - description
+    - facilitation
+    - output_path
+    - importance
+    - decisions
+
+  # Required project types
+  project_types:
+    - full-stack-web
+    - backend-api
+    - frontend-app
+    - cli-tool
+    - library
+
+  # Each project type must have these fields
+  project_types.full-stack-web:
+    - description
+    - required_standards
+
+  project_types.backend-api:
+    - description
+    - required_standards
+
+  project_types.frontend-app:
+    - description
+    - required_standards
+
+  project_types.cli-tool:
+    - description
+    - required_standards
+
+  project_types.library:
+    - description
+    - required_standards

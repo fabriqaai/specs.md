@@ -1,0 +1,55 @@
+---
+unit: {unit-name}
+bolt: {bolt-id}
+stage: model
+status: complete
+updated: {date}
+---
+
+# Static Model - {Unit Name}
+
+## Bounded Context
+
+{Define the bounded context for this unit}
+
+## Domain Entities
+
+| Entity | Properties | Business Rules |
+|--------|------------|----------------|
+| {Entity} | {properties} | {rules} |
+
+## Value Objects
+
+| Value Object | Properties | Constraints |
+|--------------|------------|-------------|
+| {ValueObject} | {properties} | {constraints} |
+
+## Aggregates
+
+| Aggregate Root | Members | Invariants |
+|----------------|---------|------------|
+| {Root} | {members} | {invariants} |
+
+## Domain Events
+
+| Event | Trigger | Payload |
+|-------|---------|---------|
+| {Event} | {trigger} | {payload} |
+
+## Domain Services
+
+| Service | Operations | Dependencies |
+|---------|------------|--------------|
+| {Service} | {operations} | {dependencies} |
+
+## Repository Interfaces
+
+| Repository | Entity | Methods |
+|------------|--------|---------|
+| {Repository} | {entity} | {methods} |
+
+## Ubiquitous Language
+
+| Term | Definition |
+|------|------------|
+| {term} | {definition} |

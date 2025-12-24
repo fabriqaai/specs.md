@@ -1,0 +1,41 @@
+# Context Configuration
+# Defines what context each agent should load on activation.
+# Only Construction Agent requires context loading at this stage.
+
+agents:
+  construction:
+    description: "Construction Agent requires project standards to generate consistent code"
+    required_context:
+      - path: standards/tech-stack.md
+        purpose: "Technology choices for code generation"
+        critical: true
+
+      - path: standards/coding-standards.md
+        purpose: "Code style and patterns for generated code"
+        critical: true
+
+    optional_context:
+      - path: standards/system-architecture.md
+        purpose: "Architectural patterns and decisions"
+
+      - path: standards/api-conventions.md
+        purpose: "API design conventions"
+
+      - path: standards/ux-guide.md
+        purpose: "UI/UX patterns for frontend code"
+
+    on_missing_critical:
+      action: warn
+      message: |
+        ⚠️ Project standards not found.
+
+        The Construction Agent needs project standards to generate consistent code.
+        Missing: {missing_files}
+
+        Please run project initialization first:
+        → Use Master Agent with 'project-init' skill
+
+        Or continue without standards (code may be inconsistent).
+
+# Note: Other agents (Master, Inception, Operations) do not require
+# standards to be loaded. They will be added here when needed.

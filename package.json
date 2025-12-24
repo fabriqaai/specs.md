@@ -1,0 +1,13 @@
+{
+  "name": "specsmd",
+  "version": "0.2.25",
+  "private": true,
+  "description": "Root workspace for specsmd development",
+  "scripts": {
+    "test": "npm run test:schema",
+    "test:schema": "cd src && npm run test:schema",
+    "lint:md": "cd src && npm run lint:md",
+    "lint:md:fix": "cd src && npm run lint:md:fix",
+    "validate": "cd src && npm run validate"
+  }
+}
