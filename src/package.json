@@ -1,6 +1,6 @@
 {
   "name": "specsmd",
-  "version": "0.0.33",
+  "version": "1.0.0",
   "description": "Multi-agent orchestration system for AI-native software development. Delivers AI-DLC, Agile, and custom SDLC flows as markdown-based agent systems.",
   "main": "lib/installer.js",
   "bin": {
@@ -66,19 +66,29 @@
     "vitest": "^4.0.15"
   },
   "release": {
-    "branches": ["main"],
+    "branches": [
+      "main"
+    ],
     "plugins": [
       "@semantic-release/commit-analyzer",
       "@semantic-release/release-notes-generator",
       "@semantic-release/npm",
-      ["@semantic-release/github", {
-        "successComment": false,
-        "failComment": false
-      }],
-      ["@semantic-release/git", {
-        "assets": ["package.json"],
-        "message": "chore(release): ${nextRelease.version} [skip ci]"
-      }]
+      [
+        "@semantic-release/github",
+        {
+          "successComment": false,
+          "failComment": false
+        }
+      ],
+      [
+        "@semantic-release/git",
+        {
+          "assets": [
+            "package.json"
+          ],
+          "message": "chore(release): ${nextRelease.version} [skip ci]"
+        }
+      ]
     ]
   }
 }
