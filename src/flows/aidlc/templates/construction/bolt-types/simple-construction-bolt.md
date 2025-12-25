@@ -25,12 +25,12 @@
 **Stages MUST be executed in this exact order:**
 
 ```text
-Stage 1: Spec → Stage 2: Implement → Stage 3: Test
+Stage 1: Plan → Stage 2: Implement → Stage 3: Test
 ```
 
 **Stage Overview:**
 
-- ✅/[ ] **1. Spec** (Required) → `implementation-plan.md`
+- ✅/[ ] **1. Plan** (Required) → `implementation-plan.md`
 - ✅/[ ] **2. Implement** (Required) → Source code + `implementation-walkthrough.md`
 - ✅/[ ] **3. Test** (Required) → Tests + `test-walkthrough.md`
 
@@ -84,7 +84,7 @@ This bolt type provides a lightweight construction process for work that doesn't
 
 ## Stages
 
-### Stage 1: Spec
+### Stage 1: Plan
 
 **Objective**: Define what to build with clear requirements
 
@@ -105,7 +105,7 @@ This bolt type provides a lightweight construction process for work that doesn't
 
 ```markdown
 ---
-stage: spec
+stage: plan
 bolt: {bolt-id}
 created: {timestamp}
 ---
@@ -137,7 +137,7 @@ created: {timestamp}
 - [ ] Dependencies identified
 - [ ] Acceptance criteria documented
 
-**⛔ HUMAN Checkpoint**: Present spec summary and **STOP**. Wait for user to confirm before proceeding to Stage 2.
+**⛔ HUMAN Checkpoint**: Present plan summary and **STOP**. Wait for user to confirm before proceeding to Stage 2.
 
 ---
 
@@ -244,7 +244,7 @@ created: {timestamp}
 1 - **Write unit tests**: Test individual functions/components
 2 - **Write integration tests**: Test API endpoints or component interactions
 3 - **Run test suite**: Execute all tests
-4 - **Verify acceptance criteria**: Check against spec
+4 - **Verify acceptance criteria**: Check against plan
 5 - **Document results**: Create test report
 
 **Artifact**: `test-walkthrough.md`
@@ -295,7 +295,7 @@ Bolt instance tracks progress:
 ---
 current_stage: implement
 stages_completed:
-  - name: spec
+  - name: plan
     completed: 2024-12-05T10:00:00Z
     artifact: implementation-plan.md
 status: in-progress
@@ -313,7 +313,7 @@ For Stage 2 (Implement) and Stage 3 (Test), load all artifacts from the bolt fol
 **Load all files in this folder**, which may include:
 
 - `bolt.md` - Bolt instance metadata
-- `implementation-plan.md` - Implementation plan from Stage 1
+- `implementation-plan.md` - Plan from Stage 1
 - `implementation-walkthrough.md` - Developer notes from Stage 2 (if exists)
 
 This ensures later stages have full context from earlier work.

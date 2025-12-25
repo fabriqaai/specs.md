@@ -54,7 +54,7 @@ AI-DLC is a reimagined development methodology where AI drives the workflow and 
    - Stage 5: Test → AI writes and runs tests
 
    **Simple Bolt** (for straightforward tasks):
-   - Stage 1: Spec → Define what to build
+   - Stage 1: Plan → Define what to build
    - Stage 2: Implement → AI generates code
    - Stage 3: Test → AI writes and runs tests
 
