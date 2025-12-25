@@ -6,7 +6,7 @@ import { handleInstallCommand } from './installHandler';
  * Shows a branded onboarding experience with installation instructions.
  */
 export class WelcomeViewProvider implements vscode.WebviewViewProvider {
-    public static readonly viewType = 'specsmd.welcomeView';
+    public static readonly viewType = 'specsmdWelcome';
 
     private _view?: vscode.WebviewView;
 
