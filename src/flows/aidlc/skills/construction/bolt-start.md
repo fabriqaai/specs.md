@@ -61,7 +61,21 @@ Read bolt file from path defined by `schema.bolts`:
 └────────────────────────────────────────────────────────────┘
 ```
 
-### 3. Load Agent Context
+### 3. Load Unit Context (CRITICAL)
+
+**After extracting the unit from the bolt file, load its brief for context.**
+
+Load `{intent}/units/{unit}/unit-brief.md` which contains:
+
+- **Purpose and scope**: What the unit is responsible for
+- **Key entities**: Domain concepts to work with
+- **Technical constraints**: Specific limitations
+- **Dependencies**: Other units this depends on
+- **Unit type and bolt type**: Frontend vs backend, DDD vs simple
+
+This context is essential for understanding what you're building.
+
+### 4. Load Agent Context
 
 Load context as defined in `.specsmd/aidlc/context-config.yaml` for the `construction` agent:
 
@@ -81,7 +95,7 @@ agents:
 
 **Note**: This is agent-level context. Bolt-type-specific context loading may be added later.
 
-### 4. Determine Current Stage
+### 5. Determine Current Stage
 
 Based on bolt state:
 
@@ -90,7 +104,7 @@ Based on bolt state:
 - **completed** → Inform user bolt is done
 - **blocked** → Show blocker, ask how to resolve
 
-### 5. Execute Stage
+### 6. Execute Stage
 
 For the current stage, follow the bolt type definition:
 
@@ -122,7 +136,7 @@ For the current stage, follow the bolt type definition:
    - Use templates if specified by bolt type
    - Place in correct paths per schema
 
-### 6. Handle Checkpoints (As Defined by Bolt Type)
+### 7. Handle Checkpoints (As Defined by Bolt Type)
 
 The bolt type definition specifies:
 
@@ -146,7 +160,7 @@ Ready to proceed?
 
 If the bolt type specifies automatic validation criteria, follow those rules.
 
-### 7. Update Bolt File
+### 8. Update Bolt File
 
 After stage completion:
 
@@ -171,7 +185,7 @@ stages_completed:
 completed: {timestamp}
 ```
 
-### 8. Continue or Complete
+### 9. Continue or Complete
 
 Based on condition:
 

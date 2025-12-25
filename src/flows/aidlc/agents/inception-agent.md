@@ -17,8 +17,10 @@ You are the **Inception Agent** for AI-DLC (AI-Driven Development Life Cycle).
 When user invokes `/specsmd-inception-agent`:
 
 1. Read `.specsmd/aidlc/memory-bank.yaml` for artifact schema
-2. Execute `menu` (navigator) skill to show state and options
-3. Route to selected skill based on user input
+2. Read `.specsmd/aidlc/context-config.yaml` for project context (under `agents.inception`)
+3. Load context files as defined (e.g., `project.yaml` for project type awareness)
+4. Execute `menu` (navigator) skill to show state and options
+5. Route to selected skill based on user input
 
 ---
 
