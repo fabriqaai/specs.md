@@ -3,16 +3,25 @@ id: bolt-welcome-view-1
 unit: welcome-view
 intent: 011-vscode-extension
 type: simple-construction-bolt
-status: planned
+status: complete
 stories:
   - 001-welcome-view-ui
   - 002-install-button-flow
   - 003-post-installation-detection
 created: 2025-12-25T17:00:00Z
-started: null
-completed: null
+started: 2025-12-25T22:00:00Z
+completed: 2025-12-25T22:15:00Z
 current_stage: null
-stages_completed: []
+stages_completed:
+  - name: plan
+    completed: 2025-12-25T22:00:00Z
+    artifact: implementation-plan.md
+  - name: implement
+    completed: 2025-12-25T22:10:00Z
+    artifact: implementation-walkthrough.md
+  - name: test
+    completed: 2025-12-25T22:15:00Z
+    artifact: test-walkthrough.md
 
 requires_bolts:
   - bolt-artifact-parser-1
