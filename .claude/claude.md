@@ -184,4 +184,53 @@ This activates the Master Orchestrator which will:
 
 ---
 
-*Last updated: 2025-12-25 - Added dogfooding documentation*
+## 9. **Git Commit Messages (Semantic Versioning)**
+
+This project uses **semantic-release** for automatic versioning. Commit messages determine version bumps.
+
+### Required Commit Format
+
+```
+<type>: <description>
+```
+
+### Commit Types and Version Impact
+
+| Type | Version Bump | When to Use |
+|------|--------------|-------------|
+| `feat:` | Minor (0.1.0) | New feature or capability |
+| `fix:` | Patch (0.0.1) | Bug fix |
+| `feat!:` | Major (1.0.0) | Breaking change |
+| `docs:` | No release | Documentation only |
+| `chore:` | No release | Maintenance, dependencies |
+| `refactor:` | No release | Code refactor, no behavior change |
+| `style:` | No release | Formatting, whitespace |
+| `test:` | No release | Adding or updating tests |
+
+### Examples
+
+```bash
+# Triggers releases
+feat: add YAML validation support
+fix: resolve memory leak in file watcher
+feat!: change CLI argument format
+
+# No release triggered
+docs: update README installation steps
+chore: update dependencies
+refactor: simplify parser logic
+test: add unit tests for validator
+```
+
+### Important Rules
+
+- **Always use lowercase** for the type prefix
+- **Use present tense** ("add feature" not "added feature")
+- **Be concise but descriptive** in the description
+- **Breaking changes** can also use footer: `BREAKING CHANGE: description`
+
+See `/dev_release_guide.md` for full workflow documentation.
+
+---
+
+*Last updated: 2025-12-25 - Added semantic versioning commit guidelines*

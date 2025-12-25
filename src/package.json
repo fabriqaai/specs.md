@@ -10,9 +10,9 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:schema": "vitest run __tests__/unit/schema-validation/",
-    "lint:md": "markdownlint 'specs/**/*.md' 'flows/**/*.md' --config ../.markdownlint.yaml",
-    "lint:md:fix": "markdownlint 'specs/**/*.md' 'flows/**/*.md' --config ../.markdownlint.yaml --fix",
-    "validate": "npm run test:schema && npm run lint:md"
+    "lint:md": "markdownlint '../memory-bank/**/*.md' 'flows/**/*.md' --config ../.markdownlint.yaml",
+    "lint:md:fix": "markdownlint '../memory-bank/**/*.md' 'flows/**/*.md' --config ../.markdownlint.yaml --fix",
+    "validate:all": "npm run test && npm run lint:md"
   },
   "keywords": [
     "ai-dlc",
@@ -23,7 +23,8 @@
     "copilot",
     "ai-native",
     "agents",
-    "workflow"
+    "workflow",
+    "spec-driven"
   ],
   "author": "specsmd team",
   "license": "MIT",
@@ -51,15 +52,33 @@
     "node": ">=14.0.0"
   },
   "devDependencies": {
+    "@semantic-release/git": "^10.0.1",
     "@types/js-yaml": "^4.0.9",
     "@types/node": "^24.10.2",
     "glob": "^13.0.0",
     "markdownlint": "^0.40.0",
     "markdownlint-cli": "^0.46.0",
     "remark-parse": "^11.0.0",
+    "semantic-release": "^24.2.0",
     "typescript": "^5.9.3",
     "unified": "^11.0.5",
     "unist-util-visit": "^5.0.0",
     "vitest": "^4.0.15"
+  },
+  "release": {
+    "branches": ["main"],
+    "plugins": [
+      "@semantic-release/commit-analyzer",
+      "@semantic-release/release-notes-generator",
+      "@semantic-release/npm",
+      ["@semantic-release/github", {
+        "successComment": false,
+        "failComment": false
+      }],
+      ["@semantic-release/git", {
+        "assets": ["package.json"],
+        "message": "chore(release): ${nextRelease.version} [skip ci]"
+      }]
+    ]
   }
 }

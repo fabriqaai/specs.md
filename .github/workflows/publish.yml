@@ -1,40 +1,52 @@
-name: Publish to npm
+name: Release
 
 on:
-  workflow_run:
-    workflows: ["Tests"]
+  push:
     branches: [main]
-    types:
-      - completed
-  release:
-    types: [published]
-  workflow_dispatch:
-    inputs:
-      version:
-        description: 'Version bump type (patch, minor, major)'
-        required: true
-        default: 'patch'
-        type: choice
-        options:
-          - patch
-          - minor
-          - major
 
 jobs:
-  publish:
+  test:
     runs-on: ubuntu-latest
-    if: |
-      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success') ||
-      (github.event_name == 'release') ||
-      (github.event_name == 'workflow_dispatch')
+    strategy:
+      matrix:
+        node-version: [20, 22]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+          cache-dependency-path: src/package-lock.json
+
+      - name: Install dependencies
+        working-directory: src
+        run: npm ci
+
+      - name: Lint markdown files
+        working-directory: src
+        run: npm run lint:md
+
+      - name: Run schema validation tests
+        working-directory: src
+        run: npm run test:schema
+
+      - name: Run all tests
+        working-directory: src
+        run: npm test
+
+  release:
+    needs: test
+    runs-on: ubuntu-latest
     permissions:
       contents: write
-    defaults:
-      run:
-        working-directory: src
+      issues: write
+      pull-requests: write
     steps:
       - uses: actions/checkout@v4
         with:
+          fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Setup Node.js
@@ -43,35 +55,16 @@ jobs:
           node-version: '20'
           registry-url: 'https://registry.npmjs.org'
 
-      - name: Copy README to src for npm package
-        run: cp ../README.md ./README.md
-
       - name: Install dependencies
-        run: npm ci --ignore-scripts || npm install
+        working-directory: src
+        run: npm ci
 
-      - name: Bump version (workflow_run or manual trigger)
-        if: github.event_name == 'workflow_run' || github.event_name == 'workflow_dispatch'
-        run: |
-          VERSION_TYPE=${{ inputs.version || 'patch' }}
-          npm version $VERSION_TYPE --no-git-tag-version
-          echo "VERSION=$(node -p "require('./package.json').version")" >> $GITHUB_ENV
+      - name: Copy README to src for npm package
+        run: cp README.md src/README.md
 
-      - name: Get version from package.json
-        if: github.event_name == 'release'
-        run: echo "VERSION=$(node -p "require('./package.json').version")" >> $GITHUB_ENV
-
-      - name: Publish to npm
-        run: npm publish --access public
+      - name: Run semantic-release
+        working-directory: src
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-
-      - name: Commit version bump
-        if: github.event_name == 'workflow_run' || github.event_name == 'workflow_dispatch'
-        run: |
-          cd ..
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git pull --rebase || true
-          git add src/package.json src/package-lock.json
-          git commit -m "chore: bump version to ${{ env.VERSION }}" || true
-          git push || echo "Push failed - version already published"
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npx semantic-release
