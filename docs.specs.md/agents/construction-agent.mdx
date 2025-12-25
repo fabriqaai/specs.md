@@ -213,11 +213,11 @@ Use this when:
 - Priorities changed
 - Estimates were off
 
-## Human Gates
+## Human Checkpoints
 
-The Construction Agent's gates are defined by the bolt type. Each bolt type has its own checkpoint structure.
+The Construction Agent's checkpoints are defined by the bolt type. Each bolt type has its own checkpoint structure.
 
-### DDD Construction (5 gates)
+### DDD Construction (5 checkpoints)
 
 ```mermaid
 flowchart LR
@@ -252,7 +252,7 @@ flowchart LR
 | **Gate 4** | Implement | Review code before testing |
 | **Gate 5** | Test | Verify all tests pass, bolt complete |
 
-### Simple Construction (3 gates)
+### Simple Construction (3 checkpoints)
 
 ```mermaid
 flowchart LR
@@ -326,8 +326,8 @@ Each bolt produces artifacts in the Memory Bank:
   <Accordion title="Complete Before Starting">
     Ensure Inception is complete before starting Construction. Missing requirements cause rework.
   </Accordion>
-  <Accordion title="Review Carefully at Gates">
-    Stage gates are your opportunity to catch issues. Don't rubber-stamp approvals.
+  <Accordion title="Review Carefully at Checkpoints">
+    Checkpoints are your opportunity to catch issues. Don't rubber-stamp approvals.
   </Accordion>
   <Accordion title="Keep Bolts Focused">
     If a bolt is taking too long, the scope may be too big. Consider splitting.

@@ -108,7 +108,7 @@ Use consistent styling for all Mermaid diagrams. Copy these styles into your dia
 | Inception          | Indigo | `#818CF8` | Inception phase, planning     |
 | Construction       | Green  | `#34D399` | Construction phase, building  |
 | Operations         | Amber  | `#FBBF24` | Operations phase, deployment  |
-| Human/Validation   | Pink   | `#F472B6` | Human review, gates           |
+| Human/Validation   | Pink   | `#F472B6` | Human review, checkpoints     |
 | AI/System          | Cyan   | `#22D3EE` | AI actions, automation        |
 | Core/Infrastructure| Blue   | `#60A5FA` | Core components               |
 | Future/Placeholder | Gray   | `#64748B` | Planned features              |
@@ -123,7 +123,7 @@ style CA fill:#34D399,stroke:#10B981,color:#fff
 style OA fill:#FBBF24,stroke:#F59E0B,color:#fff
 ```
 
-**Stage Gates Diagram:**
+**Human Checkpoints Diagram:**
 ```
 style Stage fill:#818CF8,stroke:#6366F1,color:#fff
 style Gate fill:#F472B6,stroke:#EC4899,color:#fff
