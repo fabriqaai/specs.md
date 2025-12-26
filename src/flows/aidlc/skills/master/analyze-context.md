@@ -81,6 +81,7 @@ Bolt complete → Stories complete → Unit complete (if all bolts done) → Int
 #### 6.1 Story Status Check
 
 For each completed bolt:
+
 - Read bolt's `stories` array
 - Check each story file's `status` field
 - **Inconsistency**: Bolt complete but story has `status: draft` or `status: in-progress`
@@ -88,6 +89,7 @@ For each completed bolt:
 #### 6.2 Unit Status Check
 
 For each unit:
+
 - Find all bolts for unit: `memory-bank/bolts/bolt-{unit}-*/bolt.md`
 - Determine expected status:
   - If ANY bolt `in-progress` → unit should be `in-progress`
@@ -99,6 +101,7 @@ For each unit:
 #### 6.3 Intent Status Check
 
 For each intent:
+
 - Read all unit-briefs: `{intent}/units/*/unit-brief.md`
 - Determine expected status:
   - If ANY unit `in-progress` → intent should be `construction`
@@ -129,6 +132,7 @@ If inconsistencies found, report them:
 #### 6.5 Auto-Fix (On User Confirmation)
 
 If user confirms fix:
+
 - Update each artifact's frontmatter `status` field
 - Update `updated` timestamp to current date
 - Log changes to `memory-bank/maintenance-log.md`
