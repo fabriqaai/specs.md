@@ -965,6 +965,14 @@
       color: var(--accent-primary);
     }
 
+    .metric-value.green {
+      color: var(--status-complete);
+    }
+
+    .metric-value.blue {
+      color: #3b82f6;
+    }
+
     .metric-label {
       font-size: 9px;
       color: var(--vscode-descriptionForeground);
@@ -1195,12 +1203,12 @@
       <div class="metrics-title">Overall Progress</div>
       <div class="metrics-grid">
         <div class="metric-item">
-          <div class="metric-value" id="metric-bolts">10</div>
-          <div class="metric-label">Bolts</div>
+          <div class="metric-value green" id="metric-intents">1/2</div>
+          <div class="metric-label">Intents</div>
         </div>
         <div class="metric-item">
-          <div class="metric-value" id="metric-stages">50</div>
-          <div class="metric-label">Stages</div>
+          <div class="metric-value blue" id="metric-bolts">3/10</div>
+          <div class="metric-label">Bolts</div>
         </div>
         <div class="metric-item">
           <div class="metric-value highlight" id="metric-complete">27%</div>
@@ -1850,15 +1858,27 @@
     }
 
     function renderMetrics() {
+      // Calculate intents completion (based on all stories in intent being complete)
+      const totalIntents = intents.length;
+      const completedIntents = intents.filter(intent => {
+        const intentUnits = units.filter(u => intent.units.includes(u.id));
+        const intentStories = intentUnits.flatMap(u => stories.filter(s => s.unitId === u.id));
+        return intentStories.length > 0 && intentStories.every(s => s.status === 'complete');
+      }).length;
+
+      // Calculate bolts completion
       const totalBolts = bolts.length;
+      const completedBolts = bolts.filter(b => b.status === 'complete').length;
+
+      // Calculate total completion rate (based on stages)
       const totalStages = bolts.reduce((acc, b) => acc + Object.keys(b.stages).length, 0);
       const completedStages = bolts.reduce((acc, b) => {
         return acc + Object.values(b.stages).filter(s => s === 'complete').length;
       }, 0);
       const completePercent = Math.round((completedStages / totalStages) * 100);
 
-      document.getElementById('metric-bolts').textContent = totalBolts;
-      document.getElementById('metric-stages').textContent = totalStages;
+      document.getElementById('metric-intents').textContent = `${completedIntents}/${totalIntents}`;
+      document.getElementById('metric-bolts').textContent = `${completedBolts}/${totalBolts}`;
       document.getElementById('metric-complete').textContent = completePercent + '%';
     }
 
