@@ -1,14 +1,28 @@
 /**
  * WebviewViewProvider implementation for the SpecsMD sidebar.
  * Provides a tabbed interface with Bolts, Specs, and Overview views.
+ *
+ * ARCHITECTURE:
+ * This provider uses the StateStore for centralized state management.
+ * It depends on IStateReader (not concrete StateStore) for reading state.
+ *
+ *   File Watcher → Parser → StateStore → WebviewProvider → Webview
+ *                               ↓
+ *                        [Computed State]
  */
 
 import * as vscode from 'vscode';
-import { MemoryBankModel, Bolt, ArtifactStatus } from '../parser/types';
+import { Bolt, ArtifactStatus } from '../parser/types';
 import { scanMemoryBank } from '../parser/artifactParser';
-import { computeBoltDependencies, getUpNextBolts } from '../parser/dependencyComputation';
-import { buildActivityFeed, formatRelativeTime } from '../parser/activityFeed';
-import { getWebviewContent } from './webviewContent';
+import { formatRelativeTime } from '../parser/activityFeed';
+import { getWebviewContent } from '../webview';
+import {
+    StateStore,
+    createStateStore,
+    IStateReader,
+    TabId as StateTabId,
+    ActivityFilter as StateActivityFilter
+} from '../state';
 import {
     WebviewData,
     TabId,
@@ -28,51 +42,60 @@ import {
     ActivityFilter,
     IntentData,
     UnitData,
-    StoryData
+    StoryData,
+    NextActionData
 } from './webviewMessaging';
 
 /**
  * WebviewViewProvider for the SpecsMD sidebar.
+ * Uses StateStore for centralized state management.
  */
 export class SpecsmdWebviewProvider implements vscode.WebviewViewProvider {
     public static readonly viewType = 'specsmdExplorer';
 
     private _view?: vscode.WebviewView;
-    private _model: MemoryBankModel | null = null;
-    private _activeTab: TabId = DEFAULT_TAB;
-    private _focusCardExpanded: boolean = false;
-    private _activityFilter: ActivityFilter = DEFAULT_ACTIVITY_FILTER;
-    private _activityHeight: number = DEFAULT_ACTIVITY_HEIGHT;
+    private _store: StateStore;
     private _workspacePath: string | undefined;
     private _context: vscode.ExtensionContext;
+    private _unsubscribe?: () => void;
 
     constructor(context: vscode.ExtensionContext, workspacePath?: string) {
         this._context = context;
         this._workspacePath = workspacePath;
 
-        // Restore saved tab state
-        const savedTab = context.workspaceState.get<TabId>(TAB_STATE_KEY);
-        if (savedTab && ['bolts', 'specs', 'overview'].includes(savedTab)) {
-            this._activeTab = savedTab;
-        }
+        // Create the state store
+        this._store = createStateStore();
 
-        // Restore saved focus card state
-        const savedFocusExpanded = context.workspaceState.get<boolean>(FOCUS_EXPANDED_KEY);
-        if (savedFocusExpanded !== undefined) {
-            this._focusCardExpanded = savedFocusExpanded;
-        }
+        // Restore saved UI state from workspaceState
+        this._restoreUIState();
 
-        // Restore saved activity filter
-        const savedActivityFilter = context.workspaceState.get<ActivityFilter>(ACTIVITY_FILTER_KEY);
-        if (savedActivityFilter && ['all', 'stages', 'bolts'].includes(savedActivityFilter)) {
-            this._activityFilter = savedActivityFilter;
-        }
+        // Subscribe to store changes to update the webview
+        this._unsubscribe = this._store.subscribe(() => {
+            this._updateWebview();
+        });
+    }
 
-        // Restore saved activity height
-        const savedActivityHeight = context.workspaceState.get<number>(ACTIVITY_HEIGHT_KEY);
-        if (savedActivityHeight !== undefined) {
-            this._activityHeight = Math.max(MIN_ACTIVITY_HEIGHT, Math.min(MAX_ACTIVITY_HEIGHT, savedActivityHeight));
-        }
+    /**
+     * Restores UI state from VS Code workspace state.
+     */
+    private _restoreUIState(): void {
+        const savedTab = this._context.workspaceState.get<TabId>(TAB_STATE_KEY);
+        const savedFocusExpanded = this._context.workspaceState.get<boolean>(FOCUS_EXPANDED_KEY);
+        const savedActivityFilter = this._context.workspaceState.get<ActivityFilter>(ACTIVITY_FILTER_KEY);
+        const savedActivityHeight = this._context.workspaceState.get<number>(ACTIVITY_HEIGHT_KEY);
+
+        this._store.setUIState({
+            activeTab: (savedTab && ['bolts', 'specs', 'overview'].includes(savedTab))
+                ? savedTab as StateTabId
+                : DEFAULT_TAB as StateTabId,
+            focusCardExpanded: savedFocusExpanded ?? false,
+            activityFilter: (savedActivityFilter && ['all', 'stages', 'bolts'].includes(savedActivityFilter))
+                ? savedActivityFilter as StateActivityFilter
+                : DEFAULT_ACTIVITY_FILTER as StateActivityFilter,
+            activitySectionHeight: savedActivityHeight !== undefined
+                ? Math.max(MIN_ACTIVITY_HEIGHT, Math.min(MAX_ACTIVITY_HEIGHT, savedActivityHeight))
+                : DEFAULT_ACTIVITY_HEIGHT
+        });
     }
 
     /**
@@ -115,48 +138,46 @@ export class SpecsmdWebviewProvider implements vscode.WebviewViewProvider {
     public async refresh(): Promise<void> {
         const workspacePath = this._getWorkspacePath();
         if (workspacePath) {
-            this._model = await scanMemoryBank(workspacePath);
-            // Compute dependencies after scanning
-            if (this._model && this._model.bolts.length > 0) {
-                this._model.bolts = computeBoltDependencies(this._model.bolts);
-            }
+            const model = await scanMemoryBank(workspacePath);
+            this._store.loadFromModel(model, workspacePath);
         } else {
-            this._model = null;
+            // Reset store to empty state
+            this._store.setEntities({
+                intents: [],
+                units: [],
+                stories: [],
+                bolts: [],
+                standards: []
+            });
+            this._store.setWorkspace({
+                name: '',
+                path: '',
+                memoryBankPath: '',
+                isProject: false
+            });
         }
         this._updateWebview();
     }
 
     /**
-     * Gets the current model (for testing).
+     * Gets the state store reader interface (for testing).
      */
-    public getModel(): MemoryBankModel | null {
-        return this._model;
-    }
-
-    /**
-     * Sets the model directly (for testing).
-     */
-    public setModel(model: MemoryBankModel): void {
-        this._model = model;
-        // Compute dependencies
-        if (this._model && this._model.bolts.length > 0) {
-            this._model.bolts = computeBoltDependencies(this._model.bolts);
-        }
-        this._updateWebview();
+    public getStateReader(): IStateReader {
+        return this._store;
     }
 
     /**
      * Gets the active tab.
      */
     public getActiveTab(): TabId {
-        return this._activeTab;
+        return this._store.getState().ui.activeTab;
     }
 
     /**
      * Sets the active tab and updates the view.
      */
     public setActiveTab(tab: TabId): void {
-        this._activeTab = tab;
+        this._store.setUIState({ activeTab: tab as StateTabId });
         this._context.workspaceState.update(TAB_STATE_KEY, tab);
         this._updateWebview();
     }
@@ -184,15 +205,17 @@ export class SpecsmdWebviewProvider implements vscode.WebviewViewProvider {
         this._view.webview.html = getWebviewContent(
             this._view.webview,
             data,
-            this._activeTab
+            this._store.getState().ui.activeTab
         );
     }
 
     /**
-     * Builds the data structure for the webview.
+     * Builds the data structure for the webview from StateStore.
      */
     private _buildWebviewData(): WebviewData {
-        if (!this._model || !this._model.isProject) {
+        const state = this._store.getState();
+
+        if (!state.workspace.isProject) {
             return {
                 currentIntent: null,
                 stats: { active: 0, queued: 0, done: 0, blocked: 0 },
@@ -201,89 +224,100 @@ export class SpecsmdWebviewProvider implements vscode.WebviewViewProvider {
                 activityEvents: [],
                 intents: [],
                 standards: [],
-                focusCardExpanded: this._focusCardExpanded,
-                activityFilter: this._activityFilter,
-                activityHeight: this._activityHeight
+                nextActions: [],
+                focusCardExpanded: state.ui.focusCardExpanded,
+                activityFilter: state.ui.activityFilter,
+                activityHeight: state.ui.activitySectionHeight
             };
         }
 
-        // Get current intent (first intent for now)
-        const currentIntent = this._model.intents.length > 0
-            ? { name: this._model.intents[0].name, number: this._model.intents[0].number }
+        // Get computed values from state
+        const { currentIntent, activeBolt, pendingBolts, activityFeed, boltStats, nextActions } = state.computed;
+
+        // Transform current intent
+        const currentIntentData = currentIntent
+            ? { name: currentIntent.name, number: currentIntent.number }
             : null;
 
-        // Calculate stats
-        const stats = this._calculateStats(this._model.bolts);
+        // Transform active bolt
+        const activeBoltData = activeBolt
+            ? this._transformActiveBolt(activeBolt)
+            : null;
 
-        // Get active bolt
-        const activeBolt = this._getActiveBolt(this._model.bolts);
+        // Transform pending bolts to queue
+        const upNextQueue = pendingBolts.slice(0, 5).map(bolt => this._transformQueuedBolt(bolt));
 
-        // Get up next queue
-        const upNextQueue = this._getUpNextQueue(this._model.bolts);
-
-        // Build activity events
-        const activityEvents = this._buildActivityEvents(this._model.bolts);
+        // Transform activity events
+        const now = new Date();
+        const activityEvents: ActivityEventData[] = activityFeed.slice(0, 10).map(event => {
+            // Look up bolt path from store
+            const bolt = state.bolts.get(event.targetId);
+            return {
+                id: event.id,
+                type: event.type,
+                text: event.text,
+                target: event.targetName,
+                tag: event.tag,
+                relativeTime: formatRelativeTime(event.timestamp, now),
+                exactTime: this._formatExactTime(event.timestamp),
+                path: bolt?.path
+            };
+        });
 
         // Build intents data for specs view
         const intents = this._buildIntentsData();
 
         // Build standards data
-        const standards = this._model.standards.map(s => ({
+        const standards = Array.from(state.standards.values()).map(s => ({
             name: s.name,
             path: s.path
         }));
 
+        // Transform next actions
+        const nextActionsData: NextActionData[] = nextActions.slice(0, 5).map(action => ({
+            type: action.type,
+            priority: action.priority,
+            title: action.title,
+            description: action.description,
+            targetId: action.targetId,
+            targetName: action.targetName
+        }));
+
         return {
-            currentIntent,
-            stats,
-            activeBolt,
+            currentIntent: currentIntentData,
+            stats: boltStats,
+            activeBolt: activeBoltData,
             upNextQueue,
             activityEvents,
             intents,
             standards,
-            focusCardExpanded: this._focusCardExpanded,
-            activityFilter: this._activityFilter,
-            activityHeight: this._activityHeight
+            nextActions: nextActionsData,
+            focusCardExpanded: state.ui.focusCardExpanded,
+            activityFilter: state.ui.activityFilter,
+            activityHeight: state.ui.activitySectionHeight
         };
     }
 
     /**
-     * Calculates bolt statistics.
+     * Transforms a Bolt to ActiveBoltData.
      */
-    private _calculateStats(bolts: Bolt[]): { active: number; queued: number; done: number; blocked: number } {
-        return {
-            active: bolts.filter(b => b.status === ArtifactStatus.InProgress).length,
-            queued: bolts.filter(b => b.status === ArtifactStatus.Draft).length,
-            done: bolts.filter(b => b.status === ArtifactStatus.Complete).length,
-            blocked: bolts.filter(b => b.status === ArtifactStatus.Blocked).length
-        };
-    }
-
-    /**
-     * Gets the active bolt data.
-     */
-    private _getActiveBolt(bolts: Bolt[]): ActiveBoltData | null {
-        const active = bolts.find(b => b.status === ArtifactStatus.InProgress);
-        if (!active) {
-            return null;
-        }
-
-        const stagesComplete = active.stages.filter(s => s.status === ArtifactStatus.Complete).length;
+    private _transformActiveBolt(bolt: Bolt): ActiveBoltData {
+        const stagesComplete = bolt.stages.filter(s => s.status === ArtifactStatus.Complete).length;
 
         return {
-            id: active.id,
-            name: active.id,
-            type: this._formatBoltType(active.type),
-            currentStage: active.currentStage,
+            id: bolt.id,
+            name: bolt.id,
+            type: this._formatBoltType(bolt.type),
+            currentStage: bolt.currentStage,
             stagesComplete,
-            stagesTotal: active.stages.length,
+            stagesTotal: bolt.stages.length,
             storiesComplete: 0, // Would need story status tracking
-            storiesTotal: active.stories.length,
-            stages: active.stages.map(s => ({
+            storiesTotal: bolt.stories.length,
+            stages: bolt.stages.map(s => ({
                 name: s.name,
                 status: this._mapStatus(s.status)
             })),
-            stories: active.stories.map(id => ({
+            stories: bolt.stories.map(id => ({
                 id,
                 name: id,
                 status: 'pending' as const // Would need story status lookup
@@ -292,11 +326,10 @@ export class SpecsmdWebviewProvider implements vscode.WebviewViewProvider {
     }
 
     /**
-     * Gets the up next queue.
+     * Transforms a Bolt to QueuedBoltData.
      */
-    private _getUpNextQueue(bolts: Bolt[]): QueuedBoltData[] {
-        const upNext = getUpNextBolts(bolts);
-        return upNext.slice(0, 5).map(bolt => ({
+    private _transformQueuedBolt(bolt: Bolt): QueuedBoltData {
+        return {
             id: bolt.id,
             name: bolt.id,
             type: this._formatBoltType(bolt.type),
@@ -308,35 +341,32 @@ export class SpecsmdWebviewProvider implements vscode.WebviewViewProvider {
                 name: s.name,
                 status: this._mapStatus(s.status)
             }))
-        }));
+        };
     }
 
     /**
-     * Builds activity events.
+     * Formats a timestamp for tooltip display.
      */
-    private _buildActivityEvents(bolts: Bolt[]): ActivityEventData[] {
-        const events = buildActivityFeed(bolts);
-        const now = new Date();
-
-        return events.slice(0, 10).map(event => ({
-            id: event.id,
-            type: event.type,
-            text: event.text,
-            target: event.targetName,
-            tag: event.tag,
-            relativeTime: formatRelativeTime(event.timestamp, now)
-        }));
+    private _formatExactTime(date: Date): string {
+        return date.toLocaleString(undefined, {
+            weekday: 'short',
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit'
+        });
     }
 
     /**
-     * Builds intents data for specs view.
+     * Builds intents data for specs view from StateStore.
      */
     private _buildIntentsData(): IntentData[] {
-        if (!this._model) {
-            return [];
-        }
+        const state = this._store.getState();
+        const intents = Array.from(state.intents.values());
 
-        return this._model.intents.map(intent => {
+        return intents.map(intent => {
             const units: UnitData[] = intent.units.map(unit => {
                 const stories: StoryData[] = unit.stories.map(story => ({
                     id: story.id,
@@ -424,27 +454,27 @@ export class SpecsmdWebviewProvider implements vscode.WebviewViewProvider {
                 break;
 
             case 'toggleFocus':
-                this._focusCardExpanded = message.expanded;
+                this._store.setUIState({ focusCardExpanded: message.expanded });
                 this._context.workspaceState.update(FOCUS_EXPANDED_KEY, message.expanded);
                 // No need to re-render, state is tracked client-side
                 break;
 
             case 'activityFilter':
-                this._activityFilter = message.filter;
+                this._store.setUIState({ activityFilter: message.filter as StateActivityFilter });
                 this._context.workspaceState.update(ACTIVITY_FILTER_KEY, message.filter);
                 // No need to re-render, filtering is done client-side
                 break;
 
             case 'activityResize': {
                 const height = Math.max(MIN_ACTIVITY_HEIGHT, Math.min(MAX_ACTIVITY_HEIGHT, message.height));
-                this._activityHeight = height;
+                this._store.setUIState({ activitySectionHeight: height });
                 this._context.workspaceState.update(ACTIVITY_HEIGHT_KEY, height);
                 // No need to re-render, resize is done client-side
                 break;
             }
 
             case 'startBolt':
-                vscode.window.showInformationMessage(`Starting bolt: ${message.boltId}`);
+                await this._showStartBoltCommand(message.boltId);
                 break;
 
             case 'openExternal':
@@ -469,10 +499,31 @@ export class SpecsmdWebviewProvider implements vscode.WebviewViewProvider {
     }
 
     /**
+     * Shows a popup with the command to start a bolt.
+     */
+    private async _showStartBoltCommand(boltId: string): Promise<void> {
+        const command = `/specsmd-construction-agent --bolt-id="${boltId}"`;
+
+        const result = await vscode.window.showInformationMessage(
+            `Run this command in Claude Code to start the bolt:\n\n${command}`,
+            { modal: true },
+            'Copy to Clipboard'
+        );
+
+        if (result === 'Copy to Clipboard') {
+            await vscode.env.clipboard.writeText(command);
+            vscode.window.showInformationMessage('Command copied to clipboard!');
+        }
+    }
+
+    /**
      * Disposes resources.
      */
     public dispose(): void {
-        // Cleanup if needed
+        if (this._unsubscribe) {
+            this._unsubscribe();
+        }
+        this._store.dispose();
     }
 }
 

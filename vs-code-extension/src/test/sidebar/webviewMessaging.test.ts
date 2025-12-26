@@ -105,6 +105,7 @@ suite('Webview Messaging Test Suite', () => {
                 activityEvents: [],
                 intents: [],
                 standards: [],
+                nextActions: [],
                 focusCardExpanded: false,
                 activityFilter: 'all',
                 activityHeight: 200
@@ -128,6 +129,7 @@ suite('Webview Messaging Test Suite', () => {
                 activityEvents: [],
                 intents: [],
                 standards: [],
+                nextActions: [],
                 focusCardExpanded: true,
                 activityFilter: 'stages',
                 activityHeight: 350
@@ -178,7 +180,8 @@ suite('Webview Messaging Test Suite', () => {
                         text: 'Started bolt',
                         target: 'bolt-1',
                         tag: 'bolt',
-                        relativeTime: '5m ago'
+                        relativeTime: '5m ago',
+                        exactTime: 'Thu, Dec 26, 2024, 10:00:00 AM'
                     }
                 ],
                 intents: [
@@ -194,6 +197,7 @@ suite('Webview Messaging Test Suite', () => {
                 standards: [
                     { name: 'coding-standards', path: '/standards/coding.md' }
                 ],
+                nextActions: [],
                 focusCardExpanded: true,
                 activityFilter: 'bolts',
                 activityHeight: 300
@@ -297,7 +301,8 @@ suite('Webview Messaging Test Suite', () => {
                 text: 'Bolt created',
                 target: 'bolt-1',
                 tag: 'bolt',
-                relativeTime: '2h ago'
+                relativeTime: '2h ago',
+                exactTime: 'Thu, Dec 26, 2024, 08:00:00 AM'
             };
 
             assert.strictEqual(event.type, 'bolt-created');
@@ -311,7 +316,8 @@ suite('Webview Messaging Test Suite', () => {
                 text: 'spec stage completed',
                 target: 'bolt-1',
                 tag: 'stage',
-                relativeTime: '30m ago'
+                relativeTime: '30m ago',
+                exactTime: 'Thu, Dec 26, 2024, 09:30:00 AM'
             };
 
             assert.strictEqual(event.type, 'stage-complete');
@@ -333,7 +339,8 @@ suite('Webview Messaging Test Suite', () => {
                     text: `Event ${type}`,
                     target: 'bolt-1',
                     tag: type.includes('stage') ? 'stage' : 'bolt',
-                    relativeTime: 'now'
+                    relativeTime: 'now',
+                    exactTime: 'Thu, Dec 26, 2024, 10:00:00 AM'
                 };
                 assert.strictEqual(event.type, type);
             }

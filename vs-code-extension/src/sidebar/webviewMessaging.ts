@@ -66,6 +66,9 @@ export interface WebviewData {
     /** All standards */
     standards: StandardData[];
 
+    /** Suggested next actions */
+    nextActions: NextActionData[];
+
     /** UI State: Focus card expanded */
     focusCardExpanded: boolean;
 
@@ -126,6 +129,10 @@ export interface ActivityEventData {
     target: string;
     tag: 'bolt' | 'stage';
     relativeTime: string;
+    /** Exact timestamp for tooltip display */
+    exactTime: string;
+    /** Path to the relevant file for opening */
+    path?: string;
 }
 
 /**
@@ -168,6 +175,30 @@ export interface StoryData {
 export interface StandardData {
     name: string;
     path: string;
+}
+
+/**
+ * Next action types for suggested actions.
+ */
+export type NextActionType =
+    | 'continue-bolt'
+    | 'start-bolt'
+    | 'complete-stage'
+    | 'unblock-bolt'
+    | 'review-stories'
+    | 'create-bolt'
+    | 'celebrate';
+
+/**
+ * Next action data for Suggested Actions section.
+ */
+export interface NextActionData {
+    type: NextActionType;
+    priority: number;
+    title: string;
+    description: string;
+    targetId?: string;
+    targetName?: string;
 }
 
 /**

@@ -154,6 +154,7 @@ suite('Webview Provider Test Suite', () => {
                 activityEvents: [],
                 intents: [],
                 standards: [],
+                nextActions: [],
                 focusCardExpanded: false,
                 activityFilter: 'all',
                 activityHeight: 200

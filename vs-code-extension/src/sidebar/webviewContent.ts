@@ -4,6 +4,7 @@
 
 import * as vscode from 'vscode';
 import { WebviewData, TabId, ActiveBoltData } from './webviewMessaging';
+import { getStylesheet } from './styles';
 
 /**
  * Generates a nonce for CSP.
@@ -75,1055 +76,6 @@ export function getWebviewContent(
 </html>`;
 }
 
-/**
- * Generates the CSS stylesheet.
- */
-function getStylesheet(): string {
-    return `
-    * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-    }
-
-    body {
-        font-family: var(--vscode-font-family);
-        background: var(--vscode-sideBar-background);
-        color: var(--vscode-foreground);
-        font-size: 13px;
-        line-height: 1.4;
-    }
-
-    .sidebar {
-        display: flex;
-        flex-direction: column;
-        height: 100vh;
-    }
-
-    .header {
-        padding: 10px 12px;
-        background: var(--vscode-sideBarSectionHeader-background);
-        border-bottom: 1px solid var(--vscode-sideBarSectionHeader-border);
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-
-    .header-title {
-        font-size: 11px;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-    }
-
-    .header-actions {
-        display: flex;
-        gap: 4px;
-    }
-
-    .icon-btn {
-        background: none;
-        border: none;
-        color: var(--vscode-descriptionForeground);
-        cursor: pointer;
-        padding: 4px 6px;
-        border-radius: 4px;
-        font-size: 14px;
-        transition: all 0.15s;
-    }
-
-    .icon-btn:hover {
-        background: var(--vscode-list-hoverBackground);
-        color: var(--vscode-foreground);
-    }
-
-    /* Tabs */
-    .view-tabs {
-        display: flex;
-        background: var(--vscode-editor-background);
-        border-bottom: 1px solid var(--vscode-sideBarSectionHeader-border);
-    }
-
-    .view-tab {
-        flex: 1;
-        padding: 10px;
-        font-size: 11px;
-        font-weight: 600;
-        text-align: center;
-        background: none;
-        border: none;
-        color: var(--vscode-descriptionForeground);
-        cursor: pointer;
-        border-bottom: 2px solid transparent;
-        transition: all 0.15s;
-    }
-
-    .view-tab:hover {
-        color: var(--vscode-foreground);
-        background: var(--vscode-list-hoverBackground);
-    }
-
-    .view-tab.active {
-        color: var(--vscode-textLink-foreground);
-        border-bottom-color: var(--vscode-textLink-foreground);
-    }
-
-    /* View containers */
-    .view-container {
-        display: none;
-        flex: 1;
-        overflow-y: auto;
-        flex-direction: column;
-    }
-
-    .view-container.active {
-        display: flex;
-    }
-
-    /* Mission Status (Current Intent) */
-    .mission-status {
-        padding: 16px;
-        background: var(--vscode-editor-background);
-        border-bottom: 1px solid var(--vscode-sideBarSectionHeader-border);
-    }
-
-    .mission-label {
-        font-size: 9px;
-        color: var(--vscode-textLink-foreground);
-        text-transform: uppercase;
-        letter-spacing: 1px;
-        margin-bottom: 4px;
-    }
-
-    .mission-title {
-        font-size: 14px;
-        font-weight: 600;
-        margin-bottom: 8px;
-    }
-
-    .mission-stats {
-        display: flex;
-        gap: 16px;
-        flex-wrap: wrap;
-    }
-
-    .mission-stat {
-        display: flex;
-        align-items: center;
-        gap: 6px;
-    }
-
-    .mission-stat-dot {
-        width: 8px;
-        height: 8px;
-        border-radius: 50%;
-    }
-
-    .mission-stat-dot.active { background: var(--vscode-charts-orange); }
-    .mission-stat-dot.queued { background: var(--vscode-descriptionForeground); }
-    .mission-stat-dot.done { background: var(--vscode-charts-green); }
-    .mission-stat-dot.blocked { background: var(--vscode-charts-red); }
-
-    .mission-stat-value {
-        font-size: 12px;
-        font-weight: 600;
-    }
-
-    .mission-stat-label {
-        font-size: 10px;
-        color: var(--vscode-descriptionForeground);
-    }
-
-    /* Section styling */
-    .section {
-        padding: 12px;
-        border-bottom: 1px solid var(--vscode-sideBarSectionHeader-border);
-    }
-
-    .section-label {
-        font-size: 9px;
-        color: var(--vscode-descriptionForeground);
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        margin-bottom: 10px;
-        display: flex;
-        align-items: center;
-        gap: 6px;
-    }
-
-    .section-label-icon {
-        font-size: 12px;
-    }
-
-    /* Focus Card */
-    .focus-card {
-        background: var(--vscode-editor-background);
-        border: 2px solid var(--vscode-textLink-foreground);
-        border-radius: 8px;
-        overflow: hidden;
-    }
-
-    .focus-card-header {
-        padding: 12px;
-        background: color-mix(in srgb, var(--vscode-textLink-foreground) 10%, transparent);
-        cursor: pointer;
-        transition: background 0.15s;
-    }
-
-    .focus-card-header:hover {
-        background: color-mix(in srgb, var(--vscode-textLink-foreground) 15%, transparent);
-    }
-
-    .focus-card-title {
-        font-size: 13px;
-        font-weight: 600;
-    }
-
-    .focus-card-subtitle {
-        font-size: 10px;
-        color: var(--vscode-descriptionForeground);
-        margin-top: 2px;
-    }
-
-    .focus-card-badge {
-        display: inline-block;
-        font-size: 9px;
-        padding: 3px 8px;
-        border-radius: 12px;
-        background: var(--vscode-textLink-foreground);
-        color: var(--vscode-editor-background);
-        margin-top: 8px;
-    }
-
-    .focus-card-expand {
-        float: right;
-        font-size: 10px;
-        color: var(--vscode-descriptionForeground);
-        transition: transform 0.2s;
-    }
-
-    .focus-card.expanded .focus-card-expand {
-        transform: rotate(180deg);
-    }
-
-    .focus-card-body {
-        max-height: 0;
-        overflow: hidden;
-        transition: max-height 0.3s ease;
-        padding: 0 12px;
-    }
-
-    .focus-card.expanded .focus-card-body {
-        max-height: 500px;
-        padding: 12px;
-        border-top: 1px solid var(--vscode-sideBarSectionHeader-border);
-    }
-
-    /* Progress Ring */
-    .focus-progress {
-        display: flex;
-        align-items: center;
-        gap: 16px;
-        margin-bottom: 12px;
-    }
-
-    .progress-ring {
-        width: 48px;
-        height: 48px;
-        transform: rotate(-90deg);
-    }
-
-    .progress-ring-bg {
-        fill: none;
-        stroke: var(--vscode-input-background);
-        stroke-width: 4;
-    }
-
-    .progress-ring-fill {
-        fill: none;
-        stroke: var(--vscode-textLink-foreground);
-        stroke-width: 4;
-        stroke-linecap: round;
-        transition: stroke-dasharray 0.5s ease;
-    }
-
-    .progress-text {
-        text-align: center;
-    }
-
-    .progress-percent {
-        font-size: 18px;
-        font-weight: 700;
-        color: var(--vscode-textLink-foreground);
-    }
-
-    .progress-label {
-        font-size: 9px;
-        color: var(--vscode-descriptionForeground);
-    }
-
-    /* Stage Pipeline */
-    .stage-pipeline {
-        display: flex;
-        gap: 4px;
-        margin-bottom: 12px;
-    }
-
-    .stage-pip {
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 4px;
-    }
-
-    .stage-pip-indicator {
-        width: 24px;
-        height: 24px;
-        border-radius: 4px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 10px;
-        font-weight: 600;
-    }
-
-    .stage-pip-indicator.complete {
-        background: var(--vscode-charts-green);
-        color: white;
-    }
-
-    .stage-pip-indicator.active {
-        background: var(--vscode-charts-orange);
-        color: white;
-        animation: pulse 1.5s infinite;
-    }
-
-    .stage-pip-indicator.pending {
-        background: var(--vscode-input-background);
-        color: var(--vscode-descriptionForeground);
-        border: 1px dashed var(--vscode-descriptionForeground);
-    }
-
-    @keyframes pulse {
-        0%, 100% { opacity: 1; }
-        50% { opacity: 0.6; }
-    }
-
-    .stage-pip-label {
-        font-size: 8px;
-        color: var(--vscode-descriptionForeground);
-        text-transform: uppercase;
-    }
-
-    /* Stories Checklist */
-    .focus-stories {
-        margin-bottom: 12px;
-    }
-
-    .focus-stories-title {
-        font-size: 9px;
-        color: var(--vscode-descriptionForeground);
-        text-transform: uppercase;
-        margin-bottom: 6px;
-    }
-
-    .focus-story-item {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        padding: 4px 0;
-    }
-
-    .focus-story-checkbox {
-        width: 14px;
-        height: 14px;
-        border-radius: 3px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 9px;
-    }
-
-    .focus-story-checkbox.complete {
-        background: var(--vscode-charts-green);
-        color: white;
-    }
-
-    .focus-story-checkbox.pending {
-        border: 1px solid var(--vscode-descriptionForeground);
-    }
-
-    .focus-story-name {
-        font-size: 11px;
-    }
-
-    .focus-story-name.complete {
-        color: var(--vscode-descriptionForeground);
-        text-decoration: line-through;
-    }
-
-    /* Focus Actions */
-    .focus-actions {
-        display: flex;
-        gap: 8px;
-    }
-
-    .focus-btn {
-        flex: 1;
-        padding: 8px 12px;
-        border: none;
-        border-radius: 4px;
-        font-size: 11px;
-        font-weight: 500;
-        cursor: pointer;
-        transition: all 0.15s;
-    }
-
-    .focus-btn.primary {
-        background: var(--vscode-button-background);
-        color: var(--vscode-button-foreground);
-    }
-
-    .focus-btn.primary:hover {
-        background: var(--vscode-button-hoverBackground);
-    }
-
-    .focus-btn.secondary {
-        background: var(--vscode-input-background);
-        color: var(--vscode-foreground);
-    }
-
-    .focus-btn.secondary:hover {
-        background: var(--vscode-list-hoverBackground);
-    }
-
-    /* Queue Lock Icon */
-    .queue-lock {
-        width: 20px;
-        height: 20px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 12px;
-        color: var(--vscode-charts-red);
-    }
-
-    /* Queue Stage Indicators */
-    .queue-stages {
-        display: flex;
-        gap: 2px;
-        margin-top: 4px;
-    }
-
-    .queue-stage {
-        width: 8px;
-        height: 8px;
-        border-radius: 2px;
-    }
-
-    .queue-stage.complete { background: var(--vscode-charts-green); }
-    .queue-stage.active { background: var(--vscode-charts-orange); }
-    .queue-stage.pending { background: var(--vscode-input-background); }
-
-    /* Activity Filters */
-    .activity-filters {
-        display: flex;
-        gap: 4px;
-    }
-
-    .activity-filter-btn {
-        padding: 3px 8px;
-        font-size: 9px;
-        border: none;
-        border-radius: 10px;
-        background: var(--vscode-input-background);
-        color: var(--vscode-descriptionForeground);
-        cursor: pointer;
-        transition: all 0.15s;
-    }
-
-    .activity-filter-btn:hover {
-        background: var(--vscode-list-hoverBackground);
-    }
-
-    .activity-filter-btn.active {
-        background: var(--vscode-textLink-foreground);
-        color: var(--vscode-editor-background);
-    }
-
-    /* Resize Handle */
-    .activity-resize-handle {
-        height: 6px;
-        cursor: ns-resize;
-        background: var(--vscode-sideBarSectionHeader-border);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        transition: background 0.15s;
-    }
-
-    .activity-resize-handle:hover {
-        background: var(--vscode-textLink-foreground);
-    }
-
-    .activity-resize-handle::after {
-        content: '';
-        width: 30px;
-        height: 2px;
-        background: var(--vscode-descriptionForeground);
-        border-radius: 1px;
-    }
-
-    .activity-resize-handle:hover::after {
-        background: var(--vscode-editor-background);
-    }
-
-    /* Empty state */
-    .empty-state {
-        padding: 20px;
-        text-align: center;
-        color: var(--vscode-descriptionForeground);
-    }
-
-    .empty-state-icon {
-        font-size: 24px;
-        margin-bottom: 8px;
-    }
-
-    .empty-state-text {
-        font-size: 11px;
-    }
-
-    /* Queue section */
-    .queue-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 8px;
-    }
-
-    .queue-title {
-        font-size: 10px;
-        font-weight: 600;
-        text-transform: uppercase;
-        color: var(--vscode-descriptionForeground);
-    }
-
-    .queue-count {
-        font-size: 9px;
-        padding: 2px 8px;
-        border-radius: 10px;
-        background: var(--vscode-badge-background);
-        color: var(--vscode-badge-foreground);
-    }
-
-    .queue-list {
-        display: flex;
-        flex-direction: column;
-        gap: 6px;
-    }
-
-    .queue-item {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        padding: 10px 12px;
-        background: var(--vscode-editor-background);
-        border-radius: 6px;
-        cursor: pointer;
-        transition: all 0.15s;
-        border-left: 3px solid transparent;
-    }
-
-    .queue-item:hover {
-        background: var(--vscode-list-hoverBackground);
-        border-left-color: var(--vscode-textLink-foreground);
-    }
-
-    .queue-item.blocked {
-        opacity: 0.7;
-        border-left-color: var(--vscode-charts-red);
-    }
-
-    .queue-priority {
-        width: 20px;
-        height: 20px;
-        border-radius: 4px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 10px;
-        font-weight: 600;
-        background: var(--vscode-input-background);
-        color: var(--vscode-descriptionForeground);
-    }
-
-    .queue-info {
-        flex: 1;
-        min-width: 0;
-    }
-
-    .queue-name {
-        font-size: 11px;
-        font-weight: 500;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
-
-    .queue-meta {
-        font-size: 9px;
-        color: var(--vscode-descriptionForeground);
-        margin-top: 2px;
-    }
-
-    .queue-blocked-info {
-        font-size: 9px;
-        color: var(--vscode-charts-red);
-        margin-top: 2px;
-    }
-
-    /* Activity section */
-    .activity-section {
-        padding: 12px;
-        background: var(--vscode-editor-background);
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        min-height: 120px;
-    }
-
-    .activity-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 10px;
-    }
-
-    .activity-title {
-        font-size: 10px;
-        font-weight: 600;
-        text-transform: uppercase;
-        color: var(--vscode-descriptionForeground);
-        display: flex;
-        align-items: center;
-        gap: 6px;
-    }
-
-    .activity-list {
-        display: flex;
-        flex-direction: column;
-        gap: 2px;
-        flex: 1;
-        overflow-y: auto;
-    }
-
-    .activity-item {
-        display: flex;
-        align-items: flex-start;
-        gap: 10px;
-        padding: 8px 10px;
-        border-radius: 6px;
-        cursor: pointer;
-        transition: background 0.15s;
-    }
-
-    .activity-item:hover {
-        background: var(--vscode-list-hoverBackground);
-    }
-
-    .activity-icon {
-        width: 24px;
-        height: 24px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 11px;
-        flex-shrink: 0;
-    }
-
-    .activity-icon.stage-complete {
-        background: color-mix(in srgb, var(--vscode-charts-green) 20%, transparent);
-        color: var(--vscode-charts-green);
-    }
-
-    .activity-icon.bolt-complete {
-        background: color-mix(in srgb, var(--vscode-charts-green) 30%, transparent);
-        color: var(--vscode-charts-green);
-    }
-
-    .activity-icon.bolt-start {
-        background: color-mix(in srgb, var(--vscode-charts-blue) 20%, transparent);
-        color: var(--vscode-charts-blue);
-    }
-
-    .activity-icon.bolt-created {
-        background: color-mix(in srgb, var(--vscode-charts-purple) 20%, transparent);
-        color: var(--vscode-charts-purple);
-    }
-
-    .activity-content {
-        flex: 1;
-        min-width: 0;
-    }
-
-    .activity-text {
-        font-size: 11px;
-        line-height: 1.4;
-    }
-
-    .activity-text strong {
-        color: var(--vscode-textLink-foreground);
-    }
-
-    .activity-meta {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        margin-top: 3px;
-    }
-
-    .activity-target {
-        font-size: 9px;
-        color: var(--vscode-descriptionForeground);
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
-
-    .activity-tag {
-        font-size: 8px;
-        padding: 2px 6px;
-        border-radius: 8px;
-        background: var(--vscode-input-background);
-        color: var(--vscode-descriptionForeground);
-        text-transform: uppercase;
-    }
-
-    .activity-time {
-        font-size: 9px;
-        color: var(--vscode-descriptionForeground);
-        white-space: nowrap;
-        flex-shrink: 0;
-    }
-
-    /* Specs view */
-    .specs-content {
-        flex: 1;
-        overflow-y: auto;
-    }
-
-    .intent-item {
-        border-bottom: 1px solid var(--vscode-sideBarSectionHeader-border);
-    }
-
-    .intent-header {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        padding: 10px 12px;
-        cursor: pointer;
-        transition: background 0.15s;
-    }
-
-    .intent-header:hover {
-        background: var(--vscode-list-hoverBackground);
-    }
-
-    .intent-expand {
-        font-size: 10px;
-        color: var(--vscode-descriptionForeground);
-        transition: transform 0.2s;
-    }
-
-    .intent-item.collapsed .intent-expand {
-        transform: rotate(-90deg);
-    }
-
-    .intent-icon {
-        font-size: 14px;
-    }
-
-    .intent-info {
-        flex: 1;
-    }
-
-    .intent-name {
-        font-size: 12px;
-        font-weight: 500;
-    }
-
-    .intent-meta {
-        font-size: 10px;
-        color: var(--vscode-descriptionForeground);
-        margin-top: 2px;
-    }
-
-    .intent-progress {
-        font-size: 10px;
-        color: var(--vscode-charts-green);
-        font-weight: 600;
-    }
-
-    .intent-content {
-        max-height: 2000px;
-        overflow: hidden;
-        transition: max-height 0.3s ease;
-        background: var(--vscode-editor-background);
-    }
-
-    .intent-item.collapsed .intent-content {
-        max-height: 0;
-    }
-
-    .unit-item {
-        border-bottom: 1px solid var(--vscode-sideBarSectionHeader-border);
-    }
-
-    .unit-header {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        padding: 8px 12px 8px 28px;
-        cursor: pointer;
-        transition: background 0.15s;
-    }
-
-    .unit-header:hover {
-        background: var(--vscode-list-hoverBackground);
-    }
-
-    .unit-expand {
-        font-size: 10px;
-        color: var(--vscode-descriptionForeground);
-        transition: transform 0.2s;
-    }
-
-    .unit-item.collapsed .unit-expand {
-        transform: rotate(-90deg);
-    }
-
-    .unit-status {
-        width: 16px;
-        height: 16px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 9px;
-        color: white;
-    }
-
-    .unit-status.complete { background: var(--vscode-charts-green); }
-    .unit-status.active { background: var(--vscode-charts-orange); }
-    .unit-status.pending {
-        background: var(--vscode-input-background);
-        border: 1px dashed var(--vscode-descriptionForeground);
-        color: var(--vscode-descriptionForeground);
-    }
-
-    .unit-name {
-        flex: 1;
-        font-size: 11px;
-    }
-
-    .unit-progress {
-        font-size: 9px;
-        color: var(--vscode-descriptionForeground);
-    }
-
-    .unit-content {
-        max-height: 1000px;
-        overflow: hidden;
-        transition: max-height 0.3s ease;
-    }
-
-    .unit-item.collapsed .unit-content {
-        max-height: 0;
-    }
-
-    .story-item {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        padding: 6px 12px 6px 52px;
-        cursor: pointer;
-        transition: background 0.15s;
-    }
-
-    .story-item:hover {
-        background: var(--vscode-list-hoverBackground);
-    }
-
-    .story-status {
-        width: 12px;
-        height: 12px;
-        border-radius: 50%;
-        border: 2px solid var(--vscode-descriptionForeground);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 8px;
-    }
-
-    .story-status.complete {
-        background: var(--vscode-charts-green);
-        border-color: var(--vscode-charts-green);
-        color: white;
-    }
-
-    .story-status.active {
-        background: var(--vscode-charts-orange);
-        border-color: var(--vscode-charts-orange);
-        color: white;
-    }
-
-    .story-name {
-        flex: 1;
-        font-size: 11px;
-    }
-
-    .story-name.complete {
-        color: var(--vscode-descriptionForeground);
-    }
-
-    /* Overview view */
-    .overview-content {
-        padding: 16px;
-    }
-
-    .overview-section {
-        margin-bottom: 20px;
-    }
-
-    .overview-section-title {
-        font-size: 10px;
-        font-weight: 600;
-        text-transform: uppercase;
-        color: var(--vscode-descriptionForeground);
-        margin-bottom: 10px;
-    }
-
-    .overview-metrics {
-        display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        gap: 10px;
-    }
-
-    .overview-metric-card {
-        background: var(--vscode-editor-background);
-        border-radius: 8px;
-        padding: 16px;
-        text-align: center;
-    }
-
-    .overview-metric-value {
-        font-size: 28px;
-        font-weight: 700;
-        margin-bottom: 4px;
-    }
-
-    .overview-metric-value.highlight { color: var(--vscode-textLink-foreground); }
-    .overview-metric-value.success { color: var(--vscode-charts-green); }
-
-    .overview-metric-label {
-        font-size: 10px;
-        color: var(--vscode-descriptionForeground);
-    }
-
-    .overview-progress-bar {
-        height: 8px;
-        background: var(--vscode-input-background);
-        border-radius: 4px;
-        overflow: hidden;
-        margin-bottom: 20px;
-    }
-
-    .overview-progress-fill {
-        height: 100%;
-        background: linear-gradient(90deg, var(--vscode-charts-green), var(--vscode-textLink-foreground));
-        border-radius: 4px;
-        transition: width 0.5s ease;
-    }
-
-    .overview-list {
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-    }
-
-    .overview-list-item {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        padding: 10px 12px;
-        background: var(--vscode-editor-background);
-        border-radius: 6px;
-        cursor: pointer;
-        transition: all 0.15s;
-    }
-
-    .overview-list-item:hover {
-        background: var(--vscode-list-hoverBackground);
-    }
-
-    .overview-list-icon {
-        width: 32px;
-        height: 32px;
-        border-radius: 6px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 14px;
-    }
-
-    .overview-list-icon.intent {
-        background: color-mix(in srgb, var(--vscode-charts-purple) 20%, transparent);
-        color: var(--vscode-charts-purple);
-    }
-
-    .overview-list-info {
-        flex: 1;
-    }
-
-    .overview-list-name {
-        font-size: 12px;
-        font-weight: 500;
-    }
-
-    .overview-list-meta {
-        font-size: 10px;
-        color: var(--vscode-descriptionForeground);
-        margin-top: 2px;
-    }
-
-    .overview-list-progress {
-        font-size: 11px;
-        font-weight: 600;
-        color: var(--vscode-charts-green);
-    }
-
-    /* Scrollbar */
-    ::-webkit-scrollbar {
-        width: 8px;
-    }
-
-    ::-webkit-scrollbar-track {
-        background: transparent;
-    }
-
-    ::-webkit-scrollbar-thumb {
-        background: var(--vscode-scrollbarSlider-background);
-        border-radius: 4px;
-    }
-
-    ::-webkit-scrollbar-thumb:hover {
-        background: var(--vscode-scrollbarSlider-hoverBackground);
-    }
-    `;
-}
 
 /**
  * Generates HTML for the Bolts tab.
@@ -1172,8 +124,10 @@ function getBoltsTabHtml(data: WebviewData): string {
             <div class="focus-card ${data.focusCardExpanded ? 'expanded' : ''}" data-bolt-id="${escapeHtml(data.activeBolt.id)}">
                 <div class="focus-card-header">
                     <span class="focus-card-expand">&#9660;</span>
-                    <div class="focus-card-title">${escapeHtml(data.activeBolt.name)}</div>
-                    <div class="focus-card-subtitle">${escapeHtml(data.activeBolt.type)} Bolt | ${data.activeBolt.currentStage ? escapeHtml(data.activeBolt.currentStage) : 'Not started'} Stage</div>
+                    <div class="focus-card-info">
+                        <div class="focus-card-title">${escapeHtml(data.activeBolt.name)}</div>
+                        <div class="focus-card-subtitle">${escapeHtml(data.activeBolt.type)} Bolt | ${data.activeBolt.currentStage ? escapeHtml(data.activeBolt.currentStage) : 'Not started'} Stage</div>
+                    </div>
                     <div class="focus-card-badge">In Progress</div>
                 </div>
                 <div class="focus-card-body">
@@ -1192,6 +146,12 @@ function getBoltsTabHtml(data: WebviewData): string {
             </div>
         </div>`;
 
+    // Stage abbreviations for queue items
+    const stageAbbrevMap: Record<string, string> = {
+        'model': 'M', 'design': 'D', 'architecture': 'A',
+        'implement': 'I', 'test': 'T', 'plan': 'P'
+    };
+
     const queueSection = `<div class="section">
         <div class="queue-header">
             <span class="queue-title">Up Next</span>
@@ -1209,9 +169,12 @@ function getBoltsTabHtml(data: WebviewData): string {
                             <div class="queue-name">${escapeHtml(bolt.name)}</div>
                             <div class="queue-meta">${escapeHtml(bolt.type)} | ${bolt.storiesCount} stories${bolt.unblocksCount > 0 ? ` | Enables ${bolt.unblocksCount}` : ''}</div>
                             ${bolt.isBlocked ? `<div class="queue-blocked-info">Waiting: ${bolt.blockedBy.map(escapeHtml).join(', ')}</div>` : ''}
-                            <div class="queue-stages">
-                                ${bolt.stages.map(stage => `<div class="queue-stage ${stage.status}"></div>`).join('')}
-                            </div>
+                        </div>
+                        <div class="queue-stages">
+                            ${bolt.stages.map(stage => {
+                                const abbrev = stageAbbrevMap[stage.name.toLowerCase()] || stage.name.charAt(0).toUpperCase();
+                                return `<div class="queue-stage ${stage.status}">${abbrev}</div>`;
+                            }).join('')}
                         </div>
                     </div>
                 `).join('')}
@@ -1222,9 +185,9 @@ function getBoltsTabHtml(data: WebviewData): string {
         }
     </div>`;
 
-    const activitySection = `<div class="activity-resize-handle" id="activityResizeHandle"></div>
-        <div class="activity-section" style="height: ${data.activityHeight}px;">
-        <div class="activity-header">
+    const activitySection = `<div class="activity-section" style="height: ${data.activityHeight}px;">
+        <div class="activity-resize-handle" id="activityResizeHandle"></div>
+        <div class="activity-header" style="margin-top: 8px;">
             <div class="activity-title">
                 <span>&#128340;</span>
                 Recent Activity
@@ -1426,12 +389,21 @@ function getFocusCardBody(bolt: ActiveBoltData): string {
     const completedItems = bolt.stagesComplete + bolt.storiesComplete;
     const progressPercent = totalItems > 0 ? Math.round((completedItems / totalItems) * 100) : 0;
 
-    // SVG progress ring calculation
-    const radius = 20;
+    // SVG progress ring calculation (larger ring: radius 25, circumference ~157)
+    const radius = 25;
     const circumference = 2 * Math.PI * radius;
     const dashOffset = circumference - (progressPercent / 100) * circumference;
 
-    // Stage pipeline with abbreviations
+    // Stage pipeline with abbreviations and labels
+    const stageLabels: Record<string, string> = {
+        'model': 'Model',
+        'design': 'Design',
+        'architecture': 'ADR',
+        'implement': 'Impl',
+        'test': 'Test',
+        'plan': 'Plan'
+    };
+
     const stageAbbreviations: Record<string, string> = {
         'model': 'M',
         'design': 'D',
@@ -1441,13 +413,31 @@ function getFocusCardBody(bolt: ActiveBoltData): string {
         'plan': 'P'
     };
 
-    const stagePipeline = bolt.stages.map(stage => {
+    // Current stage name for display
+    const currentStage = bolt.stages.find(s => s.status === 'active');
+    const currentStageName = currentStage
+        ? stageLabels[currentStage.name.toLowerCase()] || currentStage.name
+        : bolt.stages[0]?.name || 'Not started';
+
+    // Build stage pipeline with connectors between stages
+    const stagePipelineItems: string[] = [];
+    bolt.stages.forEach((stage, idx) => {
         const abbrev = stageAbbreviations[stage.name.toLowerCase()] || stage.name.charAt(0).toUpperCase();
-        return `<div class="stage-pip">
-            <div class="stage-pip-indicator ${stage.status}">${abbrev}</div>
-            <div class="stage-pip-label">${escapeHtml(stage.name)}</div>
-        </div>`;
-    }).join('');
+        const label = stageLabels[stage.name.toLowerCase()] || stage.name;
+
+        stagePipelineItems.push(`<div class="stage-pip">
+            <div class="stage-pip-indicator ${stage.status}">
+                ${stage.status === 'complete' ? '&#10003;' : abbrev}
+            </div>
+            <span class="stage-pip-label">${escapeHtml(label)}</span>
+        </div>`);
+
+        // Add connector between stages (not after last stage)
+        if (idx < bolt.stages.length - 1) {
+            const connectorStatus = stage.status === 'complete' ? 'complete' : '';
+            stagePipelineItems.push(`<div class="pipeline-connector ${connectorStatus}"></div>`);
+        }
+    });
 
     // Stories checklist
     const storiesChecklist = bolt.stories.map(story => `
@@ -1461,24 +451,33 @@ function getFocusCardBody(bolt: ActiveBoltData): string {
 
     return `
         <div class="focus-progress">
-            <svg class="progress-ring" viewBox="0 0 48 48">
-                <circle class="progress-ring-bg" cx="24" cy="24" r="${radius}"></circle>
-                <circle class="progress-ring-fill" cx="24" cy="24" r="${radius}"
-                    stroke-dasharray="${circumference}"
-                    stroke-dashoffset="${dashOffset}"></circle>
-            </svg>
-            <div class="progress-text">
-                <div class="progress-percent">${progressPercent}%</div>
-                <div class="progress-label">Complete</div>
+            <div class="progress-ring-container">
+                <svg class="progress-ring" viewBox="0 0 64 64">
+                    <circle class="progress-ring-bg" cx="32" cy="32" r="${radius}"></circle>
+                    <circle class="progress-ring-fill" cx="32" cy="32" r="${radius}"
+                        stroke-dasharray="${circumference}"
+                        stroke-dashoffset="${dashOffset}"></circle>
+                </svg>
+                <div class="progress-ring-text">${progressPercent}%</div>
+            </div>
+            <div class="progress-details">
+                <div class="progress-stage">Stage: <strong>${escapeHtml(currentStageName)}</strong></div>
+                <div class="progress-info">${bolt.stagesComplete} of ${bolt.stagesTotal} stages complete</div>
+                <div class="progress-info">${bolt.storiesComplete}/${bolt.storiesTotal} stories done</div>
             </div>
         </div>
         <div class="stage-pipeline">
-            ${stagePipeline}
+            ${stagePipelineItems.join('')}
         </div>
         ${bolt.stories.length > 0 ? `
             <div class="focus-stories">
-                <div class="focus-stories-title">Stories (${bolt.storiesComplete}/${bolt.storiesTotal})</div>
-                ${storiesChecklist}
+                <div class="focus-stories-title">
+                    <span>Stories</span>
+                    <span>${bolt.storiesComplete}/${bolt.storiesTotal}</span>
+                </div>
+                <div class="focus-stories-list">
+                    ${storiesChecklist}
+                </div>
             </div>
         ` : ''}
         <div class="focus-actions">
