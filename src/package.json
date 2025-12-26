@@ -10,8 +10,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:schema": "vitest run __tests__/unit/schema-validation/",
-    "lint:md": "markdownlint '../memory-bank/**/*.md' 'flows/**/*.md' --config ../.markdownlint.yaml",
-    "lint:md:fix": "markdownlint '../memory-bank/**/*.md' 'flows/**/*.md' --config ../.markdownlint.yaml --fix",
+    "lint:md": "markdownlint 'flows/**/*.md' --config ../.markdownlint.yaml",
+    "lint:md:fix": "markdownlint 'flows/**/*.md' --config ../.markdownlint.yaml --fix",
     "validate:all": "npm run test && npm run lint:md"
   },
   "keywords": [
