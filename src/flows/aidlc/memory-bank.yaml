@@ -50,20 +50,20 @@ naming:
     note: "3-digit prefix indicates order, kebab-case name"
 
   units:
-    format: "{unit-name}"
-    example: "auth-service"
-    note: "Kebab-case, descriptive name"
+    format: "{UUU}-{unit-name}"
+    example: "001-auth-service"
+    note: "3-digit prefix within intent, kebab-case name"
 
   stories:
     format: "{SSS}-{title-slug}.md"
     example: "001-user-signup.md"
     note: "3-digit story number + kebab-case story title"
-    full_path_example: "memory-bank/intents/001-user-authentication/units/auth-service/stories/001-user-signup.md"
+    full_path_example: "memory-bank/intents/001-user-authentication/units/001-auth-service/stories/001-user-signup.md"
 
   bolts:
-    format: "bolt-{unit-name}-{N}/"
-    example: "bolt-auth-service-1/"
-    note: "Directory per bolt, contains bolt.md and stage artifacts"
+    format: "{BBB}-{unit-name}/"
+    example: "001-auth-service/"
+    note: "Global 3-digit sequence, unit name for context"
     contents:
       - "bolt.md"                      # Bolt instance metadata
       - "ddd-01-domain-model.md"       # Stage 1 artifact (DDD bolt)
