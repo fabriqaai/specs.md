@@ -277,9 +277,9 @@ export async function parseBolt(boltPath: string, workspacePath?: string): Promi
     const boltType = (frontmatter.type as string) || 'simple-construction-bolt';
     const currentStage = (frontmatter.current_stage as string) || null;
     const stagesCompleted = Array.isArray(frontmatter.stages_completed)
-        ? (frontmatter.stages_completed as Array<{ name: string } | string>).map(s =>
-            typeof s === 'string' ? s : s.name
-        )
+        ? (frontmatter.stages_completed as Array<{ name: string } | string>)
+            .map(s => typeof s === 'string' ? s : s?.name)
+            .filter((s): s is string => typeof s === 'string' && s.length > 0)
         : [];
 
     // Get stage names dynamically from bolt type definition, with fallback
@@ -299,9 +299,9 @@ export async function parseBolt(boltPath: string, workspacePath?: string): Promi
     // Create a map of completed stage data for timestamp lookup
     const stageCompletedMap = new Map<string, { completedAt?: Date; artifact?: string }>();
     for (const s of stagesCompletedRaw) {
-        if (typeof s === 'string') {
+        if (typeof s === 'string' && s.length > 0) {
             stageCompletedMap.set(s.toLowerCase(), {});
-        } else if (s.name) {
+        } else if (typeof s === 'object' && s !== null && typeof s.name === 'string' && s.name.length > 0) {
             stageCompletedMap.set(s.name.toLowerCase(), {
                 completedAt: s.completed ? parseTimestamp(s.completed) : undefined,
                 artifact: s.artifact
@@ -408,9 +408,13 @@ export async function scanMemoryBank(workspacePath: string): Promise<MemoryBankM
     const intents: Intent[] = [];
 
     for (const intentFolder of intentFolders) {
-        const intent = await parseIntent(path.join(intentsPath, intentFolder));
-        if (intent) {
-            intents.push(intent);
+        try {
+            const intent = await parseIntent(path.join(intentsPath, intentFolder));
+            if (intent) {
+                intents.push(intent);
+            }
+        } catch (error) {
+            console.error(`[SpecsMD] Error parsing intent: ${intentFolder}`, error);
         }
     }
 
@@ -426,9 +430,13 @@ export async function scanMemoryBank(workspacePath: string): Promise<MemoryBankM
     clearBoltTypeCache();
 
     for (const boltFolder of boltFolders) {
-        const bolt = await parseBolt(path.join(boltsPath, boltFolder), workspacePath);
-        if (bolt) {
-            bolts.push(bolt);
+        try {
+            const bolt = await parseBolt(path.join(boltsPath, boltFolder), workspacePath);
+            if (bolt) {
+                bolts.push(bolt);
+            }
+        } catch (error) {
+            console.error(`[SpecsMD] Error parsing bolt: ${boltFolder}`, error);
         }
     }
 

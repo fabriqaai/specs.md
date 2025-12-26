@@ -69,8 +69,8 @@ export {
     BoltSelectionStrategy,
     selectCurrentIntentDefault,
     selectCurrentIntentByPendingBolts,
-    selectActiveBoltDefault,
-    selectActiveBoltMostRecent,
+    selectActiveBoltsDefault,
+    selectActiveBoltDefault, // Legacy, deprecated
 
     // Intent selection strategies (individual)
     selectIntentByActiveBolt,

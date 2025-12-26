@@ -1,9 +1,10 @@
 /**
  * FocusSection - Current Focus section wrapper.
+ * Supports multiple active bolts.
  */
 
 import { html, css } from 'lit';
-import { customElement, property } from 'lit/decorators.js';
+import { customElement, property, state } from 'lit/decorators.js';
 import { BaseElement } from '../shared/base-element.js';
 import './focus-card.js';
 import type { ActiveBoltData } from './focus-card.js';
@@ -11,26 +12,27 @@ import type { ActiveBoltData } from './focus-card.js';
 /**
  * Focus section component.
  *
- * @fires toggle-expand - When focus card is toggled
+ * @fires toggle-focus - When focus card is toggled (for persistence)
+ * @fires copy-command - When command is copied
  *
  * @example
  * ```html
- * <focus-section .bolt=${bolt} expanded></focus-section>
+ * <focus-section .bolts=${bolts}></focus-section>
  * ```
  */
 @customElement('focus-section')
 export class FocusSection extends BaseElement {
     /**
-     * Active bolt data (null if no active bolt).
+     * Active bolts data (empty array if no active bolts).
      */
-    @property({ type: Object })
-    bolt: ActiveBoltData | null = null;
+    @property({ type: Array })
+    bolts: ActiveBoltData[] = [];
 
     /**
-     * Whether the focus card is expanded.
+     * Set of expanded bolt IDs (tracked locally per-bolt).
      */
-    @property({ type: Boolean })
-    expanded = false;
+    @state()
+    private _expandedBolts: Set<string> = new Set();
 
     static styles = [
         ...BaseElement.baseStyles,
@@ -84,6 +86,24 @@ export class FocusSection extends BaseElement {
                 border-radius: 4px;
                 font-family: var(--vscode-editor-font-family, monospace);
                 font-size: 11px;
+                cursor: pointer;
+                transition: background 0.15s;
+            }
+
+            .empty-state code:hover {
+                background: var(--vscode-button-background, #0e639c);
+                color: var(--vscode-button-foreground, #ffffff);
+            }
+
+            .empty-state-hint {
+                font-size: 12px;
+                color: var(--description-foreground, #858585);
+            }
+
+            .bolts-list {
+                display: flex;
+                flex-direction: column;
+                gap: 12px;
             }
         `
     ];
@@ -94,21 +114,58 @@ export class FocusSection extends BaseElement {
                 <span class="label-icon">🎯</span>
                 Current Focus
             </div>
-            ${this.bolt
+            ${this.bolts.length > 0
                 ? html`
-                    <focus-card
-                        .bolt=${this.bolt}
-                        .expanded=${this.expanded}>
-                    </focus-card>
+                    <div class="bolts-list">
+                        ${this.bolts.map(bolt => html`
+                            <focus-card
+                                .bolt=${bolt}
+                                .expanded=${this._expandedBolts.has(bolt.id)}
+                                @toggle-expand=${(e: CustomEvent) => this._handleToggleExpand(bolt.id, e)}>
+                            </focus-card>
+                        `)}
+                    </div>
                 `
                 : html`
                     <div class="empty-state">
                         <span class="empty-state-icon">🚀</span>
-                        <span class="empty-state-text">No active bolt — run <code>/specsmd-construction-agent</code> to start</span>
+                        <div class="empty-state-text">No active bolt</div>
+                        <div class="empty-state-hint">
+                            run <code @click=${this._copyCommand}>/specsmd-construction-agent</code> to start
+                        </div>
                     </div>
                 `
             }
         `;
+    }
+
+    private _handleToggleExpand(boltId: string, e: CustomEvent): void {
+        e.stopPropagation();
+        const newExpanded = new Set(this._expandedBolts);
+        if (newExpanded.has(boltId)) {
+            newExpanded.delete(boltId);
+        } else {
+            newExpanded.add(boltId);
+        }
+        this._expandedBolts = newExpanded;
+
+        // Notify parent for any persistence needs
+        this.dispatchEvent(new CustomEvent('toggle-focus', {
+            detail: { boltId, expanded: newExpanded.has(boltId) },
+            bubbles: true,
+            composed: true
+        }));
+    }
+
+    private _copyCommand(): void {
+        const command = '/specsmd-construction-agent';
+        navigator.clipboard.writeText(command).then(() => {
+            this.dispatchEvent(new CustomEvent('copy-command', {
+                detail: { command },
+                bubbles: true,
+                composed: true
+            }));
+        });
     }
 }
 

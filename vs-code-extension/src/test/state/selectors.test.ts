@@ -7,7 +7,7 @@ import {
     selectCurrentIntentDefault,
     selectCurrentIntentByPendingBolts,
     selectActiveBoltDefault,
-    selectActiveBoltMostRecent,
+    selectActiveBoltsDefault,
     selectPendingBolts,
     selectCompletedBolts,
     selectBoltStats,
@@ -174,18 +174,30 @@ suite('State Selectors Test Suite', () => {
         });
     });
 
-    suite('selectActiveBoltMostRecent', () => {
+    suite('selectActiveBoltsDefault', () => {
 
-        test('should return most recently started bolt', () => {
+        test('should return all in-progress bolts sorted by most recent', () => {
             const now = new Date();
             const earlier = new Date(now.getTime() - 3600000); // 1 hour ago
 
             const bolts = [
                 createBolt({ id: 'older', status: ArtifactStatus.InProgress, startedAt: earlier }),
-                createBolt({ id: 'newer', status: ArtifactStatus.InProgress, startedAt: now })
+                createBolt({ id: 'newer', status: ArtifactStatus.InProgress, startedAt: now }),
+                createBolt({ id: 'draft', status: ArtifactStatus.Draft })
             ];
-            const result = selectActiveBoltMostRecent(bolts);
-            assert.strictEqual(result?.id, 'newer');
+            const result = selectActiveBoltsDefault(bolts);
+            assert.strictEqual(result.length, 2);
+            assert.strictEqual(result[0].id, 'newer'); // Most recent first
+            assert.strictEqual(result[1].id, 'older');
+        });
+
+        test('should return empty array when no in-progress bolts', () => {
+            const bolts = [
+                createBolt({ status: ArtifactStatus.Draft }),
+                createBolt({ status: ArtifactStatus.Complete })
+            ];
+            const result = selectActiveBoltsDefault(bolts);
+            assert.strictEqual(result.length, 0);
         });
     });
 
@@ -403,7 +415,7 @@ suite('State Selectors Test Suite', () => {
             const computed = computeState(intents, units, stories, bolts);
 
             assert.ok(computed.currentIntent !== null);
-            assert.ok(computed.activeBolt !== null);
+            assert.ok(computed.activeBolts.length > 0);
             assert.ok(computed.pendingBolts.length > 0);
             assert.strictEqual(computed.boltStats.active, 1);
             assert.strictEqual(computed.boltStats.queued, 1);

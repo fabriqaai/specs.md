@@ -110,10 +110,10 @@ export class StateStore implements IStateStore {
     }
 
     /**
-     * Gets the active bolt.
+     * Gets all active bolts.
      */
-    getActiveBolt(): Bolt | null {
-        return this._state.computed.activeBolt;
+    getActiveBolts(): Bolt[] {
+        return this._state.computed.activeBolts;
     }
 
     /**
@@ -307,7 +307,7 @@ export class StateStore implements IStateStore {
                 ? { name: state.computed.currentIntent.name, number: state.computed.currentIntent.number }
                 : null,
             stats: state.computed.boltStats,
-            activeBolt: state.computed.activeBolt,
+            activeBolts: state.computed.activeBolts,
             pendingBolts: state.computed.pendingBolts,
             completedBolts: state.computed.completedBolts,
             activityFeed: this.getActivityFeed(),
@@ -384,7 +384,7 @@ export class StateStore implements IStateStore {
 export interface WebviewSnapshot {
     currentIntent: { name: string; number: string } | null;
     stats: BoltStats;
-    activeBolt: Bolt | null;
+    activeBolts: Bolt[];
     pendingBolts: Bolt[];
     completedBolts: Bolt[];
     activityFeed: ActivityEvent[];

@@ -252,6 +252,10 @@ export class SpecsmdApp extends BaseElement {
                 transform: rotate(-90deg);
             }
 
+            .unit-icon {
+                font-size: 12px;
+            }
+
             .unit-status {
                 width: 16px;
                 height: 16px;
@@ -274,6 +278,33 @@ export class SpecsmdApp extends BaseElement {
             .unit-name {
                 flex: 1;
                 font-size: 11px;
+            }
+
+            /* Spec open buttons (magnifier icons) */
+            .spec-open-btn {
+                background: none;
+                border: none;
+                color: var(--description-foreground);
+                cursor: pointer;
+                padding: 4px;
+                font-size: 12px;
+                border-radius: 4px;
+                opacity: 0;
+                transition: all 0.15s;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+            .intent-header:hover .spec-open-btn,
+            .unit-header:hover .spec-open-btn {
+                opacity: 0.7;
+            }
+
+            .spec-open-btn:hover {
+                opacity: 1 !important;
+                background: var(--vscode-list-hoverBackground);
+                color: var(--foreground);
             }
 
             .unit-progress {
@@ -302,6 +333,11 @@ export class SpecsmdApp extends BaseElement {
 
             .spec-story-item:hover {
                 background: var(--vscode-list-hoverBackground);
+            }
+
+            .spec-story-icon {
+                font-size: 11px;
+                opacity: 0.7;
             }
 
             .spec-story-status {
@@ -333,6 +369,13 @@ export class SpecsmdApp extends BaseElement {
             }
 
             .spec-story-name.complete {
+                color: var(--description-foreground);
+            }
+
+            .spec-no-stories {
+                padding: 8px 12px 8px 52px;
+                font-size: 11px;
+                font-style: italic;
                 color: var(--description-foreground);
             }
 
@@ -493,6 +536,144 @@ export class SpecsmdApp extends BaseElement {
     disconnectedCallback(): void {
         super.disconnectedCallback();
         window.removeEventListener('message', this._handleMessage);
+    }
+
+    /**
+     * Called after render. Attach event handlers to server-rendered HTML.
+     */
+    updated(changedProperties: Map<string, unknown>): void {
+        super.updated(changedProperties);
+
+        // Attach handlers for specs view whenever specsHtml changes or becomes active
+        if (changedProperties.has('_specsHtml') || changedProperties.has('_activeTab')) {
+            this._attachSpecsViewHandlers();
+        }
+
+        // Attach handlers for overview view
+        if (changedProperties.has('_overviewHtml') || changedProperties.has('_activeTab')) {
+            this._attachOverviewViewHandlers();
+        }
+    }
+
+    /**
+     * Attach event handlers to specs view server-rendered HTML.
+     */
+    private _attachSpecsViewHandlers(): void {
+        const specsView = this.shadowRoot?.querySelector('#specs-view');
+        if (!specsView) return;
+
+        // Intent expand/collapse
+        specsView.querySelectorAll('.intent-header').forEach(header => {
+            header.addEventListener('click', (e) => {
+                // Don't toggle if clicking on the open button
+                if ((e.target as HTMLElement).closest('.spec-open-btn')) {
+                    return;
+                }
+                header.parentElement?.classList.toggle('collapsed');
+            });
+        });
+
+        // Intent open button (magnifier) - opens intent requirements file
+        specsView.querySelectorAll('.intent-open-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const path = (btn as HTMLElement).dataset.path;
+                if (path) {
+                    vscode.postMessage({ type: 'openArtifact', kind: 'intent', path });
+                }
+            });
+        });
+
+        // Unit expand/collapse
+        specsView.querySelectorAll('.unit-header').forEach(header => {
+            header.addEventListener('click', (e) => {
+                // Don't toggle if clicking on the open button
+                if ((e.target as HTMLElement).closest('.spec-open-btn')) {
+                    return;
+                }
+                e.stopPropagation();
+                header.parentElement?.classList.toggle('collapsed');
+            });
+        });
+
+        // Unit open button (magnifier) - opens unit brief file
+        specsView.querySelectorAll('.unit-open-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const path = (btn as HTMLElement).dataset.path;
+                if (path) {
+                    vscode.postMessage({ type: 'openArtifact', kind: 'unit', path });
+                }
+            });
+        });
+
+        // Story click
+        specsView.querySelectorAll('.spec-story-item').forEach(item => {
+            item.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const path = (item as HTMLElement).dataset.path;
+                if (path) {
+                    vscode.postMessage({ type: 'openArtifact', kind: 'story', path });
+                }
+            });
+        });
+    }
+
+    /**
+     * Attach event handlers to overview view server-rendered HTML.
+     */
+    private _attachOverviewViewHandlers(): void {
+        const overviewView = this.shadowRoot?.querySelector('#overview-view');
+        if (!overviewView) return;
+
+        // List item clicks
+        overviewView.querySelectorAll('.overview-list-item').forEach(item => {
+            item.addEventListener('click', () => {
+                const htmlItem = item as HTMLElement;
+                const path = htmlItem.dataset.path;
+                const intent = htmlItem.dataset.intent;
+                const actionType = htmlItem.dataset.actionType;
+
+                if (path) {
+                    vscode.postMessage({ type: 'openArtifact', kind: 'standard', path });
+                } else if (intent) {
+                    // Switch to specs tab when clicking on an intent
+                    this._activeTab = 'specs';
+                    vscode.postMessage({ type: 'tabChange', tab: 'specs' });
+                } else if (actionType) {
+                    const targetId = htmlItem.dataset.targetId;
+                    this._handleSuggestedAction(actionType, targetId);
+                }
+            });
+        });
+
+        // Website link
+        const websiteLink = overviewView.querySelector('#specsWebsiteLink');
+        if (websiteLink) {
+            websiteLink.addEventListener('click', () => {
+                vscode.postMessage({ type: 'openExternal', url: 'https://specs.md' });
+            });
+        }
+    }
+
+    /**
+     * Handle suggested action clicks.
+     */
+    private _handleSuggestedAction(actionType: string, targetId?: string): void {
+        switch (actionType) {
+            case 'continue-bolt':
+            case 'start-bolt':
+            case 'unblock-bolt':
+                if (targetId) {
+                    vscode.postMessage({ type: 'startBolt', boltId: targetId });
+                }
+                break;
+            case 'complete-stage':
+                if (targetId) {
+                    vscode.postMessage({ type: 'continueBolt', boltId: targetId, boltName: targetId });
+                }
+                break;
+        }
     }
 
     render() {

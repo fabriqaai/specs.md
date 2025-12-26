@@ -151,7 +151,7 @@ suite('Webview Provider Test Suite', () => {
             const emptyData: WebviewData = {
                 currentIntent: null,
                 stats: { active: 0, queued: 0, done: 0, blocked: 0 },
-                activeBolt: null,
+                activeBolts: [],
                 upNextQueue: [],
                 activityEvents: [],
                 intents: [],
@@ -163,7 +163,7 @@ suite('Webview Provider Test Suite', () => {
             };
 
             assert.strictEqual(emptyData.currentIntent, null);
-            assert.strictEqual(emptyData.activeBolt, null);
+            assert.strictEqual(emptyData.activeBolts.length, 0);
             assert.strictEqual(emptyData.upNextQueue.length, 0);
             assert.strictEqual(emptyData.activityEvents.length, 0);
             assert.strictEqual(emptyData.intents.length, 0);

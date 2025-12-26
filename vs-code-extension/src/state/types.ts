@@ -116,8 +116,8 @@ export interface NextAction {
 export interface ComputedState {
     /** Currently selected intent (first intent with active bolts, or first intent) */
     currentIntent: Intent | null;
-    /** Currently active bolt (first in-progress bolt) */
-    activeBolt: Bolt | null;
+    /** All currently active bolts (in-progress), sorted by most recent */
+    activeBolts: Bolt[];
     /** Pending bolts ordered by dependency priority */
     pendingBolts: Bolt[];
     /** Completed bolts */
@@ -208,7 +208,7 @@ export interface IStateReader {
 
     // Computed value accessors (selector shortcuts)
     getCurrentIntent(): Intent | null;
-    getActiveBolt(): Bolt | null;
+    getActiveBolts(): Bolt[];
     getPendingBolts(): Bolt[];
     getActivityFeed(filter?: ActivityFilter): ActivityEvent[];
     getBoltStats(): BoltStats;
@@ -269,7 +269,7 @@ export const DEFAULT_UI_STATE: UIState = {
 
 export const EMPTY_COMPUTED_STATE: ComputedState = {
     currentIntent: null,
-    activeBolt: null,
+    activeBolts: [],
     pendingBolts: [],
     completedBolts: [],
     activityFeed: [],

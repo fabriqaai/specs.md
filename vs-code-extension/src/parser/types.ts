@@ -234,4 +234,6 @@ export interface ActivityEvent {
     targetName: string;
     /** Category tag for filtering */
     tag: 'bolt' | 'stage';
+    /** Path to the bolt.md file for navigation */
+    path?: string;
 }

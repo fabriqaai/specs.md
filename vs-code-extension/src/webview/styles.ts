@@ -899,6 +899,10 @@ export function getStyles(): string {
         transition: background 0.15s;
     }
 
+    .unit-header:hover {
+        background: var(--vscode-list-hoverBackground);
+    }
+
     .unit-expand {
         font-size: 10px;
         color: var(--vscode-descriptionForeground);
@@ -907,6 +911,10 @@ export function getStyles(): string {
 
     .unit-item.collapsed .unit-expand {
         transform: rotate(-90deg);
+    }
+
+    .unit-icon {
+        font-size: 12px;
     }
 
     .unit-status {
@@ -933,6 +941,33 @@ export function getStyles(): string {
         font-size: 11px;
     }
 
+    /* Spec open buttons (magnifier icons) */
+    .spec-open-btn {
+        background: none;
+        border: none;
+        color: var(--vscode-descriptionForeground);
+        cursor: pointer;
+        padding: 4px;
+        font-size: 12px;
+        border-radius: 4px;
+        opacity: 0;
+        transition: all 0.15s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .intent-header:hover .spec-open-btn,
+    .unit-header:hover .spec-open-btn {
+        opacity: 0.7;
+    }
+
+    .spec-open-btn:hover {
+        opacity: 1 !important;
+        background: var(--vscode-list-hoverBackground);
+        color: var(--vscode-foreground);
+    }
+
     .unit-progress {
         font-size: 9px;
         color: var(--vscode-descriptionForeground);
@@ -955,6 +990,15 @@ export function getStyles(): string {
         padding: 6px 12px 6px 52px;
         cursor: pointer;
         transition: background 0.15s;
+    }
+
+    .spec-story-item:hover {
+        background: var(--vscode-list-hoverBackground);
+    }
+
+    .spec-story-icon {
+        font-size: 11px;
+        opacity: 0.7;
     }
 
     .spec-story-status {
@@ -986,6 +1030,13 @@ export function getStyles(): string {
     }
 
     .spec-story-name.complete {
+        color: var(--vscode-descriptionForeground);
+    }
+
+    .spec-no-stories {
+        padding: 8px 12px 8px 52px;
+        font-size: 11px;
+        font-style: italic;
         color: var(--vscode-descriptionForeground);
     }
 

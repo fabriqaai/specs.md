@@ -183,7 +183,7 @@ export class FocusCard extends BaseElement {
             }
 
             .action-btn-secondary:hover {
-                background: var(--description-foreground);
+                background: rgba(255, 255, 255, 0.15);
             }
         `
     ];

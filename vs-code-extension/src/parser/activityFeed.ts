@@ -71,7 +71,8 @@ function createEvent(
         text,
         targetId: bolt.id,
         targetName: getBoltDisplayName(bolt.id),
-        tag
+        tag,
+        path: bolt.filePath
     };
 }
 

@@ -209,31 +209,29 @@ export const selectCurrentIntentByPendingBolts: IntentSelectionStrategy = (inten
 // ============================================================================
 
 /**
- * Strategy for selecting the active bolt.
+ * Strategy for selecting active bolts (supports multiple).
  */
-export type BoltSelectionStrategy = (bolts: Bolt[]) => Bolt | null;
+export type BoltSelectionStrategy = (bolts: Bolt[]) => Bolt[];
 
 /**
- * Default strategy: First in-progress bolt.
+ * Default strategy: All in-progress bolts, sorted by most recently started.
  */
-export const selectActiveBoltDefault: BoltSelectionStrategy = (bolts) => {
-    return bolts.find(b => b.status === ArtifactStatus.InProgress) || null;
+export const selectActiveBoltsDefault: BoltSelectionStrategy = (bolts) => {
+    return bolts
+        .filter(b => b.status === ArtifactStatus.InProgress)
+        .sort((a, b) => {
+            const aTime = a.startedAt?.getTime() ?? 0;
+            const bTime = b.startedAt?.getTime() ?? 0;
+            return bTime - aTime; // Most recent first
+        });
 };
 
 /**
- * Strategy: Most recently started in-progress bolt.
+ * Legacy: First in-progress bolt only (for backwards compatibility).
+ * @deprecated Use selectActiveBoltsDefault instead
  */
-export const selectActiveBoltMostRecent: BoltSelectionStrategy = (bolts) => {
-    const inProgress = bolts.filter(b => b.status === ArtifactStatus.InProgress);
-    if (inProgress.length === 0) {
-        return null;
-    }
-
-    return inProgress.sort((a, b) => {
-        const aTime = a.startedAt?.getTime() ?? 0;
-        const bTime = b.startedAt?.getTime() ?? 0;
-        return bTime - aTime; // Most recent first
-    })[0];
+export const selectActiveBoltDefault = (bolts: Bolt[]): Bolt | null => {
+    return bolts.find(b => b.status === ArtifactStatus.InProgress) || null;
 };
 
 // ============================================================================
@@ -555,7 +553,7 @@ export interface ComputeConfig {
  */
 export const DEFAULT_COMPUTE_CONFIG: ComputeConfig = {
     intentSelector: selectCurrentIntentDefault,
-    boltSelector: selectActiveBoltDefault
+    boltSelector: selectActiveBoltsDefault
 };
 
 /**
@@ -574,7 +572,7 @@ export function computeState(
 
     // Compute each derived value
     const currentIntent = config.intentSelector(intents, boltsWithDeps);
-    const activeBolt = config.boltSelector(boltsWithDeps);
+    const activeBolts = config.boltSelector(boltsWithDeps);
     const pendingBolts = selectPendingBolts(boltsWithDeps);
     const completedBolts = selectCompletedBolts(boltsWithDeps);
     const activityFeed = selectActivityFeed(boltsWithDeps);
@@ -584,7 +582,7 @@ export function computeState(
 
     return {
         currentIntent,
-        activeBolt,
+        activeBolts,
         pendingBolts,
         completedBolts,
         activityFeed,

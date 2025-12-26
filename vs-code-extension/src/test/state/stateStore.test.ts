@@ -138,7 +138,7 @@ suite('StateStore Test Suite', () => {
             assert.strictEqual(state.workspace.isProject, true);
             assert.strictEqual(state.intents.size, 1);
             assert.strictEqual(state.bolts.size, 1);
-            assert.ok(state.computed.activeBolt !== null);
+            assert.ok(state.computed.activeBolts.length > 0);
         });
     });
 
@@ -230,7 +230,7 @@ suite('StateStore Test Suite', () => {
             });
 
             const state = store.getState();
-            assert.ok(state.computed.activeBolt !== null);
+            assert.ok(state.computed.activeBolts.length > 0);
             assert.strictEqual(state.computed.boltStats.active, 1);
         });
 
@@ -275,11 +275,11 @@ suite('StateStore Test Suite', () => {
                 bolts: [createBolt({ id: 'bolt-1', status: ArtifactStatus.Draft })]
             });
 
-            assert.strictEqual(store.getActiveBolt(), null);
+            assert.strictEqual(store.getActiveBolts().length, 0);
 
             store.updateBolt(createBolt({ id: 'bolt-1', status: ArtifactStatus.InProgress }));
 
-            assert.ok(store.getActiveBolt() !== null);
+            assert.ok(store.getActiveBolts().length > 0);
         });
     });
 
@@ -337,25 +337,29 @@ suite('StateStore Test Suite', () => {
         });
     });
 
-    suite('getActiveBolt', () => {
+    suite('getActiveBolts', () => {
 
-        test('should return null when no active bolts', () => {
+        test('should return empty array when no active bolts', () => {
             const store = createStateStore();
             store.setEntities({
                 bolts: [createBolt({ status: ArtifactStatus.Draft })]
             });
-            assert.strictEqual(store.getActiveBolt(), null);
+            assert.strictEqual(store.getActiveBolts().length, 0);
         });
 
-        test('should return in-progress bolt', () => {
+        test('should return all in-progress bolts', () => {
             const store = createStateStore();
             store.setEntities({
-                bolts: [createBolt({ id: 'active-bolt', status: ArtifactStatus.InProgress })]
+                bolts: [
+                    createBolt({ id: 'active-bolt-1', status: ArtifactStatus.InProgress }),
+                    createBolt({ id: 'active-bolt-2', status: ArtifactStatus.InProgress })
+                ]
             });
 
-            const bolt = store.getActiveBolt();
-            assert.ok(bolt);
-            assert.strictEqual(bolt.id, 'active-bolt');
+            const bolts = store.getActiveBolts();
+            assert.strictEqual(bolts.length, 2);
+            assert.ok(bolts.some(b => b.id === 'active-bolt-1'));
+            assert.ok(bolts.some(b => b.id === 'active-bolt-2'));
         });
     });
 
@@ -535,7 +539,7 @@ suite('StateStore Test Suite', () => {
             const snapshot = store.getWebviewSnapshot();
 
             assert.ok(snapshot.currentIntent !== null);
-            assert.ok(snapshot.activeBolt !== null);
+            assert.ok(snapshot.activeBolts.length > 0);
             assert.strictEqual(snapshot.intents.length, 1);
             assert.strictEqual(snapshot.standards.length, 1);
             assert.strictEqual(snapshot.isProject, true);

@@ -21,7 +21,7 @@ import type { ActivityFilter } from './activity-feed.js';
 export interface BoltsViewData {
     currentIntent: IntentInfo | null;
     stats: BoltStats;
-    activeBolt: ActiveBoltData | null;
+    activeBolts: ActiveBoltData[];
     upNextQueue: QueuedBoltData[];
     activityEvents: ActivityEventData[];
     focusCardExpanded: boolean;
@@ -87,9 +87,8 @@ export class BoltsView extends BaseElement {
 
             <div class="content">
                 <focus-section
-                    .bolt=${this.data.activeBolt}
-                    .expanded=${this.data.focusCardExpanded}
-                    @toggle-expand=${this._handleToggleFocus}
+                    .bolts=${this.data.activeBolts}
+                    @toggle-focus=${this._handleToggleFocus}
                     @continue-bolt=${this._handleContinueBolt}
                     @view-files=${this._handleViewFiles}>
                 </focus-section>

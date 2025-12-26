@@ -153,7 +153,7 @@ function getFocusCardBodyHtml(bolt: ActiveBoltData): string {
  * Generate focus section HTML.
  */
 export function getFocusSectionHtml(data: WebviewData): string {
-    if (!data.activeBolt) {
+    if (!data.activeBolts || data.activeBolts.length === 0) {
         return `
         <div class="focus-section">
             <div class="section-label">
@@ -167,7 +167,8 @@ export function getFocusSectionHtml(data: WebviewData): string {
         </div>`;
     }
 
-    const bolt = data.activeBolt;
+    // Render the most recent active bolt (first in the sorted array)
+    const bolt = data.activeBolts[0];
     const stageLabel = bolt.currentStage
         ? capitalize(bolt.currentStage)
         : 'Not started';
@@ -349,11 +350,12 @@ export function getSpecsViewHtml(data: WebviewData): string {
             <div class="intent-item">
                 <div class="intent-header" data-intent="${escapeHtml(intent.number)}">
                     <span class="intent-expand">&#9660;</span>
-                    <span class="intent-icon">&#128203;</span>
+                    <span class="intent-icon">&#127919;</span>
                     <div class="intent-info">
                         <div class="intent-name">${escapeHtml(intent.number)}-${escapeHtml(intent.name)}</div>
                         <div class="intent-meta">${intent.units.length} units | ${intent.storiesTotal} stories</div>
                     </div>
+                    <button type="button" class="spec-open-btn intent-open-btn" data-path="${escapeHtml(intent.path)}/requirements.md" title="Open intent requirements">&#128269;</button>
                     <div class="intent-progress-ring">
                         <svg width="28" height="28" viewBox="0 0 28 28">
                             <circle class="ring-bg" cx="14" cy="14" r="11"></circle>
@@ -367,21 +369,24 @@ export function getSpecsViewHtml(data: WebviewData): string {
                         <div class="unit-item">
                             <div class="unit-header" data-unit="${escapeHtml(unit.name)}">
                                 <span class="unit-expand">&#9660;</span>
-                                <div class="unit-status ${unit.status}">
-                                    ${unit.status === 'complete' ? '&#10003;' : ''}
-                                </div>
+                                <span class="unit-icon">&#128218;</span>
                                 <span class="unit-name">${escapeHtml(unit.name)}</span>
+                                <button type="button" class="spec-open-btn unit-open-btn" data-path="${escapeHtml(unit.path)}/unit-brief.md" title="Open unit brief">&#128269;</button>
                                 <span class="unit-progress">${unit.storiesComplete}/${unit.storiesTotal}</span>
                             </div>
                             <div class="unit-content">
-                                ${unit.stories.map(story => `
-                                    <div class="spec-story-item" data-path="${escapeHtml(story.path)}">
-                                        <div class="spec-story-status ${story.status}">
-                                            ${story.status === 'complete' ? '&#10003;' : story.status === 'active' ? '&#9679;' : ''}
+                                ${unit.stories.length > 0
+                                    ? unit.stories.map(story => `
+                                        <div class="spec-story-item" data-path="${escapeHtml(story.path)}">
+                                            <span class="spec-story-icon">&#128221;</span>
+                                            <div class="spec-story-status ${story.status}">
+                                                ${story.status === 'complete' ? '&#10003;' : story.status === 'active' ? '&#9679;' : ''}
+                                            </div>
+                                            <span class="spec-story-name ${story.status === 'complete' ? 'complete' : ''}">${escapeHtml(story.id)}-${escapeHtml(story.title)}</span>
                                         </div>
-                                        <span class="spec-story-name ${story.status === 'complete' ? 'complete' : ''}">${escapeHtml(story.id)}-${escapeHtml(story.title)}</span>
-                                    </div>
-                                `).join('')}
+                                    `).join('')
+                                    : `<div class="spec-no-stories">No stories in this unit</div>`
+                                }
                             </div>
                         </div>
                     `).join('')}

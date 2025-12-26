@@ -100,7 +100,7 @@ suite('Webview Messaging Test Suite', () => {
             const data: WebviewData = {
                 currentIntent: null,
                 stats: { active: 0, queued: 0, done: 0, blocked: 0 },
-                activeBolt: null,
+                activeBolts: [],
                 upNextQueue: [],
                 activityEvents: [],
                 intents: [],
@@ -113,7 +113,7 @@ suite('Webview Messaging Test Suite', () => {
 
             assert.strictEqual(data.currentIntent, null);
             assert.strictEqual(data.stats.active, 0);
-            assert.strictEqual(data.activeBolt, null);
+            assert.strictEqual(data.activeBolts.length, 0);
             assert.strictEqual(data.upNextQueue.length, 0);
             assert.strictEqual(data.focusCardExpanded, false);
             assert.strictEqual(data.activityFilter, 'all');
@@ -124,7 +124,7 @@ suite('Webview Messaging Test Suite', () => {
             const data: WebviewData = {
                 currentIntent: null,
                 stats: { active: 0, queued: 0, done: 0, blocked: 0 },
-                activeBolt: null,
+                activeBolts: [],
                 upNextQueue: [],
                 activityEvents: [],
                 intents: [],
@@ -144,7 +144,7 @@ suite('Webview Messaging Test Suite', () => {
             const data: WebviewData = {
                 currentIntent: { name: 'Test Intent', number: '001' },
                 stats: { active: 1, queued: 3, done: 5, blocked: 2 },
-                activeBolt: {
+                activeBolts: [{
                     id: 'bolt-1',
                     name: 'Test Bolt',
                     type: 'DDD',
@@ -160,7 +160,7 @@ suite('Webview Messaging Test Suite', () => {
                     stories: [
                         { id: '001', name: 'Story 1', status: 'complete' }
                     ]
-                },
+                }],
                 upNextQueue: [
                     {
                         id: 'bolt-2',
@@ -206,7 +206,7 @@ suite('Webview Messaging Test Suite', () => {
 
             assert.strictEqual(data.currentIntent?.name, 'Test Intent');
             assert.strictEqual(data.stats.active, 1);
-            assert.strictEqual(data.activeBolt?.currentStage, 'implement');
+            assert.strictEqual(data.activeBolts[0]?.currentStage, 'implement');
             assert.strictEqual(data.upNextQueue.length, 1);
             assert.strictEqual(data.activityEvents.length, 1);
         });

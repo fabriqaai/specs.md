@@ -269,11 +269,21 @@ export class SpecsmdWebviewProvider implements vscode.WebviewViewProvider {
             return;
         }
 
+        // Debug: Log intents data for specs view
+        console.log('[SpecsMD] Sending data to webview. Intents count:', data.intents.length);
+        if (data.intents.length > 0) {
+            const firstIntent = data.intents[0];
+            console.log('[SpecsMD] First intent:', firstIntent.number, firstIntent.name, 'units:', firstIntent.units.length);
+            if (firstIntent.units.length > 0) {
+                console.log('[SpecsMD] First unit:', firstIntent.units[0].name, 'stories:', firstIntent.units[0].stories.length);
+            }
+        }
+
         // Build structured data for Bolts view (Lit components)
         const boltsData = {
             currentIntent: data.currentIntent,
             stats: data.stats,
-            activeBolt: data.activeBolt,
+            activeBolts: data.activeBolts,
             upNextQueue: data.upNextQueue,
             activityEvents: data.activityEvents,
             focusCardExpanded: data.focusCardExpanded,
@@ -284,6 +294,9 @@ export class SpecsmdWebviewProvider implements vscode.WebviewViewProvider {
         // Generate HTML for specs/overview views (hybrid approach)
         const specsHtml = getSpecsViewHtml(data);
         const overviewHtml = getOverviewViewHtml(data);
+
+        // Debug: Log generated HTML lengths
+        console.log('[SpecsMD] specsHtml length:', specsHtml.length, 'overviewHtml length:', overviewHtml.length);
 
         // Send to webview
         this._view.webview.postMessage({
@@ -305,7 +318,7 @@ export class SpecsmdWebviewProvider implements vscode.WebviewViewProvider {
             return {
                 currentIntent: null,
                 stats: { active: 0, queued: 0, done: 0, blocked: 0 },
-                activeBolt: null,
+                activeBolts: [],
                 upNextQueue: [],
                 activityEvents: [],
                 intents: [],
@@ -318,17 +331,15 @@ export class SpecsmdWebviewProvider implements vscode.WebviewViewProvider {
         }
 
         // Get computed values from state
-        const { currentIntent, activeBolt, pendingBolts, activityFeed, boltStats, nextActions } = state.computed;
+        const { currentIntent, activeBolts, pendingBolts, activityFeed, boltStats, nextActions } = state.computed;
 
         // Transform current intent
         const currentIntentData = currentIntent
             ? { name: currentIntent.name, number: currentIntent.number }
             : null;
 
-        // Transform active bolt
-        const activeBoltData = activeBolt
-            ? this._transformActiveBolt(activeBolt)
-            : null;
+        // Transform active bolts (supports multiple)
+        const activeBoltsData = activeBolts.map(bolt => this._transformActiveBolt(bolt));
 
         // Transform pending bolts to queue
         const upNextQueue = pendingBolts.slice(0, 5).map(bolt => this._transformQueuedBolt(bolt));
@@ -346,7 +357,7 @@ export class SpecsmdWebviewProvider implements vscode.WebviewViewProvider {
                 tag: event.tag,
                 relativeTime: formatRelativeTime(event.timestamp, now),
                 exactTime: this._formatExactTime(event.timestamp),
-                path: bolt?.path
+                path: bolt?.filePath
             };
         });
 
@@ -372,7 +383,7 @@ export class SpecsmdWebviewProvider implements vscode.WebviewViewProvider {
         return {
             currentIntent: currentIntentData,
             stats: boltStats,
-            activeBolt: activeBoltData,
+            activeBolts: activeBoltsData,
             upNextQueue,
             activityEvents,
             intents,
@@ -457,9 +468,15 @@ export class SpecsmdWebviewProvider implements vscode.WebviewViewProvider {
         const state = this._store.getState();
         const intents = Array.from(state.intents.values());
 
+        console.log('[SpecsMD] _buildIntentsData: intents from state:', intents.length);
+
         return intents.map(intent => {
-            const units: UnitData[] = intent.units.map(unit => {
-                const stories: StoryData[] = unit.stories.map(story => ({
+            console.log('[SpecsMD] Processing intent:', intent.number, intent.name, 'units:', intent.units?.length ?? 'undefined');
+
+            const units: UnitData[] = (intent.units || []).map(unit => {
+                console.log('[SpecsMD]   Unit:', unit.name, 'stories:', unit.stories?.length ?? 'undefined');
+
+                const stories: StoryData[] = (unit.stories || []).map(story => ({
                     id: story.id,
                     title: story.title,
                     path: story.path,
@@ -480,6 +497,8 @@ export class SpecsmdWebviewProvider implements vscode.WebviewViewProvider {
 
             const storiesComplete = units.reduce((sum, u) => sum + u.storiesComplete, 0);
             const storiesTotal = units.reduce((sum, u) => sum + u.storiesTotal, 0);
+
+            console.log('[SpecsMD] Intent result:', intent.number, 'units:', units.length, 'total stories:', storiesTotal);
 
             return {
                 name: intent.name,
@@ -655,13 +674,13 @@ export class SpecsmdWebviewProvider implements vscode.WebviewViewProvider {
         const state = this._store.getState();
         const bolt = state.bolts.get(boltId);
 
-        if (bolt?.path) {
+        if (bolt?.filePath) {
             try {
-                const uri = vscode.Uri.file(bolt.path);
+                const uri = vscode.Uri.file(bolt.filePath);
                 const doc = await vscode.workspace.openTextDocument(uri);
                 await vscode.window.showTextDocument(doc);
             } catch (error) {
-                vscode.window.showErrorMessage(`Failed to open bolt file: ${bolt.path}`);
+                vscode.window.showErrorMessage(`Failed to open bolt file: ${bolt.filePath}`);
             }
         } else {
             vscode.window.showWarningMessage(`Bolt file not found: ${boltId}`);

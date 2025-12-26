@@ -53,8 +53,8 @@ export interface WebviewData {
         blocked: number;
     };
 
-    /** Active bolt (Current Focus) */
-    activeBolt: ActiveBoltData | null;
+    /** Active bolts (Current Focus) - supports multiple */
+    activeBolts: ActiveBoltData[];
 
     /** Up Next queue */
     upNextQueue: QueuedBoltData[];
