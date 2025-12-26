@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Variation 8: Command Center View</title>
+  <title>Variation 8: Command Center View (Interactive)</title>
   <style>
     /* VS Code Theme Variables */
     :root {
@@ -51,7 +51,7 @@
     }
 
     .sidebar {
-      width: 340px;
+      width: 360px;
       min-height: 100vh;
       background: var(--vscode-sideBar-background);
       border-right: 1px solid var(--vscode-input-border);
@@ -86,11 +86,17 @@
       padding: 4px 6px;
       border-radius: 4px;
       font-size: 14px;
+      transition: all 0.15s;
     }
 
     .icon-btn:hover {
       background: var(--vscode-list-hoverBackground);
       color: var(--vscode-editor-foreground);
+    }
+
+    .icon-btn.active {
+      background: var(--accent-primary);
+      color: white;
     }
 
     /* Theme Toggle */
@@ -111,6 +117,7 @@
       color: var(--vscode-editor-foreground);
       border-radius: 4px;
       cursor: pointer;
+      transition: all 0.15s;
     }
 
     .theme-btn.active {
@@ -119,11 +126,48 @@
       color: white;
     }
 
+    /* Filter Bar */
+    .filter-bar {
+      padding: 8px 12px;
+      background: var(--vscode-sideBarSectionHeader-background);
+      border-bottom: 1px solid var(--vscode-input-border);
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .filter-bar select {
+      flex: 1;
+      padding: 5px 8px;
+      font-size: 11px;
+      border: 1px solid var(--vscode-input-border);
+      background: var(--vscode-input-background);
+      color: var(--vscode-editor-foreground);
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .filter-bar select:focus {
+      outline: 1px solid var(--accent-primary);
+    }
+
+    .filter-label {
+      font-size: 10px;
+      color: var(--vscode-descriptionForeground);
+      white-space: nowrap;
+    }
+
     /* Mission Status */
     .mission-status {
       padding: 16px;
       background: linear-gradient(135deg, var(--vscode-editor-background) 0%, rgba(249, 115, 22, 0.1) 100%);
       border-bottom: 1px solid var(--vscode-input-border);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .mission-status:hover {
+      background: linear-gradient(135deg, var(--vscode-editor-background) 0%, rgba(249, 115, 22, 0.15) 100%);
     }
 
     .mission-label {
@@ -149,6 +193,19 @@
       display: flex;
       align-items: center;
       gap: 6px;
+      cursor: pointer;
+      padding: 4px 8px;
+      margin: -4px -8px;
+      border-radius: 4px;
+      transition: background 0.15s;
+    }
+
+    .mission-stat:hover {
+      background: rgba(255,255,255,0.1);
+    }
+
+    .mission-stat.active {
+      background: rgba(249, 115, 22, 0.2);
     }
 
     .mission-stat-dot {
@@ -196,12 +253,26 @@
       overflow: hidden;
     }
 
+    .focus-card.complete {
+      border-color: var(--status-complete);
+    }
+
     .focus-card-header {
       padding: 12px;
       background: rgba(249, 115, 22, 0.1);
       display: flex;
       justify-content: space-between;
       align-items: flex-start;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .focus-card-header:hover {
+      background: rgba(249, 115, 22, 0.15);
+    }
+
+    .focus-card.complete .focus-card-header {
+      background: rgba(34, 197, 94, 0.1);
     }
 
     .focus-card-title {
@@ -223,7 +294,19 @@
       color: white;
     }
 
+    .focus-card-badge.complete {
+      background: var(--status-complete);
+    }
+
     .focus-card-body {
+      padding: 12px;
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease, padding 0.3s ease;
+    }
+
+    .focus-card.expanded .focus-card-body {
+      max-height: 400px;
       padding: 12px;
     }
 
@@ -257,7 +340,6 @@
       stroke-width: 6;
       stroke-linecap: round;
       stroke-dasharray: 157;
-      stroke-dashoffset: 94;
       transition: stroke-dashoffset 0.5s ease;
     }
 
@@ -322,6 +404,7 @@
       justify-content: center;
       font-size: 10px;
       font-weight: 600;
+      transition: all 0.2s;
     }
 
     .pipeline-node.complete {
@@ -359,10 +442,76 @@
       background: var(--vscode-input-border);
       margin: 0 -4px;
       margin-bottom: 16px;
+      transition: background 0.3s;
     }
 
     .pipeline-connector.complete {
       background: var(--status-complete);
+    }
+
+    /* Stories List */
+    .stories-section {
+      margin-bottom: 12px;
+    }
+
+    .stories-header {
+      font-size: 10px;
+      color: var(--vscode-descriptionForeground);
+      margin-bottom: 6px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .stories-list {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      max-height: 120px;
+      overflow-y: auto;
+    }
+
+    .story-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 8px;
+      background: var(--vscode-editor-background);
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .story-item:hover {
+      background: var(--vscode-list-hoverBackground);
+    }
+
+    .story-checkbox {
+      width: 14px;
+      height: 14px;
+      border-radius: 3px;
+      border: 1px solid var(--vscode-input-border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      color: white;
+      transition: all 0.15s;
+    }
+
+    .story-checkbox.checked {
+      background: var(--status-complete);
+      border-color: var(--status-complete);
+    }
+
+    .story-name {
+      flex: 1;
+      font-size: 11px;
+    }
+
+    .story-item.completed .story-name {
+      text-decoration: line-through;
+      color: var(--vscode-descriptionForeground);
     }
 
     /* Quick Actions */
@@ -404,6 +553,29 @@
 
     .action-btn-secondary:hover {
       background: var(--vscode-list-hoverBackground);
+    }
+
+    .action-btn-complete {
+      background: var(--status-complete);
+      color: white;
+    }
+
+    /* No Focus State */
+    .no-focus {
+      padding: 20px;
+      text-align: center;
+      color: var(--vscode-descriptionForeground);
+    }
+
+    .no-focus-icon {
+      font-size: 32px;
+      margin-bottom: 8px;
+      opacity: 0.5;
+    }
+
+    .no-focus-text {
+      font-size: 12px;
+      margin-bottom: 12px;
     }
 
     /* Command Queue */
@@ -460,6 +632,16 @@
     .queue-item.expanded {
       background: var(--vscode-list-hoverBackground);
       border-left-color: var(--accent-primary);
+      border-radius: 6px 6px 0 0;
+    }
+
+    .queue-item.active {
+      border-left-color: var(--status-active);
+    }
+
+    .queue-item.complete {
+      border-left-color: var(--status-complete);
+      opacity: 0.7;
     }
 
     .queue-priority {
@@ -525,6 +707,11 @@
       color: white;
     }
 
+    .queue-stage.active {
+      background: var(--accent-primary);
+      color: white;
+    }
+
     .queue-stage.pending {
       background: var(--vscode-input-background);
       color: var(--vscode-descriptionForeground);
@@ -537,15 +724,14 @@
       transition: max-height 0.3s ease;
     }
 
-    .queue-item.expanded + .queue-detail {
-      max-height: 200px;
+    .queue-detail.expanded {
+      max-height: 300px;
     }
 
     .queue-detail-inner {
       padding: 12px;
       background: var(--vscode-sideBar-background);
       border-radius: 0 0 6px 6px;
-      margin-top: -6px;
       border-left: 3px solid var(--accent-primary);
     }
 
@@ -561,6 +747,12 @@
       text-align: center;
       border-radius: 4px;
       font-size: 9px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .queue-detail-stage:hover {
+      transform: scale(1.05);
     }
 
     .queue-detail-stage.complete {
@@ -568,9 +760,20 @@
       color: var(--status-complete);
     }
 
+    .queue-detail-stage.active {
+      background: rgba(249, 115, 22, 0.2);
+      color: var(--accent-primary);
+    }
+
     .queue-detail-stage.pending {
       background: var(--vscode-input-background);
       color: var(--vscode-descriptionForeground);
+    }
+
+    .queue-detail-stories {
+      margin-bottom: 10px;
+      max-height: 80px;
+      overflow-y: auto;
     }
 
     .queue-detail-actions {
@@ -585,6 +788,11 @@
       border: none;
       border-radius: 4px;
       cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .queue-detail-btn:hover {
+      filter: brightness(1.1);
     }
 
     .queue-detail-btn-primary {
@@ -592,10 +800,23 @@
       color: white;
     }
 
+    .queue-detail-btn-complete {
+      background: var(--status-complete);
+      color: white;
+    }
+
     .queue-detail-btn-secondary {
       background: var(--vscode-input-background);
       color: var(--vscode-editor-foreground);
       border: 1px solid var(--vscode-input-border);
+    }
+
+    /* Empty Queue State */
+    .queue-empty {
+      padding: 20px;
+      text-align: center;
+      color: var(--vscode-descriptionForeground);
+      font-size: 11px;
     }
 
     /* System Status */
@@ -610,6 +831,9 @@
       text-transform: uppercase;
       color: var(--vscode-descriptionForeground);
       margin-bottom: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
     }
 
     .system-grid {
@@ -632,6 +856,12 @@
 
     .system-card:hover {
       border-color: var(--vscode-input-border);
+      transform: translateY(-1px);
+    }
+
+    .system-card.active {
+      border-color: var(--accent-primary);
+      background: rgba(249, 115, 22, 0.1);
     }
 
     .system-icon {
@@ -678,6 +908,63 @@
       color: var(--vscode-descriptionForeground);
     }
 
+    /* Detail Panel */
+    .detail-panel {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease;
+      background: var(--vscode-sideBar-background);
+      border-bottom: 1px solid var(--vscode-input-border);
+    }
+
+    .detail-panel.expanded {
+      max-height: 300px;
+    }
+
+    .detail-panel-inner {
+      padding: 12px;
+    }
+
+    .detail-panel-title {
+      font-size: 11px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .detail-list {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+
+    .detail-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 8px;
+      background: var(--vscode-editor-background);
+      border-radius: 4px;
+      font-size: 11px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .detail-item:hover {
+      background: var(--vscode-list-hoverBackground);
+    }
+
+    .detail-item-icon {
+      width: 20px;
+      height: 20px;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+    }
+
     /* Keyboard Shortcut Hints */
     .shortcuts {
       padding: 12px;
@@ -703,6 +990,14 @@
       gap: 4px;
       font-size: 10px;
       color: var(--vscode-descriptionForeground);
+      cursor: pointer;
+      padding: 2px 4px;
+      border-radius: 3px;
+      transition: background 0.15s;
+    }
+
+    .shortcut:hover {
+      background: var(--vscode-list-hoverBackground);
     }
 
     .shortcut-key {
@@ -713,6 +1008,164 @@
       font-family: monospace;
       font-size: 9px;
     }
+
+    /* Toast Notification */
+    .toast {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      padding: 10px 20px;
+      background: var(--vscode-sideBar-background);
+      border: 1px solid var(--accent-primary);
+      border-radius: 6px;
+      font-size: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      opacity: 0;
+      transition: all 0.3s ease;
+      z-index: 1000;
+    }
+
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+
+    .toast.success {
+      border-color: var(--status-complete);
+    }
+
+    /* View Mode Toggle */
+    .view-toggle {
+      padding: 8px 12px;
+      background: var(--vscode-sideBarSectionHeader-background);
+      border-bottom: 1px solid var(--vscode-input-border);
+      display: flex;
+      gap: 4px;
+    }
+
+    .view-btn {
+      flex: 1;
+      padding: 6px 8px;
+      font-size: 10px;
+      border: 1px solid var(--vscode-input-border);
+      background: var(--vscode-input-background);
+      color: var(--vscode-editor-foreground);
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.15s;
+      text-align: center;
+    }
+
+    .view-btn.active {
+      background: var(--accent-primary);
+      border-color: var(--accent-primary);
+      color: white;
+    }
+
+    .view-btn:hover:not(.active) {
+      background: var(--vscode-list-hoverBackground);
+    }
+
+    /* Grouping Controls */
+    .group-controls {
+      padding: 6px 12px;
+      background: var(--vscode-editor-background);
+      border-bottom: 1px solid var(--vscode-input-border);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .group-label {
+      font-size: 10px;
+      color: var(--vscode-descriptionForeground);
+    }
+
+    .group-buttons {
+      display: flex;
+      gap: 4px;
+    }
+
+    .group-btn {
+      padding: 4px 8px;
+      font-size: 9px;
+      border: 1px solid var(--vscode-input-border);
+      background: var(--vscode-input-background);
+      color: var(--vscode-editor-foreground);
+      border-radius: 3px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .group-btn.active {
+      background: var(--accent-primary);
+      border-color: var(--accent-primary);
+      color: white;
+    }
+
+    /* Group Headers */
+    .group-header {
+      padding: 8px 12px;
+      background: var(--vscode-sideBarSectionHeader-background);
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--vscode-descriptionForeground);
+      text-transform: uppercase;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .group-header:hover {
+      background: var(--vscode-list-hoverBackground);
+    }
+
+    .group-chevron {
+      transition: transform 0.2s;
+    }
+
+    .group-header.collapsed .group-chevron {
+      transform: rotate(-90deg);
+    }
+
+    .group-content {
+      max-height: 1000px;
+      overflow: hidden;
+      transition: max-height 0.3s ease;
+    }
+
+    .group-header.collapsed + .group-content {
+      max-height: 0;
+    }
+
+    .group-count {
+      margin-left: auto;
+      padding: 2px 6px;
+      background: var(--vscode-badge-background);
+      border-radius: 10px;
+      font-size: 9px;
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--vscode-input-border);
+      border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--vscode-descriptionForeground);
+    }
   </style>
 </head>
 <body>
@@ -720,246 +1173,99 @@
     <div class="header">
       <span class="header-title">SpecsMD Command</span>
       <div class="header-actions">
-        <button type="button" class="icon-btn" title="Refresh">&#8635;</button>
-        <button type="button" class="icon-btn" title="Settings">&#9881;</button>
+        <button type="button" class="icon-btn" id="refreshBtn" title="Refresh">&#8635;</button>
+        <button type="button" class="icon-btn" id="focusModeBtn" title="Focus Mode">&#127919;</button>
+        <button type="button" class="icon-btn" id="settingsBtn" title="Settings">&#9881;</button>
       </div>
     </div>
 
     <div class="theme-toggle">
-      <button type="button" class="theme-btn active" onclick="setTheme('dark')">Dark</button>
-      <button type="button" class="theme-btn" onclick="setTheme('light')">Light</button>
+      <button type="button" class="theme-btn active" id="darkBtn">Dark</button>
+      <button type="button" class="theme-btn" id="lightBtn">Light</button>
     </div>
 
-    <div class="mission-status">
-      <div class="mission-label">Current Mission</div>
-      <div class="mission-title">001-admin-panel</div>
-      <div class="mission-stats">
-        <div class="mission-stat">
-          <div class="mission-stat-dot" style="background: var(--status-active)"></div>
-          <span class="mission-stat-value">1</span>
-          <span class="mission-stat-label">Active</span>
-        </div>
-        <div class="mission-stat">
-          <div class="mission-stat-dot" style="background: var(--status-pending)"></div>
-          <span class="mission-stat-value">4</span>
-          <span class="mission-stat-label">Queued</span>
-        </div>
-        <div class="mission-stat">
-          <div class="mission-stat-dot" style="background: var(--status-complete)"></div>
-          <span class="mission-stat-value">1</span>
-          <span class="mission-stat-label">Done</span>
-        </div>
-      </div>
+    <div class="view-toggle">
+      <button type="button" class="view-btn active" data-view="command">Command</button>
+      <button type="button" class="view-btn" data-view="queue">Queue</button>
+      <button type="button" class="view-btn" data-view="overview">Overview</button>
     </div>
 
-    <div class="focus-section">
-      <div class="section-label">
-        <span class="section-label-icon">&#127919;</span>
-        Current Focus
+    <div id="commandView">
+      <div class="filter-bar">
+        <span class="filter-label">Filter:</span>
+        <select id="statusFilter" aria-label="Filter by status">
+          <option value="all">All Status</option>
+          <option value="active">In Progress</option>
+          <option value="pending">Pending</option>
+          <option value="complete">Completed</option>
+        </select>
+        <select id="typeFilter" aria-label="Filter by type">
+          <option value="all">All Types</option>
+          <option value="DDD">DDD</option>
+          <option value="Simple">Simple</option>
+        </select>
       </div>
 
-      <div class="focus-card">
-        <div class="focus-card-header">
-          <div>
-            <div class="focus-card-title">user-management-service-1</div>
-            <div class="focus-card-subtitle">DDD Bolt | Construction Phase</div>
-          </div>
-          <div class="focus-card-badge">In Progress</div>
+      <div class="mission-status" id="missionStatus">
+        <div class="mission-label">Current Mission</div>
+        <div class="mission-title" id="missionTitle">001-admin-panel</div>
+        <div class="mission-stats" id="missionStats">
+          <!-- Dynamically rendered -->
         </div>
+      </div>
 
-        <div class="focus-card-body">
-          <div class="progress-ring-container">
-            <div class="progress-ring">
-              <svg width="64" height="64" viewBox="0 0 64 64">
-                <circle class="progress-ring-bg" cx="32" cy="32" r="25"></circle>
-                <circle class="progress-ring-fill" cx="32" cy="32" r="25"></circle>
-              </svg>
-              <div class="progress-ring-text">40%</div>
-            </div>
-            <div class="progress-details">
-              <div class="progress-stage">Stage: <strong>design</strong></div>
-              <div class="progress-info">2 of 5 stages complete</div>
-              <div class="progress-info">2/4 stories done</div>
-            </div>
-          </div>
+      <div class="focus-section">
+        <div class="section-label">
+          <span class="section-label-icon">&#127919;</span>
+          Current Focus
+        </div>
+        <div id="focusCardContainer">
+          <!-- Dynamically rendered -->
+        </div>
+      </div>
 
-          <div class="stage-pipeline">
-            <div class="pipeline-stage" onclick="clickStage('model')">
-              <div class="pipeline-node complete">&#10003;</div>
-              <span class="pipeline-label">Model</span>
-            </div>
-            <div class="pipeline-connector complete"></div>
-            <div class="pipeline-stage" onclick="clickStage('design')">
-              <div class="pipeline-node active">D</div>
-              <span class="pipeline-label">Design</span>
-            </div>
-            <div class="pipeline-connector"></div>
-            <div class="pipeline-stage" onclick="clickStage('adr')">
-              <div class="pipeline-node pending">A</div>
-              <span class="pipeline-label">ADR</span>
-            </div>
-            <div class="pipeline-connector"></div>
-            <div class="pipeline-stage" onclick="clickStage('implement')">
-              <div class="pipeline-node pending">I</div>
-              <span class="pipeline-label">Impl</span>
-            </div>
-            <div class="pipeline-connector"></div>
-            <div class="pipeline-stage" onclick="clickStage('test')">
-              <div class="pipeline-node pending">T</div>
-              <span class="pipeline-label">Test</span>
-            </div>
+      <div class="queue-section">
+        <div class="queue-header">
+          <span class="queue-title">Up Next</span>
+          <span class="queue-count" id="queueCount">0 bolts</span>
+        </div>
+        <div class="group-controls">
+          <span class="group-label">Group by:</span>
+          <div class="group-buttons">
+            <button type="button" class="group-btn active" data-group="none">None</button>
+            <button type="button" class="group-btn" data-group="type">Type</button>
+            <button type="button" class="group-btn" data-group="intent">Intent</button>
           </div>
-
-          <div class="focus-actions">
-            <button type="button" class="action-btn action-btn-primary">
-              <span>&#9654;</span> Continue
-            </button>
-            <button type="button" class="action-btn action-btn-secondary">
-              Files
-            </button>
-            <button type="button" class="action-btn action-btn-secondary">
-              Stories
-            </button>
-          </div>
+        </div>
+        <div class="queue-list" id="queueList">
+          <!-- Dynamically rendered -->
         </div>
       </div>
     </div>
 
-    <div class="queue-section">
-      <div class="queue-header">
-        <span class="queue-title">Up Next</span>
-        <span class="queue-count">4 bolts</span>
-      </div>
+    <div id="queueView" style="display: none;">
+      <!-- Full queue view content -->
+    </div>
 
-      <div class="queue-list">
-        <div class="queue-item" onclick="toggleQueueItem(this)">
-          <div class="queue-priority p1">1</div>
-          <div class="queue-info">
-            <div class="queue-name">admin-panel-ui-1</div>
-            <div class="queue-meta">Simple | 4 stories</div>
-          </div>
-          <div class="queue-stages">
-            <div class="queue-stage pending">M</div>
-            <div class="queue-stage pending">D</div>
-            <div class="queue-stage pending">A</div>
-            <div class="queue-stage pending">I</div>
-            <div class="queue-stage pending">T</div>
-          </div>
-        </div>
-        <div class="queue-detail">
-          <div class="queue-detail-inner">
-            <div class="queue-detail-stages">
-              <div class="queue-detail-stage pending">Model</div>
-              <div class="queue-detail-stage pending">Design</div>
-              <div class="queue-detail-stage pending">ADR</div>
-              <div class="queue-detail-stage pending">Impl</div>
-              <div class="queue-detail-stage pending">Test</div>
-            </div>
-            <div class="queue-detail-actions">
-              <button type="button" class="queue-detail-btn queue-detail-btn-primary">Start Bolt</button>
-              <button type="button" class="queue-detail-btn queue-detail-btn-secondary">Preview</button>
-            </div>
-          </div>
-        </div>
-
-        <div class="queue-item" onclick="toggleQueueItem(this)">
-          <div class="queue-priority p1">2</div>
-          <div class="queue-info">
-            <div class="queue-name">admin-panel-ui-2</div>
-            <div class="queue-meta">Simple | 4 stories</div>
-          </div>
-          <div class="queue-stages">
-            <div class="queue-stage pending">M</div>
-            <div class="queue-stage pending">D</div>
-            <div class="queue-stage pending">A</div>
-            <div class="queue-stage pending">I</div>
-            <div class="queue-stage pending">T</div>
-          </div>
-        </div>
-        <div class="queue-detail">
-          <div class="queue-detail-inner">
-            <div class="queue-detail-actions">
-              <button type="button" class="queue-detail-btn queue-detail-btn-primary">Start Bolt</button>
-            </div>
-          </div>
-        </div>
-
-        <div class="queue-item" onclick="toggleQueueItem(this)">
-          <div class="queue-priority p2">3</div>
-          <div class="queue-info">
-            <div class="queue-name">audit-service-1</div>
-            <div class="queue-meta">DDD | 2 stories</div>
-          </div>
-          <div class="queue-stages">
-            <div class="queue-stage pending">M</div>
-            <div class="queue-stage pending">D</div>
-            <div class="queue-stage pending">A</div>
-            <div class="queue-stage pending">I</div>
-            <div class="queue-stage pending">T</div>
-          </div>
-        </div>
-        <div class="queue-detail">
-          <div class="queue-detail-inner">
-            <div class="queue-detail-actions">
-              <button type="button" class="queue-detail-btn queue-detail-btn-primary">Start Bolt</button>
-            </div>
-          </div>
-        </div>
-
-        <div class="queue-item" onclick="toggleQueueItem(this)">
-          <div class="queue-priority p2">4</div>
-          <div class="queue-info">
-            <div class="queue-name">user-management-service-2</div>
-            <div class="queue-meta">DDD | 4 stories</div>
-          </div>
-          <div class="queue-stages">
-            <div class="queue-stage pending">M</div>
-            <div class="queue-stage pending">D</div>
-            <div class="queue-stage pending">A</div>
-            <div class="queue-stage pending">I</div>
-            <div class="queue-stage pending">T</div>
-          </div>
-        </div>
-        <div class="queue-detail">
-          <div class="queue-detail-inner">
-            <div class="queue-detail-actions">
-              <button type="button" class="queue-detail-btn queue-detail-btn-primary">Start Bolt</button>
-            </div>
-          </div>
-        </div>
-      </div>
+    <div id="overviewView" style="display: none;">
+      <!-- Overview content -->
     </div>
 
     <div class="system-section">
-      <div class="system-header">System Overview</div>
-      <div class="system-grid">
-        <div class="system-card" onclick="navigateTo('intents')">
-          <div class="system-icon intents">&#128203;</div>
-          <div class="system-info">
-            <div class="system-value">1</div>
-            <div class="system-label">Intent</div>
-          </div>
-        </div>
-        <div class="system-card" onclick="navigateTo('bolts')">
-          <div class="system-icon bolts">&#9889;</div>
-          <div class="system-info">
-            <div class="system-value">6</div>
-            <div class="system-label">Bolts</div>
-          </div>
-        </div>
-        <div class="system-card" onclick="navigateTo('stories')">
-          <div class="system-icon stories">&#128196;</div>
-          <div class="system-info">
-            <div class="system-value">24</div>
-            <div class="system-label">Stories</div>
-          </div>
-        </div>
-        <div class="system-card" onclick="navigateTo('standards')">
-          <div class="system-icon standards">&#128218;</div>
-          <div class="system-info">
-            <div class="system-value">3</div>
-            <div class="system-label">Standards</div>
-          </div>
+      <div class="system-header">
+        <span>System Overview</span>
+        <button type="button" class="icon-btn" id="expandSystemBtn" title="Expand">&#9660;</button>
+      </div>
+      <div class="system-grid" id="systemGrid">
+        <!-- Dynamically rendered -->
+      </div>
+    </div>
+
+    <div class="detail-panel" id="detailPanel">
+      <div class="detail-panel-inner">
+        <div class="detail-panel-title" id="detailTitle">Details</div>
+        <div class="detail-list" id="detailList">
+          <!-- Dynamically rendered -->
         </div>
       </div>
     </div>
@@ -967,56 +1273,782 @@
     <div class="shortcuts">
       <div class="shortcuts-title">Keyboard Shortcuts</div>
       <div class="shortcuts-list">
-        <div class="shortcut">
+        <div class="shortcut" data-action="focus">
           <span class="shortcut-key">&#8984;B</span>
           <span>Focus</span>
         </div>
-        <div class="shortcut">
+        <div class="shortcut" data-action="next">
           <span class="shortcut-key">&#8984;N</span>
           <span>Next</span>
         </div>
-        <div class="shortcut">
+        <div class="shortcut" data-action="files">
           <span class="shortcut-key">&#8984;F</span>
           <span>Files</span>
+        </div>
+        <div class="shortcut" data-action="complete">
+          <span class="shortcut-key">&#8984;D</span>
+          <span>Done</span>
         </div>
       </div>
     </div>
   </div>
 
+  <div class="toast" id="toast"></div>
+
   <script>
-    function toggleQueueItem(item) {
-      const wasExpanded = item.classList.contains('expanded');
+    // ==================== DATA MODEL ====================
+    const intents = [
+      { id: 'intent-1', name: '001-admin-panel', status: 'active', progress: 35 },
+      { id: 'intent-2', name: '002-user-dashboard', status: 'pending', progress: 0 }
+    ];
 
-      // Collapse all items
-      document.querySelectorAll('.queue-item').forEach(i => i.classList.remove('expanded'));
+    const units = [
+      { id: 'unit-1', name: 'User Management', intentId: 'intent-1', status: 'active' },
+      { id: 'unit-2', name: 'Admin Panel UI', intentId: 'intent-1', status: 'pending' },
+      { id: 'unit-3', name: 'Audit Service', intentId: 'intent-1', status: 'pending' }
+    ];
 
-      // Toggle clicked item
-      if (!wasExpanded) {
-        item.classList.add('expanded');
+    let bolts = [
+      {
+        id: 'bolt-1',
+        name: 'user-management-service-1',
+        type: 'DDD',
+        unitId: 'unit-1',
+        intentId: 'intent-1',
+        status: 'active',
+        priority: 1,
+        stages: { model: 'complete', design: 'active', adr: 'pending', implement: 'pending', test: 'pending' },
+        stories: [
+          { id: 's1', name: 'Create user entity model', status: 'complete' },
+          { id: 's2', name: 'Design user service interface', status: 'active' },
+          { id: 's3', name: 'Implement authentication flow', status: 'pending' },
+          { id: 's4', name: 'Add user validation', status: 'pending' }
+        ]
+      },
+      {
+        id: 'bolt-2',
+        name: 'user-management-service-2',
+        type: 'DDD',
+        unitId: 'unit-1',
+        intentId: 'intent-1',
+        status: 'pending',
+        priority: 4,
+        stages: { model: 'pending', design: 'pending', adr: 'pending', implement: 'pending', test: 'pending' },
+        stories: [
+          { id: 's5', name: 'Implement user CRUD operations', status: 'pending' },
+          { id: 's6', name: 'Add role-based permissions', status: 'pending' },
+          { id: 's7', name: 'Create user profile features', status: 'pending' },
+          { id: 's8', name: 'Add password reset flow', status: 'pending' }
+        ]
+      },
+      {
+        id: 'bolt-3',
+        name: 'admin-panel-ui-1',
+        type: 'Simple',
+        unitId: 'unit-2',
+        intentId: 'intent-1',
+        status: 'pending',
+        priority: 2,
+        stages: { model: 'pending', design: 'pending', adr: 'pending', implement: 'pending', test: 'pending' },
+        stories: [
+          { id: 's9', name: 'Create admin layout component', status: 'pending' },
+          { id: 's10', name: 'Add navigation sidebar', status: 'pending' },
+          { id: 's11', name: 'Implement dashboard widgets', status: 'pending' },
+          { id: 's12', name: 'Add dark mode support', status: 'pending' }
+        ]
+      },
+      {
+        id: 'bolt-4',
+        name: 'admin-panel-ui-2',
+        type: 'Simple',
+        unitId: 'unit-2',
+        intentId: 'intent-1',
+        status: 'pending',
+        priority: 3,
+        stages: { model: 'pending', design: 'pending', adr: 'pending', implement: 'pending', test: 'pending' },
+        stories: [
+          { id: 's13', name: 'Create user management page', status: 'pending' },
+          { id: 's14', name: 'Add data tables', status: 'pending' },
+          { id: 's15', name: 'Implement filters and search', status: 'pending' },
+          { id: 's16', name: 'Add bulk actions', status: 'pending' }
+        ]
+      },
+      {
+        id: 'bolt-5',
+        name: 'audit-service-1',
+        type: 'DDD',
+        unitId: 'unit-3',
+        intentId: 'intent-1',
+        status: 'pending',
+        priority: 5,
+        stages: { model: 'pending', design: 'pending', adr: 'pending', implement: 'pending', test: 'pending' },
+        stories: [
+          { id: 's17', name: 'Design audit log schema', status: 'pending' },
+          { id: 's18', name: 'Create event capture service', status: 'pending' }
+        ]
+      },
+      {
+        id: 'bolt-6',
+        name: 'auth-integration-1',
+        type: 'Simple',
+        unitId: 'unit-1',
+        intentId: 'intent-1',
+        status: 'complete',
+        priority: 0,
+        stages: { model: 'complete', design: 'complete', adr: 'complete', implement: 'complete', test: 'complete' },
+        stories: [
+          { id: 's19', name: 'Setup OAuth provider', status: 'complete' },
+          { id: 's20', name: 'Implement token refresh', status: 'complete' }
+        ]
+      }
+    ];
+
+    const standards = [
+      { id: 'std-1', name: 'tech-stack.md', type: 'standard' },
+      { id: 'std-2', name: 'coding-standards.md', type: 'standard' },
+      { id: 'std-3', name: 'system-architecture.md', type: 'standard' }
+    ];
+
+    // ==================== STATE ====================
+    let state = {
+      currentView: 'command',
+      statusFilter: 'all',
+      typeFilter: 'all',
+      groupBy: 'none',
+      expandedBolts: new Set(),
+      expandedGroups: new Set(['active', 'pending', 'complete', 'DDD', 'Simple']),
+      focusExpanded: true,
+      activeDetailPanel: null,
+      focusMode: false
+    };
+
+    // ==================== UTILITY FUNCTIONS ====================
+    function showToast(message, type = 'info') {
+      const toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.className = 'toast show' + (type === 'success' ? ' success' : '');
+      setTimeout(() => toast.classList.remove('show'), 2500);
+    }
+
+    function getStageProgress(stages) {
+      const stageOrder = ['model', 'design', 'adr', 'implement', 'test'];
+      let complete = 0;
+      let current = 'model';
+
+      stageOrder.forEach(stage => {
+        if (stages[stage] === 'complete') complete++;
+        if (stages[stage] === 'active') current = stage;
+      });
+
+      return { complete, total: 5, current, percent: Math.round((complete / 5) * 100) };
+    }
+
+    function getStoriesProgress(stories) {
+      const complete = stories.filter(s => s.status === 'complete').length;
+      return { complete, total: stories.length };
+    }
+
+    function getActiveBolt() {
+      return bolts.find(b => b.status === 'active');
+    }
+
+    function getFilteredBolts() {
+      return bolts.filter(bolt => {
+        if (state.statusFilter !== 'all' && bolt.status !== state.statusFilter) return false;
+        if (state.typeFilter !== 'all' && bolt.type !== state.typeFilter) return false;
+        return true;
+      });
+    }
+
+    function getQueuedBolts() {
+      return getFilteredBolts().filter(b => b.status !== 'active').sort((a, b) => a.priority - b.priority);
+    }
+
+    // ==================== RENDER FUNCTIONS ====================
+    function renderMissionStats() {
+      const stats = document.getElementById('missionStats');
+      const activeBolts = bolts.filter(b => b.status === 'active').length;
+      const pendingBolts = bolts.filter(b => b.status === 'pending').length;
+      const completeBolts = bolts.filter(b => b.status === 'complete').length;
+
+      stats.innerHTML = `
+        <div class="mission-stat ${state.statusFilter === 'active' ? 'active' : ''}" onclick="quickFilterStatus('active')">
+          <div class="mission-stat-dot" style="background: var(--status-active)"></div>
+          <span class="mission-stat-value">${activeBolts}</span>
+          <span class="mission-stat-label">Active</span>
+        </div>
+        <div class="mission-stat ${state.statusFilter === 'pending' ? 'active' : ''}" onclick="quickFilterStatus('pending')">
+          <div class="mission-stat-dot" style="background: var(--status-pending)"></div>
+          <span class="mission-stat-value">${pendingBolts}</span>
+          <span class="mission-stat-label">Queued</span>
+        </div>
+        <div class="mission-stat ${state.statusFilter === 'complete' ? 'active' : ''}" onclick="quickFilterStatus('complete')">
+          <div class="mission-stat-dot" style="background: var(--status-complete)"></div>
+          <span class="mission-stat-value">${completeBolts}</span>
+          <span class="mission-stat-label">Done</span>
+        </div>
+      `;
+    }
+
+    function renderFocusCard() {
+      const container = document.getElementById('focusCardContainer');
+      const activeBolt = getActiveBolt();
+
+      if (!activeBolt) {
+        container.innerHTML = `
+          <div class="no-focus">
+            <div class="no-focus-icon">&#128640;</div>
+            <div class="no-focus-text">No active bolt. Select one to start.</div>
+            <button class="action-btn action-btn-primary" onclick="startNextBolt()">
+              Start Next Bolt
+            </button>
+          </div>
+        `;
+        return;
+      }
+
+      const stageProgress = getStageProgress(activeBolt.stages);
+      const storiesProgress = getStoriesProgress(activeBolt.stories);
+      const dashOffset = 157 - (157 * stageProgress.percent / 100);
+
+      const stageLabels = { model: 'Model', design: 'Design', adr: 'ADR', implement: 'Impl', test: 'Test' };
+
+      container.innerHTML = `
+        <div class="focus-card ${state.focusExpanded ? 'expanded' : ''}" id="focusCard">
+          <div class="focus-card-header" onclick="toggleFocusCard()">
+            <div>
+              <div class="focus-card-title">${activeBolt.name}</div>
+              <div class="focus-card-subtitle">${activeBolt.type} Bolt | Construction Phase</div>
+            </div>
+            <div class="focus-card-badge">In Progress</div>
+          </div>
+          <div class="focus-card-body">
+            <div class="progress-ring-container">
+              <div class="progress-ring">
+                <svg width="64" height="64" viewBox="0 0 64 64">
+                  <circle class="progress-ring-bg" cx="32" cy="32" r="25"></circle>
+                  <circle class="progress-ring-fill" cx="32" cy="32" r="25" style="stroke-dashoffset: ${dashOffset}"></circle>
+                </svg>
+                <div class="progress-ring-text">${stageProgress.percent}%</div>
+              </div>
+              <div class="progress-details">
+                <div class="progress-stage">Stage: <strong>${stageLabels[stageProgress.current]}</strong></div>
+                <div class="progress-info">${stageProgress.complete} of ${stageProgress.total} stages complete</div>
+                <div class="progress-info">${storiesProgress.complete}/${storiesProgress.total} stories done</div>
+              </div>
+            </div>
+
+            <div class="stage-pipeline">
+              ${Object.entries(activeBolt.stages).map(([stage, status], idx, arr) => `
+                <div class="pipeline-stage" onclick="advanceStage('${activeBolt.id}', '${stage}')">
+                  <div class="pipeline-node ${status}">
+                    ${status === 'complete' ? '&#10003;' : stage.charAt(0).toUpperCase()}
+                  </div>
+                  <span class="pipeline-label">${stageLabels[stage]}</span>
+                </div>
+                ${idx < arr.length - 1 ? `<div class="pipeline-connector ${status === 'complete' ? 'complete' : ''}"></div>` : ''}
+              `).join('')}
+            </div>
+
+            <div class="stories-section">
+              <div class="stories-header">
+                <span>Stories</span>
+                <span>${storiesProgress.complete}/${storiesProgress.total}</span>
+              </div>
+              <div class="stories-list">
+                ${activeBolt.stories.map(story => `
+                  <div class="story-item ${story.status === 'complete' ? 'completed' : ''}" onclick="toggleStory('${activeBolt.id}', '${story.id}')">
+                    <div class="story-checkbox ${story.status === 'complete' ? 'checked' : ''}">
+                      ${story.status === 'complete' ? '&#10003;' : ''}
+                    </div>
+                    <span class="story-name">${story.name}</span>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+
+            <div class="focus-actions">
+              <button type="button" class="action-btn action-btn-primary" onclick="continueWork()">
+                <span>&#9654;</span> Continue
+              </button>
+              <button type="button" class="action-btn action-btn-secondary" onclick="openFiles()">
+                Files
+              </button>
+              <button type="button" class="action-btn action-btn-complete" onclick="completeBolt('${activeBolt.id}')">
+                Done
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderQueueList() {
+      const container = document.getElementById('queueList');
+      const queueCount = document.getElementById('queueCount');
+      const queuedBolts = getQueuedBolts();
+
+      queueCount.textContent = `${queuedBolts.length} bolts`;
+
+      if (queuedBolts.length === 0) {
+        container.innerHTML = `<div class="queue-empty">No bolts in queue matching filters</div>`;
+        return;
+      }
+
+      if (state.groupBy === 'none') {
+        container.innerHTML = queuedBolts.map((bolt, idx) => renderQueueItem(bolt, idx + 1)).join('');
+      } else {
+        const groups = groupBolts(queuedBolts, state.groupBy);
+        container.innerHTML = Object.entries(groups).map(([groupName, groupBolts]) => `
+          <div class="group-header ${state.expandedGroups.has(groupName) ? '' : 'collapsed'}" onclick="toggleGroup('${groupName}')">
+            <span class="group-chevron">&#9660;</span>
+            <span>${groupName}</span>
+            <span class="group-count">${groupBolts.length}</span>
+          </div>
+          <div class="group-content">
+            ${groupBolts.map((bolt, idx) => renderQueueItem(bolt, idx + 1)).join('')}
+          </div>
+        `).join('');
       }
     }
 
-    function clickStage(stage) {
-      alert(`Opening ${stage} stage files...`);
+    function groupBolts(bolts, by) {
+      const groups = {};
+      bolts.forEach(bolt => {
+        let key;
+        if (by === 'type') key = bolt.type;
+        else if (by === 'intent') {
+          const intent = intents.find(i => i.id === bolt.intentId);
+          key = intent ? intent.name : 'Unknown';
+        } else if (by === 'status') key = bolt.status;
+        else key = 'All';
+
+        if (!groups[key]) groups[key] = [];
+        groups[key].push(bolt);
+      });
+      return groups;
     }
 
-    function navigateTo(section) {
-      alert(`Navigating to ${section}...`);
+    function renderQueueItem(bolt, priority) {
+      const isExpanded = state.expandedBolts.has(bolt.id);
+      const stageLabels = { model: 'M', design: 'D', adr: 'A', implement: 'I', test: 'T' };
+      const fullLabels = { model: 'Model', design: 'Design', adr: 'ADR', implement: 'Impl', test: 'Test' };
+      const storiesProgress = getStoriesProgress(bolt.stories);
+
+      return `
+        <div class="queue-item ${isExpanded ? 'expanded' : ''} ${bolt.status}" onclick="toggleQueueItem('${bolt.id}')">
+          <div class="queue-priority ${priority <= 2 ? 'p1' : 'p2'}">${priority}</div>
+          <div class="queue-info">
+            <div class="queue-name">${bolt.name}</div>
+            <div class="queue-meta">${bolt.type} | ${storiesProgress.total} stories</div>
+          </div>
+          <div class="queue-stages">
+            ${Object.entries(bolt.stages).map(([stage, status]) => `
+              <div class="queue-stage ${status}">${stageLabels[stage]}</div>
+            `).join('')}
+          </div>
+        </div>
+        <div class="queue-detail ${isExpanded ? 'expanded' : ''}">
+          <div class="queue-detail-inner">
+            <div class="queue-detail-stages">
+              ${Object.entries(bolt.stages).map(([stage, status]) => `
+                <div class="queue-detail-stage ${status}" onclick="event.stopPropagation(); previewStage('${bolt.id}', '${stage}')">${fullLabels[stage]}</div>
+              `).join('')}
+            </div>
+            <div class="queue-detail-stories">
+              ${bolt.stories.slice(0, 3).map(story => `
+                <div class="story-item ${story.status === 'complete' ? 'completed' : ''}">
+                  <div class="story-checkbox ${story.status === 'complete' ? 'checked' : ''}">
+                    ${story.status === 'complete' ? '&#10003;' : ''}
+                  </div>
+                  <span class="story-name">${story.name}</span>
+                </div>
+              `).join('')}
+              ${bolt.stories.length > 3 ? `<div style="font-size: 10px; color: var(--vscode-descriptionForeground); padding: 4px 8px;">+${bolt.stories.length - 3} more stories</div>` : ''}
+            </div>
+            <div class="queue-detail-actions">
+              <button type="button" class="queue-detail-btn queue-detail-btn-primary" onclick="event.stopPropagation(); startBolt('${bolt.id}')">
+                ${bolt.status === 'complete' ? 'Restart' : 'Start'} Bolt
+              </button>
+              <button type="button" class="queue-detail-btn queue-detail-btn-secondary" onclick="event.stopPropagation(); previewBolt('${bolt.id}')">Preview</button>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderSystemGrid() {
+      const container = document.getElementById('systemGrid');
+      const allStories = bolts.flatMap(b => b.stories);
+      const completedStories = allStories.filter(s => s.status === 'complete').length;
+
+      container.innerHTML = `
+        <div class="system-card ${state.activeDetailPanel === 'intents' ? 'active' : ''}" onclick="showDetailPanel('intents')">
+          <div class="system-icon intents">&#128203;</div>
+          <div class="system-info">
+            <div class="system-value">${intents.length}</div>
+            <div class="system-label">Intents</div>
+          </div>
+        </div>
+        <div class="system-card ${state.activeDetailPanel === 'bolts' ? 'active' : ''}" onclick="showDetailPanel('bolts')">
+          <div class="system-icon bolts">&#9889;</div>
+          <div class="system-info">
+            <div class="system-value">${bolts.length}</div>
+            <div class="system-label">Bolts</div>
+          </div>
+        </div>
+        <div class="system-card ${state.activeDetailPanel === 'stories' ? 'active' : ''}" onclick="showDetailPanel('stories')">
+          <div class="system-icon stories">&#128196;</div>
+          <div class="system-info">
+            <div class="system-value">${completedStories}/${allStories.length}</div>
+            <div class="system-label">Stories</div>
+          </div>
+        </div>
+        <div class="system-card ${state.activeDetailPanel === 'standards' ? 'active' : ''}" onclick="showDetailPanel('standards')">
+          <div class="system-icon standards">&#128218;</div>
+          <div class="system-info">
+            <div class="system-value">${standards.length}</div>
+            <div class="system-label">Standards</div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderDetailPanel(type) {
+      const panel = document.getElementById('detailPanel');
+      const title = document.getElementById('detailTitle');
+      const list = document.getElementById('detailList');
+
+      let items = [];
+      let iconClass = '';
+
+      switch (type) {
+        case 'intents':
+          title.textContent = 'Intents';
+          iconClass = 'intents';
+          items = intents.map(i => ({
+            id: i.id,
+            name: i.name,
+            meta: `${i.progress}% complete`,
+            status: i.status
+          }));
+          break;
+        case 'bolts':
+          title.textContent = 'All Bolts';
+          iconClass = 'bolts';
+          items = bolts.map(b => ({
+            id: b.id,
+            name: b.name,
+            meta: `${b.type} | ${b.status}`,
+            status: b.status
+          }));
+          break;
+        case 'stories':
+          title.textContent = 'All Stories';
+          iconClass = 'stories';
+          items = bolts.flatMap(b => b.stories.map(s => ({
+            id: s.id,
+            name: s.name,
+            meta: `${b.name}`,
+            status: s.status
+          })));
+          break;
+        case 'standards':
+          title.textContent = 'Standards';
+          iconClass = 'standards';
+          items = standards.map(s => ({
+            id: s.id,
+            name: s.name,
+            meta: 'Standard document',
+            status: 'complete'
+          }));
+          break;
+      }
+
+      list.innerHTML = items.map(item => `
+        <div class="detail-item" onclick="selectDetailItem('${type}', '${item.id}')">
+          <div class="detail-item-icon system-icon ${iconClass}">
+            ${type === 'intents' ? '&#128203;' : type === 'bolts' ? '&#9889;' : type === 'stories' ? '&#128196;' : '&#128218;'}
+          </div>
+          <div style="flex: 1;">
+            <div style="font-weight: 500;">${item.name}</div>
+            <div style="font-size: 9px; color: var(--vscode-descriptionForeground);">${item.meta}</div>
+          </div>
+          <div class="queue-stage ${item.status === 'complete' ? 'complete' : item.status === 'active' ? 'active' : 'pending'}">
+            ${item.status === 'complete' ? '&#10003;' : item.status === 'active' ? '&#9654;' : '&#8226;'}
+          </div>
+        </div>
+      `).join('');
+
+      panel.classList.add('expanded');
+    }
+
+    function render() {
+      renderMissionStats();
+      renderFocusCard();
+      renderQueueList();
+      renderSystemGrid();
+    }
+
+    // ==================== EVENT HANDLERS ====================
+    function toggleFocusCard() {
+      state.focusExpanded = !state.focusExpanded;
+      renderFocusCard();
+    }
+
+    function toggleQueueItem(boltId) {
+      if (state.expandedBolts.has(boltId)) {
+        state.expandedBolts.delete(boltId);
+      } else {
+        state.expandedBolts.clear();
+        state.expandedBolts.add(boltId);
+      }
+      renderQueueList();
+    }
+
+    function toggleGroup(groupName) {
+      if (state.expandedGroups.has(groupName)) {
+        state.expandedGroups.delete(groupName);
+      } else {
+        state.expandedGroups.add(groupName);
+      }
+      renderQueueList();
+    }
+
+    function quickFilterStatus(status) {
+      state.statusFilter = state.statusFilter === status ? 'all' : status;
+      document.getElementById('statusFilter').value = state.statusFilter;
+      render();
+    }
+
+    function advanceStage(boltId, stage) {
+      const bolt = bolts.find(b => b.id === boltId);
+      if (!bolt) return;
+
+      const stageOrder = ['model', 'design', 'adr', 'implement', 'test'];
+      const stageIdx = stageOrder.indexOf(stage);
+
+      if (bolt.stages[stage] === 'pending' && stageIdx > 0) {
+        const prevStage = stageOrder[stageIdx - 1];
+        if (bolt.stages[prevStage] !== 'complete') {
+          showToast(`Complete ${prevStage} stage first`, 'error');
+          return;
+        }
+      }
+
+      if (bolt.stages[stage] === 'pending') {
+        bolt.stages[stage] = 'active';
+        showToast(`Started ${stage} stage`);
+      } else if (bolt.stages[stage] === 'active') {
+        bolt.stages[stage] = 'complete';
+        showToast(`Completed ${stage} stage`, 'success');
+
+        // Auto-start next stage
+        if (stageIdx < stageOrder.length - 1) {
+          bolt.stages[stageOrder[stageIdx + 1]] = 'active';
+        }
+      }
+
+      render();
+    }
+
+    function toggleStory(boltId, storyId) {
+      const bolt = bolts.find(b => b.id === boltId);
+      if (!bolt) return;
+
+      const story = bolt.stories.find(s => s.id === storyId);
+      if (!story) return;
+
+      story.status = story.status === 'complete' ? 'pending' : 'complete';
+      showToast(story.status === 'complete' ? `Completed: ${story.name}` : `Reopened: ${story.name}`,
+                story.status === 'complete' ? 'success' : 'info');
+      render();
+    }
+
+    function startBolt(boltId) {
+      // Complete current active bolt if any
+      const currentActive = getActiveBolt();
+      if (currentActive && currentActive.id !== boltId) {
+        currentActive.status = 'pending';
+      }
+
+      const bolt = bolts.find(b => b.id === boltId);
+      if (!bolt) return;
+
+      bolt.status = 'active';
+      if (bolt.stages.model === 'pending') {
+        bolt.stages.model = 'active';
+      }
+
+      showToast(`Started bolt: ${bolt.name}`, 'success');
+      state.expandedBolts.clear();
+      render();
+    }
+
+    function startNextBolt() {
+      const nextBolt = getQueuedBolts()[0];
+      if (nextBolt) {
+        startBolt(nextBolt.id);
+      } else {
+        showToast('No bolts in queue');
+      }
+    }
+
+    function completeBolt(boltId) {
+      const bolt = bolts.find(b => b.id === boltId);
+      if (!bolt) return;
+
+      // Mark all stages and stories complete
+      Object.keys(bolt.stages).forEach(stage => bolt.stages[stage] = 'complete');
+      bolt.stories.forEach(story => story.status = 'complete');
+      bolt.status = 'complete';
+      bolt.priority = 0;
+
+      showToast(`Completed bolt: ${bolt.name}`, 'success');
+      render();
+    }
+
+    function previewBolt(boltId) {
+      const bolt = bolts.find(b => b.id === boltId);
+      showToast(`Preview: ${bolt.name}`);
+    }
+
+    function previewStage(boltId, stage) {
+      showToast(`Opening ${stage} stage files...`);
+    }
+
+    function continueWork() {
+      showToast('Opening workspace...');
+    }
+
+    function openFiles() {
+      showToast('Opening file explorer...');
+    }
+
+    function showDetailPanel(type) {
+      const panel = document.getElementById('detailPanel');
+
+      if (state.activeDetailPanel === type) {
+        state.activeDetailPanel = null;
+        panel.classList.remove('expanded');
+      } else {
+        state.activeDetailPanel = type;
+        renderDetailPanel(type);
+      }
+      renderSystemGrid();
+    }
+
+    function selectDetailItem(type, id) {
+      showToast(`Selected ${type}: ${id}`);
     }
 
     function setTheme(theme) {
       const sidebar = document.getElementById('sidebar');
-      const buttons = document.querySelectorAll('.theme-btn');
-
-      buttons.forEach(btn => btn.classList.remove('active'));
-      event.target.classList.add('active');
-
-      if (theme === 'light') {
-        sidebar.classList.add('theme-light');
-      } else {
-        sidebar.classList.remove('theme-light');
-      }
+      document.getElementById('darkBtn').classList.toggle('active', theme === 'dark');
+      document.getElementById('lightBtn').classList.toggle('active', theme === 'light');
+      sidebar.classList.toggle('theme-light', theme === 'light');
     }
+
+    function setView(view) {
+      state.currentView = view;
+      document.querySelectorAll('.view-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.view === view);
+      });
+
+      document.getElementById('commandView').style.display = view === 'command' ? 'block' : 'none';
+      document.getElementById('queueView').style.display = view === 'queue' ? 'block' : 'none';
+      document.getElementById('overviewView').style.display = view === 'overview' ? 'block' : 'none';
+    }
+
+    function setGroupBy(group) {
+      state.groupBy = group;
+      document.querySelectorAll('.group-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.group === group);
+      });
+      renderQueueList();
+    }
+
+    function toggleFocusMode() {
+      state.focusMode = !state.focusMode;
+      document.getElementById('focusModeBtn').classList.toggle('active', state.focusMode);
+
+      if (state.focusMode) {
+        state.statusFilter = 'active';
+        showToast('Focus mode enabled');
+      } else {
+        state.statusFilter = 'all';
+        showToast('Focus mode disabled');
+      }
+      document.getElementById('statusFilter').value = state.statusFilter;
+      render();
+    }
+
+    // ==================== EVENT LISTENERS ====================
+    document.getElementById('darkBtn').addEventListener('click', () => setTheme('dark'));
+    document.getElementById('lightBtn').addEventListener('click', () => setTheme('light'));
+
+    document.querySelectorAll('.view-btn').forEach(btn => {
+      btn.addEventListener('click', () => setView(btn.dataset.view));
+    });
+
+    document.querySelectorAll('.group-btn').forEach(btn => {
+      btn.addEventListener('click', () => setGroupBy(btn.dataset.group));
+    });
+
+    document.getElementById('statusFilter').addEventListener('change', (e) => {
+      state.statusFilter = e.target.value;
+      render();
+    });
+
+    document.getElementById('typeFilter').addEventListener('change', (e) => {
+      state.typeFilter = e.target.value;
+      render();
+    });
+
+    document.getElementById('refreshBtn').addEventListener('click', () => {
+      showToast('Refreshing...');
+      render();
+    });
+
+    document.getElementById('focusModeBtn').addEventListener('click', toggleFocusMode);
+
+    document.getElementById('settingsBtn').addEventListener('click', () => {
+      showToast('Opening settings...');
+    });
+
+    document.querySelectorAll('.shortcut').forEach(shortcut => {
+      shortcut.addEventListener('click', () => {
+        const action = shortcut.dataset.action;
+        switch (action) {
+          case 'focus': toggleFocusMode(); break;
+          case 'next': startNextBolt(); break;
+          case 'files': openFiles(); break;
+          case 'complete':
+            const active = getActiveBolt();
+            if (active) completeBolt(active.id);
+            break;
+        }
+      });
+    });
+
+    // Keyboard shortcuts
+    document.addEventListener('keydown', (e) => {
+      if (e.metaKey || e.ctrlKey) {
+        switch (e.key.toLowerCase()) {
+          case 'b': e.preventDefault(); toggleFocusMode(); break;
+          case 'n': e.preventDefault(); startNextBolt(); break;
+          case 'f': e.preventDefault(); openFiles(); break;
+          case 'd':
+            e.preventDefault();
+            const active = getActiveBolt();
+            if (active) completeBolt(active.id);
+            break;
+        }
+      }
+    });
+
+    // ==================== INITIALIZATION ====================
+    render();
   </script>
 </body>
 </html>

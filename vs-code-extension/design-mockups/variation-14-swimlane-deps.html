@@ -1,0 +1,1380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Variation 14: Swimlane Dependencies View</title>
+  <style>
+    :root {
+      --vscode-editor-background: #1e1e1e;
+      --vscode-editor-foreground: #cccccc;
+      --vscode-sideBar-background: #252526;
+      --vscode-sideBarSectionHeader-background: #2d2d2d;
+      --vscode-input-background: #3c3c3c;
+      --vscode-input-border: #3c3c3c;
+      --vscode-list-hoverBackground: #2a2d2e;
+      --vscode-badge-background: #4d4d4d;
+      --vscode-badge-foreground: #ffffff;
+      --vscode-descriptionForeground: #858585;
+      --status-complete: #22c55e;
+      --status-active: #f97316;
+      --status-pending: #6b7280;
+      --status-blocked: #ef4444;
+      --status-info: #3b82f6;
+      --accent-primary: #f97316;
+      --dependency-line: #6366f1;
+    }
+
+    .theme-light {
+      --vscode-editor-background: #ffffff;
+      --vscode-editor-foreground: #333333;
+      --vscode-sideBar-background: #f3f3f3;
+      --vscode-sideBarSectionHeader-background: #e8e8e8;
+      --vscode-input-background: #ffffff;
+      --vscode-input-border: #cecece;
+      --vscode-list-hoverBackground: #e8e8e8;
+      --vscode-descriptionForeground: #717171;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--vscode-editor-background);
+      color: var(--vscode-editor-foreground);
+      font-size: 13px;
+    }
+
+    .sidebar {
+      width: 400px;
+      min-height: 100vh;
+      background: var(--vscode-sideBar-background);
+      border-right: 1px solid var(--vscode-input-border);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .header {
+      padding: 10px 12px;
+      background: var(--vscode-sideBarSectionHeader-background);
+      border-bottom: 1px solid var(--vscode-input-border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .header-title {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .header-actions { display: flex; gap: 4px; }
+
+    .icon-btn {
+      background: none;
+      border: none;
+      color: var(--vscode-descriptionForeground);
+      cursor: pointer;
+      padding: 4px 6px;
+      border-radius: 4px;
+      font-size: 14px;
+      transition: all 0.15s;
+    }
+
+    .icon-btn:hover {
+      background: var(--vscode-list-hoverBackground);
+      color: var(--vscode-editor-foreground);
+    }
+
+    .icon-btn.active {
+      background: var(--accent-primary);
+      color: white;
+    }
+
+    /* Tab Navigation */
+    .tab-nav {
+      display: flex;
+      background: var(--vscode-sideBarSectionHeader-background);
+      border-bottom: 1px solid var(--vscode-input-border);
+    }
+
+    .tab-btn {
+      flex: 1;
+      padding: 10px 12px;
+      font-size: 11px;
+      font-weight: 500;
+      border: none;
+      background: transparent;
+      color: var(--vscode-descriptionForeground);
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: all 0.15s;
+    }
+
+    .tab-btn:hover {
+      color: var(--vscode-editor-foreground);
+      background: var(--vscode-list-hoverBackground);
+    }
+
+    .tab-btn.active {
+      color: var(--accent-primary);
+      border-bottom-color: var(--accent-primary);
+    }
+
+    /* View Switcher */
+    .view-switcher {
+      padding: 8px 12px;
+      background: var(--vscode-editor-background);
+      border-bottom: 1px solid var(--vscode-input-border);
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+    }
+
+    .view-chip {
+      padding: 6px 12px;
+      font-size: 10px;
+      border: 1px solid var(--vscode-input-border);
+      background: var(--vscode-input-background);
+      color: var(--vscode-editor-foreground);
+      border-radius: 16px;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.15s;
+    }
+
+    .view-chip.active {
+      background: var(--accent-primary);
+      border-color: var(--accent-primary);
+      color: white;
+    }
+
+    .view-chip:hover:not(.active) {
+      background: var(--vscode-list-hoverBackground);
+    }
+
+    /* Dependency Alert Banner */
+    .alert-banner {
+      margin: 8px 12px;
+      padding: 10px 12px;
+      background: rgba(239, 68, 68, 0.1);
+      border-left: 3px solid var(--status-blocked);
+      border-radius: 4px;
+      display: none;
+    }
+
+    .alert-banner.show { display: block; }
+
+    .alert-banner-content {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .alert-banner-icon {
+      color: var(--status-blocked);
+      font-size: 14px;
+    }
+
+    .alert-banner-text {
+      flex: 1;
+      font-size: 11px;
+    }
+
+    .alert-banner-text strong {
+      color: var(--status-blocked);
+    }
+
+    .alert-banner-action {
+      padding: 4px 10px;
+      font-size: 10px;
+      background: var(--accent-primary);
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    /* Swimlane Container */
+    .swimlane-container {
+      flex: 1;
+      overflow-y: auto;
+      padding: 12px;
+    }
+
+    /* Swimlane */
+    .swimlane {
+      margin-bottom: 16px;
+    }
+
+    .swimlane-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 10px;
+      background: var(--vscode-sideBarSectionHeader-background);
+      border-radius: 6px;
+      cursor: pointer;
+      margin-bottom: 8px;
+    }
+
+    .swimlane-header:hover {
+      background: var(--vscode-list-hoverBackground);
+    }
+
+    .swimlane-chevron {
+      font-size: 10px;
+      transition: transform 0.2s;
+    }
+
+    .swimlane.collapsed .swimlane-chevron {
+      transform: rotate(-90deg);
+    }
+
+    .swimlane-icon {
+      font-size: 14px;
+    }
+
+    .swimlane-title {
+      flex: 1;
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .swimlane-badge {
+      font-size: 9px;
+      padding: 2px 8px;
+      background: var(--vscode-badge-background);
+      border-radius: 10px;
+    }
+
+    .swimlane-progress {
+      width: 50px;
+      height: 4px;
+      background: var(--vscode-input-background);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+
+    .swimlane-progress-fill {
+      height: 100%;
+      background: var(--status-complete);
+    }
+
+    .swimlane-content {
+      padding-left: 8px;
+    }
+
+    .swimlane.collapsed .swimlane-content {
+      display: none;
+    }
+
+    /* Bolt Card */
+    .bolt-card {
+      background: var(--vscode-editor-background);
+      border-radius: 8px;
+      margin-bottom: 8px;
+      overflow: hidden;
+      border: 1px solid var(--vscode-input-border);
+      transition: all 0.15s;
+    }
+
+    .bolt-card:hover {
+      border-color: var(--accent-primary);
+    }
+
+    .bolt-card.blocked {
+      border-color: var(--status-blocked);
+      background: rgba(239, 68, 68, 0.03);
+    }
+
+    .bolt-card.active {
+      border-color: var(--status-active);
+    }
+
+    .bolt-card.complete {
+      opacity: 0.7;
+    }
+
+    .bolt-card-header {
+      padding: 10px 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+    }
+
+    .bolt-card-header:hover {
+      background: var(--vscode-list-hoverBackground);
+    }
+
+    .bolt-status-indicator {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+    }
+
+    .bolt-status-indicator.complete { background: var(--status-complete); }
+    .bolt-status-indicator.active { background: var(--status-active); }
+    .bolt-status-indicator.blocked { background: var(--status-blocked); }
+    .bolt-status-indicator.pending { background: var(--status-pending); }
+
+    .bolt-card-info {
+      flex: 1;
+    }
+
+    .bolt-card-name {
+      font-size: 11px;
+      font-weight: 600;
+      margin-bottom: 2px;
+    }
+
+    .bolt-card-meta {
+      font-size: 9px;
+      color: var(--vscode-descriptionForeground);
+      display: flex;
+      gap: 8px;
+    }
+
+    .bolt-card-stages {
+      display: flex;
+      gap: 2px;
+    }
+
+    .bolt-stage {
+      width: 20px;
+      height: 6px;
+      border-radius: 3px;
+      background: var(--vscode-input-background);
+      position: relative;
+    }
+
+    .bolt-stage.complete { background: var(--status-complete); }
+    .bolt-stage.active { background: var(--status-active); }
+
+    .bolt-stage-label {
+      position: absolute;
+      top: -14px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 7px;
+      color: var(--vscode-descriptionForeground);
+      opacity: 0;
+      transition: opacity 0.15s;
+    }
+
+    .bolt-card:hover .bolt-stage-label {
+      opacity: 1;
+    }
+
+    /* Dependency Connector */
+    .bolt-deps {
+      padding: 6px 12px;
+      background: var(--vscode-sideBar-background);
+      border-top: 1px solid var(--vscode-input-border);
+      font-size: 9px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .dep-tag {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 8px;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .dep-tag:hover {
+      filter: brightness(1.2);
+    }
+
+    .dep-tag.needs {
+      background: rgba(99, 102, 241, 0.2);
+      color: var(--dependency-line);
+    }
+
+    .dep-tag.blocks {
+      background: rgba(249, 115, 22, 0.2);
+      color: var(--accent-primary);
+    }
+
+    .dep-tag.blocked-by {
+      background: rgba(239, 68, 68, 0.2);
+      color: var(--status-blocked);
+    }
+
+    .dep-status-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+    }
+
+    .dep-status-dot.complete { background: var(--status-complete); }
+    .dep-status-dot.active { background: var(--status-active); }
+    .dep-status-dot.blocked { background: var(--status-blocked); }
+    .dep-status-dot.pending { background: var(--status-pending); }
+
+    /* Bolt Card Expanded */
+    .bolt-card-body {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease;
+    }
+
+    .bolt-card.expanded .bolt-card-body {
+      max-height: 300px;
+    }
+
+    .bolt-card-body-inner {
+      padding: 12px;
+      border-top: 1px solid var(--vscode-input-border);
+    }
+
+    .stories-section {
+      margin-bottom: 12px;
+    }
+
+    .stories-title {
+      font-size: 9px;
+      color: var(--vscode-descriptionForeground);
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+
+    .story-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 8px;
+      border-radius: 4px;
+      margin-bottom: 4px;
+      cursor: pointer;
+      font-size: 10px;
+    }
+
+    .story-row:hover {
+      background: var(--vscode-list-hoverBackground);
+    }
+
+    .story-checkbox {
+      width: 14px;
+      height: 14px;
+      border-radius: 3px;
+      border: 1px solid var(--vscode-input-border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+    }
+
+    .story-checkbox.checked {
+      background: var(--status-complete);
+      border-color: var(--status-complete);
+      color: white;
+    }
+
+    .story-name { flex: 1; }
+
+    .story-row.completed .story-name {
+      text-decoration: line-through;
+      color: var(--vscode-descriptionForeground);
+    }
+
+    .bolt-actions {
+      display: flex;
+      gap: 6px;
+    }
+
+    .bolt-action-btn {
+      flex: 1;
+      padding: 8px;
+      font-size: 10px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .bolt-action-btn.primary {
+      background: var(--accent-primary);
+      color: white;
+    }
+
+    .bolt-action-btn.secondary {
+      background: var(--vscode-input-background);
+      color: var(--vscode-editor-foreground);
+      border: 1px solid var(--vscode-input-border);
+    }
+
+    .bolt-action-btn.success {
+      background: var(--status-complete);
+      color: white;
+    }
+
+    /* Specs View */
+    .specs-view {
+      padding: 12px;
+    }
+
+    .spec-card {
+      background: var(--vscode-editor-background);
+      border-radius: 8px;
+      margin-bottom: 12px;
+      overflow: hidden;
+    }
+
+    .spec-card-header {
+      padding: 12px;
+      background: var(--vscode-sideBarSectionHeader-background);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .spec-card-header:hover {
+      background: var(--vscode-list-hoverBackground);
+    }
+
+    .spec-chevron {
+      font-size: 10px;
+      transition: transform 0.2s;
+    }
+
+    .spec-card.collapsed .spec-chevron {
+      transform: rotate(-90deg);
+    }
+
+    .spec-icon {
+      font-size: 14px;
+    }
+
+    .spec-icon.intent { color: #8b5cf6; }
+    .spec-icon.unit { color: var(--status-info); }
+
+    .spec-info { flex: 1; }
+
+    .spec-name {
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .spec-meta {
+      font-size: 9px;
+      color: var(--vscode-descriptionForeground);
+    }
+
+    .spec-progress {
+      width: 60px;
+      height: 4px;
+      background: var(--vscode-input-background);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+
+    .spec-progress-fill {
+      height: 100%;
+      background: var(--status-complete);
+    }
+
+    .spec-card-body {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease;
+    }
+
+    .spec-card.expanded .spec-card-body {
+      max-height: 1000px;
+    }
+
+    .spec-card-body-inner {
+      padding: 12px;
+    }
+
+    .unit-section {
+      margin-bottom: 12px;
+    }
+
+    .unit-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px;
+      background: var(--vscode-sideBar-background);
+      border-radius: 4px;
+      cursor: pointer;
+      margin-bottom: 6px;
+    }
+
+    .unit-header:hover {
+      background: var(--vscode-list-hoverBackground);
+    }
+
+    .unit-stories {
+      padding-left: 16px;
+    }
+
+    .unit-section.collapsed .unit-stories {
+      display: none;
+    }
+
+    /* Quick Stats */
+    .quick-stats {
+      padding: 10px 12px;
+      background: var(--vscode-editor-background);
+      border-top: 1px solid var(--vscode-input-border);
+      display: flex;
+      justify-content: space-around;
+    }
+
+    .stat-box {
+      text-align: center;
+      cursor: pointer;
+      padding: 4px 8px;
+      border-radius: 4px;
+      transition: background 0.15s;
+    }
+
+    .stat-box:hover {
+      background: var(--vscode-list-hoverBackground);
+    }
+
+    .stat-box.active {
+      background: rgba(249, 115, 22, 0.2);
+    }
+
+    .stat-number {
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    .stat-number.complete { color: var(--status-complete); }
+    .stat-number.active { color: var(--status-active); }
+    .stat-number.blocked { color: var(--status-blocked); }
+    .stat-number.pending { color: var(--status-pending); }
+
+    .stat-label {
+      font-size: 9px;
+      color: var(--vscode-descriptionForeground);
+    }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      padding: 10px 20px;
+      background: var(--vscode-sideBar-background);
+      border: 1px solid var(--accent-primary);
+      border-radius: 6px;
+      font-size: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      opacity: 0;
+      transition: all 0.3s ease;
+      z-index: 1000;
+    }
+
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+
+    .toast.success { border-color: var(--status-complete); }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--vscode-input-border); border-radius: 4px; }
+  </style>
+</head>
+<body>
+  <div class="sidebar" id="sidebar">
+    <div class="header">
+      <span class="header-title">SpecsMD Swimlanes</span>
+      <div class="header-actions">
+        <button type="button" class="icon-btn" id="themeBtn" title="Toggle Theme">&#9790;</button>
+        <button type="button" class="icon-btn" id="refreshBtn" title="Refresh">&#8635;</button>
+      </div>
+    </div>
+
+    <div class="tab-nav">
+      <button type="button" class="tab-btn active" data-tab="bolts">Bolts</button>
+      <button type="button" class="tab-btn" data-tab="specs">Specs</button>
+    </div>
+
+    <div class="view-switcher" id="viewSwitcher">
+      <button type="button" class="view-chip active" data-view="swimlane">By Unit</button>
+      <button type="button" class="view-chip" data-view="status">By Status</button>
+      <button type="button" class="view-chip" data-view="deps">By Deps</button>
+      <button type="button" class="view-chip" data-view="timeline">Timeline</button>
+      <button type="button" class="view-chip" data-view="critical">Critical Path</button>
+    </div>
+
+    <div class="alert-banner" id="alertBanner">
+      <div class="alert-banner-content">
+        <span class="alert-banner-icon">&#9888;</span>
+        <span class="alert-banner-text" id="alertText">
+          <strong>admin-panel-ui-1</strong> blocked by <strong>audit-service-1</strong>
+        </span>
+        <button type="button" class="alert-banner-action" id="resolveBtn">Resolve</button>
+      </div>
+    </div>
+
+    <div class="swimlane-container" id="swimlaneContainer">
+      <!-- Rendered dynamically -->
+    </div>
+
+    <div class="specs-view" id="specsView" style="display: none;">
+      <!-- Rendered dynamically -->
+    </div>
+
+    <div class="quick-stats" id="quickStats">
+      <!-- Rendered dynamically -->
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    // ==================== DATA MODEL ====================
+    const intents = [
+      { id: 'intent-1', name: '001-admin-panel', status: 'active' }
+    ];
+
+    const units = [
+      { id: 'unit-1', name: 'User Management', intentId: 'intent-1', order: 1 },
+      { id: 'unit-2', name: 'Audit Service', intentId: 'intent-1', order: 2 },
+      { id: 'unit-3', name: 'Admin Panel UI', intentId: 'intent-1', order: 3 }
+    ];
+
+    let bolts = [
+      {
+        id: 'bolt-1',
+        name: 'role-permission-service-1',
+        type: 'DDD',
+        unitId: 'unit-1',
+        intentId: 'intent-1',
+        status: 'complete',
+        order: 1,
+        dependsOn: [],
+        stages: { model: 'complete', design: 'complete', adr: 'complete', implement: 'complete', test: 'complete' },
+        stories: [
+          { id: 's1', name: 'Define role entity', status: 'complete' },
+          { id: 's2', name: 'Create permission model', status: 'complete' }
+        ]
+      },
+      {
+        id: 'bolt-2',
+        name: 'user-management-service-1',
+        type: 'DDD',
+        unitId: 'unit-1',
+        intentId: 'intent-1',
+        status: 'complete',
+        order: 2,
+        dependsOn: ['bolt-1'],
+        stages: { model: 'complete', design: 'complete', adr: 'complete', implement: 'complete', test: 'complete' },
+        stories: [
+          { id: 's3', name: 'Create user entity model', status: 'complete' },
+          { id: 's4', name: 'Implement user CRUD', status: 'complete' }
+        ]
+      },
+      {
+        id: 'bolt-3',
+        name: 'audit-service-1',
+        type: 'DDD',
+        unitId: 'unit-2',
+        intentId: 'intent-1',
+        status: 'pending',
+        order: 3,
+        dependsOn: ['bolt-2'],
+        stages: { model: 'pending', design: 'pending', adr: 'pending', implement: 'pending', test: 'pending' },
+        stories: [
+          { id: 's5', name: 'Design audit log schema', status: 'pending' },
+          { id: 's6', name: 'Create event capture service', status: 'pending' }
+        ]
+      },
+      {
+        id: 'bolt-4',
+        name: 'admin-panel-ui-1',
+        type: 'Simple',
+        unitId: 'unit-3',
+        intentId: 'intent-1',
+        status: 'blocked',
+        order: 4,
+        dependsOn: ['bolt-3', 'bolt-2'],
+        blockedBy: 'bolt-3',
+        stages: { model: 'pending', design: 'pending', adr: 'pending', implement: 'pending', test: 'pending' },
+        stories: [
+          { id: 's7', name: 'Create admin layout', status: 'pending' },
+          { id: 's8', name: 'Add audit log viewer', status: 'pending' },
+          { id: 's9', name: 'Build user management page', status: 'pending' }
+        ]
+      },
+      {
+        id: 'bolt-5',
+        name: 'admin-panel-ui-2',
+        type: 'Simple',
+        unitId: 'unit-3',
+        intentId: 'intent-1',
+        status: 'pending',
+        order: 5,
+        dependsOn: ['bolt-4'],
+        stages: { model: 'pending', design: 'pending', adr: 'pending', implement: 'pending', test: 'pending' },
+        stories: [
+          { id: 's10', name: 'Add dashboard widgets', status: 'pending' },
+          { id: 's11', name: 'Implement settings page', status: 'pending' }
+        ]
+      }
+    ];
+
+    // ==================== STATE ====================
+    let state = {
+      activeTab: 'bolts',
+      viewMode: 'swimlane',
+      statusFilter: 'all',
+      expandedBolts: new Set(),
+      expandedSwimlanes: new Set(['unit-1', 'unit-2', 'unit-3', 'complete', 'active', 'blocked', 'pending', 'level-0', 'level-1', 'level-2']),
+      expandedSpecs: new Set(['intent-1']),
+      expandedUnits: new Set(['unit-1', 'unit-2', 'unit-3']),
+      theme: 'dark'
+    };
+
+    // ==================== UTILITY FUNCTIONS ====================
+    function showToast(message, type = 'info') {
+      const toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.className = 'toast show' + (type === 'success' ? ' success' : '');
+      setTimeout(() => toast.classList.remove('show'), 2500);
+    }
+
+    function getBoltDependents(boltId) {
+      return bolts.filter(b => b.dependsOn.includes(boltId));
+    }
+
+    function getBoltDependencies(boltId) {
+      const bolt = bolts.find(b => b.id === boltId);
+      if (!bolt) return [];
+      return bolt.dependsOn.map(id => bolts.find(b => b.id === id)).filter(Boolean);
+    }
+
+    function getBlockedBolts() {
+      return bolts.filter(b => b.status === 'blocked');
+    }
+
+    function getCriticalPath() {
+      // Find blocked bolts and trace back to their blockers
+      const blocked = getBlockedBolts();
+      const critical = [];
+
+      blocked.forEach(b => {
+        let current = b;
+        while (current) {
+          if (!critical.find(c => c.id === current.id)) {
+            critical.push(current);
+          }
+          if (current.blockedBy) {
+            current = bolts.find(x => x.id === current.blockedBy);
+          } else if (current.dependsOn.length > 0) {
+            const unmet = current.dependsOn.find(depId => {
+              const dep = bolts.find(x => x.id === depId);
+              return dep && dep.status !== 'complete';
+            });
+            current = unmet ? bolts.find(x => x.id === unmet) : null;
+          } else {
+            current = null;
+          }
+        }
+      });
+
+      return critical.reverse();
+    }
+
+    // ==================== RENDER FUNCTIONS ====================
+    function renderBoltCard(bolt, showDeps = true) {
+      const isExpanded = state.expandedBolts.has(bolt.id);
+      const deps = getBoltDependencies(bolt.id);
+      const dependents = getBoltDependents(bolt.id);
+      const stageLabels = ['M', 'D', 'A', 'I', 'T'];
+      const stageFull = ['Model', 'Design', 'ADR', 'Impl', 'Test'];
+
+      let depsHtml = '';
+      if (showDeps && (deps.length > 0 || dependents.length > 0 || bolt.blockedBy)) {
+        depsHtml = `
+          <div class="bolt-deps">
+            ${bolt.blockedBy ? (() => {
+              const blocker = bolts.find(b => b.id === bolt.blockedBy);
+              return blocker ? `
+                <span class="dep-tag blocked-by" onclick="event.stopPropagation(); scrollToBolt('${blocker.id}')">
+                  <span class="dep-status-dot ${blocker.status}"></span>
+                  <span>&#8592; blocked by ${blocker.name.split('-').slice(0,2).join('-')}</span>
+                </span>
+              ` : '';
+            })() : ''}
+            ${deps.filter(d => d.id !== bolt.blockedBy).map(d => `
+              <span class="dep-tag needs" onclick="event.stopPropagation(); scrollToBolt('${d.id}')">
+                <span class="dep-status-dot ${d.status}"></span>
+                <span>&#8592; ${d.name.split('-').slice(0,2).join('-')}</span>
+              </span>
+            `).join('')}
+            ${dependents.map(d => `
+              <span class="dep-tag blocks" onclick="event.stopPropagation(); scrollToBolt('${d.id}')">
+                <span>&#8594; ${d.name.split('-').slice(0,2).join('-')}</span>
+                <span class="dep-status-dot ${d.status}"></span>
+              </span>
+            `).join('')}
+          </div>
+        `;
+      }
+
+      return `
+        <div class="bolt-card ${bolt.status} ${isExpanded ? 'expanded' : ''}" data-bolt-id="${bolt.id}">
+          <div class="bolt-card-header" onclick="toggleBoltCard('${bolt.id}')">
+            <div class="bolt-status-indicator ${bolt.status}"></div>
+            <div class="bolt-card-info">
+              <div class="bolt-card-name">${bolt.name}</div>
+              <div class="bolt-card-meta">
+                <span>${bolt.type}</span>
+                <span>${bolt.stories.filter(s => s.status === 'complete').length}/${bolt.stories.length} stories</span>
+              </div>
+            </div>
+            <div class="bolt-card-stages">
+              ${Object.entries(bolt.stages).map(([stage, status], i) => `
+                <div class="bolt-stage ${status}">
+                  <span class="bolt-stage-label">${stageFull[i]}</span>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+          ${depsHtml}
+          <div class="bolt-card-body">
+            <div class="bolt-card-body-inner">
+              <div class="stories-section">
+                <div class="stories-title">Stories</div>
+                ${bolt.stories.map(story => `
+                  <div class="story-row ${story.status === 'complete' ? 'completed' : ''}" onclick="event.stopPropagation(); toggleStory('${bolt.id}', '${story.id}')">
+                    <div class="story-checkbox ${story.status === 'complete' ? 'checked' : ''}">
+                      ${story.status === 'complete' ? '&#10003;' : ''}
+                    </div>
+                    <span class="story-name">${story.name}</span>
+                  </div>
+                `).join('')}
+              </div>
+              <div class="bolt-actions">
+                ${bolt.status === 'pending' ? `<button class="bolt-action-btn primary" onclick="event.stopPropagation(); startBolt('${bolt.id}')">Start Bolt</button>` : ''}
+                ${bolt.status === 'blocked' ? `<button class="bolt-action-btn primary" onclick="event.stopPropagation(); resolveDependency('${bolt.id}')">Resolve Deps</button>` : ''}
+                ${bolt.status === 'active' ? `<button class="bolt-action-btn success" onclick="event.stopPropagation(); completeBolt('${bolt.id}')">Complete</button>` : ''}
+                <button class="bolt-action-btn secondary" onclick="event.stopPropagation(); showToast('Opening files...')">Files</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderSwimlanes() {
+      const container = document.getElementById('swimlaneContainer');
+      let lanes = [];
+
+      if (state.viewMode === 'swimlane') {
+        // Group by unit
+        lanes = units.map(unit => {
+          const unitBolts = bolts.filter(b => b.unitId === unit.id).sort((a, b) => a.order - b.order);
+          const complete = unitBolts.filter(b => b.status === 'complete').length;
+          const progress = unitBolts.length > 0 ? Math.round((complete / unitBolts.length) * 100) : 0;
+
+          return {
+            id: unit.id,
+            name: unit.name,
+            icon: '&#128193;',
+            bolts: unitBolts,
+            progress,
+            badge: `${complete}/${unitBolts.length}`
+          };
+        });
+      } else if (state.viewMode === 'status') {
+        const statuses = ['active', 'blocked', 'pending', 'complete'];
+        lanes = statuses.map(status => {
+          const statusBolts = bolts.filter(b => b.status === status);
+          return {
+            id: status,
+            name: status.charAt(0).toUpperCase() + status.slice(1),
+            icon: status === 'complete' ? '&#10003;' : status === 'active' ? '&#9654;' : status === 'blocked' ? '&#9888;' : '&#9675;',
+            bolts: statusBolts,
+            badge: statusBolts.length.toString()
+          };
+        }).filter(l => l.bolts.length > 0);
+      } else if (state.viewMode === 'deps') {
+        // Group by dependency level
+        const levels = [];
+        const placed = new Set();
+
+        const noDeps = bolts.filter(b => b.dependsOn.length === 0);
+        if (noDeps.length > 0) {
+          levels.push({ name: 'Level 0 (No Dependencies)', bolts: noDeps });
+          noDeps.forEach(b => placed.add(b.id));
+        }
+
+        let remaining = bolts.filter(b => !placed.has(b.id));
+        let levelNum = 1;
+        while (remaining.length > 0) {
+          const nextLevel = remaining.filter(b => b.dependsOn.every(dep => placed.has(dep)));
+          if (nextLevel.length === 0) {
+            levels.push({ name: 'Blocked/Circular', bolts: remaining });
+            break;
+          }
+          levels.push({ name: `Level ${levelNum}`, bolts: nextLevel });
+          nextLevel.forEach(b => placed.add(b.id));
+          remaining = remaining.filter(b => !placed.has(b.id));
+          levelNum++;
+        }
+
+        lanes = levels.map((level, i) => ({
+          id: `level-${i}`,
+          name: level.name,
+          icon: '&#8594;',
+          bolts: level.bolts,
+          badge: level.bolts.length.toString()
+        }));
+      } else if (state.viewMode === 'timeline') {
+        // Group by order (execution sequence)
+        lanes = bolts.sort((a, b) => a.order - b.order).map((bolt, i) => ({
+          id: `seq-${i}`,
+          name: `Step ${i + 1}`,
+          icon: `${i + 1}`,
+          bolts: [bolt],
+          badge: bolt.status
+        }));
+      } else if (state.viewMode === 'critical') {
+        const criticalPath = getCriticalPath();
+        if (criticalPath.length > 0) {
+          lanes = [{
+            id: 'critical',
+            name: 'Critical Path',
+            icon: '&#9888;',
+            bolts: criticalPath,
+            badge: criticalPath.length.toString()
+          }];
+        }
+
+        const nonCritical = bolts.filter(b => !criticalPath.find(c => c.id === b.id));
+        if (nonCritical.length > 0) {
+          lanes.push({
+            id: 'other',
+            name: 'Other Bolts',
+            icon: '&#9675;',
+            bolts: nonCritical,
+            badge: nonCritical.length.toString()
+          });
+        }
+      }
+
+      container.innerHTML = lanes.map(lane => {
+        const isExpanded = state.expandedSwimlanes.has(lane.id);
+        return `
+          <div class="swimlane ${isExpanded ? '' : 'collapsed'}" data-lane-id="${lane.id}">
+            <div class="swimlane-header" onclick="toggleSwimlane('${lane.id}')">
+              <span class="swimlane-chevron">&#9660;</span>
+              <span class="swimlane-icon">${lane.icon}</span>
+              <span class="swimlane-title">${lane.name}</span>
+              <span class="swimlane-badge">${lane.badge}</span>
+              ${lane.progress !== undefined ? `
+                <div class="swimlane-progress">
+                  <div class="swimlane-progress-fill" style="width: ${lane.progress}%"></div>
+                </div>
+              ` : ''}
+            </div>
+            <div class="swimlane-content">
+              ${lane.bolts.map(bolt => renderBoltCard(bolt)).join('')}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderSpecsView() {
+      const container = document.getElementById('specsView');
+
+      container.innerHTML = intents.map(intent => {
+        const isExpanded = state.expandedSpecs.has(intent.id);
+        const intentUnits = units.filter(u => u.intentId === intent.id);
+        const intentBolts = bolts.filter(b => b.intentId === intent.id);
+        const complete = intentBolts.filter(b => b.status === 'complete').length;
+        const progress = Math.round((complete / intentBolts.length) * 100);
+
+        return `
+          <div class="spec-card ${isExpanded ? 'expanded' : 'collapsed'}">
+            <div class="spec-card-header" onclick="toggleSpec('${intent.id}')">
+              <span class="spec-chevron">&#9660;</span>
+              <span class="spec-icon intent">&#128203;</span>
+              <div class="spec-info">
+                <div class="spec-name">${intent.name}</div>
+                <div class="spec-meta">${intentUnits.length} units | ${intentBolts.length} bolts</div>
+              </div>
+              <div class="spec-progress">
+                <div class="spec-progress-fill" style="width: ${progress}%"></div>
+              </div>
+            </div>
+            <div class="spec-card-body">
+              <div class="spec-card-body-inner">
+                ${intentUnits.map(unit => {
+                  const isUnitExpanded = state.expandedUnits.has(unit.id);
+                  const unitBolts = bolts.filter(b => b.unitId === unit.id);
+                  const unitStories = unitBolts.flatMap(b => b.stories);
+                  const completeStories = unitStories.filter(s => s.status === 'complete').length;
+
+                  return `
+                    <div class="unit-section ${isUnitExpanded ? '' : 'collapsed'}">
+                      <div class="unit-header" onclick="event.stopPropagation(); toggleUnit('${unit.id}')">
+                        <span class="spec-chevron">&#9660;</span>
+                        <span class="spec-icon unit">&#128193;</span>
+                        <span style="flex:1; font-size:11px; font-weight:500;">${unit.name}</span>
+                        <span style="font-size:9px; color:var(--vscode-descriptionForeground);">${completeStories}/${unitStories.length}</span>
+                      </div>
+                      <div class="unit-stories">
+                        ${unitBolts.flatMap(bolt => bolt.stories.map(story => `
+                          <div class="story-row ${story.status === 'complete' ? 'completed' : ''}"
+                               onclick="event.stopPropagation(); toggleStory('${bolt.id}', '${story.id}')">
+                            <div class="story-checkbox ${story.status === 'complete' ? 'checked' : ''}">
+                              ${story.status === 'complete' ? '&#10003;' : ''}
+                            </div>
+                            <span class="story-name">${story.name}</span>
+                          </div>
+                        `)).join('')}
+                      </div>
+                    </div>
+                  `;
+                }).join('')}
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderQuickStats() {
+      const container = document.getElementById('quickStats');
+      const complete = bolts.filter(b => b.status === 'complete').length;
+      const active = bolts.filter(b => b.status === 'active').length;
+      const blocked = bolts.filter(b => b.status === 'blocked').length;
+      const pending = bolts.filter(b => b.status === 'pending').length;
+
+      container.innerHTML = `
+        <div class="stat-box ${state.statusFilter === 'complete' ? 'active' : ''}" onclick="filterByStatus('complete')">
+          <div class="stat-number complete">${complete}</div>
+          <div class="stat-label">Complete</div>
+        </div>
+        <div class="stat-box ${state.statusFilter === 'active' ? 'active' : ''}" onclick="filterByStatus('active')">
+          <div class="stat-number active">${active}</div>
+          <div class="stat-label">Active</div>
+        </div>
+        <div class="stat-box ${state.statusFilter === 'blocked' ? 'active' : ''}" onclick="filterByStatus('blocked')">
+          <div class="stat-number blocked">${blocked}</div>
+          <div class="stat-label">Blocked</div>
+        </div>
+        <div class="stat-box ${state.statusFilter === 'pending' ? 'active' : ''}" onclick="filterByStatus('pending')">
+          <div class="stat-number pending">${pending}</div>
+          <div class="stat-label">Pending</div>
+        </div>
+      `;
+    }
+
+    function renderAlertBanner() {
+      const banner = document.getElementById('alertBanner');
+      const blocked = getBlockedBolts();
+
+      if (blocked.length > 0) {
+        const b = blocked[0];
+        const blocker = bolts.find(x => x.id === b.blockedBy);
+        document.getElementById('alertText').innerHTML = `
+          <strong>${b.name}</strong> blocked by <strong>${blocker?.name || 'dependency'}</strong>
+        `;
+        banner.classList.add('show');
+      } else {
+        banner.classList.remove('show');
+      }
+    }
+
+    function render() {
+      renderSwimlanes();
+      renderSpecsView();
+      renderQuickStats();
+      renderAlertBanner();
+    }
+
+    // ==================== EVENT HANDLERS ====================
+    function toggleBoltCard(boltId) {
+      if (state.expandedBolts.has(boltId)) {
+        state.expandedBolts.delete(boltId);
+      } else {
+        state.expandedBolts.add(boltId);
+      }
+      render();
+    }
+
+    function toggleSwimlane(laneId) {
+      if (state.expandedSwimlanes.has(laneId)) {
+        state.expandedSwimlanes.delete(laneId);
+      } else {
+        state.expandedSwimlanes.add(laneId);
+      }
+      render();
+    }
+
+    function toggleSpec(specId) {
+      if (state.expandedSpecs.has(specId)) {
+        state.expandedSpecs.delete(specId);
+      } else {
+        state.expandedSpecs.add(specId);
+      }
+      renderSpecsView();
+    }
+
+    function toggleUnit(unitId) {
+      if (state.expandedUnits.has(unitId)) {
+        state.expandedUnits.delete(unitId);
+      } else {
+        state.expandedUnits.add(unitId);
+      }
+      renderSpecsView();
+    }
+
+    function toggleStory(boltId, storyId) {
+      const bolt = bolts.find(b => b.id === boltId);
+      if (!bolt) return;
+      const story = bolt.stories.find(s => s.id === storyId);
+      if (!story) return;
+
+      story.status = story.status === 'complete' ? 'pending' : 'complete';
+      showToast(story.status === 'complete' ? 'Story completed' : 'Story reopened', story.status === 'complete' ? 'success' : 'info');
+      render();
+    }
+
+    function startBolt(boltId) {
+      const bolt = bolts.find(b => b.id === boltId);
+      if (!bolt) return;
+
+      const unmetDeps = bolt.dependsOn.filter(depId => {
+        const dep = bolts.find(b => b.id === depId);
+        return dep && dep.status !== 'complete';
+      });
+
+      if (unmetDeps.length > 0) {
+        showToast('Cannot start: unmet dependencies');
+        return;
+      }
+
+      bolt.status = 'active';
+      bolt.stages.model = 'active';
+      showToast(`Started: ${bolt.name}`, 'success');
+      render();
+    }
+
+    function completeBolt(boltId) {
+      const bolt = bolts.find(b => b.id === boltId);
+      if (!bolt) return;
+
+      Object.keys(bolt.stages).forEach(s => bolt.stages[s] = 'complete');
+      bolt.stories.forEach(s => s.status = 'complete');
+      bolt.status = 'complete';
+
+      // Unblock dependents
+      const dependents = getBoltDependents(boltId);
+      dependents.forEach(d => {
+        if (d.blockedBy === boltId) {
+          const stillBlocked = d.dependsOn.some(depId => {
+            const dep = bolts.find(b => b.id === depId);
+            return dep && dep.status !== 'complete';
+          });
+          if (!stillBlocked) {
+            d.status = 'pending';
+            delete d.blockedBy;
+          }
+        }
+      });
+
+      showToast(`Completed: ${bolt.name}`, 'success');
+      render();
+    }
+
+    function resolveDependency(boltId) {
+      const bolt = bolts.find(b => b.id === boltId);
+      if (!bolt || !bolt.blockedBy) return;
+
+      const blocker = bolts.find(b => b.id === bolt.blockedBy);
+      if (blocker) {
+        startBolt(blocker.id);
+      }
+    }
+
+    function scrollToBolt(boltId) {
+      const el = document.querySelector(`[data-bolt-id="${boltId}"]`);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        state.expandedBolts.add(boltId);
+        render();
+      }
+    }
+
+    function filterByStatus(status) {
+      state.statusFilter = state.statusFilter === status ? 'all' : status;
+      renderQuickStats();
+    }
+
+    function setTab(tab) {
+      state.activeTab = tab;
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.tab === tab);
+      });
+      document.getElementById('swimlaneContainer').style.display = tab === 'bolts' ? 'block' : 'none';
+      document.getElementById('specsView').style.display = tab === 'specs' ? 'block' : 'none';
+      document.getElementById('viewSwitcher').style.display = tab === 'bolts' ? 'flex' : 'none';
+    }
+
+    function setViewMode(mode) {
+      state.viewMode = mode;
+      document.querySelectorAll('.view-chip').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.view === mode);
+      });
+      render();
+    }
+
+    // ==================== EVENT LISTENERS ====================
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => setTab(btn.dataset.tab));
+    });
+
+    document.querySelectorAll('.view-chip').forEach(btn => {
+      btn.addEventListener('click', () => setViewMode(btn.dataset.view));
+    });
+
+    document.getElementById('themeBtn').addEventListener('click', () => {
+      state.theme = state.theme === 'dark' ? 'light' : 'dark';
+      document.getElementById('sidebar').classList.toggle('theme-light', state.theme === 'light');
+    });
+
+    document.getElementById('refreshBtn').addEventListener('click', () => {
+      showToast('Refreshing...');
+      render();
+    });
+
+    document.getElementById('resolveBtn').addEventListener('click', () => {
+      const blocked = getBlockedBolts();
+      if (blocked.length > 0 && blocked[0].blockedBy) {
+        const blocker = bolts.find(b => b.id === blocked[0].blockedBy);
+        if (blocker) startBolt(blocker.id);
+      }
+    });
+
+    // ==================== INITIALIZATION ====================
+    render();
+  </script>
+</body>
+</html>
