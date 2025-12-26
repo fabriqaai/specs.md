@@ -157,12 +157,14 @@ created: {timestamp}
 6 - **Document implementation**: Create implementation walkthrough
 
 **Artifacts**:
+
 - Source code - As defined in project structure (e.g., `src/`, `app/`, `pages/`)
 - `implementation-walkthrough.md` - `memory-bank/bolts/{bolt-id}/implementation-walkthrough.md`
 
 **Implementation Walkthrough Guidelines**:
 
 ⚠️ **CRITICAL RULES**:
+
 - **NO CODE** in this document - only structure summaries and descriptions
 - **USE CHECKMARKS** for all file entries (completed work)
 - **BE CONSISTENT** - follow the template exactly
@@ -210,12 +212,14 @@ created: {timestamp}
 ```
 
 **What to Include**:
+
 - ✅ File paths with brief purpose descriptions
 - ✅ Architectural decisions and rationale
 - ✅ Deviations from original plan
 - ✅ High-level structure explanations
 
 **What NOT to Include**:
+
 - ❌ Code snippets or examples
 - ❌ Implementation details (how it works internally)
 - ❌ Line-by-line explanations
