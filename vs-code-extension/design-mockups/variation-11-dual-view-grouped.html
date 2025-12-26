@@ -754,6 +754,308 @@
       max-height: 0;
     }
 
+    /* Intent Card Expanded View */
+    .intent-card-inner {
+      padding: 16px;
+      background: var(--vscode-editor-background);
+      border-left: 3px solid var(--accent-primary);
+      margin: 0 12px 12px 12px;
+      border-radius: 0 8px 8px 0;
+    }
+
+    .intent-card-header-row {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+
+    .intent-progress-ring-large {
+      width: 64px;
+      height: 64px;
+      position: relative;
+    }
+
+    .intent-progress-ring-large svg {
+      transform: rotate(-90deg);
+    }
+
+    .intent-progress-ring-large .ring-bg {
+      fill: none;
+      stroke: var(--vscode-input-background);
+      stroke-width: 6;
+    }
+
+    .intent-progress-ring-large .ring-fill {
+      fill: none;
+      stroke: var(--status-complete);
+      stroke-width: 6;
+      stroke-linecap: round;
+      stroke-dasharray: 163.36;
+      transition: stroke-dashoffset 0.3s;
+    }
+
+    .intent-progress-ring-large .ring-fill.active {
+      stroke: var(--status-active);
+    }
+
+    .intent-progress-text {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--accent-primary);
+    }
+
+    .intent-stage-info {
+      flex: 1;
+    }
+
+    .intent-stage-title {
+      font-size: 13px;
+      margin-bottom: 4px;
+    }
+
+    .intent-stage-title span {
+      color: var(--accent-primary);
+      font-weight: 600;
+    }
+
+    .intent-stage-subtitle {
+      font-size: 11px;
+      color: var(--vscode-descriptionForeground);
+    }
+
+    .intent-status-badge {
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .intent-status-badge.active {
+      background: rgba(249, 115, 22, 0.2);
+      color: var(--status-active);
+      border: 1px solid var(--status-active);
+    }
+
+    .intent-status-badge.complete {
+      background: rgba(34, 197, 94, 0.2);
+      color: var(--status-complete);
+    }
+
+    .intent-status-badge.pending {
+      background: var(--vscode-input-background);
+      color: var(--vscode-descriptionForeground);
+    }
+
+    /* Unit Pipeline */
+    .unit-pipeline {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      margin-bottom: 16px;
+      padding: 12px 0;
+    }
+
+    .unit-pipeline-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      flex: 1;
+      position: relative;
+    }
+
+    .unit-pipeline-item:not(:last-child)::after {
+      content: '';
+      position: absolute;
+      top: 12px;
+      left: 50%;
+      width: 100%;
+      height: 3px;
+      background: var(--vscode-input-background);
+      z-index: 0;
+    }
+
+    .unit-pipeline-item.complete:not(:last-child)::after {
+      background: var(--status-complete);
+    }
+
+    .unit-pipeline-node {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      font-weight: 600;
+      z-index: 1;
+      background: var(--vscode-input-background);
+      color: var(--vscode-descriptionForeground);
+    }
+
+    .unit-pipeline-node.complete {
+      background: var(--status-complete);
+      color: white;
+    }
+
+    .unit-pipeline-node.active {
+      background: var(--status-active);
+      color: white;
+      box-shadow: 0 0 8px rgba(249, 115, 22, 0.5);
+    }
+
+    .unit-pipeline-label {
+      font-size: 8px;
+      text-transform: uppercase;
+      margin-top: 6px;
+      color: var(--vscode-descriptionForeground);
+      text-align: center;
+      max-width: 60px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .unit-pipeline-label.active {
+      color: var(--status-active);
+    }
+
+    .unit-pipeline-label.complete {
+      color: var(--status-complete);
+    }
+
+    /* Stories Section in Intent Card */
+    .intent-stories-section {
+      margin-bottom: 16px;
+    }
+
+    .intent-stories-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .intent-stories-title {
+      font-size: 11px;
+      color: var(--vscode-descriptionForeground);
+    }
+
+    .intent-stories-count {
+      font-size: 11px;
+      color: var(--vscode-editor-foreground);
+    }
+
+    .intent-stories-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      max-height: 180px;
+      overflow-y: auto;
+    }
+
+    .intent-story-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 12px;
+      background: var(--vscode-sideBar-background);
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .intent-story-item:hover {
+      background: var(--vscode-list-hoverBackground);
+    }
+
+    .intent-story-checkbox {
+      width: 18px;
+      height: 18px;
+      border-radius: 4px;
+      border: 2px solid var(--vscode-input-border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      flex-shrink: 0;
+    }
+
+    .intent-story-checkbox.complete {
+      background: var(--status-complete);
+      border-color: var(--status-complete);
+      color: white;
+    }
+
+    .intent-story-checkbox.active {
+      border-color: var(--status-active);
+      color: var(--status-active);
+    }
+
+    .intent-story-name {
+      flex: 1;
+      font-size: 11px;
+    }
+
+    .intent-story-name.complete {
+      color: var(--vscode-descriptionForeground);
+      text-decoration: line-through;
+    }
+
+    /* Intent Card Actions */
+    .intent-card-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .intent-btn {
+      flex: 1;
+      padding: 10px 16px;
+      font-size: 11px;
+      font-weight: 500;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.15s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .intent-btn-primary {
+      background: var(--accent-primary);
+      color: white;
+    }
+
+    .intent-btn-primary:hover {
+      filter: brightness(1.1);
+    }
+
+    .intent-btn-secondary {
+      background: var(--vscode-input-background);
+      color: var(--vscode-editor-foreground);
+      border: 1px solid var(--vscode-input-border);
+    }
+
+    .intent-btn-secondary:hover {
+      background: var(--vscode-list-hoverBackground);
+    }
+
+    .intent-btn-success {
+      background: var(--status-complete);
+      color: white;
+    }
+
+    .intent-btn-success:hover {
+      filter: brightness(1.1);
+    }
+
     .unit-item {
       border-bottom: 1px solid var(--vscode-input-border);
     }
@@ -1655,10 +1957,65 @@
         const intentUnits = units.filter(u => u.unitId !== 'x' && intent.units.includes(u.id));
         const allStories = intentUnits.flatMap(u => stories.filter(s => s.unitId === u.id));
         const doneStories = allStories.filter(s => s.status === 'complete').length;
+        const activeStories = allStories.filter(s => s.status === 'active').length;
         const progress = Math.round((doneStories / allStories.length) * 100);
         const dashOffset = 69.115 - (69.115 * progress / 100);
+        const largeDashOffset = 163.36 - (163.36 * progress / 100);
 
         const isExpanded = expandedIntentId === intent.id;
+
+        // Determine intent status
+        let intentStatus = 'pending';
+        if (progress === 100) intentStatus = 'complete';
+        else if (activeStories > 0 || doneStories > 0) intentStatus = 'active';
+
+        // Find current unit (first with active stories, or first incomplete)
+        let currentUnit = intentUnits.find(u => {
+          const unitStories = stories.filter(s => s.unitId === u.id);
+          return unitStories.some(s => s.status === 'active');
+        }) || intentUnits.find(u => {
+          const unitStories = stories.filter(s => s.unitId === u.id);
+          return unitStories.some(s => s.status !== 'complete');
+        }) || intentUnits[0];
+
+        // Unit pipeline HTML
+        const unitPipelineHtml = intentUnits.map(unit => {
+          const unitStories = stories.filter(s => s.unitId === unit.id);
+          const unitDone = unitStories.filter(s => s.status === 'complete').length;
+          const unitActive = unitStories.some(s => s.status === 'active');
+          const unitComplete = unitDone === unitStories.length;
+          let status = 'pending';
+          if (unitComplete) status = 'complete';
+          else if (unitActive || unitDone > 0) status = 'active';
+
+          return `
+            <div class="unit-pipeline-item ${status}">
+              <div class="unit-pipeline-node ${status}">${status === 'complete' ? '&#10003;' : unit.name.charAt(0).toUpperCase()}</div>
+              <span class="unit-pipeline-label ${status}">${unit.name}</span>
+            </div>
+          `;
+        }).join('');
+
+        // Stories for expanded view (from current unit)
+        const currentUnitStories = currentUnit ? stories.filter(s => s.unitId === currentUnit.id) : [];
+        const storiesHtml = currentUnitStories.map(story => `
+          <div class="intent-story-item">
+            <div class="intent-story-checkbox ${story.status}">${story.status === 'complete' ? '&#10003;' : ''}</div>
+            <span class="intent-story-name ${story.status}">${story.name}</span>
+          </div>
+        `).join('');
+
+        // Status badge text
+        const statusText = intentStatus === 'complete' ? 'Complete' : intentStatus === 'active' ? 'In Progress' : 'Not Started';
+
+        // Action buttons
+        const actionButtons = intentStatus === 'complete'
+          ? '<button type="button" class="intent-btn intent-btn-success">&#10003; Done</button>'
+          : intentStatus === 'active'
+            ? `<button type="button" class="intent-btn intent-btn-primary">&#9654; Continue</button>
+               <button type="button" class="intent-btn intent-btn-secondary">Files</button>
+               <button type="button" class="intent-btn intent-btn-success">Done</button>`
+            : '<button type="button" class="intent-btn intent-btn-primary">Start</button>';
 
         html += `
           <div class="intent-item ${isExpanded ? '' : 'collapsed'}" id="${intent.id}">
@@ -1680,7 +2037,40 @@
               </div>
             </div>
             <div class="intent-content">
-              ${renderUnits(intentUnits)}
+              <div class="intent-card-inner">
+                <div class="intent-card-header-row">
+                  <div class="intent-progress-ring-large">
+                    <svg width="64" height="64" viewBox="0 0 64 64">
+                      <circle class="ring-bg" cx="32" cy="32" r="26"></circle>
+                      <circle class="ring-fill ${intentStatus === 'active' ? 'active' : ''}" cx="32" cy="32" r="26" style="stroke-dashoffset: ${largeDashOffset}"></circle>
+                    </svg>
+                    <span class="intent-progress-text">${progress}%</span>
+                  </div>
+                  <div class="intent-stage-info">
+                    <div class="intent-stage-title">Unit: <span>${currentUnit ? currentUnit.name : 'None'}</span></div>
+                    <div class="intent-stage-subtitle">${doneStories} of ${allStories.length} stories complete</div>
+                  </div>
+                  <span class="intent-status-badge ${intentStatus}">${statusText}</span>
+                </div>
+
+                <div class="unit-pipeline">
+                  ${unitPipelineHtml}
+                </div>
+
+                <div class="intent-stories-section">
+                  <div class="intent-stories-header">
+                    <span class="intent-stories-title">Stories</span>
+                    <span class="intent-stories-count">${currentUnitStories.filter(s => s.status === 'complete').length}/${currentUnitStories.length}</span>
+                  </div>
+                  <div class="intent-stories-list">
+                    ${storiesHtml}
+                  </div>
+                </div>
+
+                <div class="intent-card-actions">
+                  ${actionButtons}
+                </div>
+              </div>
             </div>
           </div>
         `;
