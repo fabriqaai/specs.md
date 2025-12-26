@@ -1,0 +1,1791 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Variation 8d: Command Center + Specs Tab</title>
+  <style>
+    /* VS Code Theme Variables */
+    :root {
+      --vscode-editor-background: #1e1e1e;
+      --vscode-editor-foreground: #cccccc;
+      --vscode-sideBar-background: #252526;
+      --vscode-sideBarSectionHeader-background: #2d2d2d;
+      --vscode-input-background: #3c3c3c;
+      --vscode-input-border: #3c3c3c;
+      --vscode-list-hoverBackground: #2a2d2e;
+      --vscode-badge-background: #4d4d4d;
+      --vscode-badge-foreground: #ffffff;
+      --vscode-descriptionForeground: #858585;
+
+      --status-complete: #22c55e;
+      --status-active: #f97316;
+      --status-pending: #6b7280;
+      --status-blocked: #ef4444;
+      --status-info: #3b82f6;
+      --accent-primary: #f97316;
+    }
+
+    .theme-light {
+      --vscode-editor-background: #ffffff;
+      --vscode-editor-foreground: #333333;
+      --vscode-sideBar-background: #f3f3f3;
+      --vscode-sideBarSectionHeader-background: #e8e8e8;
+      --vscode-input-background: #ffffff;
+      --vscode-input-border: #cecece;
+      --vscode-list-hoverBackground: #e8e8e8;
+      --vscode-descriptionForeground: #717171;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--vscode-editor-background);
+      color: var(--vscode-editor-foreground);
+      font-size: 13px;
+    }
+
+    .sidebar {
+      width: 360px;
+      min-height: 100vh;
+      background: var(--vscode-sideBar-background);
+      border-right: 1px solid var(--vscode-input-border);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .header {
+      padding: 10px 12px;
+      background: var(--vscode-sideBarSectionHeader-background);
+      border-bottom: 1px solid var(--vscode-input-border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .header-title {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 4px;
+    }
+
+    .icon-btn {
+      background: none;
+      border: none;
+      color: var(--vscode-descriptionForeground);
+      cursor: pointer;
+      padding: 4px 6px;
+      border-radius: 4px;
+      font-size: 14px;
+      transition: all 0.15s;
+    }
+
+    .icon-btn:hover {
+      background: var(--vscode-list-hoverBackground);
+      color: var(--vscode-editor-foreground);
+    }
+
+    /* Main View Tabs */
+    .view-tabs {
+      display: flex;
+      background: var(--vscode-editor-background);
+      border-bottom: 1px solid var(--vscode-input-border);
+    }
+
+    .view-tab {
+      flex: 1;
+      padding: 10px;
+      font-size: 11px;
+      font-weight: 600;
+      text-align: center;
+      background: none;
+      border: none;
+      color: var(--vscode-descriptionForeground);
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: all 0.15s;
+    }
+
+    .view-tab:hover {
+      color: var(--vscode-editor-foreground);
+      background: var(--vscode-list-hoverBackground);
+    }
+
+    .view-tab.active {
+      color: var(--accent-primary);
+      border-bottom-color: var(--accent-primary);
+    }
+
+    /* Theme Toggle */
+    .theme-toggle {
+      padding: 8px 12px;
+      background: var(--vscode-editor-background);
+      border-top: 1px solid var(--vscode-input-border);
+      display: flex;
+      gap: 8px;
+      margin-top: auto;
+    }
+
+    .theme-btn {
+      flex: 1;
+      padding: 6px;
+      font-size: 10px;
+      border: 1px solid var(--vscode-input-border);
+      background: var(--vscode-input-background);
+      color: var(--vscode-editor-foreground);
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .theme-btn.active {
+      background: var(--accent-primary);
+      border-color: var(--accent-primary);
+      color: white;
+    }
+
+    /* View Containers */
+    .view-container {
+      display: none;
+      flex: 1;
+      overflow-y: auto;
+    }
+
+    .view-container.active {
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ==================== COMMAND VIEW ==================== */
+    .mission-status {
+      padding: 16px;
+      background: linear-gradient(135deg, var(--vscode-editor-background) 0%, rgba(249, 115, 22, 0.1) 100%);
+      border-bottom: 1px solid var(--vscode-input-border);
+    }
+
+    .mission-label {
+      font-size: 9px;
+      color: var(--accent-primary);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 4px;
+    }
+
+    .mission-title {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .mission-stats {
+      display: flex;
+      gap: 16px;
+    }
+
+    .mission-stat {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      padding: 4px 8px;
+      margin: -4px -8px;
+      border-radius: 4px;
+      transition: background 0.15s;
+    }
+
+    .mission-stat:hover {
+      background: rgba(255,255,255,0.1);
+    }
+
+    .mission-stat.active {
+      background: rgba(249, 115, 22, 0.2);
+    }
+
+    .mission-stat-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }
+
+    .mission-stat-value {
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .mission-stat-label {
+      font-size: 10px;
+      color: var(--vscode-descriptionForeground);
+    }
+
+    /* Focus Section */
+    .focus-section {
+      padding: 16px;
+      border-bottom: 1px solid var(--vscode-input-border);
+    }
+
+    .section-label {
+      font-size: 9px;
+      color: var(--vscode-descriptionForeground);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .section-label-icon {
+      font-size: 12px;
+    }
+
+    /* Focus Card */
+    .focus-card {
+      background: var(--vscode-sideBar-background);
+      border: 2px solid var(--accent-primary);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .focus-card-header {
+      padding: 12px;
+      background: rgba(249, 115, 22, 0.1);
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .focus-card-header:hover {
+      background: rgba(249, 115, 22, 0.15);
+    }
+
+    .focus-card-title {
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .focus-card-subtitle {
+      font-size: 10px;
+      color: var(--vscode-descriptionForeground);
+      margin-top: 2px;
+    }
+
+    .focus-card-badge {
+      font-size: 9px;
+      padding: 3px 8px;
+      border-radius: 12px;
+      background: var(--accent-primary);
+      color: white;
+    }
+
+    .focus-card-body {
+      padding: 0;
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease, padding 0.3s ease;
+    }
+
+    .focus-card.expanded .focus-card-body {
+      max-height: 400px;
+      padding: 12px;
+    }
+
+    /* Progress Ring */
+    .progress-ring-container {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 12px;
+    }
+
+    .progress-ring {
+      width: 64px;
+      height: 64px;
+      position: relative;
+    }
+
+    .progress-ring svg {
+      transform: rotate(-90deg);
+    }
+
+    .progress-ring-bg {
+      fill: none;
+      stroke: var(--vscode-input-background);
+      stroke-width: 6;
+    }
+
+    .progress-ring-fill {
+      fill: none;
+      stroke: var(--accent-primary);
+      stroke-width: 6;
+      stroke-linecap: round;
+      stroke-dasharray: 157;
+      transition: stroke-dashoffset 0.5s ease;
+    }
+
+    .progress-ring-text {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .progress-details {
+      flex: 1;
+    }
+
+    .progress-stage {
+      font-size: 11px;
+      margin-bottom: 4px;
+    }
+
+    .progress-stage strong {
+      color: var(--accent-primary);
+    }
+
+    .progress-info {
+      font-size: 10px;
+      color: var(--vscode-descriptionForeground);
+    }
+
+    /* Stage Pipeline */
+    .stage-pipeline {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+      padding: 8px;
+      background: var(--vscode-editor-background);
+      border-radius: 6px;
+    }
+
+    .pipeline-stage {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      cursor: pointer;
+      transition: transform 0.15s;
+    }
+
+    .pipeline-stage:hover {
+      transform: scale(1.1);
+    }
+
+    .pipeline-node {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      font-weight: 600;
+    }
+
+    .pipeline-node.complete {
+      background: var(--status-complete);
+      color: white;
+    }
+
+    .pipeline-node.active {
+      background: var(--accent-primary);
+      color: white;
+      box-shadow: 0 0 12px rgba(249, 115, 22, 0.6);
+    }
+
+    .pipeline-node.pending {
+      background: var(--vscode-input-background);
+      color: var(--vscode-descriptionForeground);
+      border: 1px dashed var(--vscode-input-border);
+    }
+
+    .pipeline-label {
+      font-size: 8px;
+      color: var(--vscode-descriptionForeground);
+      text-transform: uppercase;
+    }
+
+    .pipeline-connector {
+      flex: 1;
+      height: 2px;
+      background: var(--vscode-input-border);
+      margin: 0 -4px;
+      margin-bottom: 16px;
+    }
+
+    .pipeline-connector.complete {
+      background: var(--status-complete);
+    }
+
+    /* Stories List */
+    .stories-section {
+      margin-bottom: 12px;
+    }
+
+    .stories-header {
+      font-size: 10px;
+      color: var(--vscode-descriptionForeground);
+      margin-bottom: 6px;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .stories-list {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      max-height: 100px;
+      overflow-y: auto;
+    }
+
+    .story-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 8px;
+      background: var(--vscode-editor-background);
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .story-item:hover {
+      background: var(--vscode-list-hoverBackground);
+    }
+
+    .story-checkbox {
+      width: 14px;
+      height: 14px;
+      border-radius: 3px;
+      border: 1px solid var(--vscode-input-border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      color: white;
+    }
+
+    .story-checkbox.checked {
+      background: var(--status-complete);
+      border-color: var(--status-complete);
+    }
+
+    .story-name {
+      flex: 1;
+      font-size: 11px;
+    }
+
+    .story-item.completed .story-name {
+      text-decoration: line-through;
+      color: var(--vscode-descriptionForeground);
+    }
+
+    /* Focus Actions */
+    .focus-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .action-btn {
+      flex: 1;
+      padding: 10px;
+      font-size: 11px;
+      font-weight: 500;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .action-btn-primary {
+      background: var(--accent-primary);
+      color: white;
+    }
+
+    .action-btn-primary:hover {
+      filter: brightness(1.1);
+    }
+
+    .action-btn-secondary {
+      background: var(--vscode-input-background);
+      color: var(--vscode-editor-foreground);
+      border: 1px solid var(--vscode-input-border);
+    }
+
+    .action-btn-secondary:hover {
+      background: var(--vscode-list-hoverBackground);
+    }
+
+    .action-btn-complete {
+      background: var(--status-complete);
+      color: white;
+    }
+
+    /* Queue Section */
+    .queue-section {
+      padding: 12px;
+      border-bottom: 1px solid var(--vscode-input-border);
+    }
+
+    .queue-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .queue-title {
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      color: var(--vscode-descriptionForeground);
+    }
+
+    .queue-count {
+      font-size: 9px;
+      padding: 2px 8px;
+      border-radius: 10px;
+      background: var(--vscode-badge-background);
+    }
+
+    .queue-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .queue-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      background: var(--vscode-editor-background);
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.15s;
+      border-left: 3px solid transparent;
+    }
+
+    .queue-item:hover {
+      background: var(--vscode-list-hoverBackground);
+      border-left-color: var(--accent-primary);
+    }
+
+    .queue-priority {
+      width: 20px;
+      height: 20px;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      font-weight: 600;
+      background: var(--vscode-input-background);
+      color: var(--vscode-descriptionForeground);
+    }
+
+    .queue-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .queue-name {
+      font-size: 11px;
+      font-weight: 500;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .queue-meta {
+      font-size: 9px;
+      color: var(--vscode-descriptionForeground);
+      margin-top: 2px;
+    }
+
+    .queue-stages {
+      display: flex;
+      gap: 2px;
+    }
+
+    .queue-stage {
+      width: 14px;
+      height: 14px;
+      border-radius: 3px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 8px;
+      font-weight: 600;
+    }
+
+    .queue-stage.complete {
+      background: var(--status-complete);
+      color: white;
+    }
+
+    .queue-stage.active {
+      background: var(--accent-primary);
+      color: white;
+    }
+
+    .queue-stage.pending {
+      background: var(--vscode-input-background);
+      color: var(--vscode-descriptionForeground);
+    }
+
+    /* System Section */
+    .system-section {
+      padding: 12px;
+      background: var(--vscode-editor-background);
+    }
+
+    .system-header {
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      color: var(--vscode-descriptionForeground);
+      margin-bottom: 8px;
+    }
+
+    .system-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+    }
+
+    .system-card {
+      background: var(--vscode-sideBar-background);
+      border-radius: 6px;
+      padding: 10px 8px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .system-card:hover {
+      transform: translateY(-2px);
+    }
+
+    .system-value {
+      font-size: 16px;
+      font-weight: 700;
+    }
+
+    .system-value.intents { color: #8b5cf6; }
+    .system-value.bolts { color: var(--accent-primary); }
+    .system-value.stories { color: var(--status-complete); }
+    .system-value.standards { color: var(--status-info); }
+
+    .system-label {
+      font-size: 8px;
+      color: var(--vscode-descriptionForeground);
+      margin-top: 2px;
+    }
+
+    /* ==================== SPECS VIEW ==================== */
+    .specs-toolbar {
+      padding: 8px 12px;
+      background: var(--vscode-sideBarSectionHeader-background);
+      border-bottom: 1px solid var(--vscode-input-border);
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .specs-toolbar-label {
+      font-size: 9px;
+      color: var(--vscode-descriptionForeground);
+      text-transform: uppercase;
+    }
+
+    .specs-toolbar-select {
+      flex: 1;
+      padding: 5px 8px;
+      font-size: 10px;
+      background: var(--vscode-input-background);
+      border: 1px solid var(--vscode-input-border);
+      color: var(--vscode-editor-foreground);
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .specs-content {
+      flex: 1;
+      overflow-y: auto;
+    }
+
+    /* Intent Item */
+    .intent-item {
+      border-bottom: 1px solid var(--vscode-input-border);
+    }
+
+    .intent-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 12px;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .intent-header:hover {
+      background: var(--vscode-list-hoverBackground);
+    }
+
+    .intent-expand {
+      font-size: 10px;
+      color: var(--vscode-descriptionForeground);
+      transition: transform 0.2s;
+    }
+
+    .intent-item.collapsed .intent-expand {
+      transform: rotate(-90deg);
+    }
+
+    .intent-icon {
+      font-size: 14px;
+    }
+
+    .intent-info {
+      flex: 1;
+    }
+
+    .intent-name {
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .intent-meta {
+      font-size: 10px;
+      color: var(--vscode-descriptionForeground);
+      margin-top: 2px;
+    }
+
+    .intent-progress {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .intent-progress-ring {
+      width: 28px;
+      height: 28px;
+      position: relative;
+    }
+
+    .intent-progress-ring svg {
+      transform: rotate(-90deg);
+    }
+
+    .intent-progress-ring .ring-bg {
+      fill: none;
+      stroke: var(--vscode-input-background);
+      stroke-width: 3;
+    }
+
+    .intent-progress-ring .ring-fill {
+      fill: none;
+      stroke: var(--status-complete);
+      stroke-width: 3;
+      stroke-linecap: round;
+      stroke-dasharray: 69.115;
+      transition: stroke-dashoffset 0.3s;
+    }
+
+    .intent-progress-text {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 8px;
+      font-weight: 600;
+    }
+
+    .intent-content {
+      max-height: 2000px;
+      overflow: hidden;
+      transition: max-height 0.3s ease;
+      background: var(--vscode-editor-background);
+    }
+
+    .intent-item.collapsed .intent-content {
+      max-height: 0;
+    }
+
+    /* Unit Item */
+    .unit-item {
+      border-bottom: 1px solid var(--vscode-input-border);
+    }
+
+    .unit-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px 8px 28px;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .unit-header:hover {
+      background: var(--vscode-list-hoverBackground);
+    }
+
+    .unit-expand {
+      font-size: 10px;
+      color: var(--vscode-descriptionForeground);
+      transition: transform 0.2s;
+    }
+
+    .unit-item.collapsed .unit-expand {
+      transform: rotate(-90deg);
+    }
+
+    .unit-status {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 9px;
+      color: white;
+    }
+
+    .unit-status.complete {
+      background: var(--status-complete);
+    }
+
+    .unit-status.active {
+      background: var(--status-active);
+    }
+
+    .unit-status.pending {
+      background: var(--vscode-input-background);
+      border: 1px dashed var(--vscode-input-border);
+      color: var(--vscode-descriptionForeground);
+    }
+
+    .unit-name {
+      flex: 1;
+      font-size: 11px;
+    }
+
+    .unit-progress {
+      font-size: 9px;
+      color: var(--vscode-descriptionForeground);
+    }
+
+    .unit-content {
+      max-height: 1000px;
+      overflow: hidden;
+      transition: max-height 0.3s ease;
+    }
+
+    .unit-item.collapsed .unit-content {
+      max-height: 0;
+    }
+
+    /* Story Item in Specs */
+    .spec-story-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 12px 6px 52px;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .spec-story-item:hover {
+      background: var(--vscode-list-hoverBackground);
+    }
+
+    .spec-story-status {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      border: 2px solid var(--vscode-input-border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 8px;
+    }
+
+    .spec-story-status.complete {
+      background: var(--status-complete);
+      border-color: var(--status-complete);
+      color: white;
+    }
+
+    .spec-story-status.active {
+      background: var(--status-active);
+      border-color: var(--status-active);
+      color: white;
+    }
+
+    .spec-story-name {
+      flex: 1;
+      font-size: 11px;
+    }
+
+    .spec-story-name.complete {
+      color: var(--vscode-descriptionForeground);
+    }
+
+    /* ==================== OVERVIEW VIEW ==================== */
+    .overview-content {
+      padding: 16px;
+    }
+
+    .overview-section {
+      margin-bottom: 20px;
+    }
+
+    .overview-section-title {
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      color: var(--vscode-descriptionForeground);
+      margin-bottom: 10px;
+    }
+
+    .overview-metrics {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+    }
+
+    .overview-metric-card {
+      background: var(--vscode-editor-background);
+      border-radius: 8px;
+      padding: 16px;
+      text-align: center;
+    }
+
+    .overview-metric-value {
+      font-size: 28px;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .overview-metric-value.highlight {
+      color: var(--accent-primary);
+    }
+
+    .overview-metric-value.success {
+      color: var(--status-complete);
+    }
+
+    .overview-metric-label {
+      font-size: 10px;
+      color: var(--vscode-descriptionForeground);
+    }
+
+    .overview-progress-bar {
+      height: 8px;
+      background: var(--vscode-input-background);
+      border-radius: 4px;
+      overflow: hidden;
+      margin-bottom: 20px;
+    }
+
+    .overview-progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--status-complete), var(--accent-primary));
+      border-radius: 4px;
+      transition: width 0.5s ease;
+    }
+
+    .overview-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .overview-list-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 12px;
+      background: var(--vscode-editor-background);
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .overview-list-item:hover {
+      background: var(--vscode-list-hoverBackground);
+    }
+
+    .overview-list-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+    }
+
+    .overview-list-icon.intent {
+      background: rgba(139, 92, 246, 0.2);
+      color: #8b5cf6;
+    }
+
+    .overview-list-icon.bolt {
+      background: rgba(249, 115, 22, 0.2);
+      color: var(--accent-primary);
+    }
+
+    .overview-list-info {
+      flex: 1;
+    }
+
+    .overview-list-name {
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .overview-list-meta {
+      font-size: 10px;
+      color: var(--vscode-descriptionForeground);
+      margin-top: 2px;
+    }
+
+    .overview-list-progress {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--status-complete);
+    }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      padding: 10px 20px;
+      background: var(--vscode-sideBar-background);
+      border: 1px solid var(--accent-primary);
+      border-radius: 6px;
+      font-size: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      opacity: 0;
+      transition: all 0.3s ease;
+      z-index: 1000;
+    }
+
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+
+    .toast.success {
+      border-color: var(--status-complete);
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--vscode-input-border);
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body>
+  <div class="sidebar" id="sidebar">
+    <div class="header">
+      <span class="header-title">SpecsMD</span>
+      <div class="header-actions">
+        <button type="button" class="icon-btn" id="refreshBtn" title="Refresh">&#8635;</button>
+        <button type="button" class="icon-btn" id="settingsBtn" title="Settings">&#9881;</button>
+      </div>
+    </div>
+
+    <!-- Main View Tabs -->
+    <div class="view-tabs">
+      <button type="button" class="view-tab active" id="command-tab" onclick="switchView('command')">
+        &#9889; Command
+      </button>
+      <button type="button" class="view-tab" id="specs-tab" onclick="switchView('specs')">
+        &#128203; Specs
+      </button>
+      <button type="button" class="view-tab" id="overview-tab" onclick="switchView('overview')">
+        &#128202; Overview
+      </button>
+    </div>
+
+    <!-- ==================== COMMAND VIEW ==================== -->
+    <div class="view-container active" id="command-view">
+      <div class="mission-status">
+        <div class="mission-label">Current Mission</div>
+        <div class="mission-title" id="missionTitle">001-admin-panel</div>
+        <div class="mission-stats" id="missionStats">
+          <!-- Dynamically rendered -->
+        </div>
+      </div>
+
+      <div class="focus-section">
+        <div class="section-label">
+          <span class="section-label-icon">&#127919;</span>
+          Current Focus
+        </div>
+        <div id="focusCardContainer">
+          <!-- Dynamically rendered -->
+        </div>
+      </div>
+
+      <div class="queue-section">
+        <div class="queue-header">
+          <span class="queue-title">Up Next</span>
+          <span class="queue-count" id="queueCount">0 bolts</span>
+        </div>
+        <div class="queue-list" id="queueList">
+          <!-- Dynamically rendered -->
+        </div>
+      </div>
+
+      <div class="system-section">
+        <div class="system-header">Overview</div>
+        <div class="system-grid" id="systemGrid">
+          <!-- Dynamically rendered -->
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== SPECS VIEW ==================== -->
+    <div class="view-container" id="specs-view">
+      <div class="specs-toolbar">
+        <span class="specs-toolbar-label">Filter</span>
+        <select class="specs-toolbar-select" id="specs-filter" onchange="filterSpecs()">
+          <option value="all">All Status</option>
+          <option value="active">In Progress</option>
+          <option value="complete">Completed</option>
+          <option value="pending">Not Started</option>
+        </select>
+      </div>
+      <div class="specs-content" id="specs-content">
+        <!-- Dynamically rendered -->
+      </div>
+    </div>
+
+    <!-- ==================== OVERVIEW VIEW ==================== -->
+    <div class="view-container" id="overview-view">
+      <div class="overview-content" id="overview-content">
+        <!-- Dynamically rendered -->
+      </div>
+    </div>
+
+    <div class="theme-toggle">
+      <button type="button" class="theme-btn active" id="darkBtn">Dark</button>
+      <button type="button" class="theme-btn" id="lightBtn">Light</button>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    // ==================== DATA MODEL ====================
+    const intents = [
+      { id: 'intent-1', name: '001-admin-panel', units: ['unit-1', 'unit-2', 'unit-3'] },
+      { id: 'intent-2', name: '002-api-gateway', units: ['unit-4', 'unit-5'] }
+    ];
+
+    const units = [
+      { id: 'unit-1', name: 'user-management', intentId: 'intent-1' },
+      { id: 'unit-2', name: 'role-permissions', intentId: 'intent-1' },
+      { id: 'unit-3', name: 'audit-logging', intentId: 'intent-1' },
+      { id: 'unit-4', name: 'rate-limiting', intentId: 'intent-2' },
+      { id: 'unit-5', name: 'authentication', intentId: 'intent-2' }
+    ];
+
+    const stories = [
+      { id: 'story-1', name: '001-create-user', unitId: 'unit-1', status: 'complete' },
+      { id: 'story-2', name: '002-view-user-list', unitId: 'unit-1', status: 'complete' },
+      { id: 'story-3', name: '003-update-user', unitId: 'unit-1', status: 'active' },
+      { id: 'story-4', name: '004-delete-user', unitId: 'unit-1', status: 'pending' },
+      { id: 'story-5', name: '001-create-role', unitId: 'unit-2', status: 'complete' },
+      { id: 'story-6', name: '002-manage-permissions', unitId: 'unit-2', status: 'complete' },
+      { id: 'story-7', name: '003-view-roles', unitId: 'unit-2', status: 'complete' },
+      { id: 'story-8', name: '004-delete-role', unitId: 'unit-2', status: 'complete' },
+      { id: 'story-9', name: '001-log-actions', unitId: 'unit-3', status: 'pending' },
+      { id: 'story-10', name: '002-view-audit-log', unitId: 'unit-3', status: 'pending' },
+      { id: 'story-11', name: '001-configure-limits', unitId: 'unit-4', status: 'complete' },
+      { id: 'story-12', name: '002-throttle-requests', unitId: 'unit-4', status: 'active' },
+      { id: 'story-13', name: '001-jwt-validation', unitId: 'unit-5', status: 'complete' },
+      { id: 'story-14', name: '002-api-key-auth', unitId: 'unit-5', status: 'active' }
+    ];
+
+    let bolts = [
+      {
+        id: 'bolt-1',
+        name: 'user-management-service-1',
+        type: 'DDD',
+        intentId: 'intent-1',
+        status: 'active',
+        stages: { model: 'complete', design: 'active', adr: 'pending', implement: 'pending', test: 'pending' },
+        stories: [
+          { id: 's1', name: 'Create user entity model', status: 'complete' },
+          { id: 's2', name: 'Design user service interface', status: 'active' },
+          { id: 's3', name: 'Implement authentication flow', status: 'pending' },
+          { id: 's4', name: 'Add user validation', status: 'pending' }
+        ]
+      },
+      {
+        id: 'bolt-2',
+        name: 'role-permission-service-1',
+        type: 'DDD',
+        intentId: 'intent-1',
+        status: 'complete',
+        stages: { model: 'complete', design: 'complete', adr: 'complete', implement: 'complete', test: 'complete' },
+        stories: [
+          { id: 's5', name: 'Create role model', status: 'complete' },
+          { id: 's6', name: 'Permission system', status: 'complete' }
+        ]
+      },
+      {
+        id: 'bolt-3',
+        name: 'admin-panel-ui-1',
+        type: 'Simple',
+        intentId: 'intent-1',
+        status: 'pending',
+        stages: { model: 'pending', design: 'pending', adr: 'pending', implement: 'pending', test: 'pending' },
+        stories: [
+          { id: 's7', name: 'Create admin layout', status: 'pending' },
+          { id: 's8', name: 'Add navigation', status: 'pending' }
+        ]
+      },
+      {
+        id: 'bolt-4',
+        name: 'rate-limiter-service-1',
+        type: 'DDD',
+        intentId: 'intent-2',
+        status: 'pending',
+        stages: { model: 'pending', design: 'pending', adr: 'pending', implement: 'pending', test: 'pending' },
+        stories: [
+          { id: 's9', name: 'Rate limit config', status: 'pending' }
+        ]
+      }
+    ];
+
+    // ==================== STATE ====================
+    let state = {
+      currentView: 'command',
+      focusExpanded: true,
+      specsFilter: 'all',
+      expandedIntents: ['intent-1'],
+      expandedUnits: ['unit-1']
+    };
+
+    // ==================== UTILITY FUNCTIONS ====================
+    function showToast(message, type = 'info') {
+      const toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.className = 'toast show' + (type === 'success' ? ' success' : '');
+      setTimeout(() => toast.classList.remove('show'), 2500);
+    }
+
+    function getStageProgress(stages) {
+      const stageOrder = ['model', 'design', 'adr', 'implement', 'test'];
+      let complete = 0;
+      let current = 'model';
+
+      stageOrder.forEach(stage => {
+        if (stages[stage] === 'complete') complete++;
+        if (stages[stage] === 'active') current = stage;
+      });
+
+      return { complete, total: 5, current, percent: Math.round((complete / 5) * 100) };
+    }
+
+    function getStoriesProgress(storyList) {
+      const complete = storyList.filter(s => s.status === 'complete').length;
+      return { complete, total: storyList.length };
+    }
+
+    function getActiveBolt() {
+      return bolts.find(b => b.status === 'active');
+    }
+
+    // ==================== VIEW SWITCHING ====================
+    function switchView(view) {
+      state.currentView = view;
+
+      document.getElementById('command-tab').classList.toggle('active', view === 'command');
+      document.getElementById('specs-tab').classList.toggle('active', view === 'specs');
+      document.getElementById('overview-tab').classList.toggle('active', view === 'overview');
+
+      document.getElementById('command-view').classList.toggle('active', view === 'command');
+      document.getElementById('specs-view').classList.toggle('active', view === 'specs');
+      document.getElementById('overview-view').classList.toggle('active', view === 'overview');
+
+      if (view === 'specs') renderSpecs();
+      if (view === 'overview') renderOverview();
+    }
+
+    // ==================== COMMAND VIEW RENDERS ====================
+    function renderMissionStats() {
+      const stats = document.getElementById('missionStats');
+      const activeBolts = bolts.filter(b => b.status === 'active').length;
+      const pendingBolts = bolts.filter(b => b.status === 'pending').length;
+      const completeBolts = bolts.filter(b => b.status === 'complete').length;
+
+      stats.innerHTML = `
+        <div class="mission-stat">
+          <div class="mission-stat-dot" style="background: var(--status-active)"></div>
+          <span class="mission-stat-value">${activeBolts}</span>
+          <span class="mission-stat-label">Active</span>
+        </div>
+        <div class="mission-stat">
+          <div class="mission-stat-dot" style="background: var(--status-pending)"></div>
+          <span class="mission-stat-value">${pendingBolts}</span>
+          <span class="mission-stat-label">Queued</span>
+        </div>
+        <div class="mission-stat">
+          <div class="mission-stat-dot" style="background: var(--status-complete)"></div>
+          <span class="mission-stat-value">${completeBolts}</span>
+          <span class="mission-stat-label">Done</span>
+        </div>
+      `;
+    }
+
+    function renderFocusCard() {
+      const container = document.getElementById('focusCardContainer');
+      const activeBolt = getActiveBolt();
+
+      if (!activeBolt) {
+        container.innerHTML = `
+          <div style="padding: 20px; text-align: center; color: var(--vscode-descriptionForeground);">
+            <div style="font-size: 24px; margin-bottom: 8px;">&#128640;</div>
+            <div style="font-size: 11px;">No active bolt</div>
+          </div>
+        `;
+        return;
+      }
+
+      const stageProgress = getStageProgress(activeBolt.stages);
+      const storiesProgress = getStoriesProgress(activeBolt.stories);
+      const dashOffset = 157 - (157 * stageProgress.percent / 100);
+      const stageLabels = { model: 'Model', design: 'Design', adr: 'ADR', implement: 'Impl', test: 'Test' };
+
+      container.innerHTML = `
+        <div class="focus-card ${state.focusExpanded ? 'expanded' : ''}">
+          <div class="focus-card-header" onclick="toggleFocusCard()">
+            <div>
+              <div class="focus-card-title">${activeBolt.name}</div>
+              <div class="focus-card-subtitle">${activeBolt.type} Bolt | ${stageLabels[stageProgress.current]} Stage</div>
+            </div>
+            <div class="focus-card-badge">In Progress</div>
+          </div>
+          <div class="focus-card-body">
+            <div class="progress-ring-container">
+              <div class="progress-ring">
+                <svg width="64" height="64" viewBox="0 0 64 64">
+                  <circle class="progress-ring-bg" cx="32" cy="32" r="25"></circle>
+                  <circle class="progress-ring-fill" cx="32" cy="32" r="25" style="stroke-dashoffset: ${dashOffset}"></circle>
+                </svg>
+                <div class="progress-ring-text">${stageProgress.percent}%</div>
+              </div>
+              <div class="progress-details">
+                <div class="progress-stage">Stage: <strong>${stageLabels[stageProgress.current]}</strong></div>
+                <div class="progress-info">${stageProgress.complete} of ${stageProgress.total} stages complete</div>
+                <div class="progress-info">${storiesProgress.complete}/${storiesProgress.total} stories done</div>
+              </div>
+            </div>
+
+            <div class="stage-pipeline">
+              ${Object.entries(activeBolt.stages).map(([stage, status], idx, arr) => `
+                <div class="pipeline-stage" onclick="advanceStage('${activeBolt.id}', '${stage}')">
+                  <div class="pipeline-node ${status}">
+                    ${status === 'complete' ? '&#10003;' : stage.charAt(0).toUpperCase()}
+                  </div>
+                  <span class="pipeline-label">${stageLabels[stage]}</span>
+                </div>
+                ${idx < arr.length - 1 ? `<div class="pipeline-connector ${status === 'complete' ? 'complete' : ''}"></div>` : ''}
+              `).join('')}
+            </div>
+
+            <div class="stories-section">
+              <div class="stories-header">
+                <span>Stories</span>
+                <span>${storiesProgress.complete}/${storiesProgress.total}</span>
+              </div>
+              <div class="stories-list">
+                ${activeBolt.stories.map(story => `
+                  <div class="story-item ${story.status === 'complete' ? 'completed' : ''}">
+                    <div class="story-checkbox ${story.status === 'complete' ? 'checked' : ''}">
+                      ${story.status === 'complete' ? '&#10003;' : ''}
+                    </div>
+                    <span class="story-name">${story.name}</span>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+
+            <div class="focus-actions">
+              <button type="button" class="action-btn action-btn-primary" onclick="showToast('Opening workspace...')">
+                Continue
+              </button>
+              <button type="button" class="action-btn action-btn-secondary" onclick="showToast('Opening files...')">
+                Files
+              </button>
+              <button type="button" class="action-btn action-btn-complete" onclick="completeBolt('${activeBolt.id}')">
+                Done
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderQueueList() {
+      const container = document.getElementById('queueList');
+      const queueCount = document.getElementById('queueCount');
+      const queuedBolts = bolts.filter(b => b.status === 'pending');
+
+      queueCount.textContent = `${queuedBolts.length} bolts`;
+
+      if (queuedBolts.length === 0) {
+        container.innerHTML = '<div style="padding: 16px; text-align: center; color: var(--vscode-descriptionForeground); font-size: 11px;">Queue empty</div>';
+        return;
+      }
+
+      const stageLabels = { model: 'M', design: 'D', adr: 'A', implement: 'I', test: 'T' };
+
+      container.innerHTML = queuedBolts.map((bolt, idx) => `
+        <div class="queue-item" onclick="startBolt('${bolt.id}')">
+          <div class="queue-priority">${idx + 1}</div>
+          <div class="queue-info">
+            <div class="queue-name">${bolt.name}</div>
+            <div class="queue-meta">${bolt.type} | ${bolt.stories.length} stories</div>
+          </div>
+          <div class="queue-stages">
+            ${Object.entries(bolt.stages).map(([stage, status]) => `
+              <div class="queue-stage ${status}">${stageLabels[stage]}</div>
+            `).join('')}
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function renderSystemGrid() {
+      const container = document.getElementById('systemGrid');
+      const allBoltStories = bolts.flatMap(b => b.stories);
+      const completedStories = allBoltStories.filter(s => s.status === 'complete').length;
+
+      container.innerHTML = `
+        <div class="system-card" onclick="switchView('specs')">
+          <div class="system-value intents">${intents.length}</div>
+          <div class="system-label">Intents</div>
+        </div>
+        <div class="system-card">
+          <div class="system-value bolts">${bolts.length}</div>
+          <div class="system-label">Bolts</div>
+        </div>
+        <div class="system-card">
+          <div class="system-value stories">${completedStories}/${allBoltStories.length}</div>
+          <div class="system-label">Stories</div>
+        </div>
+        <div class="system-card" onclick="switchView('overview')">
+          <div class="system-value standards">3</div>
+          <div class="system-label">Standards</div>
+        </div>
+      `;
+    }
+
+    // ==================== SPECS VIEW RENDERS ====================
+    function renderSpecs() {
+      const container = document.getElementById('specs-content');
+      let html = '';
+
+      intents.forEach(intent => {
+        const intentUnits = units.filter(u => intent.units.includes(u.id));
+        const allStories = intentUnits.flatMap(u => stories.filter(s => s.unitId === u.id));
+        const doneStories = allStories.filter(s => s.status === 'complete').length;
+        const activeStories = allStories.filter(s => s.status === 'active').length;
+        const progress = allStories.length > 0 ? Math.round((doneStories / allStories.length) * 100) : 0;
+        const dashOffset = 69.115 - (69.115 * progress / 100);
+
+        // Determine intent status
+        let intentStatus = 'pending';
+        if (progress === 100) intentStatus = 'complete';
+        else if (activeStories > 0 || doneStories > 0) intentStatus = 'active';
+
+        // Apply filter
+        if (state.specsFilter !== 'all' && intentStatus !== state.specsFilter) {
+          return;
+        }
+
+        const isExpanded = state.expandedIntents.includes(intent.id);
+
+        html += `
+          <div class="intent-item ${isExpanded ? '' : 'collapsed'}" id="${intent.id}">
+            <div class="intent-header" onclick="toggleIntent('${intent.id}')">
+              <span class="intent-expand">&#9660;</span>
+              <span class="intent-icon">&#128203;</span>
+              <div class="intent-info">
+                <div class="intent-name">${intent.name}</div>
+                <div class="intent-meta">${intentUnits.length} units | ${allStories.length} stories</div>
+              </div>
+              <div class="intent-progress">
+                <div class="intent-progress-ring">
+                  <svg width="28" height="28" viewBox="0 0 28 28">
+                    <circle class="ring-bg" cx="14" cy="14" r="11"></circle>
+                    <circle class="ring-fill" cx="14" cy="14" r="11" style="stroke-dashoffset: ${dashOffset}"></circle>
+                  </svg>
+                  <span class="intent-progress-text">${progress}%</span>
+                </div>
+              </div>
+            </div>
+            <div class="intent-content">
+              ${renderUnits(intentUnits)}
+            </div>
+          </div>
+        `;
+      });
+
+      container.innerHTML = html || '<div style="padding: 24px; text-align: center; color: var(--vscode-descriptionForeground);">No intents match filter</div>';
+    }
+
+    function renderUnits(unitList) {
+      return unitList.map(unit => {
+        const unitStories = stories.filter(s => s.unitId === unit.id);
+        const doneCount = unitStories.filter(s => s.status === 'complete').length;
+        const activeCount = unitStories.filter(s => s.status === 'active').length;
+
+        let unitStatus = 'pending';
+        if (doneCount === unitStories.length && unitStories.length > 0) unitStatus = 'complete';
+        else if (activeCount > 0 || doneCount > 0) unitStatus = 'active';
+
+        const isExpanded = state.expandedUnits.includes(unit.id);
+
+        return `
+          <div class="unit-item ${isExpanded ? '' : 'collapsed'}" id="${unit.id}">
+            <div class="unit-header" onclick="toggleUnit('${unit.id}')">
+              <span class="unit-expand">&#9660;</span>
+              <div class="unit-status ${unitStatus}">${unitStatus === 'complete' ? '&#10003;' : ''}</div>
+              <span class="unit-name">${unit.name}</span>
+              <span class="unit-progress">${doneCount}/${unitStories.length}</span>
+            </div>
+            <div class="unit-content">
+              ${unitStories.map(story => `
+                <div class="spec-story-item" onclick="showToast('Opening ${story.name}...')">
+                  <div class="spec-story-status ${story.status}">${story.status === 'complete' ? '&#10003;' : story.status === 'active' ? '&#9679;' : ''}</div>
+                  <span class="spec-story-name ${story.status === 'complete' ? 'complete' : ''}">${story.name}</span>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // ==================== OVERVIEW VIEW RENDERS ====================
+    function renderOverview() {
+      const container = document.getElementById('overview-content');
+
+      const totalStories = stories.length;
+      const completedStories = stories.filter(s => s.status === 'complete').length;
+      const progressPercent = Math.round((completedStories / totalStories) * 100);
+
+      const completedBolts = bolts.filter(b => b.status === 'complete').length;
+
+      container.innerHTML = `
+        <div class="overview-section">
+          <div class="overview-section-title">Overall Progress</div>
+          <div class="overview-progress-bar">
+            <div class="overview-progress-fill" style="width: ${progressPercent}%"></div>
+          </div>
+          <div class="overview-metrics">
+            <div class="overview-metric-card">
+              <div class="overview-metric-value highlight">${progressPercent}%</div>
+              <div class="overview-metric-label">Complete</div>
+            </div>
+            <div class="overview-metric-card">
+              <div class="overview-metric-value success">${completedStories}/${totalStories}</div>
+              <div class="overview-metric-label">Stories Done</div>
+            </div>
+            <div class="overview-metric-card">
+              <div class="overview-metric-value">${completedBolts}/${bolts.length}</div>
+              <div class="overview-metric-label">Bolts Done</div>
+            </div>
+            <div class="overview-metric-card">
+              <div class="overview-metric-value">${intents.length}</div>
+              <div class="overview-metric-label">Intents</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="overview-section">
+          <div class="overview-section-title">Intents</div>
+          <div class="overview-list">
+            ${intents.map(intent => {
+              const intentUnits = units.filter(u => intent.units.includes(u.id));
+              const allStories = intentUnits.flatMap(u => stories.filter(s => s.unitId === u.id));
+              const doneStories = allStories.filter(s => s.status === 'complete').length;
+              const progress = allStories.length > 0 ? Math.round((doneStories / allStories.length) * 100) : 0;
+
+              return `
+                <div class="overview-list-item" onclick="switchView('specs')">
+                  <div class="overview-list-icon intent">&#128203;</div>
+                  <div class="overview-list-info">
+                    <div class="overview-list-name">${intent.name}</div>
+                    <div class="overview-list-meta">${intentUnits.length} units | ${allStories.length} stories</div>
+                  </div>
+                  <div class="overview-list-progress">${progress}%</div>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        </div>
+
+        <div class="overview-section">
+          <div class="overview-section-title">Active Bolts</div>
+          <div class="overview-list">
+            ${bolts.filter(b => b.status === 'active').map(bolt => {
+              const progress = getStageProgress(bolt.stages);
+              return `
+                <div class="overview-list-item" onclick="switchView('command')">
+                  <div class="overview-list-icon bolt">&#9889;</div>
+                  <div class="overview-list-info">
+                    <div class="overview-list-name">${bolt.name}</div>
+                    <div class="overview-list-meta">${bolt.type} | ${progress.current} stage</div>
+                  </div>
+                  <div class="overview-list-progress">${progress.percent}%</div>
+                </div>
+              `;
+            }).join('') || '<div style="padding: 12px; text-align: center; color: var(--vscode-descriptionForeground); font-size: 11px;">No active bolts</div>'}
+          </div>
+        </div>
+      `;
+    }
+
+    // ==================== EVENT HANDLERS ====================
+    function toggleFocusCard() {
+      state.focusExpanded = !state.focusExpanded;
+      renderFocusCard();
+    }
+
+    function toggleIntent(intentId) {
+      const idx = state.expandedIntents.indexOf(intentId);
+      if (idx === -1) {
+        state.expandedIntents.push(intentId);
+      } else {
+        state.expandedIntents.splice(idx, 1);
+      }
+      renderSpecs();
+    }
+
+    function toggleUnit(unitId) {
+      const idx = state.expandedUnits.indexOf(unitId);
+      if (idx === -1) {
+        state.expandedUnits.push(unitId);
+      } else {
+        state.expandedUnits.splice(idx, 1);
+      }
+      renderSpecs();
+    }
+
+    function filterSpecs() {
+      state.specsFilter = document.getElementById('specs-filter').value;
+      renderSpecs();
+    }
+
+    function advanceStage(boltId, stage) {
+      const bolt = bolts.find(b => b.id === boltId);
+      if (!bolt || bolt.stages[stage] !== 'active') return;
+
+      const stageOrder = ['model', 'design', 'adr', 'implement', 'test'];
+      const stageIdx = stageOrder.indexOf(stage);
+      const stageLabels = { model: 'Model', design: 'Design', adr: 'ADR', implement: 'Implement', test: 'Test' };
+
+      bolt.stages[stage] = 'complete';
+      showToast(`Completed ${stageLabels[stage]}`, 'success');
+
+      if (stageIdx < stageOrder.length - 1) {
+        bolt.stages[stageOrder[stageIdx + 1]] = 'active';
+      }
+
+      render();
+    }
+
+    function startBolt(boltId) {
+      const currentActive = getActiveBolt();
+      if (currentActive) {
+        currentActive.status = 'pending';
+      }
+
+      const bolt = bolts.find(b => b.id === boltId);
+      if (!bolt) return;
+
+      bolt.status = 'active';
+      if (bolt.stages.model === 'pending') {
+        bolt.stages.model = 'active';
+      }
+
+      showToast(`Started: ${bolt.name}`, 'success');
+      render();
+    }
+
+    function completeBolt(boltId) {
+      const bolt = bolts.find(b => b.id === boltId);
+      if (!bolt) return;
+
+      Object.keys(bolt.stages).forEach(stage => bolt.stages[stage] = 'complete');
+      bolt.stories.forEach(story => story.status = 'complete');
+      bolt.status = 'complete';
+
+      showToast(`Completed: ${bolt.name}`, 'success');
+      render();
+    }
+
+    function setTheme(theme) {
+      const sidebar = document.getElementById('sidebar');
+      document.getElementById('darkBtn').classList.toggle('active', theme === 'dark');
+      document.getElementById('lightBtn').classList.toggle('active', theme === 'light');
+      sidebar.classList.toggle('theme-light', theme === 'light');
+    }
+
+    function render() {
+      renderMissionStats();
+      renderFocusCard();
+      renderQueueList();
+      renderSystemGrid();
+    }
+
+    // ==================== EVENT LISTENERS ====================
+    document.getElementById('darkBtn').addEventListener('click', () => setTheme('dark'));
+    document.getElementById('lightBtn').addEventListener('click', () => setTheme('light'));
+
+    document.getElementById('refreshBtn').addEventListener('click', () => {
+      showToast('Refreshing...');
+      render();
+    });
+
+    // ==================== INITIALIZATION ====================
+    render();
+  </script>
+</body>
+</html>
