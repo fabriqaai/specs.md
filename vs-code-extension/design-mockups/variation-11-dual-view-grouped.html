@@ -1996,14 +1996,24 @@
           `;
         }).join('');
 
-        // Stories for expanded view (from current unit)
-        const currentUnitStories = currentUnit ? stories.filter(s => s.unitId === currentUnit.id) : [];
-        const storiesHtml = currentUnitStories.map(story => `
-          <div class="intent-story-item">
-            <div class="intent-story-checkbox ${story.status}">${story.status === 'complete' ? '&#10003;' : ''}</div>
-            <span class="intent-story-name ${story.status}">${story.name}</span>
-          </div>
-        `).join('');
+        // Units for expanded view
+        const unitsHtml = intentUnits.map(unit => {
+          const unitStories = stories.filter(s => s.unitId === unit.id);
+          const unitDone = unitStories.filter(s => s.status === 'complete').length;
+          const unitComplete = unitDone === unitStories.length;
+          const unitActive = unitStories.some(s => s.status === 'active');
+          let unitStatus = 'pending';
+          if (unitComplete) unitStatus = 'complete';
+          else if (unitActive || unitDone > 0) unitStatus = 'active';
+
+          return `
+            <div class="intent-story-item">
+              <div class="intent-story-checkbox ${unitStatus}">${unitStatus === 'complete' ? '&#10003;' : ''}</div>
+              <span class="intent-story-name ${unitStatus}">${unit.name}</span>
+              <span style="font-size: 10px; color: var(--vscode-descriptionForeground);">${unitDone}/${unitStories.length}</span>
+            </div>
+          `;
+        }).join('');
 
         // Status badge text
         const statusText = intentStatus === 'complete' ? 'Complete' : intentStatus === 'active' ? 'In Progress' : 'Not Started';
@@ -2059,11 +2069,11 @@
 
                 <div class="intent-stories-section">
                   <div class="intent-stories-header">
-                    <span class="intent-stories-title">Stories</span>
-                    <span class="intent-stories-count">${currentUnitStories.filter(s => s.status === 'complete').length}/${currentUnitStories.length}</span>
+                    <span class="intent-stories-title">Units</span>
+                    <span class="intent-stories-count">${intentUnits.filter(u => stories.filter(s => s.unitId === u.id).every(s => s.status === 'complete')).length}/${intentUnits.length}</span>
                   </div>
                   <div class="intent-stories-list">
-                    ${storiesHtml}
+                    ${unitsHtml}
                   </div>
                 </div>
 
