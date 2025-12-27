@@ -1,0 +1,114 @@
+name: VS Code Extension CI/Release
+
+on:
+  push:
+    branches: [main, dev]
+    paths:
+      - 'vs-code-extension/**'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'vs-code-extension/**'
+
+jobs:
+  vs-code-extension-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: vs-code-extension/package-lock.json
+
+      - name: Install dependencies
+        working-directory: vs-code-extension
+        run: npm ci
+
+      - name: Lint
+        working-directory: vs-code-extension
+        run: npm run lint
+
+      - name: Compile
+        working-directory: vs-code-extension
+        run: npm run compile
+
+      - name: Run tests
+        working-directory: vs-code-extension
+        run: npm test
+
+  vs-code-extension-publish:
+    needs: vs-code-extension-test
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        working-directory: vs-code-extension
+        run: npm ci
+
+      - name: Get current version
+        id: version
+        working-directory: vs-code-extension
+        run: echo "version=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
+
+      - name: Check if version tag exists
+        id: tag_check
+        run: |
+          if git rev-parse "vscode-v${{ steps.version.outputs.version }}" >/dev/null 2>&1; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Package extension
+        if: steps.tag_check.outputs.exists == 'false'
+        working-directory: vs-code-extension
+        run: npm run package
+
+      - name: Validate package
+        if: steps.tag_check.outputs.exists == 'false'
+        working-directory: vs-code-extension
+        run: |
+          # Check VSIX was created
+          ls -la *.vsix
+          # Verify package contents
+          npx vsce ls
+
+      - name: Publish to VS Code Marketplace
+        if: steps.tag_check.outputs.exists == 'false'
+        working-directory: vs-code-extension
+        run: npx vsce publish -p ${{ secrets.VSCE_PAT }}
+
+      - name: Create Git tag
+        if: steps.tag_check.outputs.exists == 'false'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          # Use --force to handle race condition - if tag exists, we skip anyway
+          git tag -a "vscode-v${{ steps.version.outputs.version }}" -m "VS Code Extension v${{ steps.version.outputs.version }}" || true
+          git push origin "vscode-v${{ steps.version.outputs.version }}" || echo "Tag already exists on remote"
+
+      - name: Upload VSIX artifact
+        if: steps.tag_check.outputs.exists == 'false'
+        uses: actions/upload-artifact@v4
+        with:
+          name: specsmd-${{ steps.version.outputs.version }}.vsix
+          path: vs-code-extension/*.vsix
+          retention-days: 90
+
+      - name: Skip message
+        if: steps.tag_check.outputs.exists == 'true'
+        run: echo "Version ${{ steps.version.outputs.version }} already published. Bump version in package.json to publish a new release."

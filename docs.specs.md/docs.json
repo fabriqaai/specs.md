@@ -18,6 +18,10 @@
       {
         "label": "GitHub",
         "href": "https://github.com/fabriqaai/specs.md"
+      },
+      {
+        "label": "npm",
+        "href": "https://www.npmjs.com/package/specsmd"
       }
     ],
     "primary": {

@@ -1,5 +1,7 @@
 # SpecsMD VS Code Extension
 
+[![VS Code Extension CI/Release](https://github.com/fabriqaai/specs.md/actions/workflows/vscode-publish.yml/badge.svg)](https://github.com/fabriqaai/specs.md/actions/workflows/vscode-publish.yml)
+
 A VS Code extension for managing AI-DLC (AI Development Life Cycle) artifacts including intents, units, stories, and bolts.
 
 ## Sidebar Views
@@ -245,3 +247,39 @@ src/
     ├── selectors.ts   # Computed state derivation
     └── types.ts       # Type definitions
 ```
+
+---
+
+## Publishing (Maintainers)
+
+The extension is automatically published to the VS Code Marketplace when changes are merged to `main`.
+
+### Setup VSCE_PAT Secret
+
+To enable automated publishing, configure the `VSCE_PAT` secret:
+
+1. **Create Azure DevOps Organization** (if needed)
+   - Go to https://dev.azure.com
+   - Sign in with your Microsoft account
+   - Create a new organization if you don't have one
+
+2. **Create Personal Access Token**
+   - Click your profile icon (top right) → "Personal access tokens"
+   - Click "+ New Token"
+   - Configure:
+     - **Name**: `vscode-marketplace`
+     - **Organization**: Select **"All accessible organizations"** (required for CLI publishing)
+     - **Expiration**: Set as needed (max 1 year)
+     - **Scopes**: Click "Show all scopes" → scroll to "Marketplace" → check **"Manage"**
+   - Click "Create" and **copy the token immediately**
+
+3. **Create Publisher** (if needed)
+   - Go to https://marketplace.visualstudio.com/manage
+   - Sign in with the same Microsoft account
+   - Create publisher with ID `specsmd`
+
+4. **Add Secret to GitHub**
+   - Go to repository Settings → Secrets → Actions
+   - Click "New repository secret"
+   - Name: `VSCE_PAT`
+   - Value: Paste your token

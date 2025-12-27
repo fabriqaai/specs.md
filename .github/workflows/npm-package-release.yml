@@ -1,11 +1,13 @@
-name: Release
+name: NPM Package Release
 
 on:
   push:
     branches: [main]
+    paths:
+      - 'src/**'
 
 jobs:
-  test:
+  npm-package-test:
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -36,8 +38,8 @@ jobs:
         working-directory: src
         run: npm test
 
-  release:
-    needs: test
+  npm-package-release:
+    needs: npm-package-test
     runs-on: ubuntu-latest
     permissions:
       contents: write
