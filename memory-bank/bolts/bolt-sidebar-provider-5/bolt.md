@@ -3,7 +3,7 @@ id: bolt-sidebar-provider-5
 unit: sidebar-provider
 intent: 011-vscode-extension
 type: simple-construction-bolt
-status: completed
+status: in-progress
 stories:
   - 011-filewatcher-statestore-integration
   - 012-next-actions-ui
