@@ -2,8 +2,9 @@
     "name": "specsmd",
     "displayName": "specsmd - Memory Bank Extension - Spec Driven Development",
     "description": "Dashboard sidebar for browsing AI-DLC memory-bank artifacts",
-    "version": "0.0.3",
+    "version": "0.0.4",
     "publisher": "fabriqaai",
+    "icon": "resources/favicon.png",
     "repository": {
         "type": "git",
         "url": "https://github.com/fabriqaai/specsmd.git"
