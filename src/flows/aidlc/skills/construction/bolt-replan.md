@@ -33,9 +33,9 @@ Replan bolts during Construction phase - add new bolts, split existing ones, or 
 ```markdown
 ## Current Bolt Status: {unit-name}
 
-- ✅ **bolt-auth-service-1** ({bolt-type}): 001-user-signup, 002-user-login - completed - No dependencies
-- ⏳ **bolt-auth-service-2** ({bolt-type}): 003-password-reset, 004-email-verify - in-progress - requires bolt-1
-- [ ] **bolt-auth-service-3** ({bolt-type}): 005-mfa-setup - planned - requires bolt-2
+- ✅ **001-auth-service** ({bolt-type}): 001-user-signup, 002-user-login - completed - No dependencies
+- ⏳ **002-auth-service** ({bolt-type}): 003-password-reset, 004-email-verify - in-progress - requires 001-auth-service
+- [ ] **003-auth-service** ({bolt-type}): 005-mfa-setup - planned - requires 002-auth-service
 
 ### Summary
 
@@ -86,8 +86,10 @@ Select an option (1-4):
    ```
 
 2. **Determine next bolt ID**:
-   - Read existing bolts, find highest sequence number
-   - Next bolt: `bolt-{unit}-{N+1}`
+   - List all directories in `memory-bank/bolts/`
+   - Extract the 3-digit prefix from each (e.g., `015` from `015-auth-service`)
+   - Find the highest number
+   - Next bolt: `{next-BBB}-{unit-name}` (e.g., if highest is `015`, next is `016-auth-service`)
 
 3. **Create new bolt(s)**:
    - Use template: `.specsmd/aidlc/templates/construction/bolt-template.md`
@@ -103,12 +105,12 @@ Select an option (1-4):
 
    Created 1 new bolt:
 
-   - [ ] **bolt-auth-service-4** ({bolt-type}): 006-session-mgmt, 007-api-keys - requires bolt-3
+   - [ ] **004-auth-service** ({bolt-type}): 006-session-mgmt, 007-api-keys - requires 003-auth-service
 
    Updated dependency graph:
-   bolt-1 → bolt-2 → bolt-3 → bolt-4 (NEW)
+   001-auth-service → 002-auth-service → 003-auth-service → 004-auth-service (NEW)
 
-   File created: `memory-bank/bolts/bolt-auth-service-4.md`
+   File created: `memory-bank/bolts/004-auth-service/bolt.md`
    ```
 
 ---
@@ -136,8 +138,8 @@ Select an option (1-4):
 
    Splittable bolts (planned or in-progress):
 
-   - ⏳ **bolt-auth-service-2** ({bolt-type}): 003-password-reset, 004-email-verify, 005-mfa-setup - in-progress - ⚠️ Confirm to split
-   - [ ] **bolt-auth-service-3** ({bolt-type}): 006-session-mgmt, 007-api-keys, 008-rate-limit - planned - ✅ Can split
+   - ⏳ **002-auth-service** ({bolt-type}): 003-password-reset, 004-email-verify, 005-mfa-setup - in-progress - ⚠️ Confirm to split
+   - [ ] **003-auth-service** ({bolt-type}): 006-session-mgmt, 007-api-keys, 008-rate-limit - planned - ✅ Can split
 
    Enter bolt ID to split:
    ```
@@ -145,21 +147,21 @@ Select an option (1-4):
 2. **Propose split**:
 
    ```markdown
-   ## Split Proposal: bolt-auth-service-3
+   ## Split Proposal: 003-auth-service
 
    Current: 3 stories (006-session-mgmt, 007-api-keys, 008-rate-limit)
 
    Proposed split:
 
-   - **bolt-auth-service-3a**: 006-session-mgmt - Core feature
-   - **bolt-auth-service-3b**: 007-api-keys, 008-rate-limit - Related edge cases
+   - **003-auth-service**: 006-session-mgmt - Core feature
+   - **004-auth-service**: 007-api-keys, 008-rate-limit - Related edge cases
 
    Accept this split? (yes/no/customize)
    ```
 
 3. **Execute split**:
    - Archive or update original bolt file
-   - Create new bolt files with `3a`, `3b` suffixes (or next sequence)
+   - Create new bolt files with next sequence number
    - Update dependencies on dependent bolts
    - Update `enables_bolts` on prerequisite bolts
 
@@ -168,17 +170,17 @@ Select an option (1-4):
    ```markdown
    ## Bolt Split Complete
 
-   Original: bolt-auth-service-3 (archived)
+   Original: 003-auth-service (updated)
 
    Created:
 
-   - [ ] **bolt-auth-service-3** ({bolt-type}): 006-session-mgmt - requires bolt-2
-   - [ ] **bolt-auth-service-4** ({bolt-type}): 007-api-keys, 008-rate-limit - requires bolt-3
+   - [ ] **003-auth-service** ({bolt-type}): 006-session-mgmt - requires 002-auth-service
+   - [ ] **004-auth-service** ({bolt-type}): 007-api-keys, 008-rate-limit - requires 003-auth-service
 
    Updated files:
-   - `memory-bank/bolts/bolt-auth-service-3.md` (updated)
-   - `memory-bank/bolts/bolt-auth-service-4.md` (created)
-   - `memory-bank/bolts/bolt-auth-service-2.md` (updated enables_bolts)
+   - `memory-bank/bolts/003-auth-service/bolt.md` (updated)
+   - `memory-bank/bolts/004-auth-service/bolt.md` (created)
+   - `memory-bank/bolts/002-auth-service/bolt.md` (updated enables_bolts)
    ```
 
 ---
@@ -204,21 +206,21 @@ Select an option (1-4):
    ```markdown
    ## Current Execution Order
 
-   bolt-1 (completed) → bolt-2 (in-progress) → bolt-3 (planned) → bolt-4 (planned)
+   001-auth-service (completed) → 002-auth-service (in-progress) → 003-auth-service (planned) → 004-auth-service (planned)
 
-   - 1 - **bolt-auth-service-1**: completed - ❌ Cannot move
-   - 2 - **bolt-auth-service-2**: in-progress - ⚠️ Will pause if moved
-   - 3 - **bolt-auth-service-3**: planned - ✅ Can move
-   - 4 - **bolt-auth-service-4**: planned - ✅ Can move
+   - 1 - **001-auth-service**: completed - ❌ Cannot move
+   - 2 - **002-auth-service**: in-progress - ⚠️ Will pause if moved
+   - 3 - **003-auth-service**: planned - ✅ Can move
+   - 4 - **004-auth-service**: planned - ✅ Can move
    ```
 
 2. **Get new order**:
 
    ```markdown
    Enter new order for planned bolts (comma-separated IDs):
-   Example: bolt-auth-service-4, bolt-auth-service-3
+   Example: 004-auth-service, 003-auth-service
 
-   This will execute bolt-4 before bolt-3.
+   This will execute 004-auth-service before 003-auth-service.
    ```
 
 3. **Validate dependencies**:
@@ -236,11 +238,11 @@ Select an option (1-4):
 
    New execution order:
 
-   bolt-1 (completed) → bolt-2 (in-progress) → bolt-4 (planned) → bolt-3 (planned)
+   001-auth-service (completed) → 002-auth-service (in-progress) → 004-auth-service (planned) → 003-auth-service (planned)
 
    Updated files:
-   - `memory-bank/bolts/bolt-auth-service-3.md` (requires_bolts updated)
-   - `memory-bank/bolts/bolt-auth-service-4.md` (requires_bolts updated)
+   - `memory-bank/bolts/003-auth-service/bolt.md` (requires_bolts updated)
+   - `memory-bank/bolts/004-auth-service/bolt.md` (requires_bolts updated)
    ```
 
 ---
@@ -253,10 +255,10 @@ When modifying bolts, always update dependencies:
 
 ```yaml
 ---
-id: bolt-auth-service-3
+id: 003-auth-service
 type: ddd-construction-bolt
-requires_bolts: [bolt-auth-service-2]
-enables_bolts: [bolt-auth-service-4]
+requires_bolts: [002-auth-service]
+enables_bolts: [004-auth-service]
 requires_units: []
 complexity:
   avg_complexity: 2
@@ -314,12 +316,12 @@ Update Current Bolt Structure to reflect changes.
 
 ### Example
 
-After splitting bolt-2:
+After splitting 002-auth-service:
 
 ```markdown
 ## Replanning History
 
-- **2025-12-07**: split - bolt-2 → bolt-2, bolt-3 - Scope too large - ✅ Approved
+- **2025-12-07**: split - 002-auth-service → 002-auth-service, 003-auth-service - Scope too large - ✅ Approved
 ```
 
 ---

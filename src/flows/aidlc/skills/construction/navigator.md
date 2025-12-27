@@ -134,18 +134,18 @@ When user selects an option:
 
 ### Available Bolts
 
-- [ ] `bolt-auth-1` (auth-service, DDD) - planned
-- [ ] `bolt-auth-2` (auth-service, DDD) - planned
-- [ ] `bolt-api-1` (api-gateway, Simple) - planned
+- [ ] `001-auth-service` (auth-service, DDD) - planned
+- [ ] `002-auth-service` (auth-service, DDD) - planned
+- [ ] `003-api-gateway` (api-gateway, Simple) - planned
 
 ### Quick Actions
 
-1 - **Start bolt-auth-1**: Begin first bolt
+1 - **Start 001-auth-service**: Begin first bolt
 2 - **List all bolts**: View with details
 3 - **View bolt status**: Check specific bolt
 
 ### Suggested Next Step
-→ Start construction with `bolt-auth-1`
+→ Start construction with `001-auth-service`
 
 **Type a number or enter a bolt ID.**
 ```
@@ -161,8 +161,8 @@ When user selects an option:
 
 All {n} bolts have been completed:
 
-- ✅ `bolt-{unit}-1` - Completed 2024-12-05 (3h)
-- ✅ `bolt-{unit}-2` - Completed 2024-12-06 (4h)
+- ✅ `001-{unit-name}` - Completed 2024-12-05 (3h)
+- ✅ `005-{unit-name}` - Completed 2024-12-06 (4h)
 
 ### Summary
 - Stories delivered: {n}

@@ -87,7 +87,26 @@ Global index of all stories across intents and units.
 
 | Unit | Stories | Status |
 |------|---------|--------|
-| (units not yet defined) | TBD | Pending |
+| 001-analytics-tracker | 6 stories | Ready for Construction |
+| 002-privacy-documentation | 2 stories | 1 Complete, 1 Ready |
+
+### 001-analytics-tracker
+
+| Story | Title | Priority | Status |
+|-------|-------|----------|--------|
+| 001-initialize-mixpanel.md | Initialize Mixpanel with machine and session IDs | Must | Ready |
+| 002-detect-shell.md | Detect shell environment | Must | Ready |
+| 003-check-telemetry-disabled.md | Check if telemetry is disabled | Must | Ready |
+| 004-track-installer-events.md | Track installer lifecycle events | Must | Ready |
+| 005-track-selection-events.md | Track IDE and flow selection events | Must | Ready |
+| 006-cli-no-telemetry-flag.md | Support --no-telemetry CLI flag | Should | Ready |
+
+### 002-privacy-documentation
+
+| Story | Title | Priority | Status |
+|-------|-------|----------|--------|
+| 001-create-privacy-md.md | Create PRIVACY.md with data disclosure | Must | ✅ Complete |
+| 002-add-readme-section.md | Add analytics section to README | Must | Ready |
 
 ---
 
@@ -125,7 +144,7 @@ Global index of all stories across intents and units.
 | 004-standards-system | 3 | — | ✅ Complete (pre-specsmd) |
 | 005-testing-strategy | 5 | 0 | Pending |
 | 006-brownfield-support | 0 | 0 | Pending |
-| 007-installer-analytics | 0 | 0 | Pending |
+| 007-installer-analytics | 2 | 8 | Ready for Construction |
 | 008-terminal-dashboard | 0 | 0 | Pending |
 | 009-versioning-strategy | 0 | 0 | Pending |
 | 010-smart-unit-decomposition | 0 | 0 | Pending |

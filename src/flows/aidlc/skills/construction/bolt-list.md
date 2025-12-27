@@ -73,20 +73,20 @@ Sort bolts by:
 
 ### Active Bolts
 
-- ⏳ **bolt-auth-2** (auth-service, {bolt-type}) - Stage: {current-stage}, 2/4 (50%) ← working
+- ⏳ **002-auth-service** (auth-service, {bolt-type}) - Stage: {current-stage}, 2/4 (50%) ← working
 
 ### Planned Bolts
 
-- [ ] **bolt-auth-3** (auth-service) - Stories: 005-*, 006-* - Ready ✅
-- [ ] **bolt-payments-1** (payment-api) - Stories: 001-*, 002-*, 003-* - Ready ✅
+- [ ] **003-auth-service** (auth-service) - Stories: 005-*, 006-* - Ready ✅
+- [ ] **004-payment-api** (payment-api) - Stories: 001-*, 002-*, 003-* - Ready ✅
 
 ### Blocked Bolts
 
-- 🚫 **bolt-api-1** - Waiting for auth (since 2024-12-04)
+- 🚫 **005-api-gateway** - Waiting for auth (since 2024-12-04)
 
 ### Completed Bolts
 
-- ✅ **bolt-auth-1** (auth-service) - Completed 2024-12-05 (4 hours)
+- ✅ **001-auth-service** (auth-service) - Completed 2024-12-05 (4 hours)
 
 ### Summary
 - **Total**: {n} bolts
@@ -97,8 +97,8 @@ Sort bolts by:
 
 ### Actions
 
-1 - **Continue active bolt**: Resume `bolt-auth-2`
-2 - **Start planned bolt**: Begin `bolt-auth-3`
+1 - **Continue active bolt**: Resume `002-auth-service`
+2 - **Start planned bolt**: Begin `003-auth-service`
 3 - **View bolt status**: Check detailed status
 4 - **Plan new bolts**: Create additional bolts
 
@@ -112,14 +112,14 @@ Sort bolts by:
 ```markdown
 ## Bolts for Unit: {unit-name}
 
-- ✅ **bolt-{unit}-1** ({bolt-type}) - Completed 100% - Stories: 001-*, 002-*
-- ⏳ **bolt-{unit}-2** ({bolt-type}) - In progress 50% - Stories: 003-*, 004-* ← current
-- [ ] **bolt-{unit}-3** ({bolt-type}) - Planned 0% - Stories: 005-*
+- ✅ **001-{unit-name}** ({bolt-type}) - Completed 100% - Stories: 001-*, 002-*
+- ⏳ **002-{unit-name}** ({bolt-type}) - In progress 50% - Stories: 003-*, 004-* ← current
+- [ ] **003-{unit-name}** ({bolt-type}) - Planned 0% - Stories: 005-*
 
 ### Quick Actions
 
-1 - **Continue bolt-{unit}-2**: Resume current work
-2 - **View bolt-{unit}-1 status**: Review completed bolt
+1 - **Continue 002-{unit-name}**: Resume current work
+2 - **View 001-{unit-name} status**: Review completed bolt
 
 **Type a number to continue.**
 ```
@@ -133,8 +133,8 @@ Sort bolts by:
 ```text
 ### Available Bolts
 
-1 - bolt-{unit}-1 (planned) - Stories: 001-*, 002-*
-2 - bolt-{unit}-2 (planned) - Stories: 003-*, 004-*
+1 - 001-{unit-name} (planned) - Stories: 001-*, 002-*
+2 - 002-{unit-name} (planned) - Stories: 003-*, 004-*
 
 Which bolt would you like to work on?
 ```

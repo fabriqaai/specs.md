@@ -190,35 +190,51 @@ Establish execution order based on dependencies:
 1. **Read Path**: Check `schema.bolts` from `.specsmd/aidlc/memory-bank.yaml`
    *(Default: `memory-bank/bolts/{bolt-id}/`)*
 
-2. **Create Directory + File Per Bolt**:
+2. **Determine Bolt ID**:
+   - List all directories in `memory-bank/bolts/`
+   - Extract the 3-digit prefix from each (e.g., `015` from `015-auth-service`)
+   - Find the highest number
+   - Next bolt uses the next available number (e.g., if highest is `015`, next is `016`)
+
+   **⚠️ CRITICAL**: The `{BBB}` prefix is a **GLOBAL** sequence across ALL bolts in `memory-bank/bolts/`, NOT per-unit.
+
+3. **Create Directory + File Per Bolt**:
    For EACH bolt in the plan:
-   - Create directory: `memory-bank/bolts/bolt-{unit}-{N}/`
-   - Create file inside: `memory-bank/bolts/bolt-{unit}-{N}/bolt.md`
+   - Create directory: `memory-bank/bolts/{BBB}-{unit-name}/`
+   - Create file inside: `memory-bank/bolts/{BBB}-{unit-name}/bolt.md`
    - Use template: `.specsmd/aidlc/templates/construction/bolt-template.md`
 
-   **Example**: If planning 3 bolts for auth unit, CREATE THESE:
+   **Naming Convention** (from `memory-bank.yaml`):
+   - Format: `{BBB}-{unit-name}/` where BBB is a **GLOBAL** 3-digit sequence
+   - The number is global across ALL bolts in `memory-bank/bolts/` (not per-unit)
+   - Example sequence: `001-auth-service/`, `002-auth-service/`, `003-payment-service/`, `004-auth-service/`
+
+   **Example**: Planning bolts across multiple units (global numbering):
 
    ```text
-   memory-bank/bolts/bolt-auth-1/bolt.md  ← CREATE THIS DIRECTORY AND FILE
-   memory-bank/bolts/bolt-auth-2/bolt.md  ← CREATE THIS DIRECTORY AND FILE
-   memory-bank/bolts/bolt-auth-3/bolt.md  ← CREATE THIS DIRECTORY AND FILE
+   memory-bank/bolts/
+   ├── 001-auth-service/bolt.md     ← First bolt ever created
+   ├── 002-auth-service/bolt.md     ← Second bolt (same unit, continues sequence)
+   ├── 003-payment-service/bolt.md  ← Third bolt (different unit)
+   ├── 004-auth-service/bolt.md     ← Fourth bolt (back to auth-service)
+   └── 005-api-gateway/bolt.md      ← Fifth bolt (another unit)
    ```
 
    **Stage artifacts will be added to same directory during construction:**
 
    ```text
-   memory-bank/bolts/bolt-auth-1/
+   memory-bank/bolts/001-auth-service/
    ├── bolt.md                      ← You create this now
    └── {stage-artifacts}            ← Created during construction (varies by bolt type)
    ```
 
    *Note: Artifact names depend on bolt type (e.g., DDD bolts create `ddd-01-domain-model.md`, simple bolts create `implementation-plan.md`).*
 
-3. **Bolt File Structure** (CRITICAL: Include all dependencies in frontmatter):
+4. **Bolt File Structure** (CRITICAL: Include all dependencies in frontmatter):
 
    ```markdown
    ---
-   id: bolt-{unit}-{sequence}
+   id: {BBB}-{unit-name}
    unit: {unit-name}
    intent: {intent-name}
    type: {bolt-type}  # From unit-brief.md or default (ddd-construction-bolt, simple-construction-bolt)
@@ -227,8 +243,8 @@ Establish execution order based on dependencies:
    created: {date}
 
    # Dependency Tracking (REQUIRED)
-   requires_bolts: [bolt-auth-1]           # Bolts that must complete first
-   enables_bolts: [bolt-auth-3, bolt-api-1] # Bolts that depend on this
+   requires_bolts: [001-auth-service]       # Bolts that must complete first
+   enables_bolts: [003-auth-service, 001-api-service] # Bolts that depend on this
    requires_units: [auth-service]           # Units that must be complete
    blocks: false                            # true if waiting on dependency
 
@@ -240,7 +256,7 @@ Establish execution order based on dependencies:
      testing_scope: 2         # 1=Unit, 2=Integration, 3=E2E
    ---
 
-   ## Bolt: {bolt-id}
+   ## Bolt: {BBB}-{unit-name}
 
    ### Objective
    {What this bolt will accomplish}
@@ -257,19 +273,19 @@ Establish execution order based on dependencies:
 
    #### Bolt Dependencies (within intent)
 
-   - **bolt-auth-1** (Required): Completed
-   - **bolt-auth-2** (Optional): In Progress
+   - **001-auth-service** (Required): Completed
+   - **002-auth-service** (Optional): In Progress
 
    #### Unit Dependencies (cross-unit)
 
    - **auth-service**: Needs auth tokens - Completed
 
    #### Enables (other bolts waiting on this)
-   - bolt-auth-3
-   - bolt-api-1
+   - 003-auth-service
+   - 001-api-service
    ```
 
-### 8. Validate Plan
+### 9. Validate Plan
 
 Check the plan against:
 
@@ -291,16 +307,20 @@ Check the plan against:
 **⚠️ YOU MUST CREATE THESE DIRECTORIES AND FILES:**
 
 ```text
-memory-bank/bolts/bolt-{unit}-1/bolt.md  ← CREATE THIS DIRECTORY AND FILE
-memory-bank/bolts/bolt-{unit}-2/bolt.md  ← CREATE THIS DIRECTORY AND FILE
-memory-bank/bolts/bolt-{unit}-3/bolt.md  ← CREATE THIS DIRECTORY AND FILE
+memory-bank/bolts/{BBB}-{unit-name}/bolt.md  ← CREATE THIS DIRECTORY AND FILE
 ```
+
+**Naming Convention** (from `memory-bank.yaml`):
+
+- Format: `{BBB}-{unit-name}/` where BBB is a global 3-digit sequence
+- Example: `001-auth-service/`, `002-auth-service/`, `016-analytics-tracker/`
 
 **⚠️ DO NOT CREATE:**
 
 - `bolt-plan.md` (summary doc)
 - `README.md` files
-- Flat files like `bolt-{unit}-1.md`
+- Flat files like `001-auth-service.md` (must be in directory)
+- Old format like `bolt-{unit}-1/` (incorrect)
 
 ### Summary (displayed to user)
 
@@ -309,17 +329,17 @@ memory-bank/bolts/bolt-{unit}-3/bolt.md  ← CREATE THIS DIRECTORY AND FILE
 
 ### Bolts Created
 
-- [ ] **bolt-{unit}-1** ({bolt-type}): 001-user-signup, 002-user-login
-- [ ] **bolt-{unit}-2** ({bolt-type}): 003-password-reset, 004-email-verify
-- [ ] **bolt-{unit}-3** ({bolt-type}): 005-mfa-setup
+- [ ] **001-auth-service** ({bolt-type}): 001-user-signup, 002-user-login
+- [ ] **002-auth-service** ({bolt-type}): 003-password-reset, 004-email-verify
+- [ ] **003-auth-service** ({bolt-type}): 005-mfa-setup
 
 ### Dependency Graph
-bolt-{unit}-1 ──► bolt-{unit}-2 ──► bolt-{unit}-3
+001-auth-service ──► 002-auth-service ──► 003-auth-service
 
 ### Directories Created
-✅ `memory-bank/bolts/bolt-{unit}-1/bolt.md`
-✅ `memory-bank/bolts/bolt-{unit}-2/bolt.md`
-✅ `memory-bank/bolts/bolt-{unit}-3/bolt.md`
+✅ `memory-bank/bolts/001-auth-service/bolt.md`
+✅ `memory-bank/bolts/002-auth-service/bolt.md`
+✅ `memory-bank/bolts/003-auth-service/bolt.md`
 
 ### Total
 - {n} bolts created

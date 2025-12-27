@@ -255,7 +255,7 @@ Status changes cascade upward: Bolt → Story → Unit → Intent.
 **On Bolt Completion** (after updating stories):
 
 1. **Check Unit Completion**:
-   - Find all bolts for this unit: `memory-bank/bolts/bolt-{unit}-*/bolt.md`
+   - Find all bolts for this unit: scan `memory-bank/bolts/*/bolt.md` and match `unit: {unit-name}` in frontmatter
    - If ALL bolts have `status: complete` → update unit-brief to `status: complete`
 
 2. **Check Intent Completion**:
@@ -270,13 +270,13 @@ Unit:    draft → stories-defined → in-progress → complete
 Story:   draft → in-progress → complete
 ```
 
-**Example** (bolt-artifact-parser-1 completes):
+**Example** (001-artifact-parser completes):
 
 ```text
 1. Stories updated: 001, 002, 003, 004 → complete
 2. Check unit bolts:
-   - bolt-artifact-parser-1: complete ✓
-   - bolt-artifact-parser-2: planned ✗
+   - 001-artifact-parser: complete ✓
+   - 005-artifact-parser: planned ✗
    → Unit stays in-progress (not all bolts complete)
 3. Intent stays construction (unit not complete)
 ```
@@ -286,7 +286,7 @@ Story:   draft → in-progress → complete
 ```text
 1. Stories updated: 001, 002 → complete
 2. Check unit bolts:
-   - bolt-file-watcher-1: complete ✓
+   - 003-file-watcher: complete ✓
    → Only bolt for unit, all complete!
    → Update unit-brief: status: complete
 3. Check intent units:
