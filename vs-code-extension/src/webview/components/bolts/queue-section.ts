@@ -107,8 +107,18 @@ export class QueueSection extends BaseElement {
             }
 
             .toggle-icon {
-                font-size: 10px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                width: 12px;
+                height: 12px;
                 transition: transform 0.15s ease;
+            }
+
+            .toggle-icon svg {
+                width: 10px;
+                height: 10px;
+                fill: currentColor;
             }
 
             .toggle-btn.expanded .toggle-icon {
@@ -171,7 +181,7 @@ export class QueueSection extends BaseElement {
                     type="button"
                     class="toggle-btn ${this._expanded ? 'expanded' : ''}"
                     @click=${this._handleToggle}>
-                    <span class="toggle-icon">${this._expanded ? '▲' : '▼'}</span>
+                    <span class="toggle-icon"><svg viewBox="0 0 16 16"><path d="M8 10.5L3 5.5h10L8 10.5z"/></svg></span>
                     ${this._expanded
                         ? 'Show Less'
                         : `Show ${this._hiddenCount} More`}
