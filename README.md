@@ -22,7 +22,7 @@ Track your AI-DLC progress with our sidebar extension for VS Code and compatible
   <img src="vs-code-extension/resources/extension-preview.png" alt="VS Code Extension Preview" width="800" />
 </p>
 
-> **Note:** Works with any VS Code-based IDE including [Cursor](https://cursor.sh), [Google Antigravity](https://idx.dev), [Windsurf](https://codeium.com/windsurf), and others.
+> **Note:** Works with any VS Code-based IDE including [Cursor](https://cursor.sh), [Google Antigravity](https://antigravity.google), [Windsurf](https://codeium.com/windsurf), and others.
 
 **Install from:**
 - [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=fabriqaai.specsmd)
