@@ -765,6 +765,10 @@ export class SpecsmdWebviewProvider implements vscode.WebviewViewProvider {
                 await this._openBoltFile(message.boltId);
                 break;
 
+            case 'openBoltMd':
+                await this._openBoltFile(message.boltId);
+                break;
+
             case 'openExternal':
                 if (message.url) {
                     vscode.env.openExternal(vscode.Uri.parse(message.url));

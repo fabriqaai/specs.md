@@ -727,7 +727,8 @@ export class SpecsmdApp extends BaseElement {
                         @start-bolt=${this._handleStartBolt}
                         @continue-bolt=${this._handleContinueBolt}
                         @view-files=${this._handleViewFiles}
-                        @open-file=${this._handleOpenFile}>
+                        @open-file=${this._handleOpenFile}
+                        @open-bolt=${this._handleOpenBolt}>
                     </bolts-view>
                 ` : html`<div class="loading">Loading...</div>`}
             </div>
@@ -846,6 +847,13 @@ export class SpecsmdApp extends BaseElement {
      */
     private _handleViewFiles(e: CustomEvent<{ boltId: string }>): void {
         vscode.postMessage({ type: 'viewBoltFiles', boltId: e.detail.boltId });
+    }
+
+    /**
+     * Handle open bolt button - opens bolt.md file.
+     */
+    private _handleOpenBolt(e: CustomEvent<{ boltId: string }>): void {
+        vscode.postMessage({ type: 'openBoltMd', boltId: e.detail.boltId });
     }
 }
 

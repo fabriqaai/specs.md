@@ -15,6 +15,7 @@ const DEFAULT_VISIBLE_COUNT = 3;
  * Completions section component.
  *
  * @fires open-file - When a file is clicked in a completion item
+ * @fires open-bolt - When magnifier button is clicked
  *
  * @example
  * ```html

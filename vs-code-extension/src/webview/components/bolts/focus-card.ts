@@ -40,6 +40,7 @@ function formatStageName(name: string): string {
  * @fires toggle-expand - When card header is clicked
  * @fires continue-bolt - When Continue button is clicked
  * @fires view-files - When Files button is clicked
+ * @fires open-bolt - When magnifier button is clicked
  *
  * @example
  * ```html
@@ -113,6 +114,32 @@ export class FocusCard extends BaseElement {
                 color: white;
                 flex-shrink: 0;
                 margin-left: 12px;
+            }
+
+            .open-btn {
+                background: none;
+                border: none;
+                color: var(--description-foreground);
+                cursor: pointer;
+                padding: 4px 8px;
+                font-size: 14px;
+                border-radius: 4px;
+                opacity: 0;
+                transition: all 0.15s;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                margin-left: 8px;
+            }
+
+            .header:hover .open-btn {
+                opacity: 0.7;
+            }
+
+            .open-btn:hover {
+                opacity: 1 !important;
+                background: var(--vscode-list-hoverBackground);
+                color: var(--foreground);
             }
 
             .body {
@@ -213,6 +240,7 @@ export class FocusCard extends BaseElement {
                         <div class="title">${this.bolt.name}</div>
                         <div class="subtitle">${this.bolt.type} Bolt | ${stageLabel} Stage</div>
                     </div>
+                    <button class="open-btn" @click=${this._handleOpenBolt} title="Open bolt.md">🔍</button>
                     <div class="badge">In Progress</div>
                 </div>
                 <div class="body">
@@ -265,6 +293,15 @@ export class FocusCard extends BaseElement {
     private _handleViewFiles(e: Event): void {
         e.stopPropagation();
         this.dispatchEvent(new CustomEvent('view-files', {
+            detail: { boltId: this.bolt.id },
+            bubbles: true,
+            composed: true
+        }));
+    }
+
+    private _handleOpenBolt(e: Event): void {
+        e.stopPropagation();
+        this.dispatchEvent(new CustomEvent('open-bolt', {
             detail: { boltId: this.bolt.id },
             bubbles: true,
             composed: true

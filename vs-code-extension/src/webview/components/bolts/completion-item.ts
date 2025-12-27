@@ -32,6 +32,7 @@ export interface CompletedBoltData {
  * Completion item component.
  *
  * @fires open-file - When a file is clicked
+ * @fires open-bolt - When magnifier button is clicked
  *
  * @example
  * ```html
@@ -123,6 +124,32 @@ export class CompletionItem extends BaseElement {
                 color: var(--status-complete, #22c55e);
             }
 
+            .open-btn {
+                background: none;
+                border: none;
+                color: var(--description-foreground);
+                cursor: pointer;
+                padding: 4px 8px;
+                font-size: 14px;
+                border-radius: 4px;
+                opacity: 0;
+                transition: all 0.15s;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                flex-shrink: 0;
+            }
+
+            .header:hover .open-btn {
+                opacity: 0.7;
+            }
+
+            .open-btn:hover {
+                opacity: 1 !important;
+                background: var(--vscode-list-hoverBackground);
+                color: var(--foreground);
+            }
+
             .files-section {
                 display: none;
                 padding: 0 16px 12px 52px;
@@ -211,6 +238,7 @@ export class CompletionItem extends BaseElement {
                         ${this.bolt.type} | <span class="time">${this.bolt.relativeTime}</span>
                     </div>
                 </div>
+                <button class="open-btn" @click=${this._handleOpenBolt} title="Open bolt.md">🔍</button>
             </div>
             ${hasFiles ? html`
                 <div class="files-section ${this._expanded ? 'expanded' : ''}">
@@ -233,11 +261,11 @@ export class CompletionItem extends BaseElement {
 
     private _getFileIcon(type: string): string {
         switch (type) {
-            case 'walkthrough': return '&#128214;'; // open book
-            case 'test-report': return '&#128203;'; // clipboard
-            case 'plan': return '&#128196;'; // page
-            case 'design': return '&#128736;'; // wrench
-            default: return '&#128196;'; // page
+            case 'walkthrough': return '📖'; // open book
+            case 'test-report': return '📋'; // clipboard
+            case 'plan': return '📄'; // page
+            case 'design': return '🔧'; // wrench
+            default: return '📄'; // page
         }
     }
 
@@ -249,6 +277,15 @@ export class CompletionItem extends BaseElement {
         e.stopPropagation();
         this.dispatchEvent(new CustomEvent('open-file', {
             detail: { path },
+            bubbles: true,
+            composed: true
+        }));
+    }
+
+    private _handleOpenBolt(e: Event): void {
+        e.stopPropagation();
+        this.dispatchEvent(new CustomEvent('open-bolt', {
+            detail: { boltId: this.bolt.id },
             bubbles: true,
             composed: true
         }));

@@ -42,6 +42,7 @@ export interface BoltsViewData {
  * @fires continue-bolt - When Continue button is clicked
  * @fires view-files - When Files button is clicked
  * @fires open-file - When activity file is clicked
+ * @fires open-bolt - When bolt magnifier is clicked
  *
  * @example
  * ```html
@@ -93,7 +94,8 @@ export class BoltsView extends BaseElement {
                     .bolts=${this.data.activeBolts}
                     @toggle-focus=${this._handleToggleFocus}
                     @continue-bolt=${this._handleContinueBolt}
-                    @view-files=${this._handleViewFiles}>
+                    @view-files=${this._handleViewFiles}
+                    @open-bolt=${this._handleOpenBolt}>
                 </focus-section>
 
                 <queue-section
@@ -103,7 +105,8 @@ export class BoltsView extends BaseElement {
 
                 <completions-section
                     .bolts=${this.data.completedBolts}
-                    @open-file=${this._handleOpenFile}>
+                    @open-file=${this._handleOpenFile}
+                    @open-bolt=${this._handleOpenBolt}>
                 </completions-section>
             </div>
 
@@ -175,6 +178,15 @@ export class BoltsView extends BaseElement {
     private _handleViewFiles(e: CustomEvent<{ boltId: string }>): void {
         e.stopPropagation();
         this.dispatchEvent(new CustomEvent('view-files', {
+            detail: e.detail,
+            bubbles: true,
+            composed: true
+        }));
+    }
+
+    private _handleOpenBolt(e: CustomEvent<{ boltId: string }>): void {
+        e.stopPropagation();
+        this.dispatchEvent(new CustomEvent('open-bolt', {
             detail: e.detail,
             bubbles: true,
             composed: true

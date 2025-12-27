@@ -22,6 +22,7 @@ export type WebviewToExtensionMessage =
     | { type: 'startBolt'; boltId: string }
     | { type: 'continueBolt'; boltId: string; boltName?: string }
     | { type: 'viewBoltFiles'; boltId: string }
+    | { type: 'openBoltMd'; boltId: string }
     | { type: 'openExternal'; url: string };
 
 /**

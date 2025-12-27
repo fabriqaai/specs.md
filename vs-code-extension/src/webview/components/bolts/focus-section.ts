@@ -14,6 +14,9 @@ import type { ActiveBoltData } from './focus-card.js';
  *
  * @fires toggle-focus - When focus card is toggled (for persistence)
  * @fires copy-command - When command is copied
+ * @fires continue-bolt - When Continue button is clicked
+ * @fires view-files - When Files button is clicked
+ * @fires open-bolt - When magnifier button is clicked
  *
  * @example
  * ```html
