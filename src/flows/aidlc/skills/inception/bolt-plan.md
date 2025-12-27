@@ -311,6 +311,7 @@ memory-bank/bolts/{BBB}-{unit-name}/bolt.md  ← CREATE THIS DIRECTORY AND FILE
 ```
 
 **Naming Convention** (from `memory-bank.yaml`):
+
 - Format: `{BBB}-{unit-name}/` where BBB is a global 3-digit sequence
 - Example: `001-auth-service/`, `002-auth-service/`, `016-analytics-tracker/`
 
