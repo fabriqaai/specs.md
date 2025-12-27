@@ -68,6 +68,17 @@ export class SpecsmdApp extends BaseElement {
     @state()
     private _loaded = false;
 
+    /**
+     * Version counter for specs HTML to track when handlers need reattachment.
+     * Incremented each time _specsHtml changes.
+     */
+    private _specsVersion = 0;
+
+    /**
+     * Last attached specs version to prevent duplicate handler attachment.
+     */
+    private _lastAttachedSpecsVersion = -1;
+
     static styles = [
         ...BaseElement.baseStyles,
         css`
@@ -558,18 +569,16 @@ export class SpecsmdApp extends BaseElement {
 
     /**
      * Attach event handlers to specs view server-rendered HTML.
-     * Uses container-level guard to prevent duplicate listener attachment.
+     * Uses version counter to prevent duplicate listener attachment.
      */
     private _attachSpecsViewHandlers(): void {
         const specsView = this.shadowRoot?.querySelector('#specs-view') as HTMLElement | null;
         if (!specsView) return;
 
-        // Container-level guard to prevent multiple attachment passes within the same render cycle.
-        // We use a random ID each time specsHtml changes to ensure handlers are reattached.
-        // The ID is stored in a WeakMap rather than dataset to avoid stale references.
-        const currentRenderKey = this._specsHtml; // Use full content as key
-        if ((this as unknown as { _lastSpecsKey?: string })._lastSpecsKey === currentRenderKey) return;
-        (this as unknown as { _lastSpecsKey?: string })._lastSpecsKey = currentRenderKey;
+        // Version-based guard to prevent duplicate attachment.
+        // _specsVersion is incremented when specsHtml changes in _handleMessage.
+        if (this._lastAttachedSpecsVersion === this._specsVersion) return;
+        this._lastAttachedSpecsVersion = this._specsVersion;
 
         // Intent expand/collapse
         specsView.querySelectorAll('.intent-header').forEach(header => {
@@ -633,13 +642,9 @@ export class SpecsmdApp extends BaseElement {
         // Specs filter dropdown
         const specsFilter = specsView.querySelector('#specsFilter') as HTMLSelectElement | null;
         if (specsFilter) {
-            console.log('[SpecsMD] Attaching filter listener, current value:', specsFilter.value);
             specsFilter.addEventListener('change', () => {
-                console.log('[SpecsMD] Filter changed to:', specsFilter.value);
                 vscode.postMessage({ type: 'specsFilter', filter: specsFilter.value });
             });
-        } else {
-            console.log('[SpecsMD] specsFilter element not found');
         }
     }
 
@@ -759,6 +764,7 @@ export class SpecsmdApp extends BaseElement {
                 }
                 if (message.specsHtml !== undefined) {
                     this._specsHtml = message.specsHtml;
+                    this._specsVersion++;
                 }
                 if (message.overviewHtml !== undefined) {
                     this._overviewHtml = message.overviewHtml;

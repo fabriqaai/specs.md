@@ -280,16 +280,6 @@ export class SpecsmdWebviewProvider implements vscode.WebviewViewProvider {
             return;
         }
 
-        // Debug: Log intents data for specs view
-        console.log('[SpecsMD] Sending data to webview. Intents count:', data.intents.length);
-        if (data.intents.length > 0) {
-            const firstIntent = data.intents[0];
-            console.log('[SpecsMD] First intent:', firstIntent.number, firstIntent.name, 'units:', firstIntent.units.length);
-            if (firstIntent.units.length > 0) {
-                console.log('[SpecsMD] First unit:', firstIntent.units[0].name, 'stories:', firstIntent.units[0].stories.length);
-            }
-        }
-
         // Build structured data for Bolts view (Lit components)
         const boltsData = {
             currentIntent: data.currentIntent,
@@ -307,9 +297,6 @@ export class SpecsmdWebviewProvider implements vscode.WebviewViewProvider {
         // Generate HTML for specs/overview views (hybrid approach)
         const specsHtml = getSpecsViewHtml(data);
         const overviewHtml = getOverviewViewHtml(data);
-
-        // Debug: Log generated HTML lengths
-        console.log('[SpecsMD] specsHtml length:', specsHtml.length, 'overviewHtml length:', overviewHtml.length);
 
         // Send to webview
         this._view.webview.postMessage({
@@ -631,12 +618,6 @@ export class SpecsmdWebviewProvider implements vscode.WebviewViewProvider {
         // Convert status set to sorted array
         const availableStatuses = Array.from(statusSet).sort();
 
-        // Debug: Log filter results
-        if (specsFilter !== 'all') {
-            console.log('[SpecsMD] Filter applied:', specsFilter, 'All:', allIntentData.length, 'Filtered:', filteredIntents.length,
-                'Unit statuses:', allIntentData.map(i => `${i.number}:[${i.units.map(u => u.status).join(',')}]`));
-        }
-
         return { intents: filteredIntents, availableStatuses };
     }
 
@@ -737,11 +718,9 @@ export class SpecsmdWebviewProvider implements vscode.WebviewViewProvider {
                 break;
 
             case 'specsFilter':
-                console.log('[SpecsMD] specsFilter message received:', message.filter);
                 this._store.setUIState({ specsFilter: message.filter as StateSpecsFilter });
                 this._context.workspaceState.update(SPECS_FILTER_KEY, message.filter);
                 // Re-render to apply the filter server-side
-                console.log('[SpecsMD] Triggering _updateWebview after specsFilter change');
                 this._updateWebview();
                 break;
 
