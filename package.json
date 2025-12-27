@@ -4,7 +4,8 @@
   "description": "Root workspace for specsmd development",
   "scripts": {
     "validate:all": "cd src && npm run validate:all",
-    "lint:md:fix": "cd src && npm run lint:md:fix"
-
+    "lint:md:fix": "cd src && npm run lint:md:fix",
+    "deps:check": "echo '\\n=== NPM Package (src/) ===' && npx npm-check-updates --cwd src && echo '\\n=== VS Code Extension ===' && npx npm-check-updates --cwd vs-code-extension",
+    "deps:check:minor": "echo '\\n=== NPM Package (src/) ===' && npx npm-check-updates --cwd src --target minor && echo '\\n=== VS Code Extension ===' && npx npm-check-updates --cwd vs-code-extension --target minor"
   }
 }
