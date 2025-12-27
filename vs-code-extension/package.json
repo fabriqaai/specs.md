@@ -2,7 +2,7 @@
     "name": "specsmd",
     "displayName": "specsmd - Memory Bank Extension - Spec Driven Development",
     "description": "Dashboard sidebar for browsing AI-DLC memory-bank artifacts",
-    "version": "0.0.5",
+    "version": "0.0.6",
     "publisher": "fabriqaai",
     "icon": "resources/favicon.png",
     "homepage": "https://specs.md",
