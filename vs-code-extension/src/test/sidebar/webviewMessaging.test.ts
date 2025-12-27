@@ -102,6 +102,7 @@ suite('Webview Messaging Test Suite', () => {
                 stats: { active: 0, queued: 0, done: 0, blocked: 0 },
                 activeBolts: [],
                 upNextQueue: [],
+                completedBolts: [],
                 activityEvents: [],
                 intents: [],
                 standards: [],
@@ -126,6 +127,7 @@ suite('Webview Messaging Test Suite', () => {
                 stats: { active: 0, queued: 0, done: 0, blocked: 0 },
                 activeBolts: [],
                 upNextQueue: [],
+                completedBolts: [],
                 activityEvents: [],
                 intents: [],
                 standards: [],
@@ -174,6 +176,7 @@ suite('Webview Messaging Test Suite', () => {
                         stories: []
                     }
                 ],
+                completedBolts: [],
                 activityEvents: [
                     {
                         id: 'evt-1',

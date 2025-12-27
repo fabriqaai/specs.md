@@ -1,36 +1,36 @@
 /**
- * QueueSection - Up Next queue section.
+ * CompletionsSection - Recently completed bolts section.
  */
 
 import { html, css } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
 import { BaseElement } from '../shared/base-element.js';
-import './queue-item.js';
-import type { QueuedBoltData } from './queue-item.js';
+import './completion-item.js';
+import type { CompletedBoltData } from './completion-item.js';
 
-/** Default number of bolts to show when collapsed. */
-const DEFAULT_VISIBLE_COUNT = 5;
+/** Default number of completions to show when collapsed. */
+const DEFAULT_VISIBLE_COUNT = 3;
 
 /**
- * Queue section component.
+ * Completions section component.
  *
- * @fires start-bolt - When Start button is clicked on a queue item
+ * @fires open-file - When a file is clicked in a completion item
  *
  * @example
  * ```html
- * <queue-section .bolts=${bolts}></queue-section>
+ * <completions-section .bolts=${completedBolts}></completions-section>
  * ```
  */
-@customElement('queue-section')
-export class QueueSection extends BaseElement {
+@customElement('completions-section')
+export class CompletionsSection extends BaseElement {
     /**
-     * Array of queued bolts.
+     * Array of completed bolts.
      */
     @property({ type: Array })
-    bolts: QueuedBoltData[] = [];
+    bolts: CompletedBoltData[] = [];
 
     /**
-     * Whether the queue is expanded to show all bolts.
+     * Whether the section is expanded to show all completions.
      */
     @state()
     private _expanded = false;
@@ -64,8 +64,8 @@ export class QueueSection extends BaseElement {
                 font-weight: 500;
                 padding: 4px 12px;
                 border-radius: 12px;
-                background: var(--vscode-input-background, #3c3c3c);
-                color: var(--foreground, #cccccc);
+                background: var(--status-complete, #22c55e);
+                color: white;
             }
 
             .list {
@@ -118,9 +118,9 @@ export class QueueSection extends BaseElement {
     ];
 
     /**
-     * Gets the bolts to display based on expanded state.
+     * Gets the completions to display based on expanded state.
      */
-    private get _visibleBolts(): QueuedBoltData[] {
+    private get _visibleBolts(): CompletedBoltData[] {
         if (this._expanded) {
             return this.bolts;
         }
@@ -135,7 +135,7 @@ export class QueueSection extends BaseElement {
     }
 
     /**
-     * Number of hidden bolts when collapsed.
+     * Number of hidden completions when collapsed.
      */
     private get _hiddenCount(): number {
         return this.bolts.length - DEFAULT_VISIBLE_COUNT;
@@ -149,29 +149,27 @@ export class QueueSection extends BaseElement {
     }
 
     render() {
+        // Don't render if no completed bolts
+        if (!this.bolts || this.bolts.length === 0) {
+            return html``;
+        }
+
         return html`
             <div class="header">
-                <span class="title">Up Next</span>
-                <span class="count">${this.bolts.length} bolts</span>
+                <span class="title">Recent Completions</span>
+                <span class="count">${this.bolts.length} done</span>
             </div>
             <div class="list">
-                ${this.bolts.length > 0
-                    ? this._visibleBolts.map((bolt, idx) => html`
-                        <queue-item
-                            .bolt=${bolt}
-                            .priority=${idx + 1}
-                            class=${bolt.isBlocked ? 'blocked' : ''}>
-                        </queue-item>
-                    `)
-                    : html`<div class="empty-state">Queue empty</div>`
-                }
+                ${this._visibleBolts.map(bolt => html`
+                    <completion-item .bolt=${bolt}></completion-item>
+                `)}
             </div>
             ${this._showToggle ? html`
                 <button
                     type="button"
                     class="toggle-btn ${this._expanded ? 'expanded' : ''}"
                     @click=${this._handleToggle}>
-                    <span class="toggle-icon">${this._expanded ? '▲' : '▼'}</span>
+                    <span class="toggle-icon">${this._expanded ? '&#9650;' : '&#9660;'}</span>
                     ${this._expanded
                         ? 'Show Less'
                         : `Show ${this._hiddenCount} More`}
@@ -183,6 +181,6 @@ export class QueueSection extends BaseElement {
 
 declare global {
     interface HTMLElementTagNameMap {
-        'queue-section': QueueSection;
+        'completions-section': CompletionsSection;
     }
 }

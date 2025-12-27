@@ -48,8 +48,12 @@ import {
     IntentData,
     UnitData,
     StoryData,
-    NextActionData
+    NextActionData,
+    CompletedBoltData,
+    ArtifactFileData
 } from './webviewMessaging';
+import * as fs from 'fs';
+import * as path from 'path';
 
 /**
  * WebviewViewProvider for the SpecsMD sidebar.
@@ -285,6 +289,7 @@ export class SpecsmdWebviewProvider implements vscode.WebviewViewProvider {
             stats: data.stats,
             activeBolts: data.activeBolts,
             upNextQueue: data.upNextQueue,
+            completedBolts: data.completedBolts,
             activityEvents: data.activityEvents,
             focusCardExpanded: data.focusCardExpanded,
             activityFilter: data.activityFilter,
@@ -320,6 +325,7 @@ export class SpecsmdWebviewProvider implements vscode.WebviewViewProvider {
                 stats: { active: 0, queued: 0, done: 0, blocked: 0 },
                 activeBolts: [],
                 upNextQueue: [],
+                completedBolts: [],
                 activityEvents: [],
                 intents: [],
                 standards: [],
@@ -331,7 +337,7 @@ export class SpecsmdWebviewProvider implements vscode.WebviewViewProvider {
         }
 
         // Get computed values from state
-        const { currentIntent, activeBolts, pendingBolts, activityFeed, boltStats, nextActions } = state.computed;
+        const { currentIntent, activeBolts, pendingBolts, completedBolts, activityFeed, boltStats, nextActions } = state.computed;
 
         // Transform current intent
         const currentIntentData = currentIntent
@@ -341,11 +347,18 @@ export class SpecsmdWebviewProvider implements vscode.WebviewViewProvider {
         // Transform active bolts (supports multiple)
         const activeBoltsData = activeBolts.map(bolt => this._transformActiveBolt(bolt));
 
-        // Transform pending bolts to queue
-        const upNextQueue = pendingBolts.slice(0, 5).map(bolt => this._transformQueuedBolt(bolt));
+        // Transform pending bolts to queue (send all, filtering done client-side)
+        const upNextQueue = pendingBolts.map(bolt => this._transformQueuedBolt(bolt));
+
+        // Transform completed bolts (last 10, sorted by completion time)
+        const now = new Date();
+        const completedBoltsData = completedBolts
+            .filter(b => b.completedAt)
+            .sort((a, b) => (b.completedAt?.getTime() ?? 0) - (a.completedAt?.getTime() ?? 0))
+            .slice(0, 10)
+            .map(bolt => this._transformCompletedBolt(bolt, now));
 
         // Transform activity events
-        const now = new Date();
         const activityEvents: ActivityEventData[] = activityFeed.slice(0, 10).map(event => {
             // Look up bolt path from store
             const bolt = state.bolts.get(event.targetId);
@@ -385,6 +398,7 @@ export class SpecsmdWebviewProvider implements vscode.WebviewViewProvider {
             stats: boltStats,
             activeBolts: activeBoltsData,
             upNextQueue,
+            completedBolts: completedBoltsData,
             activityEvents,
             intents,
             standards,
@@ -420,6 +434,83 @@ export class SpecsmdWebviewProvider implements vscode.WebviewViewProvider {
                 status: 'pending' as const // Would need story status lookup
             }))
         };
+    }
+
+    /**
+     * Transforms a Bolt to CompletedBoltData.
+     */
+    private _transformCompletedBolt(bolt: Bolt, now: Date): CompletedBoltData {
+        const files = this._scanBoltArtifactFiles(bolt.path);
+        return {
+            id: bolt.id,
+            name: bolt.id,
+            type: this._formatBoltType(bolt.type),
+            completedAt: bolt.completedAt?.toISOString() ?? '',
+            relativeTime: bolt.completedAt ? formatRelativeTime(bolt.completedAt, now) : 'unknown',
+            path: bolt.path,
+            files
+        };
+    }
+
+    /**
+     * Scans a bolt directory for artifact files.
+     */
+    private _scanBoltArtifactFiles(boltPath: string): ArtifactFileData[] {
+        const files: ArtifactFileData[] = [];
+
+        try {
+            if (!fs.existsSync(boltPath)) {
+                return files;
+            }
+
+            const entries = fs.readdirSync(boltPath);
+
+            for (const entry of entries) {
+                // Skip bolt.md itself and non-markdown files
+                if (entry === 'bolt.md' || !entry.endsWith('.md')) {
+                    continue;
+                }
+
+                const filePath = path.join(boltPath, entry);
+                const stat = fs.statSync(filePath);
+
+                if (stat.isFile()) {
+                    const type = this._classifyArtifactFile(entry);
+                    files.push({
+                        name: entry,
+                        path: filePath,
+                        type
+                    });
+                }
+            }
+        } catch {
+            // Ignore errors reading directory
+        }
+
+        return files;
+    }
+
+    /**
+     * Classifies an artifact file by its name.
+     */
+    private _classifyArtifactFile(filename: string): ArtifactFileData['type'] {
+        const lower = filename.toLowerCase();
+        if (lower.includes('walkthrough') && lower.includes('test')) {
+            return 'test-report';
+        }
+        if (lower.includes('walkthrough')) {
+            return 'walkthrough';
+        }
+        if (lower.includes('test') || lower.includes('report')) {
+            return 'test-report';
+        }
+        if (lower.includes('plan')) {
+            return 'plan';
+        }
+        if (lower.includes('design') || lower.includes('adr')) {
+            return 'design';
+        }
+        return 'other';
     }
 
     /**

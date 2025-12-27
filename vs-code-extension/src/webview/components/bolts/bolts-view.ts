@@ -8,10 +8,12 @@ import { BaseElement } from '../shared/base-element.js';
 import './current-bolts.js';
 import './focus-section.js';
 import './queue-section.js';
+import './completions-section.js';
 import './activity-feed.js';
 import type { IntentInfo, BoltStats } from './current-bolts.js';
 import type { ActiveBoltData } from './focus-card.js';
 import type { QueuedBoltData } from './queue-item.js';
+import type { CompletedBoltData } from './completion-item.js';
 import type { ActivityEventData } from './activity-item.js';
 import type { ActivityFilter } from './activity-feed.js';
 
@@ -23,6 +25,7 @@ export interface BoltsViewData {
     stats: BoltStats;
     activeBolts: ActiveBoltData[];
     upNextQueue: QueuedBoltData[];
+    completedBolts: CompletedBoltData[];
     activityEvents: ActivityEventData[];
     focusCardExpanded: boolean;
     activityFilter: ActivityFilter;
@@ -97,6 +100,11 @@ export class BoltsView extends BaseElement {
                     .bolts=${this.data.upNextQueue}
                     @start-bolt=${this._handleStartBolt}>
                 </queue-section>
+
+                <completions-section
+                    .bolts=${this.data.completedBolts}
+                    @open-file=${this._handleOpenFile}>
+                </completions-section>
             </div>
 
             <activity-feed

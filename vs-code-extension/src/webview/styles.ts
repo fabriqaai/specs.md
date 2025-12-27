@@ -35,7 +35,7 @@ export function getStyles(): string {
 
     /* ==================== HEADER ==================== */
     .header {
-        padding: 10px 12px;
+        padding: 12px 16px;
         background: var(--vscode-sideBarSectionHeader-background);
         border-bottom: 1px solid var(--vscode-sideBarSectionHeader-border);
         display: flex;
@@ -107,8 +107,8 @@ export function getStyles(): string {
 
     /* ==================== MISSION STATUS ==================== */
     .mission-status {
-        padding: 16px;
-        background: linear-gradient(135deg, var(--vscode-editor-background) 0%, rgba(249, 115, 22, 0.1) 100%);
+        padding: 20px;
+        background: linear-gradient(180deg, var(--vscode-editor-background) 0%, rgba(249, 115, 22, 0.05) 100%);
         border-bottom: 1px solid var(--vscode-sideBarSectionHeader-border);
     }
 
@@ -182,14 +182,16 @@ export function getStyles(): string {
     /* ==================== FOCUS CARD ==================== */
     .focus-card {
         background: var(--vscode-sideBar-background);
-        border: 2px solid var(--accent-primary);
-        border-radius: 8px;
+        border: 1px solid var(--vscode-sideBarSectionHeader-border);
+        border-left: 3px solid var(--accent-primary);
+        border-radius: 6px;
         overflow: hidden;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
     }
 
     .focus-card-header {
-        padding: 12px;
-        background: rgba(249, 115, 22, 0.1);
+        padding: 14px 16px;
+        background: var(--vscode-editor-background);
         display: flex;
         justify-content: space-between;
         align-items: flex-start;
@@ -478,12 +480,13 @@ export function getStyles(): string {
     .queue-item {
         display: flex;
         align-items: center;
-        gap: 10px;
-        padding: 10px 12px;
+        gap: 12px;
+        padding: 12px 14px;
         background: var(--vscode-editor-background);
         border-radius: 6px;
         cursor: pointer;
         transition: all 0.15s;
+        border: 1px solid transparent;
         border-left: 3px solid transparent;
     }
 

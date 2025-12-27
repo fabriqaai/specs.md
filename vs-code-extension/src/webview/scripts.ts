@@ -41,7 +41,7 @@ export function getScripts(): string {
                     e.stopPropagation();
                     const boltId = focusCard.dataset.boltId;
                     if (boltId) {
-                        vscode.postMessage({ type: 'startBolt', boltId: boltId });
+                        vscode.postMessage({ type: 'continueBolt', boltId: boltId });
                     }
                 });
             }
@@ -53,7 +53,7 @@ export function getScripts(): string {
                     e.stopPropagation();
                     const boltId = focusCard.dataset.boltId;
                     if (boltId) {
-                        vscode.postMessage({ type: 'openBoltFiles', boltId: boltId });
+                        vscode.postMessage({ type: 'viewBoltFiles', boltId: boltId });
                     }
                 });
             }

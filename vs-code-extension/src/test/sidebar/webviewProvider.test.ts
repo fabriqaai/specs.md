@@ -153,6 +153,7 @@ suite('Webview Provider Test Suite', () => {
                 stats: { active: 0, queued: 0, done: 0, blocked: 0 },
                 activeBolts: [],
                 upNextQueue: [],
+                completedBolts: [],
                 activityEvents: [],
                 intents: [],
                 standards: [],

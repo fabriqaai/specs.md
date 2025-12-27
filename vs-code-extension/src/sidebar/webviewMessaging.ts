@@ -59,6 +59,9 @@ export interface WebviewData {
     /** Up Next queue */
     upNextQueue: QueuedBoltData[];
 
+    /** Recently completed bolts */
+    completedBolts: CompletedBoltData[];
+
     /** Recent activity events */
     activityEvents: ActivityEventData[];
 
@@ -182,6 +185,28 @@ export interface StoryData {
 export interface StandardData {
     name: string;
     path: string;
+}
+
+/**
+ * Artifact file data for completed bolts.
+ */
+export interface ArtifactFileData {
+    name: string;
+    path: string;
+    type: 'walkthrough' | 'test-report' | 'plan' | 'design' | 'other';
+}
+
+/**
+ * Completed bolt data for Recent Completions section.
+ */
+export interface CompletedBoltData {
+    id: string;
+    name: string;
+    type: string;
+    completedAt: string;
+    relativeTime: string;
+    path: string;
+    files: ArtifactFileData[];
 }
 
 /**
