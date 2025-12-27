@@ -160,7 +160,9 @@ suite('Webview Provider Test Suite', () => {
                 nextActions: [],
                 focusCardExpanded: false,
                 activityFilter: 'all',
-                activityHeight: 200
+                activityHeight: 200,
+                specsFilter: 'all',
+                availableStatuses: []
             };
 
             assert.strictEqual(emptyData.currentIntent, null);

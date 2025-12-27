@@ -2,7 +2,7 @@
  * HTML generation for webview - based on variation-8-2.html design mockup.
  */
 
-import { WebviewData, TabId, ActiveBoltData, NextActionData } from '../sidebar/webviewMessaging';
+import { WebviewData, TabId, ActiveBoltData, NextActionData, SpecsFilter } from '../sidebar/webviewMessaging';
 
 /**
  * Escape HTML special characters.
@@ -321,23 +321,44 @@ export function getBoltsViewHtml(data: WebviewData): string {
  * Generate specs view HTML.
  */
 export function getSpecsViewHtml(data: WebviewData): string {
-    if (data.intents.length === 0) {
-        return `<div class="empty-state">
-            <div class="empty-state-icon">&#128203;</div>
-            <div class="empty-state-text">No intents found</div>
-        </div>`;
-    }
+    const filter = data.specsFilter || 'all';
+    const availableStatuses = data.availableStatuses || [];
 
-    return `
+    // Build dropdown options HTML - show raw status values as they appear in markdown files
+    const statusOptionsHtml = availableStatuses
+        .map(status => {
+            const selected = status === filter ? ' selected' : '';
+            return `<option value="${escapeHtml(status)}"${selected}>${escapeHtml(status)}</option>`;
+        })
+        .join('');
+
+    const allSelected = filter === 'all' ? ' selected' : '';
+
+    // Always show the toolbar with filter dropdown
+    const toolbarHtml = `
     <div class="specs-toolbar">
         <span class="specs-toolbar-label">Filter</span>
         <select class="specs-toolbar-select" id="specsFilter">
-            <option value="all">All Status</option>
-            <option value="active">In Progress</option>
-            <option value="complete">Completed</option>
-            <option value="pending">Not Started</option>
+            <option value="all"${allSelected}>all</option>
+            ${statusOptionsHtml}
         </select>
-    </div>
+    </div>`;
+
+    // Show empty state if no intents match the filter
+    if (data.intents.length === 0) {
+        const emptyMessage = filter === 'all'
+            ? 'No intents found'
+            : `No units with '${escapeHtml(filter)}' status`;
+        return `${toolbarHtml}
+    <div class="specs-content">
+        <div class="empty-state">
+            <div class="empty-state-icon">&#128203;</div>
+            <div class="empty-state-text">${emptyMessage}</div>
+        </div>
+    </div>`;
+    }
+
+    return `${toolbarHtml}
     <div class="specs-content">
         ${data.intents.map(intent => {
             const progress = intent.storiesTotal > 0
@@ -352,7 +373,7 @@ export function getSpecsViewHtml(data: WebviewData): string {
                     <span class="intent-expand">&#9660;</span>
                     <span class="intent-icon">&#127919;</span>
                     <div class="intent-info">
-                        <div class="intent-name">${escapeHtml(intent.number)}-${escapeHtml(intent.name)}</div>
+                        <div class="intent-name">${escapeHtml(intent.number)}-${escapeHtml(intent.name)} - intent</div>
                         <div class="intent-meta">${intent.units.length} units | ${intent.storiesTotal} stories</div>
                     </div>
                     <button type="button" class="spec-open-btn intent-open-btn" data-path="${escapeHtml(intent.path)}/requirements.md" title="Open intent requirements">&#128269;</button>
@@ -370,7 +391,7 @@ export function getSpecsViewHtml(data: WebviewData): string {
                             <div class="unit-header" data-unit="${escapeHtml(unit.name)}">
                                 <span class="unit-expand">&#9660;</span>
                                 <span class="unit-icon">&#128218;</span>
-                                <span class="unit-name">${escapeHtml(unit.name)}</span>
+                                <span class="unit-name">${escapeHtml(unit.name)} - unit</span>
                                 <button type="button" class="spec-open-btn unit-open-btn" data-path="${escapeHtml(unit.path)}/unit-brief.md" title="Open unit brief">&#128269;</button>
                                 <span class="unit-progress">${unit.storiesComplete}/${unit.storiesTotal}</span>
                             </div>

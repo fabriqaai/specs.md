@@ -60,6 +60,8 @@ export interface Unit {
     path: string;
     /** Calculated status based on stories */
     status: ArtifactStatus;
+    /** Raw status string from frontmatter (for display/filtering) */
+    rawStatus?: string;
     /** Child stories */
     stories: Story[];
 }

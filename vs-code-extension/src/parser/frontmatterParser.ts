@@ -89,7 +89,9 @@ export function normalizeStatus(rawStatus: string | undefined): ArtifactStatus {
         'active',
         'started',
         'wip',
-        'working'
+        'working',
+        'ready',
+        'construction'
     ].includes(normalized)) {
         return ArtifactStatus.InProgress;
     }

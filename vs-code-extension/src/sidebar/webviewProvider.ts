@@ -26,7 +26,8 @@ import {
     createStateStore,
     IStateReader,
     TabId as StateTabId,
-    ActivityFilter as StateActivityFilter
+    ActivityFilter as StateActivityFilter,
+    SpecsFilter as StateSpecsFilter
 } from '../state';
 import {
     WebviewData,
@@ -36,8 +37,10 @@ import {
     FOCUS_EXPANDED_KEY,
     ACTIVITY_FILTER_KEY,
     ACTIVITY_HEIGHT_KEY,
+    SPECS_FILTER_KEY,
     DEFAULT_ACTIVITY_FILTER,
     DEFAULT_ACTIVITY_HEIGHT,
+    DEFAULT_SPECS_FILTER,
     MIN_ACTIVITY_HEIGHT,
     MAX_ACTIVITY_HEIGHT,
     WebviewToExtensionMessage,
@@ -45,6 +48,7 @@ import {
     QueuedBoltData,
     ActivityEventData,
     ActivityFilter,
+    SpecsFilter,
     IntentData,
     UnitData,
     StoryData,
@@ -99,6 +103,7 @@ export class SpecsmdWebviewProvider implements vscode.WebviewViewProvider {
         const savedFocusExpanded = this._context.workspaceState.get<boolean>(FOCUS_EXPANDED_KEY);
         const savedActivityFilter = this._context.workspaceState.get<ActivityFilter>(ACTIVITY_FILTER_KEY);
         const savedActivityHeight = this._context.workspaceState.get<number>(ACTIVITY_HEIGHT_KEY);
+        const savedSpecsFilter = this._context.workspaceState.get<SpecsFilter>(SPECS_FILTER_KEY);
 
         this._store.setUIState({
             activeTab: (savedTab && ['bolts', 'specs', 'overview'].includes(savedTab))
@@ -110,7 +115,9 @@ export class SpecsmdWebviewProvider implements vscode.WebviewViewProvider {
                 : DEFAULT_ACTIVITY_FILTER as StateActivityFilter,
             activitySectionHeight: savedActivityHeight !== undefined
                 ? Math.max(MIN_ACTIVITY_HEIGHT, Math.min(MAX_ACTIVITY_HEIGHT, savedActivityHeight))
-                : DEFAULT_ACTIVITY_HEIGHT
+                : DEFAULT_ACTIVITY_HEIGHT,
+            // specsFilter accepts any string - 'all' or any raw status from unit frontmatter
+            specsFilter: savedSpecsFilter ?? DEFAULT_SPECS_FILTER
         });
     }
 
@@ -293,7 +300,8 @@ export class SpecsmdWebviewProvider implements vscode.WebviewViewProvider {
             activityEvents: data.activityEvents,
             focusCardExpanded: data.focusCardExpanded,
             activityFilter: data.activityFilter,
-            activityHeight: data.activityHeight
+            activityHeight: data.activityHeight,
+            specsFilter: data.specsFilter
         };
 
         // Generate HTML for specs/overview views (hybrid approach)
@@ -332,7 +340,9 @@ export class SpecsmdWebviewProvider implements vscode.WebviewViewProvider {
                 nextActions: [],
                 focusCardExpanded: state.ui.focusCardExpanded,
                 activityFilter: state.ui.activityFilter,
-                activityHeight: state.ui.activitySectionHeight
+                activityHeight: state.ui.activitySectionHeight,
+                specsFilter: state.ui.specsFilter,
+                availableStatuses: []
             };
         }
 
@@ -374,8 +384,8 @@ export class SpecsmdWebviewProvider implements vscode.WebviewViewProvider {
             };
         });
 
-        // Build intents data for specs view
-        const intents = this._buildIntentsData();
+        // Build intents data for specs view (includes available statuses)
+        const { intents, availableStatuses } = this._buildIntentsData();
 
         // Build standards data
         const standards = Array.from(state.standards.values()).map(s => ({
@@ -405,7 +415,9 @@ export class SpecsmdWebviewProvider implements vscode.WebviewViewProvider {
             nextActions: nextActionsData,
             focusCardExpanded: state.ui.focusCardExpanded,
             activityFilter: state.ui.activityFilter,
-            activityHeight: state.ui.activitySectionHeight
+            activityHeight: state.ui.activitySectionHeight,
+            specsFilter: state.ui.specsFilter,
+            availableStatuses
         };
     }
 
@@ -554,32 +566,42 @@ export class SpecsmdWebviewProvider implements vscode.WebviewViewProvider {
 
     /**
      * Builds intents data for specs view from StateStore.
+     * Applies the current specs filter from UI state.
+     * Filter is based on UNIT raw statuses - if any unit within an intent matches the filter,
+     * the entire intent (with all units) is shown.
+     * Also discovers and returns all unique unit raw statuses for the filter dropdown.
      */
-    private _buildIntentsData(): IntentData[] {
+    private _buildIntentsData(): { intents: IntentData[]; availableStatuses: string[] } {
         const state = this._store.getState();
-        const intents = Array.from(state.intents.values());
+        const allIntents = Array.from(state.intents.values());
+        const specsFilter = state.ui.specsFilter;
 
-        console.log('[SpecsMD] _buildIntentsData: intents from state:', intents.length);
+        // Collect all unique raw unit statuses from frontmatter
+        const statusSet = new Set<string>();
 
-        return intents.map(intent => {
-            console.log('[SpecsMD] Processing intent:', intent.number, intent.name, 'units:', intent.units?.length ?? 'undefined');
-
+        // First, transform all intents to get their calculated story counts
+        const allIntentData = allIntents.map(intent => {
             const units: UnitData[] = (intent.units || []).map(unit => {
-                console.log('[SpecsMD]   Unit:', unit.name, 'stories:', unit.stories?.length ?? 'undefined');
-
                 const stories: StoryData[] = (unit.stories || []).map(story => ({
                     id: story.id,
                     title: story.title,
                     path: story.path,
-                    status: this._mapStatus(story.status)
+                    status: this._getStatusString(story.status)
                 }));
 
                 const storiesComplete = stories.filter(s => s.status === 'complete').length;
 
+                // Use raw status from frontmatter for filtering/display
+                // Fall back to normalized status string if no raw status
+                const unitStatus = unit.rawStatus || this._getStatusString(unit.status);
+                if (unitStatus) {
+                    statusSet.add(unitStatus);
+                }
+
                 return {
                     name: unit.name,
                     path: unit.path,
-                    status: this._mapStatus(unit.status),
+                    status: unitStatus,
                     storiesComplete,
                     storiesTotal: stories.length,
                     stories
@@ -588,8 +610,6 @@ export class SpecsmdWebviewProvider implements vscode.WebviewViewProvider {
 
             const storiesComplete = units.reduce((sum, u) => sum + u.storiesComplete, 0);
             const storiesTotal = units.reduce((sum, u) => sum + u.storiesTotal, 0);
-
-            console.log('[SpecsMD] Intent result:', intent.number, 'units:', units.length, 'total stories:', storiesTotal);
 
             return {
                 name: intent.name,
@@ -600,6 +620,42 @@ export class SpecsmdWebviewProvider implements vscode.WebviewViewProvider {
                 units
             };
         });
+
+        // Apply specs filter based on UNIT raw statuses
+        // If any unit within an intent matches the filter, show that intent with ALL its units
+        const filteredIntents = specsFilter === 'all' ? allIntentData : allIntentData.filter(intent => {
+            // Check if ANY unit matches the filter status
+            return intent.units.some(unit => unit.status === specsFilter);
+        });
+
+        // Convert status set to sorted array
+        const availableStatuses = Array.from(statusSet).sort();
+
+        // Debug: Log filter results
+        if (specsFilter !== 'all') {
+            console.log('[SpecsMD] Filter applied:', specsFilter, 'All:', allIntentData.length, 'Filtered:', filteredIntents.length,
+                'Unit statuses:', allIntentData.map(i => `${i.number}:[${i.units.map(u => u.status).join(',')}]`));
+        }
+
+        return { intents: filteredIntents, availableStatuses };
+    }
+
+    /**
+     * Gets a display-friendly status string from ArtifactStatus.
+     */
+    private _getStatusString(status: ArtifactStatus): string {
+        switch (status) {
+            case ArtifactStatus.Complete:
+                return 'complete';
+            case ArtifactStatus.InProgress:
+                return 'in-progress';
+            case ArtifactStatus.Draft:
+                return 'draft';
+            case ArtifactStatus.Blocked:
+                return 'blocked';
+            default:
+                return 'unknown';
+        }
     }
 
     /**
@@ -678,6 +734,15 @@ export class SpecsmdWebviewProvider implements vscode.WebviewViewProvider {
                 this._store.setUIState({ activityFilter: message.filter as StateActivityFilter });
                 this._context.workspaceState.update(ACTIVITY_FILTER_KEY, message.filter);
                 // No need to re-render, filtering is done client-side
+                break;
+
+            case 'specsFilter':
+                console.log('[SpecsMD] specsFilter message received:', message.filter);
+                this._store.setUIState({ specsFilter: message.filter as StateSpecsFilter });
+                this._context.workspaceState.update(SPECS_FILTER_KEY, message.filter);
+                // Re-render to apply the filter server-side
+                console.log('[SpecsMD] Triggering _updateWebview after specsFilter change');
+                this._updateWebview();
                 break;
 
             case 'activityResize': {

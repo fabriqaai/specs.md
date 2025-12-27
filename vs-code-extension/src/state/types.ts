@@ -31,8 +31,9 @@ export type ActivityFilter = 'all' | 'stages' | 'bolts';
 
 /**
  * Specs tree filter options.
+ * Can be 'all' or any raw status string discovered from unit frontmatter.
  */
-export type SpecsFilter = 'all' | 'active' | 'complete' | 'pending';
+export type SpecsFilter = string;
 
 /**
  * UI-specific state that is separate from data state.

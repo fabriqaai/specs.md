@@ -109,7 +109,9 @@ suite('Webview Messaging Test Suite', () => {
                 nextActions: [],
                 focusCardExpanded: false,
                 activityFilter: 'all',
-                activityHeight: 200
+                activityHeight: 200,
+                specsFilter: 'all',
+                availableStatuses: []
             };
 
             assert.strictEqual(data.currentIntent, null);
@@ -134,7 +136,9 @@ suite('Webview Messaging Test Suite', () => {
                 nextActions: [],
                 focusCardExpanded: true,
                 activityFilter: 'stages',
-                activityHeight: 350
+                activityHeight: 350,
+                specsFilter: 'active',
+                availableStatuses: ['draft', 'in-progress', 'complete']
             };
 
             assert.strictEqual(data.focusCardExpanded, true);
@@ -204,7 +208,9 @@ suite('Webview Messaging Test Suite', () => {
                 nextActions: [],
                 focusCardExpanded: true,
                 activityFilter: 'bolts',
-                activityHeight: 300
+                activityHeight: 300,
+                specsFilter: 'complete',
+                availableStatuses: ['complete', 'in-progress']
             };
 
             assert.strictEqual(data.currentIntent?.name, 'Test Intent');

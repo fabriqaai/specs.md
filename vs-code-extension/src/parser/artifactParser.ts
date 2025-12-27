@@ -195,9 +195,12 @@ export async function parseUnit(
     const unitBriefContent = await readFileSafe(unitBriefPath);
     const unitFrontmatter = unitBriefContent ? parseFrontmatter(unitBriefContent) : null;
 
-    // Calculate status from stories if not in frontmatter
-    const status = unitFrontmatter?.status
-        ? normalizeStatus(unitFrontmatter.status as string)
+    // Get raw status from frontmatter (for display/filtering)
+    const rawStatus = unitFrontmatter?.status as string | undefined;
+
+    // Calculate normalized status from stories if not in frontmatter
+    const status = rawStatus
+        ? normalizeStatus(rawStatus)
         : calculateAggregateStatus(stories.map(s => s.status));
 
     return {
@@ -205,6 +208,7 @@ export async function parseUnit(
         intentName,
         path: unitPath,
         status,
+        rawStatus,
         stories
     };
 }
