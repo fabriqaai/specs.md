@@ -1,0 +1,1105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Variation 10: Dual View with Focus Mode</title>
+  <style>
+    /* VS Code Theme Variables */
+    :root {
+      --vscode-editor-background: #1e1e1e;
+      --vscode-editor-foreground: #cccccc;
+      --vscode-sideBar-background: #252526;
+      --vscode-sideBarSectionHeader-background: #2d2d2d;
+      --vscode-input-background: #3c3c3c;
+      --vscode-input-border: #3c3c3c;
+      --vscode-list-hoverBackground: #2a2d2e;
+      --vscode-badge-background: #4d4d4d;
+      --vscode-badge-foreground: #ffffff;
+      --vscode-descriptionForeground: #858585;
+
+      --status-complete: #22c55e;
+      --status-active: #f97316;
+      --status-pending: #6b7280;
+      --status-blocked: #ef4444;
+      --accent-primary: #f97316;
+    }
+
+    .theme-light {
+      --vscode-editor-background: #ffffff;
+      --vscode-editor-foreground: #333333;
+      --vscode-sideBar-background: #f3f3f3;
+      --vscode-sideBarSectionHeader-background: #e8e8e8;
+      --vscode-input-background: #ffffff;
+      --vscode-input-border: #cecece;
+      --vscode-list-hoverBackground: #e8e8e8;
+      --vscode-descriptionForeground: #717171;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--vscode-editor-background);
+      color: var(--vscode-editor-foreground);
+      font-size: 13px;
+    }
+
+    .sidebar {
+      width: 320px;
+      min-height: 100vh;
+      background: var(--vscode-sideBar-background);
+      border-right: 1px solid var(--vscode-input-border);
+      position: relative;
+      padding-bottom: 50px;
+    }
+
+    .header {
+      padding: 10px 12px;
+      background: var(--vscode-sideBarSectionHeader-background);
+      border-bottom: 1px solid var(--vscode-input-border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .header-title {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 4px;
+    }
+
+    .icon-btn {
+      background: none;
+      border: none;
+      color: var(--vscode-descriptionForeground);
+      cursor: pointer;
+      padding: 4px 6px;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+
+    .icon-btn:hover {
+      background: var(--vscode-list-hoverBackground);
+      color: var(--vscode-editor-foreground);
+    }
+
+    /* Main View Tabs */
+    .view-tabs {
+      display: flex;
+      background: var(--vscode-editor-background);
+      border-bottom: 1px solid var(--vscode-input-border);
+    }
+
+    .view-tab {
+      flex: 1;
+      padding: 10px;
+      font-size: 11px;
+      font-weight: 600;
+      text-align: center;
+      background: none;
+      border: none;
+      color: var(--vscode-descriptionForeground);
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: all 0.15s;
+    }
+
+    .view-tab:hover {
+      color: var(--vscode-editor-foreground);
+      background: var(--vscode-list-hoverBackground);
+    }
+
+    .view-tab.active {
+      color: var(--accent-primary);
+      border-bottom-color: var(--accent-primary);
+    }
+
+    /* Filter Bar */
+    .filter-bar {
+      padding: 8px 12px;
+      background: var(--vscode-sideBarSectionHeader-background);
+      border-bottom: 1px solid var(--vscode-input-border);
+      display: flex;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .filter-dropdown {
+      flex: 1;
+      padding: 6px 8px;
+      font-size: 10px;
+      background: var(--vscode-input-background);
+      border: 1px solid var(--vscode-input-border);
+      color: var(--vscode-editor-foreground);
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    /* Focus Mode Toggle */
+    .focus-toggle {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 8px;
+      background: var(--vscode-input-background);
+      border: 1px solid var(--vscode-input-border);
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .focus-toggle:hover {
+      border-color: var(--accent-primary);
+    }
+
+    .focus-toggle.active {
+      background: rgba(249, 115, 22, 0.2);
+      border-color: var(--accent-primary);
+    }
+
+    .focus-toggle-icon {
+      font-size: 12px;
+    }
+
+    .focus-toggle-label {
+      font-size: 10px;
+      color: var(--vscode-descriptionForeground);
+    }
+
+    .focus-toggle.active .focus-toggle-label {
+      color: var(--accent-primary);
+    }
+
+    /* View Container */
+    .view-container {
+      display: none;
+    }
+
+    .view-container.active {
+      display: block;
+    }
+
+    /* Focus Banner */
+    .focus-banner {
+      padding: 10px 12px;
+      background: linear-gradient(135deg, rgba(249, 115, 22, 0.2) 0%, var(--vscode-editor-background) 100%);
+      border-bottom: 1px solid var(--accent-primary);
+      display: none;
+    }
+
+    .focus-banner.visible {
+      display: block;
+    }
+
+    .focus-banner-title {
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--accent-primary);
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+
+    .focus-banner-text {
+      font-size: 11px;
+      color: var(--vscode-descriptionForeground);
+    }
+
+    /* Bolts Content */
+    .bolts-content {
+      padding: 0;
+    }
+
+    /* Focus Section */
+    .focus-section {
+      display: none;
+    }
+
+    .focus-section.visible {
+      display: block;
+    }
+
+    .focus-section-header {
+      padding: 10px 12px;
+      background: var(--vscode-sideBarSectionHeader-background);
+      border-bottom: 1px solid var(--vscode-input-border);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .focus-section-icon {
+      font-size: 14px;
+    }
+
+    .focus-section-title {
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      flex: 1;
+    }
+
+    .focus-section-count {
+      font-size: 9px;
+      padding: 2px 8px;
+      border-radius: 10px;
+      background: var(--vscode-badge-background);
+    }
+
+    .focus-section-title.active {
+      color: var(--status-active);
+    }
+
+    .focus-section-count.active {
+      background: rgba(249, 115, 22, 0.2);
+      color: var(--status-active);
+    }
+
+    /* Current Focus Card */
+    .current-focus {
+      padding: 12px;
+      background: var(--vscode-editor-background);
+      border-bottom: 1px solid var(--vscode-input-border);
+    }
+
+    .current-focus-card {
+      background: linear-gradient(135deg, var(--vscode-sideBar-background) 0%, rgba(249, 115, 22, 0.1) 100%);
+      border: 2px solid var(--accent-primary);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .current-focus-header {
+      padding: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+
+    .current-focus-title {
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .current-focus-subtitle {
+      font-size: 10px;
+      color: var(--vscode-descriptionForeground);
+      margin-top: 2px;
+    }
+
+    .current-focus-badge {
+      font-size: 9px;
+      padding: 3px 8px;
+      border-radius: 12px;
+      background: var(--accent-primary);
+      color: white;
+    }
+
+    .current-focus-body {
+      padding: 0 12px 12px;
+    }
+
+    /* Stage Progress */
+    .stage-progress {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      margin-bottom: 12px;
+    }
+
+    .stage-node {
+      flex: 1;
+      height: 6px;
+      border-radius: 3px;
+      background: var(--vscode-input-background);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .stage-node.complete {
+      background: var(--status-complete);
+    }
+
+    .stage-node.active {
+      background: var(--status-active);
+      animation: stage-pulse 2s infinite;
+    }
+
+    @keyframes stage-pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.6; }
+    }
+
+    .stage-labels {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+
+    .stage-label {
+      font-size: 9px;
+      color: var(--vscode-descriptionForeground);
+      text-align: center;
+    }
+
+    .stage-label.complete {
+      color: var(--status-complete);
+    }
+
+    .stage-label.active {
+      color: var(--accent-primary);
+      font-weight: 600;
+    }
+
+    .current-focus-actions {
+      display: flex;
+      gap: 6px;
+    }
+
+    .action-btn {
+      flex: 1;
+      padding: 10px;
+      font-size: 11px;
+      font-weight: 500;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .action-btn-primary {
+      background: var(--accent-primary);
+      color: white;
+    }
+
+    .action-btn-primary:hover {
+      filter: brightness(1.1);
+    }
+
+    .action-btn-secondary {
+      background: var(--vscode-input-background);
+      color: var(--vscode-editor-foreground);
+      border: 1px solid var(--vscode-input-border);
+    }
+
+    .action-btn-secondary:hover {
+      background: var(--vscode-list-hoverBackground);
+    }
+
+    /* Bolt List */
+    .bolt-list {
+      border-bottom: 1px solid var(--vscode-input-border);
+    }
+
+    .bolt-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      cursor: pointer;
+      transition: background 0.15s;
+      border-bottom: 1px solid var(--vscode-input-border);
+    }
+
+    .bolt-item:last-child {
+      border-bottom: none;
+    }
+
+    .bolt-item:hover {
+      background: var(--vscode-list-hoverBackground);
+    }
+
+    .bolt-item.expanded {
+      background: var(--vscode-list-hoverBackground);
+    }
+
+    .bolt-status-indicator {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .bolt-status-indicator.active {
+      background: var(--status-active);
+      box-shadow: 0 0 6px rgba(249, 115, 22, 0.5);
+    }
+
+    .bolt-status-indicator.complete {
+      background: var(--status-complete);
+    }
+
+    .bolt-status-indicator.pending {
+      background: var(--status-pending);
+    }
+
+    .bolt-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .bolt-name {
+      font-size: 11px;
+      font-weight: 500;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .bolt-meta {
+      font-size: 9px;
+      color: var(--vscode-descriptionForeground);
+      margin-top: 2px;
+    }
+
+    .bolt-stages {
+      display: flex;
+      gap: 2px;
+    }
+
+    .bolt-stage {
+      width: 16px;
+      height: 16px;
+      border-radius: 3px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 8px;
+      font-weight: 600;
+    }
+
+    .bolt-stage.complete {
+      background: var(--status-complete);
+      color: white;
+    }
+
+    .bolt-stage.active {
+      background: var(--status-active);
+      color: white;
+    }
+
+    .bolt-stage.pending {
+      background: var(--vscode-input-background);
+      color: var(--vscode-descriptionForeground);
+    }
+
+    .bolt-expand {
+      font-size: 10px;
+      color: var(--vscode-descriptionForeground);
+      transition: transform 0.2s;
+    }
+
+    .bolt-item.expanded .bolt-expand {
+      transform: rotate(180deg);
+    }
+
+    /* Bolt Expanded */
+    .bolt-expanded {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease;
+      background: var(--vscode-editor-background);
+    }
+
+    .bolt-item.expanded + .bolt-expanded {
+      max-height: 200px;
+    }
+
+    .bolt-expanded-inner {
+      padding: 12px;
+      border-bottom: 1px solid var(--accent-primary);
+    }
+
+    .bolt-expanded-actions {
+      display: flex;
+      gap: 6px;
+    }
+
+    .bolt-expanded-btn {
+      flex: 1;
+      padding: 8px;
+      font-size: 10px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .bolt-expanded-btn-primary {
+      background: var(--accent-primary);
+      color: white;
+    }
+
+    .bolt-expanded-btn-secondary {
+      background: var(--vscode-input-background);
+      color: var(--vscode-editor-foreground);
+      border: 1px solid var(--vscode-input-border);
+    }
+
+    /* Backlog Section */
+    .backlog-section {
+      opacity: 0.7;
+    }
+
+    .backlog-section .focus-section-header {
+      background: var(--vscode-editor-background);
+    }
+
+    /* Theme Toggle */
+    .theme-toggle {
+      padding: 8px 12px;
+      background: var(--vscode-editor-background);
+      border-top: 1px solid var(--vscode-input-border);
+      display: flex;
+      gap: 8px;
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+    }
+
+    .theme-btn {
+      flex: 1;
+      padding: 6px;
+      font-size: 10px;
+      border: 1px solid var(--vscode-input-border);
+      background: var(--vscode-input-background);
+      color: var(--vscode-editor-foreground);
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .theme-btn.active {
+      background: var(--accent-primary);
+      border-color: var(--accent-primary);
+      color: white;
+    }
+
+    /* =========== SPECS VIEW =========== */
+    .specs-content {
+      padding: 8px 0;
+    }
+
+    .intent-item {
+      border-bottom: 1px solid var(--vscode-input-border);
+    }
+
+    .intent-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 12px;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .intent-header:hover {
+      background: var(--vscode-list-hoverBackground);
+    }
+
+    .intent-expand {
+      font-size: 10px;
+      color: var(--vscode-descriptionForeground);
+      transition: transform 0.2s;
+      width: 12px;
+    }
+
+    .intent-item.collapsed .intent-expand {
+      transform: rotate(-90deg);
+    }
+
+    .intent-icon {
+      font-size: 14px;
+    }
+
+    .intent-info {
+      flex: 1;
+    }
+
+    .intent-name {
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .intent-meta {
+      font-size: 10px;
+      color: var(--vscode-descriptionForeground);
+      margin-top: 2px;
+    }
+
+    .intent-progress {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .progress-bar-mini {
+      width: 40px;
+      height: 4px;
+      background: var(--vscode-input-background);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+
+    .progress-bar-mini-fill {
+      height: 100%;
+      background: var(--status-complete);
+    }
+
+    .progress-text {
+      font-size: 10px;
+      color: var(--vscode-descriptionForeground);
+    }
+
+    .intent-content {
+      max-height: 1000px;
+      overflow: hidden;
+      transition: max-height 0.3s ease;
+      background: var(--vscode-editor-background);
+    }
+
+    .intent-item.collapsed .intent-content {
+      max-height: 0;
+    }
+
+    .unit-item {
+      border-bottom: 1px solid var(--vscode-input-border);
+    }
+
+    .unit-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px 8px 28px;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .unit-header:hover {
+      background: var(--vscode-list-hoverBackground);
+    }
+
+    .unit-expand {
+      font-size: 10px;
+      color: var(--vscode-descriptionForeground);
+      transition: transform 0.2s;
+      width: 12px;
+    }
+
+    .unit-item.collapsed .unit-expand {
+      transform: rotate(-90deg);
+    }
+
+    .unit-name {
+      flex: 1;
+      font-size: 11px;
+    }
+
+    .unit-count {
+      font-size: 9px;
+      padding: 2px 6px;
+      border-radius: 8px;
+      background: var(--vscode-badge-background);
+    }
+
+    .unit-content {
+      max-height: 500px;
+      overflow: hidden;
+      transition: max-height 0.3s ease;
+    }
+
+    .unit-item.collapsed .unit-content {
+      max-height: 0;
+    }
+
+    .story-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 12px 6px 44px;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .story-item:hover {
+      background: var(--vscode-list-hoverBackground);
+    }
+
+    .story-status {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      border: 2px solid var(--vscode-input-border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 8px;
+    }
+
+    .story-status.complete {
+      background: var(--status-complete);
+      border-color: var(--status-complete);
+      color: white;
+    }
+
+    .story-name {
+      font-size: 11px;
+    }
+
+    .story-name.complete {
+      color: var(--vscode-descriptionForeground);
+    }
+  </style>
+</head>
+<body>
+  <div class="sidebar" id="sidebar">
+    <div class="header">
+      <span class="header-title">SpecsMD</span>
+      <div class="header-actions">
+        <button type="button" class="icon-btn" title="Refresh">&#8635;</button>
+        <button type="button" class="icon-btn" title="Settings">&#9881;</button>
+      </div>
+    </div>
+
+    <!-- Main View Tabs -->
+    <div class="view-tabs">
+      <button type="button" class="view-tab" onclick="switchView('specs')">
+        &#128203; Specs
+      </button>
+      <button type="button" class="view-tab active" onclick="switchView('bolts')">
+        &#9889; Bolts
+      </button>
+    </div>
+
+    <!-- =========== SPECS VIEW =========== -->
+    <div class="view-container" id="specs-view">
+      <div class="filter-bar">
+        <select class="filter-dropdown">
+          <option>All Status</option>
+          <option>In Progress</option>
+          <option>Completed</option>
+        </select>
+      </div>
+      <div class="specs-content">
+        <div class="intent-item" id="intent-1">
+          <div class="intent-header" onclick="toggleIntent('intent-1')">
+            <span class="intent-expand">&#9660;</span>
+            <span class="intent-icon">&#128203;</span>
+            <div class="intent-info">
+              <div class="intent-name">001-admin-panel</div>
+              <div class="intent-meta">3 units | 14 stories</div>
+            </div>
+            <div class="intent-progress">
+              <div class="progress-bar-mini">
+                <div class="progress-bar-mini-fill" style="width: 35%"></div>
+              </div>
+              <span class="progress-text">35%</span>
+            </div>
+          </div>
+          <div class="intent-content">
+            <div class="unit-item" id="unit-1">
+              <div class="unit-header" onclick="toggleUnit('unit-1')">
+                <span class="unit-expand">&#9660;</span>
+                <span class="unit-name">user-management</span>
+                <span class="unit-count">4</span>
+              </div>
+              <div class="unit-content">
+                <div class="story-item">
+                  <div class="story-status complete">&#10003;</div>
+                  <span class="story-name complete">001-create-user</span>
+                </div>
+                <div class="story-item">
+                  <div class="story-status complete">&#10003;</div>
+                  <span class="story-name complete">002-view-user-list</span>
+                </div>
+                <div class="story-item">
+                  <div class="story-status"></div>
+                  <span class="story-name">003-update-user</span>
+                </div>
+                <div class="story-item">
+                  <div class="story-status"></div>
+                  <span class="story-name">004-delete-user</span>
+                </div>
+              </div>
+            </div>
+            <div class="unit-item collapsed" id="unit-2">
+              <div class="unit-header" onclick="toggleUnit('unit-2')">
+                <span class="unit-expand">&#9660;</span>
+                <span class="unit-name">role-permissions</span>
+                <span class="unit-count">6</span>
+              </div>
+              <div class="unit-content">
+                <div class="story-item">
+                  <div class="story-status complete">&#10003;</div>
+                  <span class="story-name complete">001-create-role</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- =========== BOLTS VIEW =========== -->
+    <div class="view-container active" id="bolts-view">
+      <div class="filter-bar">
+        <select class="filter-dropdown">
+          <option>All Intents</option>
+          <option>001-admin-panel</option>
+        </select>
+        <div class="focus-toggle active" onclick="toggleFocusMode()">
+          <span class="focus-toggle-icon">&#127919;</span>
+          <span class="focus-toggle-label">Focus</span>
+        </div>
+      </div>
+
+      <!-- Focus Banner -->
+      <div class="focus-banner visible" id="focus-banner">
+        <div class="focus-banner-title">&#127919; Focus Mode Active</div>
+        <div class="focus-banner-text">In-progress bolts are shown at the top</div>
+      </div>
+
+      <div class="bolts-content">
+        <!-- In Progress Section -->
+        <div class="focus-section visible" id="in-progress-section">
+          <div class="focus-section-header">
+            <span class="focus-section-icon">&#128293;</span>
+            <span class="focus-section-title active">In Progress</span>
+            <span class="focus-section-count active">1</span>
+          </div>
+
+          <!-- Current Focus Card -->
+          <div class="current-focus">
+            <div class="current-focus-card">
+              <div class="current-focus-header">
+                <div>
+                  <div class="current-focus-title">user-management-service-1</div>
+                  <div class="current-focus-subtitle">DDD | Stage: design | 2/4 stories</div>
+                </div>
+                <div class="current-focus-badge">Active</div>
+              </div>
+              <div class="current-focus-body">
+                <div class="stage-progress">
+                  <div class="stage-node complete"></div>
+                  <div class="stage-node active"></div>
+                  <div class="stage-node"></div>
+                  <div class="stage-node"></div>
+                  <div class="stage-node"></div>
+                </div>
+                <div class="stage-labels">
+                  <span class="stage-label complete">M</span>
+                  <span class="stage-label active">D</span>
+                  <span class="stage-label">A</span>
+                  <span class="stage-label">I</span>
+                  <span class="stage-label">T</span>
+                </div>
+                <div class="current-focus-actions">
+                  <button type="button" class="action-btn action-btn-primary">&#9654; Continue Design</button>
+                  <button type="button" class="action-btn action-btn-secondary">Files</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Completed Section -->
+        <div class="focus-section visible" id="completed-section">
+          <div class="focus-section-header">
+            <span class="focus-section-icon">&#10003;</span>
+            <span class="focus-section-title" style="color: var(--status-complete)">Completed</span>
+            <span class="focus-section-count">1</span>
+          </div>
+          <div class="bolt-list">
+            <div class="bolt-item" onclick="toggleBoltItem(this)">
+              <div class="bolt-status-indicator complete"></div>
+              <div class="bolt-info">
+                <div class="bolt-name">role-permission-service-1</div>
+                <div class="bolt-meta">DDD | 6/6 stories</div>
+              </div>
+              <div class="bolt-stages">
+                <div class="bolt-stage complete">M</div>
+                <div class="bolt-stage complete">D</div>
+                <div class="bolt-stage complete">A</div>
+                <div class="bolt-stage complete">I</div>
+                <div class="bolt-stage complete">T</div>
+              </div>
+              <span class="bolt-expand">&#9660;</span>
+            </div>
+            <div class="bolt-expanded">
+              <div class="bolt-expanded-inner">
+                <div class="bolt-expanded-actions">
+                  <button type="button" class="bolt-expanded-btn bolt-expanded-btn-secondary">View Files</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Backlog Section -->
+        <div class="focus-section backlog-section visible" id="backlog-section">
+          <div class="focus-section-header">
+            <span class="focus-section-icon">&#128203;</span>
+            <span class="focus-section-title">Backlog</span>
+            <span class="focus-section-count">4</span>
+          </div>
+          <div class="bolt-list">
+            <div class="bolt-item" onclick="toggleBoltItem(this)">
+              <div class="bolt-status-indicator pending"></div>
+              <div class="bolt-info">
+                <div class="bolt-name">admin-panel-ui-1</div>
+                <div class="bolt-meta">Simple | 0/4 stories</div>
+              </div>
+              <div class="bolt-stages">
+                <div class="bolt-stage pending">M</div>
+                <div class="bolt-stage pending">D</div>
+                <div class="bolt-stage pending">A</div>
+                <div class="bolt-stage pending">I</div>
+                <div class="bolt-stage pending">T</div>
+              </div>
+              <span class="bolt-expand">&#9660;</span>
+            </div>
+            <div class="bolt-expanded">
+              <div class="bolt-expanded-inner">
+                <div class="bolt-expanded-actions">
+                  <button type="button" class="bolt-expanded-btn bolt-expanded-btn-primary">Start Bolt</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="bolt-item" onclick="toggleBoltItem(this)">
+              <div class="bolt-status-indicator pending"></div>
+              <div class="bolt-info">
+                <div class="bolt-name">admin-panel-ui-2</div>
+                <div class="bolt-meta">Simple | 0/4 stories</div>
+              </div>
+              <div class="bolt-stages">
+                <div class="bolt-stage pending">M</div>
+                <div class="bolt-stage pending">D</div>
+                <div class="bolt-stage pending">A</div>
+                <div class="bolt-stage pending">I</div>
+                <div class="bolt-stage pending">T</div>
+              </div>
+              <span class="bolt-expand">&#9660;</span>
+            </div>
+            <div class="bolt-expanded">
+              <div class="bolt-expanded-inner">
+                <div class="bolt-expanded-actions">
+                  <button type="button" class="bolt-expanded-btn bolt-expanded-btn-primary">Start Bolt</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="bolt-item" onclick="toggleBoltItem(this)">
+              <div class="bolt-status-indicator pending"></div>
+              <div class="bolt-info">
+                <div class="bolt-name">audit-service-1</div>
+                <div class="bolt-meta">DDD | 0/2 stories</div>
+              </div>
+              <div class="bolt-stages">
+                <div class="bolt-stage pending">M</div>
+                <div class="bolt-stage pending">D</div>
+                <div class="bolt-stage pending">A</div>
+                <div class="bolt-stage pending">I</div>
+                <div class="bolt-stage pending">T</div>
+              </div>
+              <span class="bolt-expand">&#9660;</span>
+            </div>
+            <div class="bolt-expanded">
+              <div class="bolt-expanded-inner">
+                <div class="bolt-expanded-actions">
+                  <button type="button" class="bolt-expanded-btn bolt-expanded-btn-primary">Start Bolt</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="bolt-item" onclick="toggleBoltItem(this)">
+              <div class="bolt-status-indicator pending"></div>
+              <div class="bolt-info">
+                <div class="bolt-name">user-management-service-2</div>
+                <div class="bolt-meta">DDD | 0/4 stories</div>
+              </div>
+              <div class="bolt-stages">
+                <div class="bolt-stage pending">M</div>
+                <div class="bolt-stage pending">D</div>
+                <div class="bolt-stage pending">A</div>
+                <div class="bolt-stage pending">I</div>
+                <div class="bolt-stage pending">T</div>
+              </div>
+              <span class="bolt-expand">&#9660;</span>
+            </div>
+            <div class="bolt-expanded">
+              <div class="bolt-expanded-inner">
+                <div class="bolt-expanded-actions">
+                  <button type="button" class="bolt-expanded-btn bolt-expanded-btn-primary">Start Bolt</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="theme-toggle">
+      <button type="button" class="theme-btn active" onclick="setTheme('dark')">Dark</button>
+      <button type="button" class="theme-btn" onclick="setTheme('light')">Light</button>
+    </div>
+  </div>
+
+  <script>
+    function switchView(view) {
+      document.querySelectorAll('.view-tab').forEach(tab => tab.classList.remove('active'));
+      event.target.classList.add('active');
+      document.querySelectorAll('.view-container').forEach(v => v.classList.remove('active'));
+      document.getElementById(view + '-view').classList.add('active');
+    }
+
+    function toggleFocusMode() {
+      const toggle = document.querySelector('.focus-toggle');
+      const banner = document.getElementById('focus-banner');
+      const sections = document.querySelectorAll('.focus-section');
+
+      toggle.classList.toggle('active');
+      banner.classList.toggle('visible');
+
+      // In a real implementation, this would reorganize the bolt list
+    }
+
+    function toggleIntent(id) {
+      document.getElementById(id).classList.toggle('collapsed');
+    }
+
+    function toggleUnit(id) {
+      document.getElementById(id).classList.toggle('collapsed');
+    }
+
+    function toggleBoltItem(item) {
+      const wasExpanded = item.classList.contains('expanded');
+      document.querySelectorAll('.bolt-item').forEach(b => b.classList.remove('expanded'));
+      if (!wasExpanded) {
+        item.classList.add('expanded');
+      }
+    }
+
+    function setTheme(theme) {
+      const sidebar = document.getElementById('sidebar');
+      const buttons = document.querySelectorAll('.theme-btn');
+      buttons.forEach(btn => btn.classList.remove('active'));
+      event.target.classList.add('active');
+      if (theme === 'light') {
+        sidebar.classList.add('theme-light');
+      } else {
+        sidebar.classList.remove('theme-light');
+      }
+    }
+  </script>
+</body>
+</html>

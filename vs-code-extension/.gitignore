@@ -1,0 +1,28 @@
+# Dependencies
+node_modules/
+
+# Compiled output
+out/
+out-test/
+dist/
+*.js.map
+
+# VS Code extension
+*.vsix
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+*.swp
+*.swo
+
+# Test output
+coverage/
+.nyc_output/
+
+# Logs
+*.log
+npm-debug.log*

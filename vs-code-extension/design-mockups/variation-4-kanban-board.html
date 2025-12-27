@@ -1,0 +1,858 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Variation 4: Kanban Board View</title>
+  <style>
+    /* VS Code Theme Variables */
+    :root {
+      /* Dark Theme (Default) */
+      --vscode-editor-background: #1e1e1e;
+      --vscode-editor-foreground: #cccccc;
+      --vscode-sideBar-background: #252526;
+      --vscode-sideBarSectionHeader-background: #2d2d2d;
+      --vscode-input-background: #3c3c3c;
+      --vscode-input-foreground: #cccccc;
+      --vscode-input-border: #3c3c3c;
+      --vscode-button-background: #0e639c;
+      --vscode-button-foreground: #ffffff;
+      --vscode-button-hoverBackground: #1177bb;
+      --vscode-list-hoverBackground: #2a2d2e;
+      --vscode-list-activeSelectionBackground: #094771;
+      --vscode-focusBorder: #007fd4;
+      --vscode-badge-background: #4d4d4d;
+      --vscode-badge-foreground: #ffffff;
+      --vscode-progressBar-background: #0e70c0;
+      --vscode-descriptionForeground: #858585;
+      --vscode-errorForeground: #f48771;
+      --vscode-gitDecoration-modifiedResourceForeground: #e2c08d;
+      --vscode-gitDecoration-addedResourceForeground: #81b88b;
+      --vscode-gitDecoration-untrackedResourceForeground: #73c991;
+
+      /* Custom status colors */
+      --status-complete: #22c55e;
+      --status-active: #f97316;
+      --status-pending: #6b7280;
+      --status-blocked: #ef4444;
+      --accent-primary: #f97316;
+    }
+
+    /* Light Theme */
+    .theme-light {
+      --vscode-editor-background: #ffffff;
+      --vscode-editor-foreground: #333333;
+      --vscode-sideBar-background: #f3f3f3;
+      --vscode-sideBarSectionHeader-background: #e8e8e8;
+      --vscode-input-background: #ffffff;
+      --vscode-input-border: #cecece;
+      --vscode-list-hoverBackground: #e8e8e8;
+      --vscode-descriptionForeground: #717171;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--vscode-editor-background);
+      color: var(--vscode-editor-foreground);
+      font-size: 13px;
+      line-height: 1.4;
+    }
+
+    .sidebar {
+      width: 320px;
+      min-height: 100vh;
+      background: var(--vscode-sideBar-background);
+      border-right: 1px solid var(--vscode-input-border);
+    }
+
+    .header {
+      padding: 10px 12px;
+      background: var(--vscode-sideBarSectionHeader-background);
+      border-bottom: 1px solid var(--vscode-input-border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .header-title {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 4px;
+    }
+
+    .icon-btn {
+      background: none;
+      border: none;
+      color: var(--vscode-descriptionForeground);
+      cursor: pointer;
+      padding: 4px 6px;
+      border-radius: 4px;
+      font-size: 14px;
+      transition: all 0.15s;
+    }
+
+    .icon-btn:hover {
+      background: var(--vscode-list-hoverBackground);
+      color: var(--vscode-editor-foreground);
+    }
+
+    /* Theme Toggle */
+    .theme-toggle {
+      padding: 8px 12px;
+      background: var(--vscode-editor-background);
+      border-bottom: 1px solid var(--vscode-input-border);
+      display: flex;
+      gap: 8px;
+    }
+
+    .theme-btn {
+      flex: 1;
+      padding: 6px;
+      font-size: 10px;
+      border: 1px solid var(--vscode-input-border);
+      background: var(--vscode-input-background);
+      color: var(--vscode-editor-foreground);
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .theme-btn.active {
+      background: var(--accent-primary);
+      border-color: var(--accent-primary);
+      color: white;
+    }
+
+    /* Kanban Columns */
+    .kanban-container {
+      padding: 8px;
+    }
+
+    .kanban-column {
+      margin-bottom: 12px;
+      border-radius: 6px;
+      overflow: hidden;
+      border: 1px solid var(--vscode-input-border);
+    }
+
+    .kanban-header {
+      padding: 10px 12px;
+      background: var(--vscode-sideBarSectionHeader-background);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      user-select: none;
+      transition: background 0.15s;
+    }
+
+    .kanban-header:hover {
+      background: var(--vscode-list-hoverBackground);
+    }
+
+    .kanban-expand {
+      font-size: 10px;
+      color: var(--vscode-descriptionForeground);
+      transition: transform 0.2s;
+    }
+
+    .kanban-column.collapsed .kanban-expand {
+      transform: rotate(-90deg);
+    }
+
+    .kanban-indicator {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+    }
+
+    .indicator-active { background: var(--status-active); }
+    .indicator-pending { background: var(--status-pending); }
+    .indicator-complete { background: var(--status-complete); }
+
+    .kanban-title {
+      flex: 1;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .kanban-count {
+      font-size: 10px;
+      padding: 2px 8px;
+      border-radius: 10px;
+      background: var(--vscode-badge-background);
+      color: var(--vscode-badge-foreground);
+    }
+
+    .kanban-content {
+      padding: 8px;
+      background: var(--vscode-editor-background);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      max-height: 400px;
+      overflow-y: auto;
+      transition: max-height 0.3s ease, padding 0.3s ease;
+    }
+
+    .kanban-column.collapsed .kanban-content {
+      max-height: 0;
+      padding: 0 8px;
+      overflow: hidden;
+    }
+
+    /* Bolt Card */
+    .bolt-card {
+      background: var(--vscode-sideBar-background);
+      border: 1px solid var(--vscode-input-border);
+      border-radius: 6px;
+      overflow: hidden;
+      transition: all 0.15s;
+    }
+
+    .bolt-card:hover {
+      border-color: var(--accent-primary);
+    }
+
+    .bolt-card.expanded {
+      border-color: var(--accent-primary);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    }
+
+    .bolt-card-header {
+      padding: 10px 12px;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .bolt-card-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .bolt-name {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--vscode-editor-foreground);
+    }
+
+    .bolt-badge {
+      font-size: 9px;
+      padding: 2px 6px;
+      border-radius: 3px;
+      background: var(--vscode-badge-background);
+      color: var(--vscode-descriptionForeground);
+    }
+
+    /* Stage Squares */
+    .stage-squares {
+      display: flex;
+      gap: 3px;
+    }
+
+    .stage-square {
+      width: 22px;
+      height: 22px;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 9px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.15s, box-shadow 0.15s;
+      position: relative;
+    }
+
+    .stage-square:hover {
+      transform: scale(1.15);
+      z-index: 1;
+    }
+
+    .stage-complete {
+      background: var(--status-complete);
+      color: white;
+    }
+
+    .stage-active {
+      background: var(--status-active);
+      color: white;
+      box-shadow: 0 0 8px rgba(249, 115, 22, 0.5);
+      animation: pulse 2s infinite;
+    }
+
+    .stage-pending {
+      background: var(--vscode-input-background);
+      color: var(--vscode-descriptionForeground);
+      border: 1px dashed var(--vscode-input-border);
+    }
+
+    .stage-blocked {
+      background: var(--status-blocked);
+      color: white;
+    }
+
+    @keyframes pulse {
+      0%, 100% { box-shadow: 0 0 8px rgba(249, 115, 22, 0.5); }
+      50% { box-shadow: 0 0 16px rgba(249, 115, 22, 0.8); }
+    }
+
+    /* Tooltip */
+    .stage-square::after {
+      content: attr(data-tooltip);
+      position: absolute;
+      bottom: calc(100% + 4px);
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--vscode-editor-background);
+      border: 1px solid var(--vscode-input-border);
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 10px;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.15s;
+      z-index: 10;
+    }
+
+    .stage-square:hover::after {
+      opacity: 1;
+    }
+
+    /* Expanded Content */
+    .bolt-card-content {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease;
+      border-top: 1px solid transparent;
+    }
+
+    .bolt-card.expanded .bolt-card-content {
+      max-height: 500px;
+      border-top-color: var(--vscode-input-border);
+    }
+
+    .bolt-card-inner {
+      padding: 12px;
+    }
+
+    .progress-section {
+      margin-bottom: 12px;
+    }
+
+    .progress-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 10px;
+      color: var(--vscode-descriptionForeground);
+      margin-bottom: 4px;
+    }
+
+    .progress-bar {
+      height: 4px;
+      background: var(--vscode-input-background);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--status-complete) 0%, var(--status-active) 100%);
+      border-radius: 2px;
+      transition: width 0.3s;
+    }
+
+    /* Stories List */
+    .stories-section {
+      margin-bottom: 12px;
+    }
+
+    .stories-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .stories-title {
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--vscode-descriptionForeground);
+      text-transform: uppercase;
+    }
+
+    .stories-toggle {
+      font-size: 9px;
+      color: var(--accent-primary);
+      cursor: pointer;
+      background: none;
+      border: none;
+      padding: 2px 6px;
+    }
+
+    .stories-toggle:hover {
+      text-decoration: underline;
+    }
+
+    .stories-list {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease;
+    }
+
+    .stories-list.expanded {
+      max-height: 300px;
+    }
+
+    .story-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 8px;
+      background: var(--vscode-editor-background);
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .story-item:hover {
+      background: var(--vscode-list-hoverBackground);
+    }
+
+    .story-check {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      border: 2px solid var(--vscode-input-border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 8px;
+      transition: all 0.15s;
+    }
+
+    .story-check.done {
+      background: var(--status-complete);
+      border-color: var(--status-complete);
+      color: white;
+    }
+
+    .story-name {
+      flex: 1;
+      font-size: 11px;
+      color: var(--vscode-editor-foreground);
+    }
+
+    .story-name.done {
+      text-decoration: line-through;
+      color: var(--vscode-descriptionForeground);
+    }
+
+    /* Actions */
+    .bolt-actions {
+      display: flex;
+      gap: 6px;
+    }
+
+    .action-btn {
+      flex: 1;
+      padding: 8px;
+      font-size: 10px;
+      font-weight: 500;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .action-btn-primary {
+      background: var(--accent-primary);
+      color: white;
+    }
+
+    .action-btn-primary:hover {
+      filter: brightness(1.1);
+    }
+
+    .action-btn-secondary {
+      background: var(--vscode-input-background);
+      color: var(--vscode-editor-foreground);
+      border: 1px solid var(--vscode-input-border);
+    }
+
+    .action-btn-secondary:hover {
+      background: var(--vscode-list-hoverBackground);
+    }
+
+    /* Empty State */
+    .empty-state {
+      padding: 16px;
+      text-align: center;
+      color: var(--vscode-descriptionForeground);
+      font-size: 11px;
+      font-style: italic;
+    }
+  </style>
+</head>
+<body>
+  <div class="sidebar" id="sidebar">
+    <div class="header">
+      <span class="header-title">SpecsMD Kanban</span>
+      <div class="header-actions">
+        <button type="button" class="icon-btn" title="Refresh">&#8635;</button>
+        <button type="button" class="icon-btn" title="Settings">&#9881;</button>
+      </div>
+    </div>
+
+    <div class="theme-toggle">
+      <button type="button" class="theme-btn active" onclick="setTheme('dark')">Dark</button>
+      <button type="button" class="theme-btn" onclick="setTheme('light')">Light</button>
+    </div>
+
+    <div class="kanban-container">
+      <!-- In Progress Column -->
+      <div class="kanban-column" id="col-active">
+        <div class="kanban-header" onclick="toggleColumn('col-active')">
+          <span class="kanban-expand">&#9660;</span>
+          <div class="kanban-indicator indicator-active"></div>
+          <span class="kanban-title">In Progress</span>
+          <span class="kanban-count">1</span>
+        </div>
+        <div class="kanban-content">
+          <div class="bolt-card" id="bolt-1">
+            <div class="bolt-card-header" onclick="toggleBolt('bolt-1')">
+              <div class="bolt-card-top">
+                <span class="bolt-name">user-management-service-1</span>
+                <span class="bolt-badge">DDD</span>
+              </div>
+              <div class="stage-squares">
+                <div class="stage-square stage-complete" data-tooltip="Model">M</div>
+                <div class="stage-square stage-active" data-tooltip="Design">D</div>
+                <div class="stage-square stage-pending" data-tooltip="ADR">A</div>
+                <div class="stage-square stage-pending" data-tooltip="Implement">I</div>
+                <div class="stage-square stage-pending" data-tooltip="Test">T</div>
+              </div>
+            </div>
+            <div class="bolt-card-content">
+              <div class="bolt-card-inner">
+                <div class="progress-section">
+                  <div class="progress-label">
+                    <span>Stage 2 of 5</span>
+                    <span>40%</span>
+                  </div>
+                  <div class="progress-bar">
+                    <div class="progress-fill" style="width: 40%"></div>
+                  </div>
+                </div>
+                <div class="stories-section">
+                  <div class="stories-header">
+                    <span class="stories-title">Stories (2/4)</span>
+                    <button type="button" class="stories-toggle" onclick="toggleStories(event, 'bolt-1')">Show</button>
+                  </div>
+                  <div class="stories-list" id="stories-bolt-1">
+                    <div class="story-item">
+                      <div class="story-check done">&#10003;</div>
+                      <span class="story-name done">001-create-user</span>
+                    </div>
+                    <div class="story-item">
+                      <div class="story-check done">&#10003;</div>
+                      <span class="story-name done">002-view-user-list</span>
+                    </div>
+                    <div class="story-item">
+                      <div class="story-check"></div>
+                      <span class="story-name">003-update-user</span>
+                    </div>
+                    <div class="story-item">
+                      <div class="story-check"></div>
+                      <span class="story-name">004-delete-user</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="bolt-actions">
+                  <button type="button" class="action-btn action-btn-primary">Continue Design</button>
+                  <button type="button" class="action-btn action-btn-secondary">Files</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pending Column -->
+      <div class="kanban-column" id="col-pending">
+        <div class="kanban-header" onclick="toggleColumn('col-pending')">
+          <span class="kanban-expand">&#9660;</span>
+          <div class="kanban-indicator indicator-pending"></div>
+          <span class="kanban-title">Pending</span>
+          <span class="kanban-count">4</span>
+        </div>
+        <div class="kanban-content">
+          <div class="bolt-card" id="bolt-2">
+            <div class="bolt-card-header" onclick="toggleBolt('bolt-2')">
+              <div class="bolt-card-top">
+                <span class="bolt-name">admin-panel-ui-1</span>
+                <span class="bolt-badge">Simple</span>
+              </div>
+              <div class="stage-squares">
+                <div class="stage-square stage-pending" data-tooltip="Model">M</div>
+                <div class="stage-square stage-pending" data-tooltip="Design">D</div>
+                <div class="stage-square stage-pending" data-tooltip="ADR">A</div>
+                <div class="stage-square stage-pending" data-tooltip="Implement">I</div>
+                <div class="stage-square stage-pending" data-tooltip="Test">T</div>
+              </div>
+            </div>
+            <div class="bolt-card-content">
+              <div class="bolt-card-inner">
+                <div class="progress-section">
+                  <div class="progress-label">
+                    <span>Not started</span>
+                    <span>0%</span>
+                  </div>
+                  <div class="progress-bar">
+                    <div class="progress-fill" style="width: 0%"></div>
+                  </div>
+                </div>
+                <div class="stories-section">
+                  <div class="stories-header">
+                    <span class="stories-title">Stories (0/4)</span>
+                    <button type="button" class="stories-toggle" onclick="toggleStories(event, 'bolt-2')">Show</button>
+                  </div>
+                  <div class="stories-list" id="stories-bolt-2">
+                    <div class="story-item">
+                      <div class="story-check"></div>
+                      <span class="story-name">001-panel-layout</span>
+                    </div>
+                    <div class="story-item">
+                      <div class="story-check"></div>
+                      <span class="story-name">002-navigation</span>
+                    </div>
+                    <div class="story-item">
+                      <div class="story-check"></div>
+                      <span class="story-name">003-dashboard</span>
+                    </div>
+                    <div class="story-item">
+                      <div class="story-check"></div>
+                      <span class="story-name">004-settings</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="bolt-actions">
+                  <button type="button" class="action-btn action-btn-primary">Start Bolt</button>
+                  <button type="button" class="action-btn action-btn-secondary">Preview</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="bolt-card" id="bolt-3">
+            <div class="bolt-card-header" onclick="toggleBolt('bolt-3')">
+              <div class="bolt-card-top">
+                <span class="bolt-name">admin-panel-ui-2</span>
+                <span class="bolt-badge">Simple</span>
+              </div>
+              <div class="stage-squares">
+                <div class="stage-square stage-pending" data-tooltip="Model">M</div>
+                <div class="stage-square stage-pending" data-tooltip="Design">D</div>
+                <div class="stage-square stage-pending" data-tooltip="ADR">A</div>
+                <div class="stage-square stage-pending" data-tooltip="Implement">I</div>
+                <div class="stage-square stage-pending" data-tooltip="Test">T</div>
+              </div>
+            </div>
+            <div class="bolt-card-content">
+              <div class="bolt-card-inner">
+                <div class="bolt-actions">
+                  <button type="button" class="action-btn action-btn-primary">Start Bolt</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="bolt-card" id="bolt-4">
+            <div class="bolt-card-header" onclick="toggleBolt('bolt-4')">
+              <div class="bolt-card-top">
+                <span class="bolt-name">audit-service-1</span>
+                <span class="bolt-badge">DDD</span>
+              </div>
+              <div class="stage-squares">
+                <div class="stage-square stage-pending" data-tooltip="Model">M</div>
+                <div class="stage-square stage-pending" data-tooltip="Design">D</div>
+                <div class="stage-square stage-pending" data-tooltip="ADR">A</div>
+                <div class="stage-square stage-pending" data-tooltip="Implement">I</div>
+                <div class="stage-square stage-pending" data-tooltip="Test">T</div>
+              </div>
+            </div>
+            <div class="bolt-card-content">
+              <div class="bolt-card-inner">
+                <div class="bolt-actions">
+                  <button type="button" class="action-btn action-btn-primary">Start Bolt</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="bolt-card" id="bolt-5">
+            <div class="bolt-card-header" onclick="toggleBolt('bolt-5')">
+              <div class="bolt-card-top">
+                <span class="bolt-name">user-management-service-2</span>
+                <span class="bolt-badge">DDD</span>
+              </div>
+              <div class="stage-squares">
+                <div class="stage-square stage-pending" data-tooltip="Model">M</div>
+                <div class="stage-square stage-pending" data-tooltip="Design">D</div>
+                <div class="stage-square stage-pending" data-tooltip="ADR">A</div>
+                <div class="stage-square stage-pending" data-tooltip="Implement">I</div>
+                <div class="stage-square stage-pending" data-tooltip="Test">T</div>
+              </div>
+            </div>
+            <div class="bolt-card-content">
+              <div class="bolt-card-inner">
+                <div class="bolt-actions">
+                  <button type="button" class="action-btn action-btn-primary">Start Bolt</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Complete Column -->
+      <div class="kanban-column" id="col-complete">
+        <div class="kanban-header" onclick="toggleColumn('col-complete')">
+          <span class="kanban-expand">&#9660;</span>
+          <div class="kanban-indicator indicator-complete"></div>
+          <span class="kanban-title">Complete</span>
+          <span class="kanban-count">1</span>
+        </div>
+        <div class="kanban-content">
+          <div class="bolt-card" id="bolt-6">
+            <div class="bolt-card-header" onclick="toggleBolt('bolt-6')">
+              <div class="bolt-card-top">
+                <span class="bolt-name">role-permission-service-1</span>
+                <span class="bolt-badge">DDD</span>
+              </div>
+              <div class="stage-squares">
+                <div class="stage-square stage-complete" data-tooltip="Model">M</div>
+                <div class="stage-square stage-complete" data-tooltip="Design">D</div>
+                <div class="stage-square stage-complete" data-tooltip="ADR">A</div>
+                <div class="stage-square stage-complete" data-tooltip="Implement">I</div>
+                <div class="stage-square stage-complete" data-tooltip="Test">T</div>
+              </div>
+            </div>
+            <div class="bolt-card-content">
+              <div class="bolt-card-inner">
+                <div class="progress-section">
+                  <div class="progress-label">
+                    <span>Completed</span>
+                    <span>100%</span>
+                  </div>
+                  <div class="progress-bar">
+                    <div class="progress-fill" style="width: 100%"></div>
+                  </div>
+                </div>
+                <div class="stories-section">
+                  <div class="stories-header">
+                    <span class="stories-title">Stories (6/6)</span>
+                    <button type="button" class="stories-toggle" onclick="toggleStories(event, 'bolt-6')">Show</button>
+                  </div>
+                  <div class="stories-list" id="stories-bolt-6">
+                    <div class="story-item">
+                      <div class="story-check done">&#10003;</div>
+                      <span class="story-name done">001-create-role</span>
+                    </div>
+                    <div class="story-item">
+                      <div class="story-check done">&#10003;</div>
+                      <span class="story-name done">002-manage-permissions</span>
+                    </div>
+                    <div class="story-item">
+                      <div class="story-check done">&#10003;</div>
+                      <span class="story-name done">003-view-roles</span>
+                    </div>
+                    <div class="story-item">
+                      <div class="story-check done">&#10003;</div>
+                      <span class="story-name done">004-delete-role</span>
+                    </div>
+                    <div class="story-item">
+                      <div class="story-check done">&#10003;</div>
+                      <span class="story-name done">005-view-role-users</span>
+                    </div>
+                    <div class="story-item">
+                      <div class="story-check done">&#10003;</div>
+                      <span class="story-name done">006-effective-permissions</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="bolt-actions">
+                  <button type="button" class="action-btn action-btn-secondary">View Files</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function toggleColumn(id) {
+      const col = document.getElementById(id);
+      col.classList.toggle('collapsed');
+    }
+
+    function toggleBolt(id) {
+      const bolt = document.getElementById(id);
+      const wasExpanded = bolt.classList.contains('expanded');
+
+      // Collapse all bolts first
+      document.querySelectorAll('.bolt-card').forEach(b => b.classList.remove('expanded'));
+
+      // Toggle the clicked one
+      if (!wasExpanded) {
+        bolt.classList.add('expanded');
+      }
+    }
+
+    function toggleStories(event, boltId) {
+      event.stopPropagation();
+      const list = document.getElementById('stories-' + boltId);
+      const btn = event.target;
+
+      list.classList.toggle('expanded');
+      btn.textContent = list.classList.contains('expanded') ? 'Hide' : 'Show';
+    }
+
+    function setTheme(theme) {
+      const sidebar = document.getElementById('sidebar');
+      const buttons = document.querySelectorAll('.theme-btn');
+
+      buttons.forEach(btn => btn.classList.remove('active'));
+      event.target.classList.add('active');
+
+      if (theme === 'light') {
+        sidebar.classList.add('theme-light');
+      } else {
+        sidebar.classList.remove('theme-light');
+      }
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,932 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Variation 7: Heatmap Grid View</title>
+  <style>
+    /* VS Code Theme Variables */
+    :root {
+      --vscode-editor-background: #1e1e1e;
+      --vscode-editor-foreground: #cccccc;
+      --vscode-sideBar-background: #252526;
+      --vscode-sideBarSectionHeader-background: #2d2d2d;
+      --vscode-input-background: #3c3c3c;
+      --vscode-input-border: #3c3c3c;
+      --vscode-list-hoverBackground: #2a2d2e;
+      --vscode-badge-background: #4d4d4d;
+      --vscode-badge-foreground: #ffffff;
+      --vscode-descriptionForeground: #858585;
+
+      --status-complete: #22c55e;
+      --status-active: #f97316;
+      --status-pending: #6b7280;
+      --status-blocked: #ef4444;
+      --accent-primary: #f97316;
+
+      /* Heatmap colors */
+      --heat-0: #2d2d2d;
+      --heat-1: rgba(249, 115, 22, 0.3);
+      --heat-2: rgba(249, 115, 22, 0.5);
+      --heat-3: rgba(249, 115, 22, 0.7);
+      --heat-4: rgba(249, 115, 22, 0.9);
+      --heat-5: #22c55e;
+    }
+
+    .theme-light {
+      --vscode-editor-background: #ffffff;
+      --vscode-editor-foreground: #333333;
+      --vscode-sideBar-background: #f3f3f3;
+      --vscode-sideBarSectionHeader-background: #e8e8e8;
+      --vscode-input-background: #ffffff;
+      --vscode-input-border: #cecece;
+      --vscode-list-hoverBackground: #e8e8e8;
+      --vscode-descriptionForeground: #717171;
+      --heat-0: #e5e5e5;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--vscode-editor-background);
+      color: var(--vscode-editor-foreground);
+      font-size: 13px;
+    }
+
+    .sidebar {
+      width: 340px;
+      min-height: 100vh;
+      background: var(--vscode-sideBar-background);
+      border-right: 1px solid var(--vscode-input-border);
+    }
+
+    .header {
+      padding: 10px 12px;
+      background: var(--vscode-sideBarSectionHeader-background);
+      border-bottom: 1px solid var(--vscode-input-border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .header-title {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 4px;
+    }
+
+    .icon-btn {
+      background: none;
+      border: none;
+      color: var(--vscode-descriptionForeground);
+      cursor: pointer;
+      padding: 4px 6px;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+
+    .icon-btn:hover {
+      background: var(--vscode-list-hoverBackground);
+      color: var(--vscode-editor-foreground);
+    }
+
+    /* Theme Toggle */
+    .theme-toggle {
+      padding: 8px 12px;
+      background: var(--vscode-editor-background);
+      border-bottom: 1px solid var(--vscode-input-border);
+      display: flex;
+      gap: 8px;
+    }
+
+    .theme-btn {
+      flex: 1;
+      padding: 6px;
+      font-size: 10px;
+      border: 1px solid var(--vscode-input-border);
+      background: var(--vscode-input-background);
+      color: var(--vscode-editor-foreground);
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .theme-btn.active {
+      background: var(--accent-primary);
+      border-color: var(--accent-primary);
+      color: white;
+    }
+
+    /* Overall Progress */
+    .progress-overview {
+      padding: 16px;
+      background: var(--vscode-editor-background);
+      border-bottom: 1px solid var(--vscode-input-border);
+    }
+
+    .progress-title {
+      font-size: 10px;
+      color: var(--vscode-descriptionForeground);
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    .progress-stats {
+      display: flex;
+      gap: 16px;
+      margin-bottom: 12px;
+    }
+
+    .progress-stat {
+      text-align: center;
+    }
+
+    .progress-stat-value {
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--vscode-editor-foreground);
+    }
+
+    .progress-stat-label {
+      font-size: 9px;
+      color: var(--vscode-descriptionForeground);
+    }
+
+    .overall-bar {
+      height: 8px;
+      background: var(--vscode-input-background);
+      border-radius: 4px;
+      overflow: hidden;
+      display: flex;
+    }
+
+    .bar-segment {
+      height: 100%;
+      transition: width 0.3s;
+    }
+
+    .bar-complete {
+      background: var(--status-complete);
+    }
+
+    .bar-active {
+      background: var(--status-active);
+    }
+
+    .bar-pending {
+      background: var(--vscode-input-border);
+    }
+
+    /* Grid Header */
+    .grid-header {
+      display: grid;
+      grid-template-columns: 1fr repeat(5, 36px);
+      gap: 4px;
+      padding: 8px 12px;
+      background: var(--vscode-sideBarSectionHeader-background);
+      border-bottom: 1px solid var(--vscode-input-border);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .grid-header-bolt {
+      font-size: 9px;
+      color: var(--vscode-descriptionForeground);
+      text-transform: uppercase;
+    }
+
+    .grid-header-stage {
+      font-size: 9px;
+      font-weight: 600;
+      color: var(--vscode-descriptionForeground);
+      text-align: center;
+    }
+
+    /* Grid Content */
+    .grid-content {
+      padding: 8px 0;
+    }
+
+    /* Grid Row */
+    .grid-row {
+      display: grid;
+      grid-template-columns: 1fr repeat(5, 36px);
+      gap: 4px;
+      padding: 6px 12px;
+      align-items: center;
+      cursor: pointer;
+      transition: background 0.15s;
+      border-left: 3px solid transparent;
+    }
+
+    .grid-row:hover {
+      background: var(--vscode-list-hoverBackground);
+    }
+
+    .grid-row.selected {
+      background: rgba(249, 115, 22, 0.1);
+      border-left-color: var(--accent-primary);
+    }
+
+    .bolt-cell {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      min-width: 0;
+    }
+
+    .bolt-cell-name {
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--vscode-editor-foreground);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .bolt-cell-meta {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 9px;
+      color: var(--vscode-descriptionForeground);
+    }
+
+    .bolt-cell-badge {
+      padding: 1px 4px;
+      border-radius: 2px;
+      background: var(--vscode-badge-background);
+    }
+
+    /* Heat Cell */
+    .heat-cell {
+      width: 36px;
+      height: 28px;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      font-weight: 600;
+      transition: transform 0.15s, box-shadow 0.15s;
+      cursor: pointer;
+      position: relative;
+    }
+
+    .heat-cell:hover {
+      transform: scale(1.15);
+      z-index: 5;
+    }
+
+    .heat-pending {
+      background: var(--heat-0);
+      color: var(--vscode-descriptionForeground);
+      border: 1px dashed var(--vscode-input-border);
+    }
+
+    .heat-active {
+      background: var(--status-active);
+      color: white;
+      box-shadow: 0 0 10px rgba(249, 115, 22, 0.5);
+      animation: heat-pulse 2s infinite;
+    }
+
+    .heat-complete {
+      background: var(--status-complete);
+      color: white;
+    }
+
+    .heat-blocked {
+      background: var(--status-blocked);
+      color: white;
+    }
+
+    @keyframes heat-pulse {
+      0%, 100% { box-shadow: 0 0 10px rgba(249, 115, 22, 0.5); }
+      50% { box-shadow: 0 0 18px rgba(249, 115, 22, 0.8); }
+    }
+
+    /* Heat Cell Tooltip */
+    .heat-cell::after {
+      content: attr(data-tooltip);
+      position: absolute;
+      bottom: calc(100% + 6px);
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--vscode-editor-background);
+      border: 1px solid var(--vscode-input-border);
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 10px;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.15s;
+      z-index: 100;
+      font-weight: normal;
+    }
+
+    .heat-cell:hover::after {
+      opacity: 1;
+    }
+
+    /* Expanded Detail */
+    .row-detail {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease;
+      background: var(--vscode-editor-background);
+    }
+
+    .grid-row.selected + .row-detail {
+      max-height: 400px;
+    }
+
+    .row-detail-inner {
+      padding: 12px;
+      border-bottom: 2px solid var(--accent-primary);
+    }
+
+    .detail-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .detail-title {
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .detail-badge {
+      font-size: 10px;
+      padding: 3px 10px;
+      border-radius: 12px;
+    }
+
+    .badge-in-progress {
+      background: rgba(249, 115, 22, 0.2);
+      color: var(--status-active);
+    }
+
+    .badge-complete {
+      background: rgba(34, 197, 94, 0.2);
+      color: var(--status-complete);
+    }
+
+    .badge-pending {
+      background: rgba(107, 114, 128, 0.2);
+      color: var(--status-pending);
+    }
+
+    /* Stage Detail Cards */
+    .stage-detail-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 6px;
+      margin-bottom: 12px;
+    }
+
+    .stage-detail-card {
+      background: var(--vscode-sideBar-background);
+      border: 1px solid var(--vscode-input-border);
+      border-radius: 6px;
+      padding: 8px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .stage-detail-card:hover {
+      border-color: var(--accent-primary);
+    }
+
+    .stage-detail-card.complete {
+      border-color: var(--status-complete);
+      background: rgba(34, 197, 94, 0.1);
+    }
+
+    .stage-detail-card.active {
+      border-color: var(--status-active);
+      background: rgba(249, 115, 22, 0.1);
+    }
+
+    .stage-detail-icon {
+      font-size: 18px;
+      margin-bottom: 4px;
+    }
+
+    .stage-detail-icon.complete {
+      color: var(--status-complete);
+    }
+
+    .stage-detail-icon.active {
+      color: var(--status-active);
+    }
+
+    .stage-detail-icon.pending {
+      color: var(--vscode-descriptionForeground);
+    }
+
+    .stage-detail-name {
+      font-size: 9px;
+      color: var(--vscode-descriptionForeground);
+      text-transform: uppercase;
+    }
+
+    /* Stories Section */
+    .stories-section {
+      margin-bottom: 12px;
+    }
+
+    .stories-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .stories-title {
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--vscode-descriptionForeground);
+      text-transform: uppercase;
+    }
+
+    .stories-count {
+      font-size: 10px;
+      color: var(--status-complete);
+    }
+
+    .stories-toggle-btn {
+      font-size: 9px;
+      color: var(--accent-primary);
+      background: none;
+      border: none;
+      cursor: pointer;
+    }
+
+    .stories-toggle-btn:hover {
+      text-decoration: underline;
+    }
+
+    .stories-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 4px;
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease;
+    }
+
+    .stories-grid.visible {
+      max-height: 200px;
+    }
+
+    .story-chip {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 8px;
+      background: var(--vscode-sideBar-background);
+      border-radius: 4px;
+      font-size: 10px;
+    }
+
+    .story-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }
+
+    .story-dot.done {
+      background: var(--status-complete);
+    }
+
+    .story-dot.pending {
+      background: var(--vscode-input-border);
+    }
+
+    .story-name.done {
+      color: var(--vscode-descriptionForeground);
+      text-decoration: line-through;
+    }
+
+    /* Actions */
+    .detail-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .detail-btn {
+      flex: 1;
+      padding: 10px;
+      font-size: 11px;
+      font-weight: 500;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .detail-btn-primary {
+      background: var(--accent-primary);
+      color: white;
+    }
+
+    .detail-btn-primary:hover {
+      filter: brightness(1.1);
+    }
+
+    .detail-btn-secondary {
+      background: var(--vscode-input-background);
+      color: var(--vscode-editor-foreground);
+      border: 1px solid var(--vscode-input-border);
+    }
+
+    .detail-btn-secondary:hover {
+      background: var(--vscode-list-hoverBackground);
+    }
+
+    /* Legend */
+    .legend {
+      padding: 12px;
+      background: var(--vscode-editor-background);
+      border-top: 1px solid var(--vscode-input-border);
+    }
+
+    .legend-title {
+      font-size: 9px;
+      color: var(--vscode-descriptionForeground);
+      margin-bottom: 8px;
+      text-transform: uppercase;
+    }
+
+    .legend-items {
+      display: flex;
+      gap: 16px;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 10px;
+      color: var(--vscode-descriptionForeground);
+    }
+
+    .legend-box {
+      width: 16px;
+      height: 12px;
+      border-radius: 2px;
+    }
+  </style>
+</head>
+<body>
+  <div class="sidebar" id="sidebar">
+    <div class="header">
+      <span class="header-title">SpecsMD Heatmap</span>
+      <div class="header-actions">
+        <button type="button" class="icon-btn" title="Refresh">&#8635;</button>
+        <button type="button" class="icon-btn" title="Settings">&#9881;</button>
+      </div>
+    </div>
+
+    <div class="theme-toggle">
+      <button type="button" class="theme-btn active" onclick="setTheme('dark')">Dark</button>
+      <button type="button" class="theme-btn" onclick="setTheme('light')">Light</button>
+    </div>
+
+    <div class="progress-overview">
+      <div class="progress-title">Overall Progress</div>
+      <div class="progress-stats">
+        <div class="progress-stat">
+          <div class="progress-stat-value">6</div>
+          <div class="progress-stat-label">Bolts</div>
+        </div>
+        <div class="progress-stat">
+          <div class="progress-stat-value">30</div>
+          <div class="progress-stat-label">Stages</div>
+        </div>
+        <div class="progress-stat">
+          <div class="progress-stat-value">27%</div>
+          <div class="progress-stat-label">Complete</div>
+        </div>
+      </div>
+      <div class="overall-bar">
+        <div class="bar-segment bar-complete" style="width: 17%"></div>
+        <div class="bar-segment bar-active" style="width: 10%"></div>
+        <div class="bar-segment bar-pending" style="width: 73%"></div>
+      </div>
+    </div>
+
+    <div class="grid-header">
+      <div class="grid-header-bolt">Bolt</div>
+      <div class="grid-header-stage">M</div>
+      <div class="grid-header-stage">D</div>
+      <div class="grid-header-stage">A</div>
+      <div class="grid-header-stage">I</div>
+      <div class="grid-header-stage">T</div>
+    </div>
+
+    <div class="grid-content">
+      <!-- Row 1 - Active -->
+      <div class="grid-row selected" onclick="selectRow(this)">
+        <div class="bolt-cell">
+          <span class="bolt-cell-name">user-management-service-1</span>
+          <div class="bolt-cell-meta">
+            <span class="bolt-cell-badge">DDD</span>
+            <span>2/4 stories</span>
+          </div>
+        </div>
+        <div class="heat-cell heat-complete" data-tooltip="Model: Complete">&#10003;</div>
+        <div class="heat-cell heat-active" data-tooltip="Design: In Progress">D</div>
+        <div class="heat-cell heat-pending" data-tooltip="ADR: Pending">A</div>
+        <div class="heat-cell heat-pending" data-tooltip="Implement: Pending">I</div>
+        <div class="heat-cell heat-pending" data-tooltip="Test: Pending">T</div>
+      </div>
+      <div class="row-detail">
+        <div class="row-detail-inner">
+          <div class="detail-header">
+            <span class="detail-title">user-management-service-1</span>
+            <span class="detail-badge badge-in-progress">In Progress</span>
+          </div>
+          <div class="stage-detail-grid">
+            <div class="stage-detail-card complete">
+              <div class="stage-detail-icon complete">&#10003;</div>
+              <div class="stage-detail-name">Model</div>
+            </div>
+            <div class="stage-detail-card active">
+              <div class="stage-detail-icon active">&#9679;</div>
+              <div class="stage-detail-name">Design</div>
+            </div>
+            <div class="stage-detail-card">
+              <div class="stage-detail-icon pending">&#9675;</div>
+              <div class="stage-detail-name">ADR</div>
+            </div>
+            <div class="stage-detail-card">
+              <div class="stage-detail-icon pending">&#9675;</div>
+              <div class="stage-detail-name">Implement</div>
+            </div>
+            <div class="stage-detail-card">
+              <div class="stage-detail-icon pending">&#9675;</div>
+              <div class="stage-detail-name">Test</div>
+            </div>
+          </div>
+          <div class="stories-section">
+            <div class="stories-header">
+              <span class="stories-title">Stories</span>
+              <span class="stories-count">2/4 done</span>
+              <button type="button" class="stories-toggle-btn" onclick="event.stopPropagation(); toggleStories('stories-1')">Show</button>
+            </div>
+            <div class="stories-grid" id="stories-1">
+              <div class="story-chip">
+                <div class="story-dot done"></div>
+                <span class="story-name done">001-create-user</span>
+              </div>
+              <div class="story-chip">
+                <div class="story-dot done"></div>
+                <span class="story-name done">002-view-user-list</span>
+              </div>
+              <div class="story-chip">
+                <div class="story-dot pending"></div>
+                <span class="story-name">003-update-user</span>
+              </div>
+              <div class="story-chip">
+                <div class="story-dot pending"></div>
+                <span class="story-name">004-delete-user</span>
+              </div>
+            </div>
+          </div>
+          <div class="detail-actions">
+            <button type="button" class="detail-btn detail-btn-primary">Continue Design</button>
+            <button type="button" class="detail-btn detail-btn-secondary">Files</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Row 2 - Pending -->
+      <div class="grid-row" onclick="selectRow(this)">
+        <div class="bolt-cell">
+          <span class="bolt-cell-name">admin-panel-ui-1</span>
+          <div class="bolt-cell-meta">
+            <span class="bolt-cell-badge">Simple</span>
+            <span>0/4 stories</span>
+          </div>
+        </div>
+        <div class="heat-cell heat-pending" data-tooltip="Model: Pending">M</div>
+        <div class="heat-cell heat-pending" data-tooltip="Design: Pending">D</div>
+        <div class="heat-cell heat-pending" data-tooltip="ADR: Pending">A</div>
+        <div class="heat-cell heat-pending" data-tooltip="Implement: Pending">I</div>
+        <div class="heat-cell heat-pending" data-tooltip="Test: Pending">T</div>
+      </div>
+      <div class="row-detail">
+        <div class="row-detail-inner">
+          <div class="detail-header">
+            <span class="detail-title">admin-panel-ui-1</span>
+            <span class="detail-badge badge-pending">Pending</span>
+          </div>
+          <div class="detail-actions">
+            <button type="button" class="detail-btn detail-btn-primary">Start Bolt</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Row 3 - Pending -->
+      <div class="grid-row" onclick="selectRow(this)">
+        <div class="bolt-cell">
+          <span class="bolt-cell-name">admin-panel-ui-2</span>
+          <div class="bolt-cell-meta">
+            <span class="bolt-cell-badge">Simple</span>
+            <span>0/4 stories</span>
+          </div>
+        </div>
+        <div class="heat-cell heat-pending" data-tooltip="Model: Pending">M</div>
+        <div class="heat-cell heat-pending" data-tooltip="Design: Pending">D</div>
+        <div class="heat-cell heat-pending" data-tooltip="ADR: Pending">A</div>
+        <div class="heat-cell heat-pending" data-tooltip="Implement: Pending">I</div>
+        <div class="heat-cell heat-pending" data-tooltip="Test: Pending">T</div>
+      </div>
+      <div class="row-detail">
+        <div class="row-detail-inner">
+          <div class="detail-header">
+            <span class="detail-title">admin-panel-ui-2</span>
+            <span class="detail-badge badge-pending">Pending</span>
+          </div>
+          <div class="detail-actions">
+            <button type="button" class="detail-btn detail-btn-primary">Start Bolt</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Row 4 - Pending -->
+      <div class="grid-row" onclick="selectRow(this)">
+        <div class="bolt-cell">
+          <span class="bolt-cell-name">audit-service-1</span>
+          <div class="bolt-cell-meta">
+            <span class="bolt-cell-badge">DDD</span>
+            <span>0/2 stories</span>
+          </div>
+        </div>
+        <div class="heat-cell heat-pending" data-tooltip="Model: Pending">M</div>
+        <div class="heat-cell heat-pending" data-tooltip="Design: Pending">D</div>
+        <div class="heat-cell heat-pending" data-tooltip="ADR: Pending">A</div>
+        <div class="heat-cell heat-pending" data-tooltip="Implement: Pending">I</div>
+        <div class="heat-cell heat-pending" data-tooltip="Test: Pending">T</div>
+      </div>
+      <div class="row-detail">
+        <div class="row-detail-inner">
+          <div class="detail-header">
+            <span class="detail-title">audit-service-1</span>
+            <span class="detail-badge badge-pending">Pending</span>
+          </div>
+          <div class="detail-actions">
+            <button type="button" class="detail-btn detail-btn-primary">Start Bolt</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Row 5 - Complete -->
+      <div class="grid-row" onclick="selectRow(this)">
+        <div class="bolt-cell">
+          <span class="bolt-cell-name">role-permission-service-1</span>
+          <div class="bolt-cell-meta">
+            <span class="bolt-cell-badge">DDD</span>
+            <span>6/6 stories</span>
+          </div>
+        </div>
+        <div class="heat-cell heat-complete" data-tooltip="Model: Complete">&#10003;</div>
+        <div class="heat-cell heat-complete" data-tooltip="Design: Complete">&#10003;</div>
+        <div class="heat-cell heat-complete" data-tooltip="ADR: Complete">&#10003;</div>
+        <div class="heat-cell heat-complete" data-tooltip="Implement: Complete">&#10003;</div>
+        <div class="heat-cell heat-complete" data-tooltip="Test: Complete">&#10003;</div>
+      </div>
+      <div class="row-detail">
+        <div class="row-detail-inner">
+          <div class="detail-header">
+            <span class="detail-title">role-permission-service-1</span>
+            <span class="detail-badge badge-complete">Complete</span>
+          </div>
+          <div class="stage-detail-grid">
+            <div class="stage-detail-card complete">
+              <div class="stage-detail-icon complete">&#10003;</div>
+              <div class="stage-detail-name">Model</div>
+            </div>
+            <div class="stage-detail-card complete">
+              <div class="stage-detail-icon complete">&#10003;</div>
+              <div class="stage-detail-name">Design</div>
+            </div>
+            <div class="stage-detail-card complete">
+              <div class="stage-detail-icon complete">&#10003;</div>
+              <div class="stage-detail-name">ADR</div>
+            </div>
+            <div class="stage-detail-card complete">
+              <div class="stage-detail-icon complete">&#10003;</div>
+              <div class="stage-detail-name">Implement</div>
+            </div>
+            <div class="stage-detail-card complete">
+              <div class="stage-detail-icon complete">&#10003;</div>
+              <div class="stage-detail-name">Test</div>
+            </div>
+          </div>
+          <div class="detail-actions">
+            <button type="button" class="detail-btn detail-btn-secondary">View Files</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Row 6 - Pending -->
+      <div class="grid-row" onclick="selectRow(this)">
+        <div class="bolt-cell">
+          <span class="bolt-cell-name">user-management-service-2</span>
+          <div class="bolt-cell-meta">
+            <span class="bolt-cell-badge">DDD</span>
+            <span>0/4 stories</span>
+          </div>
+        </div>
+        <div class="heat-cell heat-pending" data-tooltip="Model: Pending">M</div>
+        <div class="heat-cell heat-pending" data-tooltip="Design: Pending">D</div>
+        <div class="heat-cell heat-pending" data-tooltip="ADR: Pending">A</div>
+        <div class="heat-cell heat-pending" data-tooltip="Implement: Pending">I</div>
+        <div class="heat-cell heat-pending" data-tooltip="Test: Pending">T</div>
+      </div>
+      <div class="row-detail">
+        <div class="row-detail-inner">
+          <div class="detail-header">
+            <span class="detail-title">user-management-service-2</span>
+            <span class="detail-badge badge-pending">Pending</span>
+          </div>
+          <div class="detail-actions">
+            <button type="button" class="detail-btn detail-btn-primary">Start Bolt</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="legend">
+      <div class="legend-title">Legend</div>
+      <div class="legend-items">
+        <div class="legend-item">
+          <div class="legend-box heat-complete"></div>
+          <span>Complete</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-box heat-active"></div>
+          <span>Active</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-box heat-pending"></div>
+          <span>Pending</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function selectRow(row) {
+      const wasSelected = row.classList.contains('selected');
+
+      // Deselect all rows
+      document.querySelectorAll('.grid-row').forEach(r => r.classList.remove('selected'));
+
+      // Toggle clicked row
+      if (!wasSelected) {
+        row.classList.add('selected');
+      }
+    }
+
+    function toggleStories(id) {
+      const grid = document.getElementById(id);
+      const btn = grid.previousElementSibling.querySelector('.stories-toggle-btn');
+      grid.classList.toggle('visible');
+      btn.textContent = grid.classList.contains('visible') ? 'Hide' : 'Show';
+    }
+
+    function setTheme(theme) {
+      const sidebar = document.getElementById('sidebar');
+      const buttons = document.querySelectorAll('.theme-btn');
+
+      buttons.forEach(btn => btn.classList.remove('active'));
+      event.target.classList.add('active');
+
+      if (theme === 'light') {
+        sidebar.classList.add('theme-light');
+      } else {
+        sidebar.classList.remove('theme-light');
+      }
+    }
+  </script>
+</body>
+</html>

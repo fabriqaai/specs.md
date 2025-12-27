@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SpecsMD Sidebar Design Mockups</title>
+  <style>
+    :root {
+      --bg-primary: #1a1a2e;
+      --bg-secondary: #16213e;
+      --bg-card: #1f2937;
+      --text-primary: #e5e7eb;
+      --text-secondary: #9ca3af;
+      --accent: #f97316;
+      --accent-hover: #fb923c;
+      --border: #374151;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Header */
+    .header {
+      padding: 16px 24px;
+      background: var(--bg-secondary);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .header-title {
+      font-size: 18px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .header-logo {
+      width: 32px;
+      height: 32px;
+      background: var(--accent);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 14px;
+    }
+
+    .header-nav {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .nav-btn {
+      padding: 10px 20px;
+      font-size: 14px;
+      font-weight: 500;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .nav-btn-primary {
+      background: var(--accent);
+      color: white;
+    }
+
+    .nav-btn-primary:hover:not(:disabled) {
+      background: var(--accent-hover);
+      transform: translateY(-1px);
+    }
+
+    .nav-btn-secondary {
+      background: var(--bg-card);
+      color: var(--text-primary);
+      border: 1px solid var(--border);
+    }
+
+    .nav-btn-secondary:hover:not(:disabled) {
+      background: var(--border);
+    }
+
+    .nav-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .slide-counter {
+      font-size: 14px;
+      color: var(--text-secondary);
+      padding: 8px 16px;
+      background: var(--bg-card);
+      border-radius: 20px;
+      min-width: 80px;
+      text-align: center;
+    }
+
+    /* Main Layout */
+    .main-container {
+      flex: 1;
+      display: flex;
+      overflow: hidden;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      width: 280px;
+      background: var(--bg-secondary);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .sidebar-header {
+      padding: 16px;
+      border-bottom: 1px solid var(--border);
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-secondary);
+    }
+
+    .sidebar-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 8px;
+    }
+
+    .sidebar-item {
+      padding: 12px 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      margin-bottom: 4px;
+      transition: all 0.15s;
+      border: 1px solid transparent;
+    }
+
+    .sidebar-item:hover {
+      background: var(--bg-card);
+    }
+
+    .sidebar-item.active {
+      background: rgba(249, 115, 22, 0.15);
+      border-color: var(--accent);
+    }
+
+    .sidebar-item-number {
+      font-size: 10px;
+      color: var(--accent);
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .sidebar-item-title {
+      font-size: 13px;
+      font-weight: 500;
+      margin-bottom: 4px;
+    }
+
+    .sidebar-item-desc {
+      font-size: 11px;
+      color: var(--text-secondary);
+    }
+
+    .sidebar-item-tags {
+      display: flex;
+      gap: 4px;
+      margin-top: 6px;
+      flex-wrap: wrap;
+    }
+
+    .tag {
+      font-size: 9px;
+      padding: 2px 6px;
+      background: var(--bg-primary);
+      border-radius: 4px;
+      color: var(--text-secondary);
+    }
+
+    .tag.interactive {
+      background: rgba(34, 197, 94, 0.2);
+      color: #22c55e;
+    }
+
+    /* Iframe Container */
+    .iframe-container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      background: var(--bg-primary);
+    }
+
+    .iframe-header {
+      padding: 12px 20px;
+      background: var(--bg-card);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .iframe-title {
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .iframe-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .iframe-action-btn {
+      padding: 6px 12px;
+      font-size: 12px;
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .iframe-action-btn:hover {
+      background: var(--border);
+    }
+
+    .iframe-wrapper {
+      flex: 1;
+      display: flex;
+      align-items: stretch;
+      justify-content: flex-start;
+      padding: 20px;
+      padding-left: 100px;
+      background: #0a0a0a;
+      overflow: auto;
+    }
+
+    .iframe-frame {
+      background: #1e1e1e;
+      border-radius: 12px;
+      overflow: visible;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+      height: 100%;
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      width: fit-content;
+    }
+
+    .iframe-frame-header {
+      height: 32px;
+      background: #2d2d2d;
+      display: flex;
+      align-items: center;
+      padding: 0 12px;
+      gap: 8px;
+    }
+
+    .frame-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+    }
+
+    .frame-dot.red { background: #ff5f57; }
+    .frame-dot.yellow { background: #febc2e; }
+    .frame-dot.green { background: #28c840; }
+
+    .frame-title {
+      flex: 1;
+      text-align: center;
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+
+    iframe {
+      border: none;
+      width: 1200px;
+      height: 70%;
+      min-height: 400px;
+      background: #252526;
+    }
+
+    /* Footer */
+    .footer {
+      padding: 12px 24px;
+      background: var(--bg-secondary);
+      border-top: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .footer-info {
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+
+    .keyboard-hints {
+      display: flex;
+      gap: 16px;
+    }
+
+    .kbd-hint {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      color: var(--text-secondary);
+    }
+
+    .kbd {
+      padding: 3px 8px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      font-family: monospace;
+      font-size: 10px;
+    }
+
+    /* Responsive */
+    @media (max-width: 900px) {
+      .sidebar {
+        width: 220px;
+      }
+    }
+
+    @media (max-width: 700px) {
+      .sidebar {
+        display: none;
+      }
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--text-secondary);
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="header-title">
+      <div class="header-logo">S</div>
+      <span>SpecsMD Sidebar Mockups</span>
+    </div>
+    <div class="header-nav">
+      <button class="nav-btn nav-btn-secondary" id="prevBtn" onclick="prevSlide()">
+        <span>&#8592;</span> Previous
+      </button>
+      <div class="slide-counter" id="slideCounter">1 / 16</div>
+      <button class="nav-btn nav-btn-primary" id="nextBtn" onclick="nextSlide()">
+        Next <span>&#8594;</span>
+      </button>
+    </div>
+  </div>
+
+  <div class="main-container">
+    <div class="sidebar">
+      <div class="sidebar-header">All Variations (16)</div>
+      <div class="sidebar-list" id="sidebarList">
+        <!-- Rendered dynamically -->
+      </div>
+    </div>
+
+    <div class="iframe-container">
+      <div class="iframe-header">
+        <div class="iframe-title" id="currentTitle">Variation 1: Metrics Dashboard</div>
+        <div class="iframe-actions">
+          <button class="iframe-action-btn" onclick="openInNewTab()">Open in New Tab</button>
+          <button class="iframe-action-btn" onclick="reloadIframe()">Reload</button>
+        </div>
+      </div>
+      <div class="iframe-wrapper">
+        <div class="iframe-frame">
+          <div class="iframe-frame-header">
+            <div class="frame-dot red"></div>
+            <div class="frame-dot yellow"></div>
+            <div class="frame-dot green"></div>
+            <div class="frame-title" id="frameTitle">variation-1-metrics-dashboard.html</div>
+          </div>
+          <iframe id="mockupFrame" src="variation-1-metrics-dashboard.html"></iframe>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    <div class="footer-info">
+      VS Code Extension Sidebar Design Explorations
+    </div>
+    <div class="keyboard-hints">
+      <div class="kbd-hint"><span class="kbd">&#8592;</span> Previous</div>
+      <div class="kbd-hint"><span class="kbd">&#8594;</span> Next</div>
+      <div class="kbd-hint"><span class="kbd">1-9</span> Jump to slide</div>
+    </div>
+  </div>
+
+  <script>
+    const variations = [
+      {
+        file: 'variation-1-metrics-dashboard.html',
+        title: 'Metrics Dashboard',
+        desc: 'Stats-first dashboard with metrics cards at top',
+        tags: ['basic']
+      },
+      {
+        file: 'variation-2-pipeline-flow.html',
+        title: 'Pipeline Flow',
+        desc: 'Pipeline/Kanban style with connected dot visualization',
+        tags: ['basic']
+      },
+      {
+        file: 'variation-3-focus-mode.html',
+        title: 'Focus Mode',
+        desc: 'Three view modes (Dashboard, Focus, List) with toggles',
+        tags: ['basic']
+      },
+      {
+        file: 'variation-4-kanban-board.html',
+        title: 'Kanban Board',
+        desc: 'Kanban columns (In Progress, Pending, Complete)',
+        tags: ['interactive']
+      },
+      {
+        file: 'variation-5-timeline.html',
+        title: 'Timeline View',
+        desc: 'Timeline/swimlane view with row expansion',
+        tags: ['interactive']
+      },
+      {
+        file: 'variation-6-activity-feed.html',
+        title: 'Activity Feed',
+        desc: 'Chronological activity feed style',
+        tags: ['interactive']
+      },
+      {
+        file: 'variation-7-heatmap-grid.html',
+        title: 'Heatmap Grid',
+        desc: 'Grid view with stage heatmap cells',
+        tags: ['interactive']
+      },
+      {
+        file: 'variation-8-command-center.html',
+        title: 'Command Center',
+        desc: 'Mission control style with circular progress and queue',
+        tags: ['interactive', 'full']
+      },
+      {
+        file: 'variation-8-2.html',
+        title: 'Command Center Merged',
+        desc: 'Merged view with Bolts, Specs, Overview tabs and resizable activity feed',
+        tags: ['interactive', 'full', 'activity', 'tabs']
+      },
+      {
+        file: 'variation-8a-command-center-timeline.html',
+        title: 'Command Center + Timeline',
+        desc: 'Command center with activity timeline derived from frontmatter dates',
+        tags: ['interactive', 'full', 'activity']
+      },
+      {
+        file: 'variation-9-dual-view.html',
+        title: 'Dual View',
+        desc: 'Basic Specs/Bolts tab structure',
+        tags: ['interactive', 'tabs']
+      },
+      {
+        file: 'variation-10-dual-view-focus.html',
+        title: 'Dual View + Focus',
+        desc: 'Dual view with Focus Mode toggle',
+        tags: ['interactive', 'tabs']
+      },
+      {
+        file: 'variation-11-dual-view-grouped.html',
+        title: 'Dual View + Grouping',
+        desc: 'Full interactive with grouping and filtering',
+        tags: ['interactive', 'tabs', 'full']
+      },
+      {
+        file: 'variation-12-dependency-graph.html',
+        title: 'Dependency Graph',
+        desc: 'Visual dependency graph with blocking detection',
+        tags: ['interactive', 'deps', 'full']
+      },
+      {
+        file: 'variation-13-hierarchy-explorer.html',
+        title: 'Hierarchy Explorer',
+        desc: 'Tree-based explorer with multiple view modes',
+        tags: ['interactive', 'tree', 'full']
+      },
+      {
+        file: 'variation-14-swimlane-deps.html',
+        title: 'Swimlane Dependencies',
+        desc: '5 view modes: Unit, Status, Deps, Timeline, Critical Path',
+        tags: ['interactive', 'deps', 'full']
+      }
+    ];
+
+    let currentIndex = 0;
+
+    function renderSidebar() {
+      const list = document.getElementById('sidebarList');
+      list.innerHTML = variations.map((v, i) => {
+        // Extract variation number from filename (e.g., "variation-8-2.html" -> "8-2")
+        const match = v.file.match(/variation-([^.]+)\.html/);
+        const varNum = match ? match[1].replace(/-/g, ' ').replace(/([a-z])/g, '$1') : (i + 1);
+        return `
+          <div class="sidebar-item ${i === currentIndex ? 'active' : ''}" onclick="goToSlide(${i})">
+            <div class="sidebar-item-number">Variation ${varNum}</div>
+            <div class="sidebar-item-title">${v.title}</div>
+            <div class="sidebar-item-desc">${v.desc}</div>
+            <div class="sidebar-item-tags">
+              ${v.tags.map(t => `<span class="tag ${t}">${t}</span>`).join('')}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function updateView() {
+      const variation = variations[currentIndex];
+
+      // Extract variation number from filename
+      const match = variation.file.match(/variation-([^.]+)\.html/);
+      const varNum = match ? match[1].replace(/-/g, ' ').replace(/([a-z])/g, '$1') : (currentIndex + 1);
+
+      // Update iframe
+      document.getElementById('mockupFrame').src = variation.file;
+      document.getElementById('currentTitle').textContent = `Variation ${varNum}: ${variation.title}`;
+      document.getElementById('frameTitle').textContent = variation.file;
+
+      // Update counter
+      document.getElementById('slideCounter').textContent = `${currentIndex + 1} / ${variations.length}`;
+
+      // Update buttons
+      document.getElementById('prevBtn').disabled = currentIndex === 0;
+      document.getElementById('nextBtn').disabled = currentIndex === variations.length - 1;
+
+      // Update sidebar
+      renderSidebar();
+
+      // Scroll active item into view
+      const activeItem = document.querySelector('.sidebar-item.active');
+      if (activeItem) {
+        activeItem.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+    }
+
+    function nextSlide() {
+      if (currentIndex < variations.length - 1) {
+        currentIndex++;
+        updateView();
+      }
+    }
+
+    function prevSlide() {
+      if (currentIndex > 0) {
+        currentIndex--;
+        updateView();
+      }
+    }
+
+    function goToSlide(index) {
+      currentIndex = index;
+      updateView();
+    }
+
+    function openInNewTab() {
+      window.open(variations[currentIndex].file, '_blank');
+    }
+
+    function reloadIframe() {
+      const iframe = document.getElementById('mockupFrame');
+      iframe.src = iframe.src;
+    }
+
+    // Keyboard navigation
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+        e.preventDefault();
+        nextSlide();
+      } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+        e.preventDefault();
+        prevSlide();
+      } else if (e.key >= '1' && e.key <= '9') {
+        const index = parseInt(e.key) - 1;
+        if (index < variations.length) {
+          goToSlide(index);
+        }
+      } else if (e.key === '0') {
+        goToSlide(9); // 0 = 10th slide
+      }
+    });
+
+    // Initialize
+    renderSidebar();
+    updateView();
+  </script>
+</body>
+</html>

@@ -1,3 +1,9 @@
+---
+status: complete
+completed: 2025-12-25
+note: "Implemented before specsmd dogfooding. Stories not tracked in AI-DLC."
+---
+
 # Intent: Agentic Coding Tool Integration
 
 ## Overview

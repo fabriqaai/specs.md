@@ -1,0 +1,63 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "type": "npm",
+            "script": "compile",
+            "path": "vs-code-extension",
+            "problemMatcher": "$tsc",
+            "isBackground": false,
+            "presentation": {
+                "reveal": "silent"
+            },
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "label": "npm: compile - vs-code-extension"
+        },
+        {
+            "type": "npm",
+            "script": "watch",
+            "path": "vs-code-extension",
+            "problemMatcher": "$tsc-watch",
+            "isBackground": true,
+            "presentation": {
+                "reveal": "never"
+            },
+            "group": "build",
+            "label": "npm: watch - vs-code-extension"
+        },
+        {
+            "type": "npm",
+            "script": "lint",
+            "path": "vs-code-extension",
+            "problemMatcher": ["$eslint-stylish"],
+            "presentation": {
+                "reveal": "silent"
+            },
+            "label": "npm: lint - vs-code-extension"
+        },
+        {
+            "type": "npm",
+            "script": "test",
+            "path": "vs-code-extension",
+            "problemMatcher": [],
+            "presentation": {
+                "reveal": "always"
+            },
+            "group": "test",
+            "label": "npm: test - vs-code-extension"
+        },
+        {
+            "type": "npm",
+            "script": "package",
+            "path": "vs-code-extension",
+            "problemMatcher": [],
+            "presentation": {
+                "reveal": "always"
+            },
+            "label": "npm: package - vs-code-extension"
+        }
+    ]
+}

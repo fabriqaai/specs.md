@@ -1,0 +1,1278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Variation 13: Hierarchy Explorer</title>
+  <style>
+    :root {
+      --vscode-editor-background: #1e1e1e;
+      --vscode-editor-foreground: #cccccc;
+      --vscode-sideBar-background: #252526;
+      --vscode-sideBarSectionHeader-background: #2d2d2d;
+      --vscode-input-background: #3c3c3c;
+      --vscode-input-border: #3c3c3c;
+      --vscode-list-hoverBackground: #2a2d2e;
+      --vscode-list-activeSelectionBackground: #094771;
+      --vscode-badge-background: #4d4d4d;
+      --vscode-badge-foreground: #ffffff;
+      --vscode-descriptionForeground: #858585;
+      --status-complete: #22c55e;
+      --status-active: #f97316;
+      --status-pending: #6b7280;
+      --status-blocked: #ef4444;
+      --status-info: #3b82f6;
+      --accent-primary: #f97316;
+      --dependency-line: #6366f1;
+      --tree-line: #404040;
+    }
+
+    .theme-light {
+      --vscode-editor-background: #ffffff;
+      --vscode-editor-foreground: #333333;
+      --vscode-sideBar-background: #f3f3f3;
+      --vscode-sideBarSectionHeader-background: #e8e8e8;
+      --vscode-input-background: #ffffff;
+      --vscode-input-border: #cecece;
+      --vscode-list-hoverBackground: #e8e8e8;
+      --vscode-list-activeSelectionBackground: #0078d4;
+      --vscode-descriptionForeground: #717171;
+      --tree-line: #d0d0d0;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--vscode-editor-background);
+      color: var(--vscode-editor-foreground);
+      font-size: 13px;
+    }
+
+    .sidebar {
+      width: 380px;
+      min-height: 100vh;
+      background: var(--vscode-sideBar-background);
+      border-right: 1px solid var(--vscode-input-border);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .header {
+      padding: 10px 12px;
+      background: var(--vscode-sideBarSectionHeader-background);
+      border-bottom: 1px solid var(--vscode-input-border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .header-title {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .header-actions { display: flex; gap: 4px; }
+
+    .icon-btn {
+      background: none;
+      border: none;
+      color: var(--vscode-descriptionForeground);
+      cursor: pointer;
+      padding: 4px 6px;
+      border-radius: 4px;
+      font-size: 14px;
+      transition: all 0.15s;
+    }
+
+    .icon-btn:hover {
+      background: var(--vscode-list-hoverBackground);
+      color: var(--vscode-editor-foreground);
+    }
+
+    .icon-btn.active {
+      background: var(--accent-primary);
+      color: white;
+    }
+
+    /* Tab Navigation */
+    .tab-nav {
+      display: flex;
+      background: var(--vscode-sideBarSectionHeader-background);
+      border-bottom: 1px solid var(--vscode-input-border);
+    }
+
+    .tab-btn {
+      flex: 1;
+      padding: 10px 12px;
+      font-size: 11px;
+      font-weight: 500;
+      border: none;
+      background: transparent;
+      color: var(--vscode-descriptionForeground);
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: all 0.15s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .tab-btn:hover {
+      color: var(--vscode-editor-foreground);
+      background: var(--vscode-list-hoverBackground);
+    }
+
+    .tab-btn.active {
+      color: var(--accent-primary);
+      border-bottom-color: var(--accent-primary);
+    }
+
+    .tab-badge {
+      font-size: 9px;
+      padding: 2px 6px;
+      background: var(--vscode-badge-background);
+      border-radius: 10px;
+    }
+
+    .tab-btn.active .tab-badge {
+      background: var(--accent-primary);
+      color: white;
+    }
+
+    /* Toolbar */
+    .toolbar {
+      padding: 8px 12px;
+      background: var(--vscode-editor-background);
+      border-bottom: 1px solid var(--vscode-input-border);
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .search-box {
+      flex: 1;
+      padding: 6px 10px;
+      font-size: 11px;
+      border: 1px solid var(--vscode-input-border);
+      background: var(--vscode-input-background);
+      color: var(--vscode-editor-foreground);
+      border-radius: 4px;
+    }
+
+    .search-box:focus {
+      outline: 1px solid var(--accent-primary);
+    }
+
+    .toolbar-btn {
+      padding: 6px 10px;
+      font-size: 10px;
+      border: 1px solid var(--vscode-input-border);
+      background: var(--vscode-input-background);
+      color: var(--vscode-editor-foreground);
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.15s;
+      white-space: nowrap;
+    }
+
+    .toolbar-btn:hover {
+      background: var(--vscode-list-hoverBackground);
+    }
+
+    .toolbar-btn.active {
+      background: var(--accent-primary);
+      border-color: var(--accent-primary);
+      color: white;
+    }
+
+    /* View Mode Selector */
+    .view-mode-bar {
+      padding: 6px 12px;
+      background: var(--vscode-sideBarSectionHeader-background);
+      border-bottom: 1px solid var(--vscode-input-border);
+      display: flex;
+      gap: 4px;
+    }
+
+    .view-mode-btn {
+      flex: 1;
+      padding: 6px 8px;
+      font-size: 9px;
+      border: 1px solid var(--vscode-input-border);
+      background: var(--vscode-input-background);
+      color: var(--vscode-editor-foreground);
+      border-radius: 4px;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.15s;
+    }
+
+    .view-mode-btn.active {
+      background: var(--accent-primary);
+      border-color: var(--accent-primary);
+      color: white;
+    }
+
+    .view-mode-btn:hover:not(.active) {
+      background: var(--vscode-list-hoverBackground);
+    }
+
+    /* Tree Container */
+    .tree-container {
+      flex: 1;
+      overflow-y: auto;
+      padding: 8px 0;
+    }
+
+    /* Tree Node */
+    .tree-node {
+      position: relative;
+    }
+
+    .tree-node-header {
+      display: flex;
+      align-items: center;
+      padding: 6px 12px;
+      cursor: pointer;
+      transition: background 0.1s;
+      position: relative;
+    }
+
+    .tree-node-header:hover {
+      background: var(--vscode-list-hoverBackground);
+    }
+
+    .tree-node-header.selected {
+      background: var(--vscode-list-activeSelectionBackground);
+    }
+
+    .tree-indent {
+      display: flex;
+      align-items: stretch;
+    }
+
+    .tree-indent-guide {
+      width: 16px;
+      position: relative;
+    }
+
+    .tree-indent-guide::before {
+      content: '';
+      position: absolute;
+      left: 7px;
+      top: 0;
+      bottom: 0;
+      width: 1px;
+      background: var(--tree-line);
+    }
+
+    .tree-indent-guide.last::before {
+      bottom: 50%;
+    }
+
+    .tree-indent-guide.last::after {
+      content: '';
+      position: absolute;
+      left: 7px;
+      top: 50%;
+      width: 8px;
+      height: 1px;
+      background: var(--tree-line);
+    }
+
+    .tree-chevron {
+      width: 16px;
+      font-size: 10px;
+      color: var(--vscode-descriptionForeground);
+      transition: transform 0.15s;
+      text-align: center;
+    }
+
+    .tree-node.collapsed .tree-chevron {
+      transform: rotate(-90deg);
+    }
+
+    .tree-icon {
+      width: 18px;
+      height: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      margin-right: 6px;
+    }
+
+    .tree-icon.intent { color: #8b5cf6; }
+    .tree-icon.unit { color: var(--status-info); }
+    .tree-icon.bolt { color: var(--accent-primary); }
+    .tree-icon.story { color: var(--status-complete); }
+
+    .tree-label {
+      flex: 1;
+      font-size: 12px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .tree-label.strikethrough {
+      text-decoration: line-through;
+      color: var(--vscode-descriptionForeground);
+    }
+
+    .tree-badges {
+      display: flex;
+      gap: 4px;
+      margin-left: 8px;
+    }
+
+    .tree-badge {
+      font-size: 9px;
+      padding: 2px 6px;
+      border-radius: 10px;
+      background: var(--vscode-badge-background);
+    }
+
+    .tree-badge.status {
+      background: none;
+      padding: 2px 4px;
+    }
+
+    .tree-badge.complete { color: var(--status-complete); }
+    .tree-badge.active { color: var(--status-active); }
+    .tree-badge.blocked { color: var(--status-blocked); }
+    .tree-badge.pending { color: var(--vscode-descriptionForeground); }
+
+    .tree-status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      margin-left: 8px;
+    }
+
+    .tree-status-dot.complete { background: var(--status-complete); }
+    .tree-status-dot.active { background: var(--status-active); }
+    .tree-status-dot.blocked { background: var(--status-blocked); }
+    .tree-status-dot.pending { background: var(--status-pending); }
+
+    .tree-children {
+      overflow: hidden;
+    }
+
+    .tree-node.collapsed > .tree-children {
+      display: none;
+    }
+
+    /* Dependency Indicators */
+    .dep-indicator {
+      display: flex;
+      align-items: center;
+      gap: 2px;
+      margin-left: 8px;
+      font-size: 9px;
+      color: var(--dependency-line);
+    }
+
+    .dep-arrow {
+      font-size: 8px;
+    }
+
+    .dep-count {
+      padding: 1px 4px;
+      background: rgba(99, 102, 241, 0.2);
+      border-radius: 3px;
+    }
+
+    /* Bolt Stages Mini */
+    .stages-mini {
+      display: flex;
+      gap: 1px;
+      margin-left: 8px;
+    }
+
+    .stage-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 2px;
+      background: var(--vscode-input-background);
+    }
+
+    .stage-dot.complete { background: var(--status-complete); }
+    .stage-dot.active { background: var(--status-active); }
+
+    /* Progress Bar */
+    .progress-mini {
+      width: 40px;
+      height: 4px;
+      background: var(--vscode-input-background);
+      border-radius: 2px;
+      margin-left: 8px;
+      overflow: hidden;
+    }
+
+    .progress-mini-fill {
+      height: 100%;
+      background: var(--status-complete);
+    }
+
+    /* Dependency Panel */
+    .dep-panel {
+      background: var(--vscode-editor-background);
+      border-top: 1px solid var(--vscode-input-border);
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease;
+    }
+
+    .dep-panel.show {
+      max-height: 250px;
+    }
+
+    .dep-panel-header {
+      padding: 10px 12px;
+      background: var(--vscode-sideBarSectionHeader-background);
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .dep-panel-close {
+      cursor: pointer;
+      color: var(--vscode-descriptionForeground);
+    }
+
+    .dep-panel-close:hover {
+      color: var(--vscode-editor-foreground);
+    }
+
+    .dep-panel-content {
+      padding: 12px;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+
+    .dep-section {
+      margin-bottom: 12px;
+    }
+
+    .dep-section:last-child {
+      margin-bottom: 0;
+    }
+
+    .dep-section-title {
+      font-size: 9px;
+      color: var(--vscode-descriptionForeground);
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+
+    .dep-list {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .dep-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 8px;
+      background: var(--vscode-sideBar-background);
+      border-radius: 4px;
+      font-size: 11px;
+      cursor: pointer;
+    }
+
+    .dep-item:hover {
+      background: var(--vscode-list-hoverBackground);
+    }
+
+    .dep-item-status {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+    }
+
+    .dep-item-status.complete { background: var(--status-complete); }
+    .dep-item-status.active { background: var(--status-active); }
+    .dep-item-status.blocked { background: var(--status-blocked); }
+    .dep-item-status.pending { background: var(--status-pending); }
+
+    .dep-item-name { flex: 1; }
+
+    .dep-item-arrow {
+      color: var(--vscode-descriptionForeground);
+      font-size: 10px;
+    }
+
+    /* Blocked Warning */
+    .blocked-warning {
+      margin: 8px 12px;
+      padding: 10px;
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid var(--status-blocked);
+      border-radius: 6px;
+      font-size: 10px;
+    }
+
+    .blocked-warning-title {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-weight: 600;
+      color: var(--status-blocked);
+      margin-bottom: 4px;
+    }
+
+    .blocked-warning-text {
+      color: var(--vscode-descriptionForeground);
+      margin-bottom: 8px;
+    }
+
+    .blocked-warning-actions {
+      display: flex;
+      gap: 6px;
+    }
+
+    .blocked-warning-btn {
+      flex: 1;
+      padding: 6px;
+      font-size: 9px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .blocked-warning-btn.primary {
+      background: var(--accent-primary);
+      color: white;
+    }
+
+    .blocked-warning-btn.secondary {
+      background: var(--vscode-input-background);
+      color: var(--vscode-editor-foreground);
+      border: 1px solid var(--vscode-input-border);
+    }
+
+    /* Stats Bar */
+    .stats-bar {
+      padding: 10px 12px;
+      background: var(--vscode-editor-background);
+      border-top: 1px solid var(--vscode-input-border);
+      display: flex;
+      justify-content: space-around;
+    }
+
+    .stat-item {
+      text-align: center;
+      cursor: pointer;
+      padding: 4px 8px;
+      border-radius: 4px;
+      transition: background 0.15s;
+    }
+
+    .stat-item:hover {
+      background: var(--vscode-list-hoverBackground);
+    }
+
+    .stat-item.active {
+      background: rgba(249, 115, 22, 0.2);
+    }
+
+    .stat-value {
+      font-size: 16px;
+      font-weight: 700;
+    }
+
+    .stat-label {
+      font-size: 9px;
+      color: var(--vscode-descriptionForeground);
+    }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      padding: 10px 20px;
+      background: var(--vscode-sideBar-background);
+      border: 1px solid var(--accent-primary);
+      border-radius: 6px;
+      font-size: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      opacity: 0;
+      transition: all 0.3s ease;
+      z-index: 1000;
+    }
+
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--vscode-input-border); border-radius: 4px; }
+  </style>
+</head>
+<body>
+  <div class="sidebar" id="sidebar">
+    <div class="header">
+      <span class="header-title">SpecsMD Explorer</span>
+      <div class="header-actions">
+        <button type="button" class="icon-btn" id="expandAllBtn" title="Expand All">&#9660;</button>
+        <button type="button" class="icon-btn" id="collapseAllBtn" title="Collapse All">&#9650;</button>
+        <button type="button" class="icon-btn" id="themeBtn" title="Toggle Theme">&#9790;</button>
+      </div>
+    </div>
+
+    <div class="tab-nav">
+      <button type="button" class="tab-btn active" data-tab="specs">
+        Specs <span class="tab-badge" id="specsBadge">5</span>
+      </button>
+      <button type="button" class="tab-btn" data-tab="bolts">
+        Bolts <span class="tab-badge" id="boltsBadge">5</span>
+      </button>
+    </div>
+
+    <div class="toolbar">
+      <input type="text" class="search-box" id="searchBox" placeholder="Search..." aria-label="Search">
+      <button type="button" class="toolbar-btn" id="filterBtn">Filter</button>
+      <button type="button" class="toolbar-btn" id="showDepsBtn">Show Deps</button>
+    </div>
+
+    <div class="view-mode-bar">
+      <button type="button" class="view-mode-btn active" data-mode="hierarchy">Hierarchy</button>
+      <button type="button" class="view-mode-btn" data-mode="flat">Flat</button>
+      <button type="button" class="view-mode-btn" data-mode="deps">By Deps</button>
+      <button type="button" class="view-mode-btn" data-mode="status">By Status</button>
+    </div>
+
+    <div id="blockedWarning" class="blocked-warning" style="display: none;">
+      <div class="blocked-warning-title">
+        <span>&#9888;</span>
+        <span>Dependency Blocked</span>
+      </div>
+      <div class="blocked-warning-text" id="blockedText">
+        admin-panel-ui-1 is waiting for audit-service-1
+      </div>
+      <div class="blocked-warning-actions">
+        <button type="button" class="blocked-warning-btn primary" id="buildDepBtn">Build Dependency</button>
+        <button type="button" class="blocked-warning-btn secondary" id="skipDepBtn">Skip</button>
+      </div>
+    </div>
+
+    <div class="tree-container" id="treeContainer">
+      <!-- Rendered dynamically -->
+    </div>
+
+    <div class="dep-panel" id="depPanel">
+      <div class="dep-panel-header">
+        <span id="depPanelTitle">Dependencies</span>
+        <span class="dep-panel-close" onclick="closeDependencyPanel()">&#10005;</span>
+      </div>
+      <div class="dep-panel-content" id="depPanelContent">
+        <!-- Rendered dynamically -->
+      </div>
+    </div>
+
+    <div class="stats-bar" id="statsBar">
+      <!-- Rendered dynamically -->
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    // ==================== DATA MODEL ====================
+    const intents = [
+      { id: 'intent-1', name: '001-admin-panel', status: 'active' }
+    ];
+
+    const units = [
+      { id: 'unit-1', name: 'User Management', intentId: 'intent-1', status: 'active' },
+      { id: 'unit-2', name: 'Admin Panel UI', intentId: 'intent-1', status: 'blocked' },
+      { id: 'unit-3', name: 'Audit Service', intentId: 'intent-1', status: 'pending' }
+    ];
+
+    let bolts = [
+      {
+        id: 'bolt-1',
+        name: 'role-permission-service-1',
+        type: 'DDD',
+        unitId: 'unit-1',
+        intentId: 'intent-1',
+        status: 'complete',
+        dependsOn: [],
+        stages: { model: 'complete', design: 'complete', adr: 'complete', implement: 'complete', test: 'complete' },
+        stories: [
+          { id: 's1', name: 'Define role entity', status: 'complete' },
+          { id: 's2', name: 'Create permission model', status: 'complete' }
+        ]
+      },
+      {
+        id: 'bolt-2',
+        name: 'user-management-service-1',
+        type: 'DDD',
+        unitId: 'unit-1',
+        intentId: 'intent-1',
+        status: 'complete',
+        dependsOn: ['bolt-1'],
+        stages: { model: 'complete', design: 'complete', adr: 'complete', implement: 'complete', test: 'complete' },
+        stories: [
+          { id: 's3', name: 'Create user entity model', status: 'complete' },
+          { id: 's4', name: 'Implement user CRUD', status: 'complete' }
+        ]
+      },
+      {
+        id: 'bolt-3',
+        name: 'audit-service-1',
+        type: 'DDD',
+        unitId: 'unit-3',
+        intentId: 'intent-1',
+        status: 'pending',
+        dependsOn: ['bolt-2'],
+        stages: { model: 'pending', design: 'pending', adr: 'pending', implement: 'pending', test: 'pending' },
+        stories: [
+          { id: 's5', name: 'Design audit log schema', status: 'pending' },
+          { id: 's6', name: 'Create event capture service', status: 'pending' }
+        ]
+      },
+      {
+        id: 'bolt-4',
+        name: 'admin-panel-ui-1',
+        type: 'Simple',
+        unitId: 'unit-2',
+        intentId: 'intent-1',
+        status: 'blocked',
+        dependsOn: ['bolt-3', 'bolt-2'],
+        blockedBy: 'bolt-3',
+        stages: { model: 'pending', design: 'pending', adr: 'pending', implement: 'pending', test: 'pending' },
+        stories: [
+          { id: 's7', name: 'Create admin layout', status: 'pending' },
+          { id: 's8', name: 'Add audit log viewer', status: 'pending' },
+          { id: 's9', name: 'Build user management page', status: 'pending' }
+        ]
+      },
+      {
+        id: 'bolt-5',
+        name: 'admin-panel-ui-2',
+        type: 'Simple',
+        unitId: 'unit-2',
+        intentId: 'intent-1',
+        status: 'pending',
+        dependsOn: ['bolt-4'],
+        stages: { model: 'pending', design: 'pending', adr: 'pending', implement: 'pending', test: 'pending' },
+        stories: [
+          { id: 's10', name: 'Add dashboard widgets', status: 'pending' },
+          { id: 's11', name: 'Implement settings page', status: 'pending' }
+        ]
+      }
+    ];
+
+    // ==================== STATE ====================
+    let state = {
+      activeTab: 'specs',
+      viewMode: 'hierarchy',
+      searchQuery: '',
+      statusFilter: 'all',
+      showDeps: false,
+      selectedNode: null,
+      expandedNodes: new Set(['intent-1', 'unit-1', 'unit-2', 'unit-3', 'bolt-1', 'bolt-2', 'bolt-3', 'bolt-4', 'bolt-5']),
+      theme: 'dark'
+    };
+
+    // ==================== UTILITY FUNCTIONS ====================
+    function showToast(message) {
+      const toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 2500);
+    }
+
+    function getBoltDependents(boltId) {
+      return bolts.filter(b => b.dependsOn.includes(boltId));
+    }
+
+    function getBoltDependencies(boltId) {
+      const bolt = bolts.find(b => b.id === boltId);
+      if (!bolt) return [];
+      return bolt.dependsOn.map(id => bolts.find(b => b.id === id)).filter(Boolean);
+    }
+
+    function calculateProgress(items, completeFn) {
+      const complete = items.filter(completeFn).length;
+      return Math.round((complete / items.length) * 100);
+    }
+
+    function matchesSearch(text) {
+      if (!state.searchQuery) return true;
+      return text.toLowerCase().includes(state.searchQuery.toLowerCase());
+    }
+
+    // ==================== RENDER FUNCTIONS ====================
+    function renderTreeNode(data, depth = 0, isLast = false) {
+      const isExpanded = state.expandedNodes.has(data.id);
+      const isSelected = state.selectedNode === data.id;
+      const hasChildren = data.children && data.children.length > 0;
+
+      let indentHtml = '';
+      for (let i = 0; i < depth; i++) {
+        indentHtml += `<span class="tree-indent-guide ${i === depth - 1 && isLast ? 'last' : ''}"></span>`;
+      }
+
+      let iconHtml = '';
+      let badges = '';
+      let extras = '';
+
+      if (data.type === 'intent') {
+        iconHtml = `<span class="tree-icon intent">&#128203;</span>`;
+        const progress = calculateProgress(bolts.filter(b => b.intentId === data.id), b => b.status === 'complete');
+        extras = `<div class="progress-mini"><div class="progress-mini-fill" style="width: ${progress}%"></div></div>`;
+      } else if (data.type === 'unit') {
+        iconHtml = `<span class="tree-icon unit">&#128193;</span>`;
+        const unitBolts = bolts.filter(b => b.unitId === data.id);
+        const complete = unitBolts.filter(b => b.status === 'complete').length;
+        badges = `<span class="tree-badge">${complete}/${unitBolts.length}</span>`;
+      } else if (data.type === 'bolt') {
+        iconHtml = `<span class="tree-icon bolt">&#9889;</span>`;
+        const deps = getBoltDependencies(data.id);
+        const dependents = getBoltDependents(data.id);
+
+        extras = `<div class="stages-mini">
+          ${Object.values(data.stages).map(s => `<span class="stage-dot ${s}"></span>`).join('')}
+        </div>`;
+
+        if (state.showDeps && (deps.length > 0 || dependents.length > 0)) {
+          extras += `<div class="dep-indicator">
+            ${deps.length > 0 ? `<span class="dep-arrow">&#8592;</span><span class="dep-count">${deps.length}</span>` : ''}
+            ${dependents.length > 0 ? `<span class="dep-count">${dependents.length}</span><span class="dep-arrow">&#8594;</span>` : ''}
+          </div>`;
+        }
+
+        badges = `<span class="tree-badge">${data.boltType}</span>`;
+      } else if (data.type === 'story') {
+        iconHtml = `<span class="tree-icon story">${data.status === 'complete' ? '&#10003;' : '&#9675;'}</span>`;
+      }
+
+      let childrenHtml = '';
+      if (hasChildren && isExpanded) {
+        childrenHtml = `<div class="tree-children">
+          ${data.children.map((child, i) => renderTreeNode(child, depth + 1, i === data.children.length - 1)).join('')}
+        </div>`;
+      }
+
+      return `
+        <div class="tree-node ${isExpanded ? '' : 'collapsed'}" data-id="${data.id}" data-type="${data.type}">
+          <div class="tree-node-header ${isSelected ? 'selected' : ''}" onclick="handleNodeClick('${data.id}', '${data.type}')">
+            <div class="tree-indent">${indentHtml}</div>
+            <span class="tree-chevron">${hasChildren ? '&#9660;' : ''}</span>
+            ${iconHtml}
+            <span class="tree-label ${data.status === 'complete' && data.type === 'story' ? 'strikethrough' : ''}">${data.name}</span>
+            <div class="tree-badges">${badges}</div>
+            ${extras}
+            <div class="tree-status-dot ${data.status}"></div>
+          </div>
+          ${childrenHtml}
+        </div>
+      `;
+    }
+
+    function buildSpecsTree() {
+      return intents.filter(i => matchesSearch(i.name)).map(intent => {
+        const intentUnits = units.filter(u => u.intentId === intent.id);
+
+        return {
+          id: intent.id,
+          name: intent.name,
+          type: 'intent',
+          status: intent.status,
+          children: intentUnits.filter(u => matchesSearch(u.name)).map(unit => {
+            const unitBolts = bolts.filter(b => b.unitId === unit.id);
+            const allStories = unitBolts.flatMap(b => b.stories);
+
+            return {
+              id: unit.id,
+              name: unit.name,
+              type: 'unit',
+              status: unit.status,
+              children: allStories.filter(s => matchesSearch(s.name)).map(story => {
+                const parentBolt = bolts.find(b => b.stories.some(s => s.id === story.id));
+                return {
+                  id: story.id,
+                  name: story.name,
+                  type: 'story',
+                  status: story.status,
+                  boltId: parentBolt?.id
+                };
+              })
+            };
+          })
+        };
+      });
+    }
+
+    function buildBoltsTree() {
+      if (state.viewMode === 'hierarchy') {
+        return intents.map(intent => ({
+          id: intent.id,
+          name: intent.name,
+          type: 'intent',
+          status: intent.status,
+          children: units.filter(u => u.intentId === intent.id).map(unit => ({
+            id: unit.id,
+            name: unit.name,
+            type: 'unit',
+            status: unit.status,
+            children: bolts.filter(b => b.unitId === unit.id && matchesSearch(b.name)).map(bolt => ({
+              id: bolt.id,
+              name: bolt.name,
+              type: 'bolt',
+              status: bolt.status,
+              boltType: bolt.type,
+              stages: bolt.stages,
+              children: bolt.stories.filter(s => matchesSearch(s.name)).map(story => ({
+                id: story.id,
+                name: story.name,
+                type: 'story',
+                status: story.status
+              }))
+            }))
+          }))
+        }));
+      } else if (state.viewMode === 'deps') {
+        // Group by dependency level
+        const levels = [];
+        const placed = new Set();
+
+        const noDeps = bolts.filter(b => b.dependsOn.length === 0);
+        if (noDeps.length > 0) {
+          levels.push({ name: 'No Dependencies', bolts: noDeps });
+          noDeps.forEach(b => placed.add(b.id));
+        }
+
+        let remaining = bolts.filter(b => !placed.has(b.id));
+        let levelNum = 1;
+        while (remaining.length > 0) {
+          const nextLevel = remaining.filter(b =>
+            b.dependsOn.every(dep => placed.has(dep))
+          );
+
+          if (nextLevel.length === 0) {
+            levels.push({ name: 'Circular/Blocked', bolts: remaining });
+            break;
+          }
+
+          levels.push({ name: `Level ${levelNum}`, bolts: nextLevel });
+          nextLevel.forEach(b => placed.add(b.id));
+          remaining = remaining.filter(b => !placed.has(b.id));
+          levelNum++;
+        }
+
+        return levels.map((level, i) => ({
+          id: `level-${i}`,
+          name: level.name,
+          type: 'unit',
+          status: 'active',
+          children: level.bolts.map(bolt => ({
+            id: bolt.id,
+            name: bolt.name,
+            type: 'bolt',
+            status: bolt.status,
+            boltType: bolt.type,
+            stages: bolt.stages,
+            children: []
+          }))
+        }));
+      } else if (state.viewMode === 'status') {
+        const groups = ['active', 'blocked', 'pending', 'complete'];
+        return groups.map(status => {
+          const statusBolts = bolts.filter(b => b.status === status);
+          return {
+            id: `status-${status}`,
+            name: status.charAt(0).toUpperCase() + status.slice(1),
+            type: 'unit',
+            status: status,
+            children: statusBolts.map(bolt => ({
+              id: bolt.id,
+              name: bolt.name,
+              type: 'bolt',
+              status: bolt.status,
+              boltType: bolt.type,
+              stages: bolt.stages,
+              children: []
+            }))
+          };
+        }).filter(g => g.children.length > 0);
+      } else {
+        // Flat view
+        return bolts.filter(b => matchesSearch(b.name)).map(bolt => ({
+          id: bolt.id,
+          name: bolt.name,
+          type: 'bolt',
+          status: bolt.status,
+          boltType: bolt.type,
+          stages: bolt.stages,
+          children: bolt.stories.map(story => ({
+            id: story.id,
+            name: story.name,
+            type: 'story',
+            status: story.status
+          }))
+        }));
+      }
+    }
+
+    function renderTree() {
+      const container = document.getElementById('treeContainer');
+      const tree = state.activeTab === 'specs' ? buildSpecsTree() : buildBoltsTree();
+
+      container.innerHTML = tree.map((node, i) => renderTreeNode(node, 0, i === tree.length - 1)).join('');
+    }
+
+    function renderBlockedWarning() {
+      const warning = document.getElementById('blockedWarning');
+      const blockedBolts = bolts.filter(b => b.status === 'blocked');
+
+      if (blockedBolts.length > 0) {
+        const blocked = blockedBolts[0];
+        const blocker = bolts.find(b => b.id === blocked.blockedBy);
+        document.getElementById('blockedText').textContent =
+          `${blocked.name} is waiting for ${blocker?.name || 'dependency'}`;
+        warning.style.display = 'block';
+      } else {
+        warning.style.display = 'none';
+      }
+    }
+
+    function renderDependencyPanel(boltId) {
+      const bolt = bolts.find(b => b.id === boltId);
+      if (!bolt) return;
+
+      const deps = getBoltDependencies(boltId);
+      const dependents = getBoltDependents(boltId);
+
+      document.getElementById('depPanelTitle').textContent = `${bolt.name} Dependencies`;
+
+      let html = '';
+
+      if (deps.length > 0) {
+        html += `
+          <div class="dep-section">
+            <div class="dep-section-title">Depends On (${deps.length})</div>
+            <div class="dep-list">
+              ${deps.map(d => `
+                <div class="dep-item" onclick="handleNodeClick('${d.id}', 'bolt')">
+                  <span class="dep-item-status ${d.status}"></span>
+                  <span class="dep-item-name">${d.name}</span>
+                  <span class="dep-item-arrow">&#8594;</span>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        `;
+      }
+
+      if (dependents.length > 0) {
+        html += `
+          <div class="dep-section">
+            <div class="dep-section-title">Blocks (${dependents.length})</div>
+            <div class="dep-list">
+              ${dependents.map(d => `
+                <div class="dep-item" onclick="handleNodeClick('${d.id}', 'bolt')">
+                  <span class="dep-item-status ${d.status}"></span>
+                  <span class="dep-item-name">${d.name}</span>
+                  <span class="dep-item-arrow">&#8594;</span>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        `;
+      }
+
+      if (deps.length === 0 && dependents.length === 0) {
+        html = '<div style="color: var(--vscode-descriptionForeground); font-size: 11px;">No dependencies</div>';
+      }
+
+      document.getElementById('depPanelContent').innerHTML = html;
+      document.getElementById('depPanel').classList.add('show');
+    }
+
+    function closeDependencyPanel() {
+      document.getElementById('depPanel').classList.remove('show');
+    }
+
+    function renderStatsBar() {
+      const container = document.getElementById('statsBar');
+      const allStories = bolts.flatMap(b => b.stories);
+      const completeStories = allStories.filter(s => s.status === 'complete').length;
+      const completeBolts = bolts.filter(b => b.status === 'complete').length;
+      const blockedBolts = bolts.filter(b => b.status === 'blocked').length;
+      const activeBolts = bolts.filter(b => b.status === 'active').length;
+
+      container.innerHTML = `
+        <div class="stat-item" onclick="filterByStatus('complete')">
+          <div class="stat-value" style="color: var(--status-complete)">${completeBolts}</div>
+          <div class="stat-label">Complete</div>
+        </div>
+        <div class="stat-item" onclick="filterByStatus('active')">
+          <div class="stat-value" style="color: var(--status-active)">${activeBolts}</div>
+          <div class="stat-label">Active</div>
+        </div>
+        <div class="stat-item" onclick="filterByStatus('blocked')">
+          <div class="stat-value" style="color: var(--status-blocked)">${blockedBolts}</div>
+          <div class="stat-label">Blocked</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value">${completeStories}/${allStories.length}</div>
+          <div class="stat-label">Stories</div>
+        </div>
+      `;
+
+      document.getElementById('specsBadge').textContent = allStories.length;
+      document.getElementById('boltsBadge').textContent = bolts.length;
+    }
+
+    function render() {
+      renderTree();
+      renderBlockedWarning();
+      renderStatsBar();
+    }
+
+    // ==================== EVENT HANDLERS ====================
+    function handleNodeClick(id, type) {
+      // Toggle expand/collapse
+      if (state.expandedNodes.has(id)) {
+        state.expandedNodes.delete(id);
+      } else {
+        state.expandedNodes.add(id);
+      }
+
+      state.selectedNode = id;
+
+      if (type === 'bolt') {
+        renderDependencyPanel(id);
+      } else {
+        closeDependencyPanel();
+      }
+
+      if (type === 'story') {
+        const bolt = bolts.find(b => b.stories.some(s => s.id === id));
+        if (bolt) {
+          const story = bolt.stories.find(s => s.id === id);
+          if (story) {
+            story.status = story.status === 'complete' ? 'pending' : 'complete';
+            showToast(story.status === 'complete' ? 'Story completed' : 'Story reopened');
+          }
+        }
+      }
+
+      render();
+    }
+
+    function setTab(tab) {
+      state.activeTab = tab;
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.tab === tab);
+      });
+      closeDependencyPanel();
+      render();
+    }
+
+    function setViewMode(mode) {
+      state.viewMode = mode;
+      document.querySelectorAll('.view-mode-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.mode === mode);
+      });
+      render();
+    }
+
+    function filterByStatus(status) {
+      state.statusFilter = state.statusFilter === status ? 'all' : status;
+      showToast(state.statusFilter === 'all' ? 'Showing all' : `Filtered: ${status}`);
+      render();
+    }
+
+    function expandAll() {
+      intents.forEach(i => state.expandedNodes.add(i.id));
+      units.forEach(u => state.expandedNodes.add(u.id));
+      bolts.forEach(b => state.expandedNodes.add(b.id));
+      render();
+    }
+
+    function collapseAll() {
+      state.expandedNodes.clear();
+      render();
+    }
+
+    function toggleShowDeps() {
+      state.showDeps = !state.showDeps;
+      document.getElementById('showDepsBtn').classList.toggle('active', state.showDeps);
+      render();
+    }
+
+    function buildDependencyFirst() {
+      const blockedBolts = bolts.filter(b => b.status === 'blocked');
+      if (blockedBolts.length === 0) return;
+
+      const blocked = blockedBolts[0];
+      const blocker = bolts.find(b => b.id === blocked.blockedBy);
+
+      if (blocker && blocker.status === 'pending') {
+        blocker.status = 'active';
+        blocker.stages.model = 'active';
+        showToast(`Started: ${blocker.name}`);
+        render();
+      }
+    }
+
+    function skipDependency() {
+      const blockedBolts = bolts.filter(b => b.status === 'blocked');
+      if (blockedBolts.length === 0) return;
+
+      const blocked = blockedBolts[0];
+      blocked.status = 'active';
+      blocked.stages.model = 'active';
+      showToast(`Started without deps: ${blocked.name}`);
+      render();
+    }
+
+    // ==================== EVENT LISTENERS ====================
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => setTab(btn.dataset.tab));
+    });
+
+    document.querySelectorAll('.view-mode-btn').forEach(btn => {
+      btn.addEventListener('click', () => setViewMode(btn.dataset.mode));
+    });
+
+    document.getElementById('searchBox').addEventListener('input', (e) => {
+      state.searchQuery = e.target.value;
+      render();
+    });
+
+    document.getElementById('expandAllBtn').addEventListener('click', expandAll);
+    document.getElementById('collapseAllBtn').addEventListener('click', collapseAll);
+    document.getElementById('showDepsBtn').addEventListener('click', toggleShowDeps);
+    document.getElementById('buildDepBtn').addEventListener('click', buildDependencyFirst);
+    document.getElementById('skipDepBtn').addEventListener('click', skipDependency);
+
+    document.getElementById('themeBtn').addEventListener('click', () => {
+      state.theme = state.theme === 'dark' ? 'light' : 'dark';
+      document.getElementById('sidebar').classList.toggle('theme-light', state.theme === 'light');
+    });
+
+    // ==================== INITIALIZATION ====================
+    render();
+  </script>
+</body>
+</html>

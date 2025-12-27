@@ -39,7 +39,7 @@ Enable the Inception Agent to intelligently decompose intents into appropriate u
 ### FR-5: Simple Construction Bolt
 
 - FR-5.1: System SHALL provide `simple-construction-bolt` for non-DDD work
-- FR-5.2: Simple bolt SHALL have 3 stages: Spec, Implement, Test
+- FR-5.2: Simple bolt SHALL have 3 stages: Plan, Implement, Test
 - FR-5.3: Simple bolt SHALL NOT require domain model or technical design artifacts
 - FR-5.4: Simple bolt SHALL be suitable for: UI work, integrations, utilities, scripts
 

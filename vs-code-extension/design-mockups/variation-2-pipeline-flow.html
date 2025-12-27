@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Variation 2: Pipeline Flow View</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #1e1e1e;
+      color: #cccccc;
+      font-size: 13px;
+      line-height: 1.4;
+    }
+
+    .sidebar {
+      width: 300px;
+      min-height: 100vh;
+      background: #252526;
+      border-right: 1px solid #3c3c3c;
+    }
+
+    .header {
+      padding: 12px 16px;
+      background: #2d2d2d;
+      border-bottom: 1px solid #3c3c3c;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .header-title {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #bbbbbb;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .header-actions button {
+      background: none;
+      border: none;
+      color: #888;
+      cursor: pointer;
+      padding: 4px;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+
+    .header-actions button:hover {
+      background: #3c3c3c;
+      color: #fff;
+    }
+
+    /* Intent Selector */
+    .intent-selector {
+      padding: 12px;
+      border-bottom: 1px solid #3c3c3c;
+    }
+
+    .intent-dropdown {
+      width: 100%;
+      background: #2d2d2d;
+      border: 1px solid #3c3c3c;
+      border-radius: 6px;
+      padding: 8px 12px;
+      color: #fff;
+      font-size: 12px;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .intent-dropdown:hover {
+      border-color: #f97316;
+    }
+
+    .intent-dropdown-arrow {
+      color: #888;
+    }
+
+    .intent-status {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 8px;
+      font-size: 10px;
+      color: #888;
+    }
+
+    .intent-status-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #22c55e;
+    }
+
+    /* Phase Sections */
+    .phase-section {
+      border-bottom: 1px solid #3c3c3c;
+    }
+
+    .phase-header {
+      padding: 10px 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .phase-header:hover {
+      background: #2d2d2d;
+    }
+
+    .phase-indicator {
+      width: 3px;
+      height: 20px;
+      border-radius: 2px;
+    }
+
+    .phase-inception .phase-indicator {
+      background: #8b5cf6;
+    }
+
+    .phase-construction .phase-indicator {
+      background: #f97316;
+    }
+
+    .phase-operations .phase-indicator {
+      background: #22c55e;
+    }
+
+    .phase-title {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      flex: 1;
+    }
+
+    .phase-inception .phase-title {
+      color: #8b5cf6;
+    }
+
+    .phase-construction .phase-title {
+      color: #f97316;
+    }
+
+    .phase-operations .phase-title {
+      color: #22c55e;
+    }
+
+    .phase-count {
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 10px;
+      background: #3c3c3c;
+      color: #888;
+    }
+
+    .phase-content {
+      padding: 0 12px 12px;
+    }
+
+    .phase-empty {
+      font-size: 11px;
+      color: #666;
+      font-style: italic;
+      padding: 8px 0;
+    }
+
+    /* Bolt Row */
+    .bolt-row {
+      background: #2d2d2d;
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 8px;
+      cursor: pointer;
+      transition: all 0.15s;
+      border: 1px solid transparent;
+    }
+
+    .bolt-row:hover {
+      border-color: #4c4c4c;
+    }
+
+    .bolt-row.active {
+      border-color: #f97316;
+      background: linear-gradient(135deg, #2d2d2d 0%, rgba(249, 115, 22, 0.1) 100%);
+    }
+
+    .bolt-row-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .bolt-row-name {
+      font-size: 12px;
+      font-weight: 500;
+      color: #fff;
+    }
+
+    .bolt-row-badge {
+      font-size: 9px;
+      padding: 2px 6px;
+      border-radius: 3px;
+      background: #3c3c3c;
+      color: #888;
+    }
+
+    /* Pipeline Indicator */
+    .pipeline {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      margin-bottom: 8px;
+    }
+
+    .pipeline-dot {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 8px;
+      z-index: 1;
+      position: relative;
+    }
+
+    .pipeline-connector {
+      width: 16px;
+      height: 2px;
+      margin: 0 -2px;
+    }
+
+    .dot-completed {
+      background: #22c55e;
+      color: #fff;
+      box-shadow: 0 0 6px rgba(34, 197, 94, 0.4);
+    }
+
+    .dot-active {
+      background: #f97316;
+      color: #fff;
+      box-shadow: 0 0 8px rgba(249, 115, 22, 0.5);
+      animation: pulse 2s infinite;
+    }
+
+    .dot-pending {
+      background: transparent;
+      border: 2px solid #4c4c4c;
+      color: #666;
+    }
+
+    .connector-completed {
+      background: #22c55e;
+    }
+
+    .connector-active {
+      background: linear-gradient(90deg, #22c55e 0%, #f97316 100%);
+    }
+
+    .connector-pending {
+      background: #3c3c3c;
+    }
+
+    @keyframes pulse {
+      0%, 100% { box-shadow: 0 0 8px rgba(249, 115, 22, 0.5); }
+      50% { box-shadow: 0 0 16px rgba(249, 115, 22, 0.8); }
+    }
+
+    .pipeline-label {
+      font-size: 10px;
+      color: #888;
+      margin-left: 8px;
+    }
+
+    .pipeline-label-active {
+      color: #f97316;
+    }
+
+    /* Story Summary */
+    .story-summary {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 10px;
+      color: #666;
+    }
+
+    .story-dots {
+      display: flex;
+      gap: 3px;
+    }
+
+    .story-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+    }
+
+    .story-dot-done {
+      background: #22c55e;
+    }
+
+    .story-dot-pending {
+      background: #3c3c3c;
+    }
+
+    /* Expanded Stories */
+    .stories-expanded {
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px solid #3c3c3c;
+    }
+
+    .story-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 0;
+      font-size: 11px;
+    }
+
+    .story-checkbox {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      border: 2px solid #4c4c4c;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 8px;
+    }
+
+    .story-checkbox.done {
+      background: #22c55e;
+      border-color: #22c55e;
+      color: #fff;
+    }
+
+    .story-name {
+      color: #aaa;
+      flex: 1;
+    }
+
+    .story-name.done {
+      text-decoration: line-through;
+      color: #666;
+    }
+
+    /* Filter Panel */
+    .filter-panel {
+      padding: 12px;
+      background: #1e1e1e;
+      border-top: 1px solid #3c3c3c;
+    }
+
+    .filter-title {
+      font-size: 10px;
+      color: #666;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+    }
+
+    .filter-options {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .filter-option {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 11px;
+      color: #888;
+      cursor: pointer;
+    }
+
+    .filter-option:hover {
+      color: #ccc;
+    }
+
+    .filter-checkbox {
+      width: 14px;
+      height: 14px;
+      border: 1px solid #4c4c4c;
+      border-radius: 3px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      color: #f97316;
+    }
+
+    .filter-checkbox.checked {
+      background: #f97316;
+      border-color: #f97316;
+      color: #fff;
+    }
+
+    /* Time indicator */
+    .time-indicator {
+      font-size: 9px;
+      color: #666;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .time-indicator.stale {
+      color: #ef4444;
+    }
+  </style>
+</head>
+<body>
+  <div class="sidebar">
+    <div class="header">
+      <span class="header-title">SpecsMD Flow</span>
+      <div class="header-actions">
+        <button title="Collapse All">&#9776;</button>
+        <button title="Filter">&#9881;</button>
+      </div>
+    </div>
+
+    <div class="intent-selector">
+      <div class="intent-dropdown">
+        <span>001-admin-panel</span>
+        <span class="intent-dropdown-arrow">&#9662;</span>
+      </div>
+      <div class="intent-status">
+        <span class="intent-status-dot"></span>
+        <span>4 bolts | 1 complete | 1 in progress</span>
+      </div>
+    </div>
+
+    <!-- Inception Phase -->
+    <div class="phase-section phase-inception">
+      <div class="phase-header">
+        <div class="phase-indicator"></div>
+        <span class="phase-title">Inception</span>
+        <span class="phase-count">0</span>
+      </div>
+      <div class="phase-content">
+        <div class="phase-empty">No bolts in inception</div>
+      </div>
+    </div>
+
+    <!-- Construction Phase -->
+    <div class="phase-section phase-construction">
+      <div class="phase-header">
+        <div class="phase-indicator"></div>
+        <span class="phase-title">Construction</span>
+        <span class="phase-count">4</span>
+      </div>
+      <div class="phase-content">
+        <!-- Active Bolt -->
+        <div class="bolt-row active">
+          <div class="bolt-row-header">
+            <span class="bolt-row-name">user-management-service-1</span>
+            <span class="bolt-row-badge">DDD</span>
+          </div>
+          <div class="pipeline">
+            <div class="pipeline-dot dot-completed">&#10003;</div>
+            <div class="pipeline-connector connector-completed"></div>
+            <div class="pipeline-dot dot-active">&#9679;</div>
+            <div class="pipeline-connector connector-pending"></div>
+            <div class="pipeline-dot dot-pending"></div>
+            <div class="pipeline-connector connector-pending"></div>
+            <div class="pipeline-dot dot-pending"></div>
+            <div class="pipeline-connector connector-pending"></div>
+            <div class="pipeline-dot dot-pending"></div>
+            <span class="pipeline-label pipeline-label-active">design</span>
+          </div>
+          <div class="story-summary">
+            <div class="story-dots">
+              <div class="story-dot story-dot-done"></div>
+              <div class="story-dot story-dot-done"></div>
+              <div class="story-dot story-dot-pending"></div>
+              <div class="story-dot story-dot-pending"></div>
+            </div>
+            <span>2/4 stories</span>
+            <span class="time-indicator">&#128336; 2h ago</span>
+          </div>
+
+          <!-- Expanded Stories -->
+          <div class="stories-expanded">
+            <div class="story-item">
+              <div class="story-checkbox done">&#10003;</div>
+              <span class="story-name done">001-create-user</span>
+            </div>
+            <div class="story-item">
+              <div class="story-checkbox done">&#10003;</div>
+              <span class="story-name done">002-view-user-list</span>
+            </div>
+            <div class="story-item">
+              <div class="story-checkbox"></div>
+              <span class="story-name">003-update-user</span>
+            </div>
+            <div class="story-item">
+              <div class="story-checkbox"></div>
+              <span class="story-name">004-delete-user</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Pending Bolts -->
+        <div class="bolt-row">
+          <div class="bolt-row-header">
+            <span class="bolt-row-name">admin-panel-ui-1</span>
+            <span class="bolt-row-badge">Simple</span>
+          </div>
+          <div class="pipeline">
+            <div class="pipeline-dot dot-pending"></div>
+            <div class="pipeline-connector connector-pending"></div>
+            <div class="pipeline-dot dot-pending"></div>
+            <div class="pipeline-connector connector-pending"></div>
+            <div class="pipeline-dot dot-pending"></div>
+            <div class="pipeline-connector connector-pending"></div>
+            <div class="pipeline-dot dot-pending"></div>
+            <div class="pipeline-connector connector-pending"></div>
+            <div class="pipeline-dot dot-pending"></div>
+            <span class="pipeline-label">pending</span>
+          </div>
+          <div class="story-summary">
+            <div class="story-dots">
+              <div class="story-dot story-dot-pending"></div>
+              <div class="story-dot story-dot-pending"></div>
+              <div class="story-dot story-dot-pending"></div>
+              <div class="story-dot story-dot-pending"></div>
+            </div>
+            <span>0/4 stories</span>
+          </div>
+        </div>
+
+        <div class="bolt-row">
+          <div class="bolt-row-header">
+            <span class="bolt-row-name">admin-panel-ui-2</span>
+            <span class="bolt-row-badge">Simple</span>
+          </div>
+          <div class="pipeline">
+            <div class="pipeline-dot dot-pending"></div>
+            <div class="pipeline-connector connector-pending"></div>
+            <div class="pipeline-dot dot-pending"></div>
+            <div class="pipeline-connector connector-pending"></div>
+            <div class="pipeline-dot dot-pending"></div>
+            <div class="pipeline-connector connector-pending"></div>
+            <div class="pipeline-dot dot-pending"></div>
+            <div class="pipeline-connector connector-pending"></div>
+            <div class="pipeline-dot dot-pending"></div>
+            <span class="pipeline-label">pending</span>
+          </div>
+          <div class="story-summary">
+            <div class="story-dots">
+              <div class="story-dot story-dot-pending"></div>
+              <div class="story-dot story-dot-pending"></div>
+              <div class="story-dot story-dot-pending"></div>
+              <div class="story-dot story-dot-pending"></div>
+            </div>
+            <span>0/4 stories</span>
+          </div>
+        </div>
+
+        <div class="bolt-row">
+          <div class="bolt-row-header">
+            <span class="bolt-row-name">audit-service-1</span>
+            <span class="bolt-row-badge">DDD</span>
+          </div>
+          <div class="pipeline">
+            <div class="pipeline-dot dot-pending"></div>
+            <div class="pipeline-connector connector-pending"></div>
+            <div class="pipeline-dot dot-pending"></div>
+            <div class="pipeline-connector connector-pending"></div>
+            <div class="pipeline-dot dot-pending"></div>
+            <div class="pipeline-connector connector-pending"></div>
+            <div class="pipeline-dot dot-pending"></div>
+            <div class="pipeline-connector connector-pending"></div>
+            <div class="pipeline-dot dot-pending"></div>
+            <span class="pipeline-label">pending</span>
+          </div>
+          <div class="story-summary">
+            <div class="story-dots">
+              <div class="story-dot story-dot-pending"></div>
+              <div class="story-dot story-dot-pending"></div>
+            </div>
+            <span>0/2 stories</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Operations Phase -->
+    <div class="phase-section phase-operations">
+      <div class="phase-header">
+        <div class="phase-indicator"></div>
+        <span class="phase-title">Operations</span>
+        <span class="phase-count">1</span>
+      </div>
+      <div class="phase-content">
+        <div class="bolt-row" style="opacity: 0.8;">
+          <div class="bolt-row-header">
+            <span class="bolt-row-name">role-permission-service-1</span>
+            <span class="bolt-row-badge" style="background: rgba(34, 197, 94, 0.2); color: #22c55e;">Complete</span>
+          </div>
+          <div class="pipeline">
+            <div class="pipeline-dot dot-completed">&#10003;</div>
+            <div class="pipeline-connector connector-completed"></div>
+            <div class="pipeline-dot dot-completed">&#10003;</div>
+            <div class="pipeline-connector connector-completed"></div>
+            <div class="pipeline-dot dot-completed">&#10003;</div>
+            <div class="pipeline-connector connector-completed"></div>
+            <div class="pipeline-dot dot-completed">&#10003;</div>
+            <div class="pipeline-connector connector-completed"></div>
+            <div class="pipeline-dot dot-completed">&#10003;</div>
+            <span class="pipeline-label" style="color: #22c55e;">complete</span>
+          </div>
+          <div class="story-summary">
+            <div class="story-dots">
+              <div class="story-dot story-dot-done"></div>
+              <div class="story-dot story-dot-done"></div>
+              <div class="story-dot story-dot-done"></div>
+              <div class="story-dot story-dot-done"></div>
+              <div class="story-dot story-dot-done"></div>
+              <div class="story-dot story-dot-done"></div>
+            </div>
+            <span style="color: #22c55e;">6/6 stories</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Filter Panel -->
+    <div class="filter-panel">
+      <div class="filter-title">Quick Filters</div>
+      <div class="filter-options">
+        <label class="filter-option">
+          <div class="filter-checkbox checked">&#10003;</div>
+          <span>Show in-progress</span>
+        </label>
+        <label class="filter-option">
+          <div class="filter-checkbox checked">&#10003;</div>
+          <span>Show pending</span>
+        </label>
+        <label class="filter-option">
+          <div class="filter-checkbox"></div>
+          <span>Hide completed</span>
+        </label>
+        <label class="filter-option">
+          <div class="filter-checkbox"></div>
+          <span>Expand stories</span>
+        </label>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

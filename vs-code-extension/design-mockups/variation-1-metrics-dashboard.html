@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Variation 1: Metrics-First Dashboard</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #1e1e1e;
+      color: #cccccc;
+      font-size: 13px;
+      line-height: 1.4;
+    }
+
+    .sidebar {
+      width: 300px;
+      min-height: 100vh;
+      background: #252526;
+      border-right: 1px solid #3c3c3c;
+    }
+
+    .header {
+      padding: 12px 16px;
+      background: #2d2d2d;
+      border-bottom: 1px solid #3c3c3c;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .header-title {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #bbbbbb;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .header-actions button {
+      background: none;
+      border: none;
+      color: #888;
+      cursor: pointer;
+      padding: 4px;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+
+    .header-actions button:hover {
+      background: #3c3c3c;
+      color: #fff;
+    }
+
+    /* Stats Cards */
+    .stats-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      padding: 12px;
+    }
+
+    .stat-card {
+      background: #2d2d2d;
+      border-radius: 6px;
+      padding: 12px;
+      border: 1px solid #3c3c3c;
+    }
+
+    .stat-card:hover {
+      border-color: #f97316;
+    }
+
+    .stat-value {
+      font-size: 24px;
+      font-weight: 600;
+      color: #ffffff;
+    }
+
+    .stat-label {
+      font-size: 11px;
+      color: #888;
+      margin-top: 2px;
+    }
+
+    .stat-sub {
+      font-size: 10px;
+      color: #f97316;
+      margin-top: 4px;
+    }
+
+    /* Active Bolt Section */
+    .section {
+      padding: 12px;
+      border-bottom: 1px solid #3c3c3c;
+    }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #f97316;
+      margin-bottom: 10px;
+    }
+
+    .section-header-muted {
+      color: #888;
+    }
+
+    .active-bolt-card {
+      background: linear-gradient(135deg, #2d2d2d 0%, #1e1e1e 100%);
+      border: 1px solid #f97316;
+      border-radius: 8px;
+      padding: 12px;
+    }
+
+    .bolt-name {
+      font-size: 12px;
+      font-weight: 500;
+      color: #ffffff;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .bolt-type-badge {
+      font-size: 9px;
+      background: #3c3c3c;
+      padding: 2px 6px;
+      border-radius: 3px;
+      color: #888;
+    }
+
+    /* Stage Indicators */
+    .stage-indicators {
+      display: flex;
+      gap: 4px;
+      margin-bottom: 10px;
+    }
+
+    .stage-box {
+      width: 24px;
+      height: 24px;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 9px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.15s;
+    }
+
+    .stage-box:hover {
+      transform: scale(1.1);
+    }
+
+    .stage-completed {
+      background: #22c55e;
+      color: #fff;
+    }
+
+    .stage-active {
+      background: #f97316;
+      color: #fff;
+      box-shadow: 0 0 8px rgba(249, 115, 22, 0.5);
+    }
+
+    .stage-pending {
+      background: #3c3c3c;
+      color: #666;
+      border: 1px dashed #555;
+    }
+
+    .stage-blocked {
+      background: #ef4444;
+      color: #fff;
+    }
+
+    /* Progress Bar */
+    .progress-container {
+      margin-bottom: 8px;
+    }
+
+    .progress-bar {
+      height: 4px;
+      background: #3c3c3c;
+      border-radius: 2px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #22c55e 0%, #f97316 100%);
+      border-radius: 2px;
+      transition: width 0.3s;
+    }
+
+    .progress-text {
+      display: flex;
+      justify-content: space-between;
+      font-size: 10px;
+      color: #888;
+      margin-top: 4px;
+    }
+
+    /* Story Count */
+    .story-count {
+      font-size: 11px;
+      color: #888;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .story-count-done {
+      color: #22c55e;
+    }
+
+    /* Bolt List */
+    .bolt-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .bolt-item {
+      background: #2d2d2d;
+      border: 1px solid #3c3c3c;
+      border-radius: 6px;
+      padding: 10px 12px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .bolt-item:hover {
+      border-color: #555;
+      background: #333;
+    }
+
+    .bolt-item-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+
+    .bolt-item-name {
+      font-size: 11px;
+      color: #ccc;
+      font-weight: 500;
+    }
+
+    .bolt-item-status {
+      font-size: 9px;
+      padding: 2px 6px;
+      border-radius: 3px;
+    }
+
+    .status-pending {
+      background: #3c3c3c;
+      color: #888;
+    }
+
+    .status-complete {
+      background: rgba(34, 197, 94, 0.2);
+      color: #22c55e;
+    }
+
+    .mini-stages {
+      display: flex;
+      gap: 3px;
+    }
+
+    .mini-stage {
+      width: 16px;
+      height: 6px;
+      border-radius: 2px;
+    }
+
+    /* Filter Bar */
+    .filter-bar {
+      padding: 8px 12px;
+      background: #2d2d2d;
+      border-bottom: 1px solid #3c3c3c;
+      display: flex;
+      gap: 6px;
+    }
+
+    .filter-chip {
+      font-size: 10px;
+      padding: 4px 8px;
+      border-radius: 12px;
+      background: #3c3c3c;
+      color: #888;
+      cursor: pointer;
+      border: none;
+      transition: all 0.15s;
+    }
+
+    .filter-chip:hover {
+      background: #4c4c4c;
+      color: #ccc;
+    }
+
+    .filter-chip.active {
+      background: #f97316;
+      color: #fff;
+    }
+
+    /* Tooltip */
+    .tooltip {
+      position: relative;
+    }
+
+    .tooltip::after {
+      content: attr(data-tooltip);
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #1e1e1e;
+      border: 1px solid #3c3c3c;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 10px;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.15s;
+    }
+
+    .tooltip:hover::after {
+      opacity: 1;
+    }
+
+    /* Legend */
+    .legend {
+      padding: 12px;
+      background: #1e1e1e;
+      border-top: 1px solid #3c3c3c;
+    }
+
+    .legend-title {
+      font-size: 10px;
+      color: #666;
+      margin-bottom: 8px;
+    }
+
+    .legend-items {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 10px;
+      color: #888;
+    }
+
+    .legend-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 2px;
+    }
+  </style>
+</head>
+<body>
+  <div class="sidebar">
+    <div class="header">
+      <span class="header-title">SpecsMD Dashboard</span>
+      <div class="header-actions">
+        <button title="Refresh">&#8635;</button>
+        <button title="Settings">&#9881;</button>
+      </div>
+    </div>
+
+    <div class="filter-bar">
+      <button class="filter-chip active">All</button>
+      <button class="filter-chip">In Progress</button>
+      <button class="filter-chip">Pending</button>
+      <button class="filter-chip">Completed</button>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-value">6</div>
+        <div class="stat-label">Total Bolts</div>
+        <div class="stat-sub">2 in progress</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">24</div>
+        <div class="stat-label">Stories</div>
+        <div class="stat-sub">8 completed</div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-header">
+        <span>&#128293;</span> Active Bolt
+      </div>
+      <div class="active-bolt-card">
+        <div class="bolt-name">
+          user-management-service-1
+          <span class="bolt-type-badge">DDD</span>
+        </div>
+        <div class="stage-indicators">
+          <div class="stage-box stage-completed tooltip" data-tooltip="Model">M</div>
+          <div class="stage-box stage-active tooltip" data-tooltip="Design">D</div>
+          <div class="stage-box stage-pending tooltip" data-tooltip="ADR">A</div>
+          <div class="stage-box stage-pending tooltip" data-tooltip="Implement">I</div>
+          <div class="stage-box stage-pending tooltip" data-tooltip="Test">T</div>
+        </div>
+        <div class="progress-container">
+          <div class="progress-bar">
+            <div class="progress-fill" style="width: 40%"></div>
+          </div>
+          <div class="progress-text">
+            <span>Stage 2 of 5</span>
+            <span>40%</span>
+          </div>
+        </div>
+        <div class="story-count">
+          <span>&#128196;</span>
+          <span class="story-count-done">2</span> / 4 stories
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-header section-header-muted">
+        <span>&#128203;</span> Up Next
+      </div>
+      <div class="bolt-list">
+        <div class="bolt-item">
+          <div class="bolt-item-header">
+            <span class="bolt-item-name">admin-panel-ui-1</span>
+            <span class="bolt-item-status status-pending">Simple</span>
+          </div>
+          <div class="mini-stages">
+            <div class="mini-stage stage-pending"></div>
+            <div class="mini-stage stage-pending"></div>
+            <div class="mini-stage stage-pending"></div>
+            <div class="mini-stage stage-pending"></div>
+            <div class="mini-stage stage-pending"></div>
+          </div>
+        </div>
+
+        <div class="bolt-item">
+          <div class="bolt-item-header">
+            <span class="bolt-item-name">admin-panel-ui-2</span>
+            <span class="bolt-item-status status-pending">Simple</span>
+          </div>
+          <div class="mini-stages">
+            <div class="mini-stage stage-pending"></div>
+            <div class="mini-stage stage-pending"></div>
+            <div class="mini-stage stage-pending"></div>
+            <div class="mini-stage stage-pending"></div>
+            <div class="mini-stage stage-pending"></div>
+          </div>
+        </div>
+
+        <div class="bolt-item">
+          <div class="bolt-item-header">
+            <span class="bolt-item-name">audit-service-1</span>
+            <span class="bolt-item-status status-pending">DDD</span>
+          </div>
+          <div class="mini-stages">
+            <div class="mini-stage stage-pending"></div>
+            <div class="mini-stage stage-pending"></div>
+            <div class="mini-stage stage-pending"></div>
+            <div class="mini-stage stage-pending"></div>
+            <div class="mini-stage stage-pending"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-header section-header-muted" style="color: #22c55e;">
+        <span>&#10003;</span> Completed
+      </div>
+      <div class="bolt-list">
+        <div class="bolt-item" style="opacity: 0.7;">
+          <div class="bolt-item-header">
+            <span class="bolt-item-name">role-permission-service-1</span>
+            <span class="bolt-item-status status-complete">DDD</span>
+          </div>
+          <div class="mini-stages">
+            <div class="mini-stage stage-completed"></div>
+            <div class="mini-stage stage-completed"></div>
+            <div class="mini-stage stage-completed"></div>
+            <div class="mini-stage stage-completed"></div>
+            <div class="mini-stage stage-completed"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="legend">
+      <div class="legend-title">STAGE LEGEND</div>
+      <div class="legend-items">
+        <div class="legend-item">
+          <div class="legend-dot stage-completed"></div>
+          <span>Done</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-dot stage-active"></div>
+          <span>Active</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-dot stage-pending"></div>
+          <span>Pending</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-dot stage-blocked"></div>
+          <span>Blocked</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

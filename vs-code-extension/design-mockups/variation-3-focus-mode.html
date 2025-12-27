@@ -1,0 +1,898 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Variation 3: Focus Mode with View Switcher</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #1e1e1e;
+      color: #cccccc;
+      font-size: 13px;
+      line-height: 1.4;
+    }
+
+    .sidebar-container {
+      display: flex;
+      gap: 20px;
+      padding: 20px;
+    }
+
+    .sidebar {
+      width: 300px;
+      min-height: 90vh;
+      background: #252526;
+      border-right: 1px solid #3c3c3c;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .header {
+      padding: 12px 16px;
+      background: #2d2d2d;
+      border-bottom: 1px solid #3c3c3c;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .header-title {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #bbbbbb;
+    }
+
+    /* View Switcher */
+    .view-switcher {
+      display: flex;
+      background: #1e1e1e;
+      border-radius: 6px;
+      padding: 2px;
+    }
+
+    .view-btn {
+      background: none;
+      border: none;
+      padding: 6px 10px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 12px;
+      color: #888;
+      transition: all 0.15s;
+    }
+
+    .view-btn:hover {
+      color: #ccc;
+    }
+
+    .view-btn.active {
+      background: #f97316;
+      color: #fff;
+    }
+
+    .view-label {
+      font-size: 9px;
+      margin-top: 2px;
+      text-align: center;
+    }
+
+    /* DASHBOARD VIEW */
+    .dashboard-view .stats-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      padding: 12px;
+    }
+
+    .mini-stat {
+      background: #2d2d2d;
+      border-radius: 8px;
+      padding: 12px;
+      text-align: center;
+      border: 1px solid #3c3c3c;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .mini-stat:hover {
+      border-color: #f97316;
+      transform: translateY(-1px);
+    }
+
+    .mini-stat-value {
+      font-size: 28px;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .mini-stat-label {
+      font-size: 10px;
+      color: #888;
+      text-transform: uppercase;
+    }
+
+    .mini-stat-sub {
+      font-size: 9px;
+      color: #f97316;
+      margin-top: 4px;
+    }
+
+    .current-work {
+      padding: 12px;
+      border-top: 1px solid #3c3c3c;
+    }
+
+    .section-title {
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      color: #f97316;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .section-title-muted {
+      color: #666;
+    }
+
+    .work-card {
+      background: linear-gradient(135deg, #2d2d2d 0%, rgba(249, 115, 22, 0.1) 100%);
+      border: 1px solid #f97316;
+      border-radius: 8px;
+      padding: 14px;
+    }
+
+    .work-card-name {
+      font-size: 13px;
+      font-weight: 600;
+      color: #fff;
+      margin-bottom: 10px;
+    }
+
+    /* Horizontal Stage Track */
+    .stage-track {
+      display: flex;
+      align-items: center;
+      background: #1e1e1e;
+      border-radius: 20px;
+      padding: 4px;
+      margin-bottom: 10px;
+    }
+
+    .stage-track-item {
+      flex: 1;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 9px;
+      font-weight: 600;
+      border-radius: 16px;
+      margin: 0 2px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .stage-track-item:hover {
+      transform: scale(1.05);
+    }
+
+    .stage-track-complete {
+      background: #22c55e;
+      color: #fff;
+    }
+
+    .stage-track-active {
+      background: #f97316;
+      color: #fff;
+      box-shadow: 0 0 10px rgba(249, 115, 22, 0.5);
+    }
+
+    .stage-track-pending {
+      background: #3c3c3c;
+      color: #666;
+    }
+
+    .work-meta {
+      display: flex;
+      justify-content: space-between;
+      font-size: 10px;
+      color: #888;
+    }
+
+    .quick-list {
+      padding: 12px;
+      border-top: 1px solid #3c3c3c;
+    }
+
+    .quick-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 10px;
+      background: #2d2d2d;
+      border-radius: 6px;
+      margin-bottom: 6px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .quick-item:hover {
+      background: #333;
+    }
+
+    .quick-item-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #3c3c3c;
+    }
+
+    .quick-item-name {
+      flex: 1;
+      font-size: 11px;
+      color: #ccc;
+    }
+
+    .quick-item-stages {
+      display: flex;
+      gap: 2px;
+    }
+
+    .quick-stage {
+      width: 8px;
+      height: 8px;
+      border-radius: 2px;
+    }
+
+    /* FOCUS VIEW */
+    .focus-view .focus-header {
+      padding: 16px;
+      background: linear-gradient(135deg, #2d2d2d 0%, rgba(249, 115, 22, 0.15) 100%);
+      border-bottom: 1px solid #f97316;
+    }
+
+    .focus-back {
+      font-size: 10px;
+      color: #888;
+      cursor: pointer;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .focus-back:hover {
+      color: #f97316;
+    }
+
+    .focus-bolt-name {
+      font-size: 16px;
+      font-weight: 600;
+      color: #fff;
+      margin-bottom: 4px;
+    }
+
+    .focus-bolt-type {
+      font-size: 10px;
+      color: #f97316;
+    }
+
+    .focus-stage-section {
+      padding: 16px;
+    }
+
+    .focus-stage-label {
+      font-size: 10px;
+      color: #888;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+
+    /* Large Stage Visualization */
+    .focus-stages {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: relative;
+      margin-bottom: 16px;
+    }
+
+    .focus-stages::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 20px;
+      right: 20px;
+      height: 3px;
+      background: #3c3c3c;
+      transform: translateY(-50%);
+      z-index: 0;
+    }
+
+    .focus-stage {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 600;
+      z-index: 1;
+      cursor: pointer;
+      transition: all 0.15s;
+      position: relative;
+    }
+
+    .focus-stage:hover {
+      transform: scale(1.1);
+    }
+
+    .focus-stage-complete {
+      background: #22c55e;
+      color: #fff;
+      box-shadow: 0 2px 8px rgba(34, 197, 94, 0.3);
+    }
+
+    .focus-stage-active {
+      background: #f97316;
+      color: #fff;
+      box-shadow: 0 2px 12px rgba(249, 115, 22, 0.5);
+      animation: pulse-focus 2s infinite;
+    }
+
+    .focus-stage-pending {
+      background: #2d2d2d;
+      border: 2px solid #4c4c4c;
+      color: #666;
+    }
+
+    @keyframes pulse-focus {
+      0%, 100% { box-shadow: 0 2px 12px rgba(249, 115, 22, 0.5); }
+      50% { box-shadow: 0 2px 20px rgba(249, 115, 22, 0.8); }
+    }
+
+    .focus-stage-name {
+      position: absolute;
+      top: 48px;
+      font-size: 9px;
+      color: #888;
+      white-space: nowrap;
+    }
+
+    .focus-progress {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px;
+      background: #2d2d2d;
+      border-radius: 8px;
+    }
+
+    .focus-progress-bar {
+      flex: 1;
+      height: 6px;
+      background: #3c3c3c;
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .focus-progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #22c55e 0%, #f97316 100%);
+      border-radius: 3px;
+    }
+
+    .focus-progress-text {
+      font-size: 12px;
+      font-weight: 600;
+      color: #f97316;
+    }
+
+    /* Stories in Focus */
+    .focus-stories {
+      padding: 16px;
+      border-top: 1px solid #3c3c3c;
+    }
+
+    .focus-stories-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .focus-stories-title {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      color: #888;
+    }
+
+    .focus-stories-count {
+      font-size: 10px;
+      color: #22c55e;
+    }
+
+    .focus-story {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      background: #2d2d2d;
+      border-radius: 6px;
+      margin-bottom: 6px;
+      cursor: pointer;
+      transition: all 0.15s;
+      border: 1px solid transparent;
+    }
+
+    .focus-story:hover {
+      border-color: #4c4c4c;
+    }
+
+    .focus-story-check {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      border: 2px solid #4c4c4c;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+    }
+
+    .focus-story-check.done {
+      background: #22c55e;
+      border-color: #22c55e;
+      color: #fff;
+    }
+
+    .focus-story-name {
+      flex: 1;
+      font-size: 12px;
+      color: #ccc;
+    }
+
+    .focus-story-name.done {
+      color: #666;
+      text-decoration: line-through;
+    }
+
+    /* Action Button */
+    .focus-action {
+      padding: 16px;
+      border-top: 1px solid #3c3c3c;
+    }
+
+    .action-btn {
+      width: 100%;
+      padding: 12px;
+      background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+      border: none;
+      border-radius: 8px;
+      color: #fff;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .action-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(249, 115, 22, 0.4);
+    }
+
+    /* LIST VIEW */
+    .list-view .list-header {
+      padding: 12px;
+      background: #2d2d2d;
+      border-bottom: 1px solid #3c3c3c;
+    }
+
+    .list-filter-row {
+      display: flex;
+      gap: 6px;
+    }
+
+    .list-filter-chip {
+      font-size: 10px;
+      padding: 4px 10px;
+      border-radius: 12px;
+      background: #3c3c3c;
+      color: #888;
+      border: none;
+      cursor: pointer;
+    }
+
+    .list-filter-chip.active {
+      background: #f97316;
+      color: #fff;
+    }
+
+    .list-content {
+      padding: 8px;
+    }
+
+    .list-bolt {
+      background: #2d2d2d;
+      border-radius: 6px;
+      margin-bottom: 6px;
+      overflow: hidden;
+    }
+
+    .list-bolt-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      cursor: pointer;
+    }
+
+    .list-bolt-header:hover {
+      background: #333;
+    }
+
+    .list-bolt-expand {
+      color: #888;
+      font-size: 10px;
+    }
+
+    .list-bolt-status {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+    }
+
+    .list-bolt-status.active {
+      background: #f97316;
+      box-shadow: 0 0 6px rgba(249, 115, 22, 0.5);
+    }
+
+    .list-bolt-status.pending {
+      background: #3c3c3c;
+    }
+
+    .list-bolt-status.complete {
+      background: #22c55e;
+    }
+
+    .list-bolt-name {
+      flex: 1;
+      font-size: 11px;
+      color: #ccc;
+    }
+
+    .list-bolt-stages {
+      display: flex;
+      gap: 2px;
+    }
+
+    .list-stage {
+      width: 14px;
+      height: 14px;
+      border-radius: 3px;
+      font-size: 7px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+    }
+
+    .label-text {
+      margin-top: 30px;
+      text-align: center;
+      font-size: 10px;
+      color: #666;
+      font-style: italic;
+    }
+  </style>
+</head>
+<body>
+  <div class="sidebar-container">
+    <!-- DASHBOARD VIEW -->
+    <div class="sidebar dashboard-view">
+      <div class="header">
+        <span class="header-title">SpecsMD</span>
+        <div class="view-switcher">
+          <button class="view-btn active" title="Dashboard">&#128202;</button>
+          <button class="view-btn" title="Focus">&#127919;</button>
+          <button class="view-btn" title="List">&#128203;</button>
+        </div>
+      </div>
+
+      <div class="stats-grid">
+        <div class="mini-stat">
+          <div class="mini-stat-value">6</div>
+          <div class="mini-stat-label">Bolts</div>
+          <div class="mini-stat-sub">2 active</div>
+        </div>
+        <div class="mini-stat">
+          <div class="mini-stat-value">24</div>
+          <div class="mini-stat-label">Stories</div>
+          <div class="mini-stat-sub">33% done</div>
+        </div>
+        <div class="mini-stat">
+          <div class="mini-stat-value">1</div>
+          <div class="mini-stat-label">Intent</div>
+        </div>
+        <div class="mini-stat">
+          <div class="mini-stat-value">3</div>
+          <div class="mini-stat-label">Standards</div>
+        </div>
+      </div>
+
+      <div class="current-work">
+        <div class="section-title">&#128293; Current Work</div>
+        <div class="work-card">
+          <div class="work-card-name">user-management-service-1</div>
+          <div class="stage-track">
+            <div class="stage-track-item stage-track-complete">M</div>
+            <div class="stage-track-item stage-track-active">D</div>
+            <div class="stage-track-item stage-track-pending">A</div>
+            <div class="stage-track-item stage-track-pending">I</div>
+            <div class="stage-track-item stage-track-pending">T</div>
+          </div>
+          <div class="work-meta">
+            <span>Stage: design</span>
+            <span>40% complete</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="quick-list">
+        <div class="section-title section-title-muted">&#128203; Up Next</div>
+        <div class="quick-item">
+          <div class="quick-item-dot"></div>
+          <span class="quick-item-name">admin-panel-ui-1</span>
+          <div class="quick-item-stages">
+            <div class="quick-stage stage-track-pending"></div>
+            <div class="quick-stage stage-track-pending"></div>
+            <div class="quick-stage stage-track-pending"></div>
+            <div class="quick-stage stage-track-pending"></div>
+            <div class="quick-stage stage-track-pending"></div>
+          </div>
+        </div>
+        <div class="quick-item">
+          <div class="quick-item-dot"></div>
+          <span class="quick-item-name">admin-panel-ui-2</span>
+          <div class="quick-item-stages">
+            <div class="quick-stage stage-track-pending"></div>
+            <div class="quick-stage stage-track-pending"></div>
+            <div class="quick-stage stage-track-pending"></div>
+            <div class="quick-stage stage-track-pending"></div>
+            <div class="quick-stage stage-track-pending"></div>
+          </div>
+        </div>
+        <div class="quick-item">
+          <div class="quick-item-dot"></div>
+          <span class="quick-item-name">audit-service-1</span>
+          <div class="quick-item-stages">
+            <div class="quick-stage stage-track-pending"></div>
+            <div class="quick-stage stage-track-pending"></div>
+            <div class="quick-stage stage-track-pending"></div>
+            <div class="quick-stage stage-track-pending"></div>
+            <div class="quick-stage stage-track-pending"></div>
+          </div>
+        </div>
+      </div>
+
+      <p class="label-text">Dashboard View</p>
+    </div>
+
+    <!-- FOCUS VIEW -->
+    <div class="sidebar focus-view">
+      <div class="header">
+        <span class="header-title">SpecsMD</span>
+        <div class="view-switcher">
+          <button class="view-btn" title="Dashboard">&#128202;</button>
+          <button class="view-btn active" title="Focus">&#127919;</button>
+          <button class="view-btn" title="List">&#128203;</button>
+        </div>
+      </div>
+
+      <div class="focus-header">
+        <div class="focus-back">&#8592; Back to dashboard</div>
+        <div class="focus-bolt-name">user-management-service-1</div>
+        <div class="focus-bolt-type">DDD Bolt | Construction Phase</div>
+      </div>
+
+      <div class="focus-stage-section">
+        <div class="focus-stage-label">Stage Progress (2/5)</div>
+        <div class="focus-stages">
+          <div class="focus-stage focus-stage-complete">
+            M
+            <span class="focus-stage-name">model</span>
+          </div>
+          <div class="focus-stage focus-stage-active">
+            D
+            <span class="focus-stage-name">design</span>
+          </div>
+          <div class="focus-stage focus-stage-pending">
+            A
+            <span class="focus-stage-name">adr</span>
+          </div>
+          <div class="focus-stage focus-stage-pending">
+            I
+            <span class="focus-stage-name">implement</span>
+          </div>
+          <div class="focus-stage focus-stage-pending">
+            T
+            <span class="focus-stage-name">test</span>
+          </div>
+        </div>
+        <div class="focus-progress">
+          <div class="focus-progress-bar">
+            <div class="focus-progress-fill" style="width: 40%"></div>
+          </div>
+          <div class="focus-progress-text">40%</div>
+        </div>
+      </div>
+
+      <div class="focus-stories">
+        <div class="focus-stories-header">
+          <span class="focus-stories-title">Stories</span>
+          <span class="focus-stories-count">2/4 done</span>
+        </div>
+        <div class="focus-story">
+          <div class="focus-story-check done">&#10003;</div>
+          <span class="focus-story-name done">001-create-user</span>
+        </div>
+        <div class="focus-story">
+          <div class="focus-story-check done">&#10003;</div>
+          <span class="focus-story-name done">002-view-user-list</span>
+        </div>
+        <div class="focus-story">
+          <div class="focus-story-check"></div>
+          <span class="focus-story-name">003-update-user</span>
+        </div>
+        <div class="focus-story">
+          <div class="focus-story-check"></div>
+          <span class="focus-story-name">004-delete-user</span>
+        </div>
+      </div>
+
+      <div class="focus-action">
+        <button class="action-btn">
+          <span>&#9654;</span>
+          Continue Design Stage
+        </button>
+      </div>
+
+      <p class="label-text">Focus View</p>
+    </div>
+
+    <!-- LIST VIEW -->
+    <div class="sidebar list-view">
+      <div class="header">
+        <span class="header-title">SpecsMD</span>
+        <div class="view-switcher">
+          <button class="view-btn" title="Dashboard">&#128202;</button>
+          <button class="view-btn" title="Focus">&#127919;</button>
+          <button class="view-btn active" title="List">&#128203;</button>
+        </div>
+      </div>
+
+      <div class="list-header">
+        <div class="list-filter-row">
+          <button class="list-filter-chip active">All</button>
+          <button class="list-filter-chip">Active</button>
+          <button class="list-filter-chip">Pending</button>
+          <button class="list-filter-chip">Done</button>
+        </div>
+      </div>
+
+      <div class="list-content">
+        <div class="list-bolt">
+          <div class="list-bolt-header">
+            <span class="list-bolt-expand">&#9660;</span>
+            <div class="list-bolt-status active"></div>
+            <span class="list-bolt-name">user-management-service-1</span>
+            <div class="list-bolt-stages">
+              <div class="list-stage stage-track-complete">M</div>
+              <div class="list-stage stage-track-active">D</div>
+              <div class="list-stage stage-track-pending">A</div>
+              <div class="list-stage stage-track-pending">I</div>
+              <div class="list-stage stage-track-pending">T</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="list-bolt">
+          <div class="list-bolt-header">
+            <span class="list-bolt-expand">&#9654;</span>
+            <div class="list-bolt-status pending"></div>
+            <span class="list-bolt-name">admin-panel-ui-1</span>
+            <div class="list-bolt-stages">
+              <div class="list-stage stage-track-pending">M</div>
+              <div class="list-stage stage-track-pending">D</div>
+              <div class="list-stage stage-track-pending">A</div>
+              <div class="list-stage stage-track-pending">I</div>
+              <div class="list-stage stage-track-pending">T</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="list-bolt">
+          <div class="list-bolt-header">
+            <span class="list-bolt-expand">&#9654;</span>
+            <div class="list-bolt-status pending"></div>
+            <span class="list-bolt-name">admin-panel-ui-2</span>
+            <div class="list-bolt-stages">
+              <div class="list-stage stage-track-pending">M</div>
+              <div class="list-stage stage-track-pending">D</div>
+              <div class="list-stage stage-track-pending">A</div>
+              <div class="list-stage stage-track-pending">I</div>
+              <div class="list-stage stage-track-pending">T</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="list-bolt">
+          <div class="list-bolt-header">
+            <span class="list-bolt-expand">&#9654;</span>
+            <div class="list-bolt-status pending"></div>
+            <span class="list-bolt-name">audit-service-1</span>
+            <div class="list-bolt-stages">
+              <div class="list-stage stage-track-pending">M</div>
+              <div class="list-stage stage-track-pending">D</div>
+              <div class="list-stage stage-track-pending">A</div>
+              <div class="list-stage stage-track-pending">I</div>
+              <div class="list-stage stage-track-pending">T</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="list-bolt">
+          <div class="list-bolt-header">
+            <span class="list-bolt-expand">&#9654;</span>
+            <div class="list-bolt-status complete"></div>
+            <span class="list-bolt-name" style="color:#666;">role-permission-service-1</span>
+            <div class="list-bolt-stages">
+              <div class="list-stage stage-track-complete">M</div>
+              <div class="list-stage stage-track-complete">D</div>
+              <div class="list-stage stage-track-complete">A</div>
+              <div class="list-stage stage-track-complete">I</div>
+              <div class="list-stage stage-track-complete">T</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="list-bolt">
+          <div class="list-bolt-header">
+            <span class="list-bolt-expand">&#9654;</span>
+            <div class="list-bolt-status pending"></div>
+            <span class="list-bolt-name">user-management-service-2</span>
+            <div class="list-bolt-stages">
+              <div class="list-stage stage-track-pending">M</div>
+              <div class="list-stage stage-track-pending">D</div>
+              <div class="list-stage stage-track-pending">A</div>
+              <div class="list-stage stage-track-pending">I</div>
+              <div class="list-stage stage-track-pending">T</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <p class="label-text">List View (Compact)</p>
+    </div>
+  </div>
+</body>
+</html>

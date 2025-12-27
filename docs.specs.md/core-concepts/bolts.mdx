@@ -35,7 +35,7 @@ specs.md currently supports two bolt types:
 | Type | Best For | Stages |
 |------|----------|--------|
 | **DDD Construction** | Complex business logic, domain modeling | Model → Design → ADR → Implement → Test |
-| **Simple Construction** | UI, integrations, utilities | Spec → Implement → Test |
+| **Simple Construction** | UI, integrations, utilities | Plan → Implement → Test |
 
 ### Choosing a Bolt Type
 
@@ -97,7 +97,7 @@ The most comprehensive bolt type, used for complex domain logic:
 A lightweight bolt for UI, integrations, and utilities:
 
 <Steps>
-  <Step title="Spec">
+  <Step title="Plan">
     Define what to build:
     - Review stories and requirements
     - List specific deliverables
@@ -159,16 +159,16 @@ flowchart LR
 ```mermaid
 flowchart LR
     subgraph Stages
-        S[Spec] --> I[Implement] --> T[Test]
+        P[Plan] --> I[Implement] --> T[Test]
     end
 
     subgraph Gates
-        S -.-> G1[Human Review]
+        P -.-> G1[Human Review]
         I -.-> G2[Human Review]
         T -.-> G3[Human Review]
     end
 
-    style S fill:#818CF8,stroke:#6366F1,color:#fff
+    style P fill:#818CF8,stroke:#6366F1,color:#fff
     style I fill:#34D399,stroke:#10B981,color:#fff
     style T fill:#FBBF24,stroke:#F59E0B,color:#fff
     style G1 fill:#F472B6,stroke:#EC4899,color:#fff
@@ -212,8 +212,9 @@ Each bolt produces artifacts stored in the Memory Bank:
     ```
     memory-bank/bolts/{bolt-id}/
     ├── bolt.md                    # Bolt metadata and state
-    ├── spec.md                    # Specification
-    └── test-report.md             # Test results
+    ├── implementation-plan.md     # Plan from Stage 1
+    ├── implementation-walkthrough.md # Developer notes from Stage 2
+    └── test-walkthrough.md        # Test results from Stage 3
     ```
   </Tab>
 </Tabs>

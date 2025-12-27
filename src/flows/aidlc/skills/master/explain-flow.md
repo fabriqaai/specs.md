@@ -41,10 +41,22 @@ AI-DLC is a reimagined development methodology where AI drives the workflow and 
    - Output: Complete implementation plan
 
 2. **Construction** → Building & Testing
-   - Execute bolts through their stages
+   - Execute bolts through their stages (stages vary by bolt type)
    - AI generates designs, code, and tests
    - Human validates at each stage
    - Output: Tested, working code
+
+   **DDD Bolt** (for domain-heavy business logic):
+   - Stage 1: Domain Model → AI models entities, aggregates, events
+   - Stage 2: Technical Design → AI architects layers, APIs, data
+   - Stage 3: ADR Analysis → Capture architectural decisions (optional)
+   - Stage 4: Implement → AI generates code from designs
+   - Stage 5: Test → AI writes and runs tests
+
+   **Simple Bolt** (for straightforward tasks):
+   - Stage 1: Plan → Define what to build
+   - Stage 2: Implement → AI generates code
+   - Stage 3: Test → AI writes and runs tests
 
 3. **Operations** → Deploy & Monitor
    - Package deployment units

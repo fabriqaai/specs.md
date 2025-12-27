@@ -40,8 +40,8 @@ specs.md-website/
 ├── guides/                   # How-to guides
 │   └── bolt-types.mdx
 └── images/                   # Static assets
-    ├── specs_md_pixel_logo.png
-    ├── favicon.svg
+    ├── logo.png
+    ├── favicon.png
     ├── hero-dark.svg
     └── hero-light.svg
 ```

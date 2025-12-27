@@ -37,5 +37,31 @@ agents:
 
         Or continue without standards (code may be inconsistent).
 
-# Note: Other agents (Master, Inception, Operations) do not require
-# standards to be loaded. They will be added here when needed.
+  inception:
+    description: "Inception Agent needs project type awareness for unit decomposition"
+    required_context:
+      - path: project.yaml
+        purpose: "Project type for unit decomposition and bolt type defaults"
+        critical: false
+
+    optional_context:
+      - path: standards/tech-stack.md
+        purpose: "Technology context for realistic decomposition"
+
+    on_missing_critical:
+      action: continue
+      message: |
+        ℹ️ Project not initialized yet.
+
+        The project.yaml file will be created during project-init.
+        Inception can proceed without it (will use defaults).
+
+  operations:
+    description: "Operations Agent requires deployment context"
+    required_context: []
+    optional_context:
+      - path: standards/system-architecture.md
+        purpose: "Architecture for deployment decisions"
+
+      - path: operations/deployment-config.md
+        purpose: "Existing deployment configuration"

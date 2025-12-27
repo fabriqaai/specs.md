@@ -34,11 +34,17 @@ status: planned
 stories:
   - story-1
   - story-2
-created: {YYYY-MM-DD}
+created: {YYYY-MM-DDTHH:MM:SSZ}
 started: null
 completed: null
 current_stage: null
 stages_completed: []
+
+# Bolt Dependencies (for execution ordering)
+requires_bolts: []          # Bolts that must complete before this bolt can start
+enables_bolts: []           # Bolts that become unblocked when this bolt completes
+requires_units: []          # Units that must exist (usually empty)
+blocks: false               # Computed: true if any requires_bolts are incomplete
 
 # Complexity Assessment (aggregate of included stories)
 complexity:
@@ -141,6 +147,12 @@ stages_completed:
   - name: model
     completed: 2024-12-05T10:00:00Z
     artifact: ddd-01-domain-model.md
+
+requires_bolts: []
+enables_bolts:
+  - bolt-auth-service-2
+requires_units: []
+blocks: false
 
 complexity:
   avg_complexity: 2

@@ -1,0 +1,1101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Variation 9: Dual View (Specs/Bolts)</title>
+  <style>
+    /* VS Code Theme Variables */
+    :root {
+      --vscode-editor-background: #1e1e1e;
+      --vscode-editor-foreground: #cccccc;
+      --vscode-sideBar-background: #252526;
+      --vscode-sideBarSectionHeader-background: #2d2d2d;
+      --vscode-input-background: #3c3c3c;
+      --vscode-input-border: #3c3c3c;
+      --vscode-list-hoverBackground: #2a2d2e;
+      --vscode-list-activeSelectionBackground: #094771;
+      --vscode-badge-background: #4d4d4d;
+      --vscode-badge-foreground: #ffffff;
+      --vscode-descriptionForeground: #858585;
+
+      --status-complete: #22c55e;
+      --status-active: #f97316;
+      --status-pending: #6b7280;
+      --status-blocked: #ef4444;
+      --accent-primary: #f97316;
+    }
+
+    .theme-light {
+      --vscode-editor-background: #ffffff;
+      --vscode-editor-foreground: #333333;
+      --vscode-sideBar-background: #f3f3f3;
+      --vscode-sideBarSectionHeader-background: #e8e8e8;
+      --vscode-input-background: #ffffff;
+      --vscode-input-border: #cecece;
+      --vscode-list-hoverBackground: #e8e8e8;
+      --vscode-descriptionForeground: #717171;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--vscode-editor-background);
+      color: var(--vscode-editor-foreground);
+      font-size: 13px;
+    }
+
+    .sidebar {
+      width: 320px;
+      min-height: 100vh;
+      background: var(--vscode-sideBar-background);
+      border-right: 1px solid var(--vscode-input-border);
+    }
+
+    .header {
+      padding: 10px 12px;
+      background: var(--vscode-sideBarSectionHeader-background);
+      border-bottom: 1px solid var(--vscode-input-border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .header-title {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 4px;
+    }
+
+    .icon-btn {
+      background: none;
+      border: none;
+      color: var(--vscode-descriptionForeground);
+      cursor: pointer;
+      padding: 4px 6px;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+
+    .icon-btn:hover {
+      background: var(--vscode-list-hoverBackground);
+      color: var(--vscode-editor-foreground);
+    }
+
+    /* Main View Tabs */
+    .view-tabs {
+      display: flex;
+      background: var(--vscode-editor-background);
+      border-bottom: 1px solid var(--vscode-input-border);
+    }
+
+    .view-tab {
+      flex: 1;
+      padding: 10px;
+      font-size: 11px;
+      font-weight: 600;
+      text-align: center;
+      background: none;
+      border: none;
+      color: var(--vscode-descriptionForeground);
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: all 0.15s;
+    }
+
+    .view-tab:hover {
+      color: var(--vscode-editor-foreground);
+      background: var(--vscode-list-hoverBackground);
+    }
+
+    .view-tab.active {
+      color: var(--accent-primary);
+      border-bottom-color: var(--accent-primary);
+    }
+
+    .view-tab-icon {
+      margin-right: 6px;
+    }
+
+    /* Filter Bar */
+    .filter-bar {
+      padding: 8px 12px;
+      background: var(--vscode-sideBarSectionHeader-background);
+      border-bottom: 1px solid var(--vscode-input-border);
+      display: flex;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .filter-dropdown {
+      flex: 1;
+      padding: 6px 8px;
+      font-size: 10px;
+      background: var(--vscode-input-background);
+      border: 1px solid var(--vscode-input-border);
+      color: var(--vscode-editor-foreground);
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .filter-chip {
+      padding: 4px 8px;
+      font-size: 9px;
+      border-radius: 10px;
+      background: var(--vscode-input-background);
+      color: var(--vscode-descriptionForeground);
+      border: none;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .filter-chip:hover {
+      background: var(--vscode-list-hoverBackground);
+    }
+
+    .filter-chip.active {
+      background: var(--accent-primary);
+      color: white;
+    }
+
+    /* View Container */
+    .view-container {
+      display: none;
+    }
+
+    .view-container.active {
+      display: block;
+    }
+
+    /* =========== SPECS VIEW =========== */
+    .specs-content {
+      padding: 8px 0;
+    }
+
+    /* Intent Item */
+    .intent-item {
+      border-bottom: 1px solid var(--vscode-input-border);
+    }
+
+    .intent-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 12px;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .intent-header:hover {
+      background: var(--vscode-list-hoverBackground);
+    }
+
+    .intent-expand {
+      font-size: 10px;
+      color: var(--vscode-descriptionForeground);
+      transition: transform 0.2s;
+      width: 12px;
+    }
+
+    .intent-item.collapsed .intent-expand {
+      transform: rotate(-90deg);
+    }
+
+    .intent-icon {
+      font-size: 14px;
+    }
+
+    .intent-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .intent-name {
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .intent-meta {
+      font-size: 10px;
+      color: var(--vscode-descriptionForeground);
+      margin-top: 2px;
+    }
+
+    .intent-progress {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .progress-bar-mini {
+      width: 40px;
+      height: 4px;
+      background: var(--vscode-input-background);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+
+    .progress-bar-mini-fill {
+      height: 100%;
+      background: var(--status-complete);
+      border-radius: 2px;
+    }
+
+    .progress-text {
+      font-size: 10px;
+      color: var(--vscode-descriptionForeground);
+      min-width: 30px;
+      text-align: right;
+    }
+
+    .progress-text.complete {
+      color: var(--status-complete);
+    }
+
+    /* Intent Content (Units) */
+    .intent-content {
+      max-height: 1000px;
+      overflow: hidden;
+      transition: max-height 0.3s ease;
+      background: var(--vscode-editor-background);
+    }
+
+    .intent-item.collapsed .intent-content {
+      max-height: 0;
+    }
+
+    /* Unit Item */
+    .unit-item {
+      border-bottom: 1px solid var(--vscode-input-border);
+    }
+
+    .unit-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px 8px 28px;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .unit-header:hover {
+      background: var(--vscode-list-hoverBackground);
+    }
+
+    .unit-expand {
+      font-size: 10px;
+      color: var(--vscode-descriptionForeground);
+      transition: transform 0.2s;
+      width: 12px;
+    }
+
+    .unit-item.collapsed .unit-expand {
+      transform: rotate(-90deg);
+    }
+
+    .unit-icon {
+      font-size: 12px;
+    }
+
+    .unit-name {
+      flex: 1;
+      font-size: 11px;
+    }
+
+    .unit-count {
+      font-size: 9px;
+      padding: 2px 6px;
+      border-radius: 8px;
+      background: var(--vscode-badge-background);
+      color: var(--vscode-badge-foreground);
+    }
+
+    /* Unit Content (Stories) */
+    .unit-content {
+      max-height: 500px;
+      overflow: hidden;
+      transition: max-height 0.3s ease;
+    }
+
+    .unit-item.collapsed .unit-content {
+      max-height: 0;
+    }
+
+    /* Story Item */
+    .story-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 12px 6px 44px;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .story-item:hover {
+      background: var(--vscode-list-hoverBackground);
+    }
+
+    .story-status {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      border: 2px solid var(--vscode-input-border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 8px;
+    }
+
+    .story-status.complete {
+      background: var(--status-complete);
+      border-color: var(--status-complete);
+      color: white;
+    }
+
+    .story-status.active {
+      background: var(--status-active);
+      border-color: var(--status-active);
+      color: white;
+    }
+
+    .story-name {
+      flex: 1;
+      font-size: 11px;
+      color: var(--vscode-editor-foreground);
+    }
+
+    .story-name.complete {
+      color: var(--vscode-descriptionForeground);
+    }
+
+    /* =========== BOLTS VIEW =========== */
+    .bolts-content {
+      padding: 8px 0;
+    }
+
+    /* Bolt Item */
+    .bolt-item {
+      border-bottom: 1px solid var(--vscode-input-border);
+    }
+
+    .bolt-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .bolt-header:hover {
+      background: var(--vscode-list-hoverBackground);
+    }
+
+    .bolt-status-indicator {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .bolt-status-indicator.active {
+      background: var(--status-active);
+      box-shadow: 0 0 6px rgba(249, 115, 22, 0.5);
+    }
+
+    .bolt-status-indicator.complete {
+      background: var(--status-complete);
+    }
+
+    .bolt-status-indicator.pending {
+      background: var(--status-pending);
+    }
+
+    .bolt-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .bolt-name {
+      font-size: 11px;
+      font-weight: 500;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .bolt-meta {
+      font-size: 9px;
+      color: var(--vscode-descriptionForeground);
+      margin-top: 2px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .bolt-type {
+      padding: 1px 4px;
+      background: var(--vscode-badge-background);
+      border-radius: 2px;
+    }
+
+    /* Stage Squares */
+    .bolt-stages {
+      display: flex;
+      gap: 2px;
+    }
+
+    .bolt-stage {
+      width: 18px;
+      height: 18px;
+      border-radius: 3px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.15s;
+    }
+
+    .bolt-stage:hover {
+      transform: scale(1.15);
+    }
+
+    .bolt-stage.complete {
+      background: var(--status-complete);
+      color: white;
+    }
+
+    .bolt-stage.active {
+      background: var(--status-active);
+      color: white;
+    }
+
+    .bolt-stage.pending {
+      background: var(--vscode-input-background);
+      color: var(--vscode-descriptionForeground);
+      border: 1px dashed var(--vscode-input-border);
+    }
+
+    .bolt-progress {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .bolt-expand {
+      font-size: 10px;
+      color: var(--vscode-descriptionForeground);
+      transition: transform 0.2s;
+    }
+
+    .bolt-item.collapsed .bolt-expand {
+      transform: rotate(-90deg);
+    }
+
+    /* Bolt Content (Expanded) */
+    .bolt-content {
+      max-height: 400px;
+      overflow: hidden;
+      transition: max-height 0.3s ease;
+      background: var(--vscode-editor-background);
+    }
+
+    .bolt-item.collapsed .bolt-content {
+      max-height: 0;
+    }
+
+    .bolt-content-inner {
+      padding: 12px;
+    }
+
+    /* Stage Detail Row */
+    .stage-detail-row {
+      display: flex;
+      gap: 4px;
+      margin-bottom: 12px;
+    }
+
+    .stage-detail-item {
+      flex: 1;
+      padding: 8px 4px;
+      text-align: center;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .stage-detail-item:hover {
+      transform: translateY(-2px);
+    }
+
+    .stage-detail-item.complete {
+      background: rgba(34, 197, 94, 0.2);
+      color: var(--status-complete);
+    }
+
+    .stage-detail-item.active {
+      background: rgba(249, 115, 22, 0.2);
+      color: var(--status-active);
+      border: 1px solid var(--accent-primary);
+    }
+
+    .stage-detail-item.pending {
+      background: var(--vscode-input-background);
+      color: var(--vscode-descriptionForeground);
+    }
+
+    .stage-detail-icon {
+      font-size: 14px;
+      margin-bottom: 2px;
+    }
+
+    .stage-detail-name {
+      font-size: 9px;
+      text-transform: uppercase;
+    }
+
+    /* Stories in Bolt */
+    .bolt-stories {
+      margin-bottom: 12px;
+    }
+
+    .bolt-stories-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+
+    .bolt-stories-title {
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--vscode-descriptionForeground);
+      text-transform: uppercase;
+    }
+
+    .bolt-stories-count {
+      font-size: 10px;
+      color: var(--status-complete);
+    }
+
+    .bolt-stories-toggle {
+      font-size: 9px;
+      color: var(--accent-primary);
+      background: none;
+      border: none;
+      cursor: pointer;
+    }
+
+    .bolt-stories-list {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 4px;
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease;
+    }
+
+    .bolt-stories-list.visible {
+      max-height: 200px;
+    }
+
+    .bolt-story-chip {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 8px;
+      background: var(--vscode-sideBar-background);
+      border-radius: 4px;
+      font-size: 10px;
+    }
+
+    .bolt-story-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+    }
+
+    .bolt-story-dot.done {
+      background: var(--status-complete);
+    }
+
+    .bolt-story-dot.pending {
+      background: var(--vscode-input-border);
+    }
+
+    /* Bolt Actions */
+    .bolt-actions {
+      display: flex;
+      gap: 6px;
+    }
+
+    .bolt-btn {
+      flex: 1;
+      padding: 8px;
+      font-size: 10px;
+      font-weight: 500;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .bolt-btn-primary {
+      background: var(--accent-primary);
+      color: white;
+    }
+
+    .bolt-btn-primary:hover {
+      filter: brightness(1.1);
+    }
+
+    .bolt-btn-secondary {
+      background: var(--vscode-input-background);
+      color: var(--vscode-editor-foreground);
+      border: 1px solid var(--vscode-input-border);
+    }
+
+    .bolt-btn-secondary:hover {
+      background: var(--vscode-list-hoverBackground);
+    }
+
+    /* Theme Toggle */
+    .theme-toggle {
+      padding: 8px 12px;
+      background: var(--vscode-editor-background);
+      border-top: 1px solid var(--vscode-input-border);
+      display: flex;
+      gap: 8px;
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+    }
+
+    .theme-btn {
+      flex: 1;
+      padding: 6px;
+      font-size: 10px;
+      border: 1px solid var(--vscode-input-border);
+      background: var(--vscode-input-background);
+      color: var(--vscode-editor-foreground);
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .theme-btn.active {
+      background: var(--accent-primary);
+      border-color: var(--accent-primary);
+      color: white;
+    }
+
+    .sidebar {
+      position: relative;
+      padding-bottom: 50px;
+    }
+  </style>
+</head>
+<body>
+  <div class="sidebar" id="sidebar">
+    <div class="header">
+      <span class="header-title">SpecsMD</span>
+      <div class="header-actions">
+        <button type="button" class="icon-btn" title="Refresh">&#8635;</button>
+        <button type="button" class="icon-btn" title="Settings">&#9881;</button>
+      </div>
+    </div>
+
+    <!-- Main View Tabs -->
+    <div class="view-tabs">
+      <button type="button" class="view-tab active" onclick="switchView('specs')">
+        <span class="view-tab-icon">&#128203;</span>Specs
+      </button>
+      <button type="button" class="view-tab" onclick="switchView('bolts')">
+        <span class="view-tab-icon">&#9889;</span>Bolts
+      </button>
+    </div>
+
+    <!-- =========== SPECS VIEW =========== -->
+    <div class="view-container active" id="specs-view">
+      <div class="filter-bar">
+        <select class="filter-dropdown">
+          <option>All Status</option>
+          <option>In Progress</option>
+          <option>Completed</option>
+          <option>Not Started</option>
+        </select>
+        <button type="button" class="filter-chip active">All</button>
+        <button type="button" class="filter-chip">Active</button>
+        <button type="button" class="filter-chip">Done</button>
+      </div>
+
+      <div class="specs-content">
+        <!-- Intent 1 -->
+        <div class="intent-item" id="intent-1">
+          <div class="intent-header" onclick="toggleIntent('intent-1')">
+            <span class="intent-expand">&#9660;</span>
+            <span class="intent-icon">&#128203;</span>
+            <div class="intent-info">
+              <div class="intent-name">001-admin-panel</div>
+              <div class="intent-meta">3 units | 14 stories</div>
+            </div>
+            <div class="intent-progress">
+              <div class="progress-bar-mini">
+                <div class="progress-bar-mini-fill" style="width: 35%"></div>
+              </div>
+              <span class="progress-text">35%</span>
+            </div>
+          </div>
+          <div class="intent-content">
+            <!-- Unit 1 -->
+            <div class="unit-item" id="unit-1">
+              <div class="unit-header" onclick="toggleUnit('unit-1')">
+                <span class="unit-expand">&#9660;</span>
+                <span class="unit-icon">&#128230;</span>
+                <span class="unit-name">user-management</span>
+                <span class="unit-count">4</span>
+              </div>
+              <div class="unit-content">
+                <div class="story-item">
+                  <div class="story-status complete">&#10003;</div>
+                  <span class="story-name complete">001-create-user</span>
+                </div>
+                <div class="story-item">
+                  <div class="story-status complete">&#10003;</div>
+                  <span class="story-name complete">002-view-user-list</span>
+                </div>
+                <div class="story-item">
+                  <div class="story-status"></div>
+                  <span class="story-name">003-update-user</span>
+                </div>
+                <div class="story-item">
+                  <div class="story-status"></div>
+                  <span class="story-name">004-delete-user</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Unit 2 -->
+            <div class="unit-item collapsed" id="unit-2">
+              <div class="unit-header" onclick="toggleUnit('unit-2')">
+                <span class="unit-expand">&#9660;</span>
+                <span class="unit-icon">&#128230;</span>
+                <span class="unit-name">role-permissions</span>
+                <span class="unit-count">6</span>
+              </div>
+              <div class="unit-content">
+                <div class="story-item">
+                  <div class="story-status complete">&#10003;</div>
+                  <span class="story-name complete">001-create-role</span>
+                </div>
+                <div class="story-item">
+                  <div class="story-status complete">&#10003;</div>
+                  <span class="story-name complete">002-manage-permissions</span>
+                </div>
+                <div class="story-item">
+                  <div class="story-status complete">&#10003;</div>
+                  <span class="story-name complete">003-view-roles</span>
+                </div>
+                <div class="story-item">
+                  <div class="story-status complete">&#10003;</div>
+                  <span class="story-name complete">004-delete-role</span>
+                </div>
+                <div class="story-item">
+                  <div class="story-status complete">&#10003;</div>
+                  <span class="story-name complete">005-view-role-users</span>
+                </div>
+                <div class="story-item">
+                  <div class="story-status complete">&#10003;</div>
+                  <span class="story-name complete">006-effective-permissions</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Unit 3 -->
+            <div class="unit-item collapsed" id="unit-3">
+              <div class="unit-header" onclick="toggleUnit('unit-3')">
+                <span class="unit-expand">&#9660;</span>
+                <span class="unit-icon">&#128230;</span>
+                <span class="unit-name">audit-logging</span>
+                <span class="unit-count">4</span>
+              </div>
+              <div class="unit-content">
+                <div class="story-item">
+                  <div class="story-status"></div>
+                  <span class="story-name">001-log-actions</span>
+                </div>
+                <div class="story-item">
+                  <div class="story-status"></div>
+                  <span class="story-name">002-view-audit-log</span>
+                </div>
+                <div class="story-item">
+                  <div class="story-status"></div>
+                  <span class="story-name">003-filter-logs</span>
+                </div>
+                <div class="story-item">
+                  <div class="story-status"></div>
+                  <span class="story-name">004-export-logs</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- =========== BOLTS VIEW =========== -->
+    <div class="view-container" id="bolts-view">
+      <div class="filter-bar">
+        <select class="filter-dropdown">
+          <option>All Status</option>
+          <option>In Progress</option>
+          <option>Completed</option>
+          <option>Not Started</option>
+        </select>
+        <select class="filter-dropdown">
+          <option>All Intents</option>
+          <option>001-admin-panel</option>
+        </select>
+      </div>
+
+      <div class="bolts-content">
+        <!-- Bolt 1 - Active -->
+        <div class="bolt-item" id="bolt-1">
+          <div class="bolt-header" onclick="toggleBolt('bolt-1')">
+            <div class="bolt-status-indicator active"></div>
+            <div class="bolt-info">
+              <div class="bolt-name">user-management-service-1</div>
+              <div class="bolt-meta">
+                <span class="bolt-type">DDD</span>
+                <span>2/4 stories</span>
+              </div>
+            </div>
+            <div class="bolt-stages">
+              <div class="bolt-stage complete">M</div>
+              <div class="bolt-stage active">D</div>
+              <div class="bolt-stage pending">A</div>
+              <div class="bolt-stage pending">I</div>
+              <div class="bolt-stage pending">T</div>
+            </div>
+            <span class="bolt-expand">&#9660;</span>
+          </div>
+          <div class="bolt-content">
+            <div class="bolt-content-inner">
+              <div class="stage-detail-row">
+                <div class="stage-detail-item complete">
+                  <div class="stage-detail-icon">&#10003;</div>
+                  <div class="stage-detail-name">Model</div>
+                </div>
+                <div class="stage-detail-item active">
+                  <div class="stage-detail-icon">&#9679;</div>
+                  <div class="stage-detail-name">Design</div>
+                </div>
+                <div class="stage-detail-item pending">
+                  <div class="stage-detail-icon">&#9675;</div>
+                  <div class="stage-detail-name">ADR</div>
+                </div>
+                <div class="stage-detail-item pending">
+                  <div class="stage-detail-icon">&#9675;</div>
+                  <div class="stage-detail-name">Impl</div>
+                </div>
+                <div class="stage-detail-item pending">
+                  <div class="stage-detail-icon">&#9675;</div>
+                  <div class="stage-detail-name">Test</div>
+                </div>
+              </div>
+              <div class="bolt-stories">
+                <div class="bolt-stories-header">
+                  <span class="bolt-stories-title">Stories</span>
+                  <span class="bolt-stories-count">2/4</span>
+                  <button type="button" class="bolt-stories-toggle" onclick="event.stopPropagation(); toggleBoltStories('bolt-1')">Show</button>
+                </div>
+                <div class="bolt-stories-list" id="stories-bolt-1">
+                  <div class="bolt-story-chip">
+                    <div class="bolt-story-dot done"></div>
+                    <span>001-create-user</span>
+                  </div>
+                  <div class="bolt-story-chip">
+                    <div class="bolt-story-dot done"></div>
+                    <span>002-view-user-list</span>
+                  </div>
+                  <div class="bolt-story-chip">
+                    <div class="bolt-story-dot pending"></div>
+                    <span>003-update-user</span>
+                  </div>
+                  <div class="bolt-story-chip">
+                    <div class="bolt-story-dot pending"></div>
+                    <span>004-delete-user</span>
+                  </div>
+                </div>
+              </div>
+              <div class="bolt-actions">
+                <button type="button" class="bolt-btn bolt-btn-primary">Continue Design</button>
+                <button type="button" class="bolt-btn bolt-btn-secondary">Files</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Bolt 2 - Pending -->
+        <div class="bolt-item collapsed" id="bolt-2">
+          <div class="bolt-header" onclick="toggleBolt('bolt-2')">
+            <div class="bolt-status-indicator pending"></div>
+            <div class="bolt-info">
+              <div class="bolt-name">admin-panel-ui-1</div>
+              <div class="bolt-meta">
+                <span class="bolt-type">Simple</span>
+                <span>0/4 stories</span>
+              </div>
+            </div>
+            <div class="bolt-stages">
+              <div class="bolt-stage pending">M</div>
+              <div class="bolt-stage pending">D</div>
+              <div class="bolt-stage pending">A</div>
+              <div class="bolt-stage pending">I</div>
+              <div class="bolt-stage pending">T</div>
+            </div>
+            <span class="bolt-expand">&#9660;</span>
+          </div>
+          <div class="bolt-content">
+            <div class="bolt-content-inner">
+              <div class="bolt-actions">
+                <button type="button" class="bolt-btn bolt-btn-primary">Start Bolt</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Bolt 3 - Pending -->
+        <div class="bolt-item collapsed" id="bolt-3">
+          <div class="bolt-header" onclick="toggleBolt('bolt-3')">
+            <div class="bolt-status-indicator pending"></div>
+            <div class="bolt-info">
+              <div class="bolt-name">admin-panel-ui-2</div>
+              <div class="bolt-meta">
+                <span class="bolt-type">Simple</span>
+                <span>0/4 stories</span>
+              </div>
+            </div>
+            <div class="bolt-stages">
+              <div class="bolt-stage pending">M</div>
+              <div class="bolt-stage pending">D</div>
+              <div class="bolt-stage pending">A</div>
+              <div class="bolt-stage pending">I</div>
+              <div class="bolt-stage pending">T</div>
+            </div>
+            <span class="bolt-expand">&#9660;</span>
+          </div>
+          <div class="bolt-content">
+            <div class="bolt-content-inner">
+              <div class="bolt-actions">
+                <button type="button" class="bolt-btn bolt-btn-primary">Start Bolt</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Bolt 4 - Complete -->
+        <div class="bolt-item collapsed" id="bolt-4">
+          <div class="bolt-header" onclick="toggleBolt('bolt-4')">
+            <div class="bolt-status-indicator complete"></div>
+            <div class="bolt-info">
+              <div class="bolt-name">role-permission-service-1</div>
+              <div class="bolt-meta">
+                <span class="bolt-type">DDD</span>
+                <span>6/6 stories</span>
+              </div>
+            </div>
+            <div class="bolt-stages">
+              <div class="bolt-stage complete">M</div>
+              <div class="bolt-stage complete">D</div>
+              <div class="bolt-stage complete">A</div>
+              <div class="bolt-stage complete">I</div>
+              <div class="bolt-stage complete">T</div>
+            </div>
+            <span class="bolt-expand">&#9660;</span>
+          </div>
+          <div class="bolt-content">
+            <div class="bolt-content-inner">
+              <div class="bolt-actions">
+                <button type="button" class="bolt-btn bolt-btn-secondary">View Files</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="theme-toggle">
+      <button type="button" class="theme-btn active" onclick="setTheme('dark')">Dark</button>
+      <button type="button" class="theme-btn" onclick="setTheme('light')">Light</button>
+    </div>
+  </div>
+
+  <script>
+    function switchView(view) {
+      // Update tabs
+      document.querySelectorAll('.view-tab').forEach(tab => tab.classList.remove('active'));
+      event.target.classList.add('active');
+
+      // Update views
+      document.querySelectorAll('.view-container').forEach(v => v.classList.remove('active'));
+      document.getElementById(view + '-view').classList.add('active');
+    }
+
+    function toggleIntent(id) {
+      document.getElementById(id).classList.toggle('collapsed');
+    }
+
+    function toggleUnit(id) {
+      document.getElementById(id).classList.toggle('collapsed');
+    }
+
+    function toggleBolt(id) {
+      const bolt = document.getElementById(id);
+      const wasCollapsed = bolt.classList.contains('collapsed');
+
+      // Collapse all bolts
+      document.querySelectorAll('.bolt-item').forEach(b => b.classList.add('collapsed'));
+
+      // Toggle clicked bolt
+      if (wasCollapsed) {
+        bolt.classList.remove('collapsed');
+      }
+    }
+
+    function toggleBoltStories(boltId) {
+      const list = document.getElementById('stories-' + boltId);
+      const btn = list.previousElementSibling.querySelector('.bolt-stories-toggle');
+      list.classList.toggle('visible');
+      btn.textContent = list.classList.contains('visible') ? 'Hide' : 'Show';
+    }
+
+    function setTheme(theme) {
+      const sidebar = document.getElementById('sidebar');
+      const buttons = document.querySelectorAll('.theme-btn');
+
+      buttons.forEach(btn => btn.classList.remove('active'));
+      event.target.classList.add('active');
+
+      if (theme === 'light') {
+        sidebar.classList.add('theme-light');
+      } else {
+        sidebar.classList.remove('theme-light');
+      }
+    }
+  </script>
+</body>
+</html>

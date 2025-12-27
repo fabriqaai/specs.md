@@ -61,7 +61,21 @@ Read bolt file from path defined by `schema.bolts`:
 └────────────────────────────────────────────────────────────┘
 ```
 
-### 3. Load Agent Context
+### 3. Load Unit Context (CRITICAL)
+
+**After extracting the unit from the bolt file, load its brief for context.**
+
+Load `{intent}/units/{unit}/unit-brief.md` which contains:
+
+- **Purpose and scope**: What the unit is responsible for
+- **Key entities**: Domain concepts to work with
+- **Technical constraints**: Specific limitations
+- **Dependencies**: Other units this depends on
+- **Unit type and bolt type**: Frontend vs backend, DDD vs simple
+
+This context is essential for understanding what you're building.
+
+### 4. Load Agent Context
 
 Load context as defined in `.specsmd/aidlc/context-config.yaml` for the `construction` agent:
 
@@ -81,16 +95,38 @@ agents:
 
 **Note**: This is agent-level context. Bolt-type-specific context loading may be added later.
 
-### 4. Determine Current Stage
+### 5. Determine Current Stage
 
 Based on bolt state:
 
-- **planned** → Start with first stage, set status to `in-progress`
+- **planned** → Start with first stage, update bolt file immediately (see Step 6)
 - **in-progress** → Continue from `current_stage`
 - **completed** → Inform user bolt is done
 - **blocked** → Show blocker, ask how to resolve
 
-### 5. Execute Stage
+### 6. Update Bolt File on Start (CRITICAL - DO FIRST)
+
+**⚠️ BEFORE any stage work begins, update the bolt file IMMEDIATELY.**
+
+When transitioning from `planned` to `in-progress`:
+
+```yaml
+---
+status: in-progress          # was: planned
+started: {ISO-8601-timestamp} # was: null
+current_stage: {first-stage}  # was: null (e.g., "domain-model")
+---
+```
+
+**This is NON-NEGOTIABLE.** The bolt file must reflect that work has begun before any stage activities start. This ensures:
+
+1. Progress is tracked even if execution is interrupted
+2. Other tools/agents see accurate status
+3. Resumption works correctly
+
+**Also update construction log** (see "Update Construction Log" section below).
+
+### 7. Execute Stage
 
 For the current stage, follow the bolt type definition:
 
@@ -122,7 +158,7 @@ For the current stage, follow the bolt type definition:
    - Use templates if specified by bolt type
    - Place in correct paths per schema
 
-### 6. Handle Checkpoints (As Defined by Bolt Type)
+### 8. Handle Checkpoints (As Defined by Bolt Type)
 
 The bolt type definition specifies:
 
@@ -146,9 +182,9 @@ Ready to proceed?
 
 If the bolt type specifies automatic validation criteria, follow those rules.
 
-### 7. Update Bolt File
+### 9. Update Bolt File on Stage Completion
 
-After stage completion:
+After each stage completion:
 
 - Add stage to `stages_completed` with timestamp
 - Update `current_stage` to next stage
@@ -171,7 +207,96 @@ stages_completed:
 completed: {timestamp}
 ```
 
-### 8. Continue or Complete
+#### Update Story Status (On Bolt Completion)
+
+When marking a bolt as `status: complete`, update all stories in the bolt's `stories` array:
+
+1. **Read bolt's stories**: Get story IDs from bolt frontmatter `stories: [001-story-name, 002-story-name, ...]`
+2. **Locate story files**: `{intent}/units/{unit}/stories/{story-id}.md`
+3. **Update each story frontmatter**:
+
+   ```yaml
+   # Change from
+   status: draft
+   implemented: false
+
+   # To
+   status: complete
+   implemented: true
+   ```
+
+**Example**:
+
+```text
+Bolt stories: [001-create-role, 002-manage-permissions, 003-view-roles]
+
+Updated:
+✅ stories/001-create-role.md → status: complete, implemented: true
+✅ stories/002-manage-permissions.md → status: complete, implemented: true
+✅ stories/003-view-roles.md → status: complete, implemented: true
+```
+
+This ensures the memory-bank reflects actual implementation status and the VS Code extension shows correct completion indicators.
+
+#### Update Unit & Intent Status (Status Cascade)
+
+Status changes cascade upward: Bolt → Story → Unit → Intent.
+
+**On Bolt Start** (when changing from `planned` to `in-progress`):
+
+1. **Update Unit Status**:
+   - Read unit-brief: `{intent}/units/{unit}/unit-brief.md`
+   - If unit status is `stories-defined` or `stories-updated` → change to `in-progress`
+
+2. **Update Intent Status**:
+   - Read requirements: `{intent}/requirements.md`
+   - If intent status is `units-defined` → change to `construction`
+
+**On Bolt Completion** (after updating stories):
+
+1. **Check Unit Completion**:
+   - Find all bolts for this unit: `memory-bank/bolts/bolt-{unit}-*/bolt.md`
+   - If ALL bolts have `status: complete` → update unit-brief to `status: complete`
+
+2. **Check Intent Completion**:
+   - Read unit-briefs for all units in intent: `{intent}/units/*/unit-brief.md`
+   - If ALL units have `status: complete` → update requirements to `status: complete`
+
+**Status Transitions**:
+
+```text
+Intent:  draft → requirements-defined → units-defined → construction → complete
+Unit:    draft → stories-defined → in-progress → complete
+Story:   draft → in-progress → complete
+```
+
+**Example** (bolt-artifact-parser-1 completes):
+
+```text
+1. Stories updated: 001, 002, 003, 004 → complete
+2. Check unit bolts:
+   - bolt-artifact-parser-1: complete ✓
+   - bolt-artifact-parser-2: planned ✗
+   → Unit stays in-progress (not all bolts complete)
+3. Intent stays construction (unit not complete)
+```
+
+**Example** (last bolt for file-watcher completes):
+
+```text
+1. Stories updated: 001, 002 → complete
+2. Check unit bolts:
+   - bolt-file-watcher-1: complete ✓
+   → Only bolt for unit, all complete!
+   → Update unit-brief: status: complete
+3. Check intent units:
+   - artifact-parser: in-progress ✗
+   - file-watcher: complete ✓
+   - sidebar-provider: in-progress ✗
+   → Intent stays construction (not all units complete)
+```
+
+### 10. Continue or Complete
 
 Based on condition:
 

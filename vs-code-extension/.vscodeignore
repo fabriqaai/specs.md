@@ -1,0 +1,17 @@
+.vscode/**
+.vscode-test/**
+src/**
+out-test/**
+**/*.ts
+**/*.map
+.gitignore
+.eslintrc.json
+.mocharc.json
+tsconfig.json
+tsconfig.test.json
+vsc-extension-quickstart.md
+**/test/**
+**/*.vsix
+node_modules/**
+!node_modules/js-yaml/**
+esbuild.webview.mjs

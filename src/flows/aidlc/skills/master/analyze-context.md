@@ -70,6 +70,106 @@ Based on evidence found:
 - **All bolts completed** → Ready for Operations → Deploy unit
 - **Deployed to production** → Operations → Monitor and maintain
 
+### 6. Validate Status Integrity
+
+Check for status inconsistencies across the artifact hierarchy. Status must cascade correctly:
+
+```text
+Bolt complete → Stories complete → Unit complete (if all bolts done) → Intent complete (if all units done)
+```
+
+#### 6.1 Story Status Check
+
+For each completed bolt:
+
+- Read bolt's `stories` array
+- Check each story file's `status` field
+- **Inconsistency**: Bolt complete but story has `status: draft` or `status: in-progress`
+
+#### 6.2 Unit Status Check
+
+For each unit:
+
+- Find all bolts for unit: `memory-bank/bolts/bolt-{unit}-*/bolt.md`
+- Determine expected status:
+  - If ANY bolt `in-progress` → unit should be `in-progress`
+  - If ALL bolts `complete` → unit should be `complete`
+  - If ALL bolts `planned` and at least one story defined → unit should be `stories-defined`
+  - If NO bolts exist but stories exist → unit should be `stories-defined`
+- **Inconsistency**: Unit status doesn't match expected based on bolt states
+
+#### 6.3 Intent Status Check
+
+For each intent:
+
+- Read all unit-briefs: `{intent}/units/*/unit-brief.md`
+- Determine expected status:
+  - If ANY unit `in-progress` → intent should be `construction`
+  - If ALL units `complete` → intent should be `complete`
+  - If units defined but none started → intent should be `units-defined`
+- **Inconsistency**: Intent status doesn't match expected based on unit states
+
+#### 6.4 Report Inconsistencies
+
+If inconsistencies found, report them:
+
+```markdown
+## ⚠️ Status Inconsistencies Detected
+
+| Artifact | Current Status | Expected Status | Reason |
+|----------|----------------|-----------------|--------|
+| unit-brief: file-watcher | draft | complete | All bolts complete |
+| requirements: 011-vscode-extension | units-defined | construction | Has in-progress units |
+
+### Actions
+1 - **fix**: Update all statuses to expected values
+2 - **skip**: Continue without fixing
+3 - **review**: Show details for each inconsistency
+
+**Type 1 to fix inconsistencies, or 2 to skip.**
+```
+
+#### 6.5 Auto-Fix (On User Confirmation)
+
+If user confirms fix:
+
+- Update each artifact's frontmatter `status` field
+- Update `updated` timestamp to current date
+- Log changes to `memory-bank/maintenance-log.md`
+- Report changes made
+
+#### 6.6 Log to Maintenance Log
+
+Append entry to `memory-bank/maintenance-log.md` (create if doesn't exist):
+
+```markdown
+## {ISO-8601-timestamp} - Status Sync
+
+**Triggered by**: analyze-context integrity check
+
+| Artifact | Old Status | New Status | Reason |
+|----------|------------|------------|--------|
+| {path} | {old} | {new} | {reason} |
+
+---
+```
+
+**Example**:
+
+```markdown
+## 2025-12-26T15:30:00Z - Status Sync
+
+**Triggered by**: analyze-context integrity check
+
+| Artifact | Old Status | New Status | Reason |
+|----------|------------|------------|--------|
+| 011-vscode-extension/units/file-watcher/unit-brief.md | draft | complete | All bolts complete (1/1) |
+| 011-vscode-extension/units/extension-core/unit-brief.md | draft | complete | All bolts complete (1/1) |
+| 011-vscode-extension/requirements.md | units-defined | construction | Has in-progress units |
+
+---
+```
+
 ---
 
 ## Output
@@ -91,14 +191,21 @@ Provide a structured analysis:
 - Stories found: {count} for {unit}
 - Bolts found: {count} ({status breakdown})
 
+### Status Integrity
+- ✅ All statuses consistent (or)
+- ⚠️ {N} inconsistencies found (see details below)
+
 ### Current State Details
 {Specific details about what exists and what's missing}
+
+{If inconsistencies found, include the inconsistency table here}
 
 ### Actions
 
 1 - **proceed**: Execute suggested action
 2 - **explain**: Learn more about current phase
 3 - **different**: Work on something else
+{If inconsistencies: 4 - **fix**: Fix status inconsistencies}
 
 ### Suggested Next Step
 → **proceed** - {Specific command to run}

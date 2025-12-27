@@ -1,0 +1,2304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Variation 11: Dual View with Group by State (Interactive)</title>
+  <style>
+    /* VS Code Theme Variables */
+    :root {
+      --vscode-editor-background: #1e1e1e;
+      --vscode-editor-foreground: #cccccc;
+      --vscode-sideBar-background: #252526;
+      --vscode-sideBarSectionHeader-background: #2d2d2d;
+      --vscode-input-background: #3c3c3c;
+      --vscode-input-border: #3c3c3c;
+      --vscode-list-hoverBackground: #2a2d2e;
+      --vscode-badge-background: #4d4d4d;
+      --vscode-badge-foreground: #ffffff;
+      --vscode-descriptionForeground: #858585;
+
+      --status-complete: #22c55e;
+      --status-active: #f97316;
+      --status-pending: #6b7280;
+      --accent-primary: #f97316;
+    }
+
+    .theme-light {
+      --vscode-editor-background: #ffffff;
+      --vscode-editor-foreground: #333333;
+      --vscode-sideBar-background: #f3f3f3;
+      --vscode-sideBarSectionHeader-background: #e8e8e8;
+      --vscode-input-background: #ffffff;
+      --vscode-input-border: #cecece;
+      --vscode-list-hoverBackground: #e8e8e8;
+      --vscode-descriptionForeground: #717171;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--vscode-editor-background);
+      color: var(--vscode-editor-foreground);
+      font-size: 13px;
+    }
+
+    .sidebar {
+      width: 320px;
+      min-height: 100vh;
+      background: var(--vscode-sideBar-background);
+      border-right: 1px solid var(--vscode-input-border);
+      position: relative;
+      padding-bottom: 42px;
+    }
+
+    .header {
+      padding: 10px 12px;
+      background: var(--vscode-sideBarSectionHeader-background);
+      border-bottom: 1px solid var(--vscode-input-border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .header-title {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 4px;
+    }
+
+    .icon-btn {
+      background: none;
+      border: none;
+      color: var(--vscode-descriptionForeground);
+      cursor: pointer;
+      padding: 4px 6px;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+
+    .icon-btn:hover {
+      background: var(--vscode-list-hoverBackground);
+      color: var(--vscode-editor-foreground);
+    }
+
+    /* Main View Tabs */
+    .view-tabs {
+      display: flex;
+      background: var(--vscode-editor-background);
+      border-bottom: 1px solid var(--vscode-input-border);
+    }
+
+    .view-tab {
+      flex: 1;
+      padding: 10px;
+      font-size: 11px;
+      font-weight: 600;
+      text-align: center;
+      background: none;
+      border: none;
+      color: var(--vscode-descriptionForeground);
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: all 0.15s;
+    }
+
+    .view-tab:hover {
+      color: var(--vscode-editor-foreground);
+      background: var(--vscode-list-hoverBackground);
+    }
+
+    .view-tab.active {
+      color: var(--accent-primary);
+      border-bottom-color: var(--accent-primary);
+    }
+
+    /* Toolbar */
+    .toolbar {
+      padding: 8px 12px;
+      background: var(--vscode-sideBarSectionHeader-background);
+      border-bottom: 1px solid var(--vscode-input-border);
+    }
+
+    .toolbar-row {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .toolbar-row + .toolbar-row {
+      margin-top: 6px;
+    }
+
+    .toolbar-label {
+      font-size: 9px;
+      color: var(--vscode-descriptionForeground);
+      text-transform: uppercase;
+      min-width: 50px;
+    }
+
+    .toolbar-select {
+      flex: 1;
+      padding: 5px 8px;
+      font-size: 10px;
+      background: var(--vscode-input-background);
+      border: 1px solid var(--vscode-input-border);
+      color: var(--vscode-editor-foreground);
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    /* Group By Buttons */
+    .group-by-buttons {
+      display: flex;
+      gap: 4px;
+      flex: 1;
+    }
+
+    .group-btn {
+      flex: 1;
+      padding: 5px 8px;
+      font-size: 10px;
+      background: var(--vscode-input-background);
+      border: 1px solid var(--vscode-input-border);
+      color: var(--vscode-descriptionForeground);
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .group-btn:hover {
+      border-color: var(--accent-primary);
+      color: var(--vscode-editor-foreground);
+    }
+
+    .group-btn.active {
+      background: var(--accent-primary);
+      border-color: var(--accent-primary);
+      color: white;
+    }
+
+    /* Summary Bar */
+    .summary-bar {
+      display: flex;
+      padding: 8px 12px;
+      gap: 8px;
+      background: var(--vscode-editor-background);
+      border-bottom: 1px solid var(--vscode-input-border);
+    }
+
+    .summary-item {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 10px;
+      cursor: pointer;
+      padding: 4px 8px;
+      border-radius: 4px;
+      transition: background 0.15s;
+    }
+
+    .summary-item:hover {
+      background: var(--vscode-list-hoverBackground);
+    }
+
+    .summary-item.active {
+      background: rgba(249, 115, 22, 0.2);
+    }
+
+    .summary-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }
+
+    .summary-dot.active {
+      background: var(--status-active);
+    }
+
+    .summary-dot.complete {
+      background: var(--status-complete);
+    }
+
+    .summary-dot.pending {
+      background: var(--status-pending);
+    }
+
+    .summary-value {
+      font-weight: 600;
+    }
+
+    .summary-label {
+      color: var(--vscode-descriptionForeground);
+    }
+
+    /* View Container */
+    .view-container {
+      display: none;
+    }
+
+    .view-container.active {
+      display: block;
+    }
+
+    /* Bolts Content */
+    .bolts-content {
+      min-height: 200px;
+    }
+
+    /* Group Section */
+    .group-section {
+      border-bottom: 1px solid var(--vscode-input-border);
+    }
+
+    .group-section.hidden {
+      display: none;
+    }
+
+    .group-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      background: var(--vscode-sideBarSectionHeader-background);
+      cursor: pointer;
+      transition: background 0.15s;
+      user-select: none;
+    }
+
+    .group-header:hover {
+      background: var(--vscode-list-hoverBackground);
+    }
+
+    .group-expand {
+      font-size: 10px;
+      color: var(--vscode-descriptionForeground);
+      transition: transform 0.2s;
+    }
+
+    .group-section.collapsed .group-expand {
+      transform: rotate(-90deg);
+    }
+
+    .group-indicator {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+    }
+
+    .group-indicator.active {
+      background: var(--status-active);
+      box-shadow: 0 0 6px rgba(249, 115, 22, 0.5);
+    }
+
+    .group-indicator.complete {
+      background: var(--status-complete);
+    }
+
+    .group-indicator.pending {
+      background: var(--status-pending);
+    }
+
+    .group-title {
+      flex: 1;
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .group-title.active {
+      color: var(--status-active);
+    }
+
+    .group-title.complete {
+      color: var(--status-complete);
+    }
+
+    .group-count {
+      font-size: 9px;
+      padding: 2px 8px;
+      border-radius: 10px;
+      background: var(--vscode-badge-background);
+    }
+
+    .group-content {
+      max-height: 2000px;
+      overflow: hidden;
+      transition: max-height 0.3s ease;
+      background: var(--vscode-editor-background);
+    }
+
+    .group-section.collapsed .group-content {
+      max-height: 0;
+    }
+
+    /* Bolt Card */
+    .bolt-card {
+      border-bottom: 1px solid var(--vscode-input-border);
+    }
+
+    .bolt-card.hidden {
+      display: none;
+    }
+
+    .bolt-card:last-child {
+      border-bottom: none;
+    }
+
+    .bolt-card-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .bolt-card-header:hover {
+      background: var(--vscode-list-hoverBackground);
+    }
+
+    .bolt-card.expanded .bolt-card-header {
+      background: var(--vscode-list-hoverBackground);
+    }
+
+    .bolt-priority {
+      width: 20px;
+      height: 20px;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      font-weight: 600;
+      background: var(--vscode-input-background);
+      color: var(--vscode-descriptionForeground);
+    }
+
+    .bolt-priority.p1 {
+      background: rgba(249, 115, 22, 0.2);
+      color: var(--accent-primary);
+    }
+
+    .bolt-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .bolt-name {
+      font-size: 11px;
+      font-weight: 500;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .bolt-meta {
+      font-size: 9px;
+      color: var(--vscode-descriptionForeground);
+      margin-top: 2px;
+      display: flex;
+      gap: 8px;
+    }
+
+    .bolt-type {
+      padding: 1px 4px;
+      background: var(--vscode-badge-background);
+      border-radius: 2px;
+    }
+
+    .bolt-stages {
+      display: flex;
+      gap: 2px;
+    }
+
+    .bolt-stage {
+      width: 16px;
+      height: 16px;
+      border-radius: 3px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.15s;
+    }
+
+    .bolt-stage:hover {
+      transform: scale(1.2);
+    }
+
+    .bolt-stage.complete {
+      background: var(--status-complete);
+      color: white;
+    }
+
+    .bolt-stage.active {
+      background: var(--status-active);
+      color: white;
+    }
+
+    .bolt-stage.pending {
+      background: var(--vscode-input-background);
+      color: var(--vscode-descriptionForeground);
+    }
+
+    .bolt-expand {
+      font-size: 10px;
+      color: var(--vscode-descriptionForeground);
+      transition: transform 0.2s;
+    }
+
+    .bolt-card.expanded .bolt-expand {
+      transform: rotate(180deg);
+    }
+
+    /* Bolt Expanded Content */
+    .bolt-card-content {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease;
+    }
+
+    .bolt-card.expanded .bolt-card-content {
+      max-height: 400px;
+    }
+
+    .bolt-card-inner {
+      padding: 12px;
+      border-left: 3px solid var(--accent-primary);
+      margin-left: 12px;
+    }
+
+    .bolt-stage-row {
+      display: flex;
+      gap: 4px;
+      margin-bottom: 12px;
+    }
+
+    .bolt-stage-item {
+      flex: 1;
+      padding: 6px 4px;
+      text-align: center;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .bolt-stage-item:hover {
+      transform: translateY(-1px);
+    }
+
+    .bolt-stage-item.complete {
+      background: rgba(34, 197, 94, 0.2);
+      color: var(--status-complete);
+    }
+
+    .bolt-stage-item.active {
+      background: rgba(249, 115, 22, 0.2);
+      color: var(--status-active);
+      border: 1px solid var(--accent-primary);
+    }
+
+    .bolt-stage-item.pending {
+      background: var(--vscode-input-background);
+      color: var(--vscode-descriptionForeground);
+    }
+
+    .bolt-stage-icon {
+      font-size: 12px;
+    }
+
+    .bolt-stage-name {
+      font-size: 8px;
+      text-transform: uppercase;
+      margin-top: 2px;
+    }
+
+    .bolt-stories-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .bolt-stories-label {
+      font-size: 10px;
+      color: var(--vscode-descriptionForeground);
+    }
+
+    .bolt-stories-count {
+      font-size: 10px;
+      color: var(--status-complete);
+    }
+
+    .bolt-stories-toggle {
+      font-size: 9px;
+      color: var(--accent-primary);
+      background: none;
+      border: none;
+      cursor: pointer;
+    }
+
+    .bolt-stories-toggle:hover {
+      text-decoration: underline;
+    }
+
+    .bolt-stories-list {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      margin-bottom: 12px;
+    }
+
+    .bolt-story {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 10px;
+      background: var(--vscode-sideBar-background);
+      border-radius: 4px;
+      font-size: 10px;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .bolt-story:hover {
+      background: var(--vscode-list-hoverBackground);
+    }
+
+    .bolt-story-checkbox {
+      width: 14px;
+      height: 14px;
+      border-radius: 3px;
+      border: 2px solid var(--vscode-input-border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      flex-shrink: 0;
+    }
+
+    .bolt-story-checkbox.done {
+      background: var(--status-complete);
+      border-color: var(--status-complete);
+      color: white;
+    }
+
+    .bolt-story-name {
+      flex: 1;
+    }
+
+    .bolt-story-name.done {
+      color: var(--vscode-descriptionForeground);
+    }
+
+    .bolt-actions {
+      display: flex;
+      gap: 6px;
+    }
+
+    .bolt-btn {
+      flex: 1;
+      padding: 8px;
+      font-size: 10px;
+      font-weight: 500;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .bolt-btn-primary {
+      background: var(--accent-primary);
+      color: white;
+    }
+
+    .bolt-btn-primary:hover {
+      filter: brightness(1.1);
+    }
+
+    .bolt-btn-secondary {
+      background: var(--vscode-input-background);
+      color: var(--vscode-editor-foreground);
+      border: 1px solid var(--vscode-input-border);
+    }
+
+    .bolt-btn-secondary:hover {
+      background: var(--vscode-list-hoverBackground);
+    }
+
+    /* Flat List (No Grouping) */
+    .flat-list {
+      display: none;
+    }
+
+    .flat-list.visible {
+      display: block;
+    }
+
+    .grouped-list.hidden {
+      display: none;
+    }
+
+    /* Specs View */
+    .specs-content {
+      padding: 0;
+    }
+
+    .intent-item {
+      border-bottom: 1px solid var(--vscode-input-border);
+    }
+
+    .intent-item.hidden {
+      display: none;
+    }
+
+    .intent-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 12px;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .intent-header:hover {
+      background: var(--vscode-list-hoverBackground);
+    }
+
+    .intent-expand {
+      font-size: 10px;
+      color: var(--vscode-descriptionForeground);
+      transition: transform 0.2s;
+    }
+
+    .intent-item.collapsed .intent-expand {
+      transform: rotate(-90deg);
+    }
+
+    .intent-icon {
+      font-size: 14px;
+    }
+
+    .intent-info {
+      flex: 1;
+    }
+
+    .intent-name {
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .intent-meta {
+      font-size: 10px;
+      color: var(--vscode-descriptionForeground);
+      margin-top: 2px;
+    }
+
+    .intent-progress {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .progress-ring {
+      width: 28px;
+      height: 28px;
+      position: relative;
+    }
+
+    .progress-ring svg {
+      transform: rotate(-90deg);
+    }
+
+    .progress-ring-bg {
+      fill: none;
+      stroke: var(--vscode-input-background);
+      stroke-width: 3;
+    }
+
+    .progress-ring-fill {
+      fill: none;
+      stroke: var(--status-complete);
+      stroke-width: 3;
+      stroke-linecap: round;
+      stroke-dasharray: 69.115;
+      transition: stroke-dashoffset 0.3s;
+    }
+
+    .progress-ring-text {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 8px;
+      font-weight: 600;
+    }
+
+    .intent-content {
+      max-height: 2000px;
+      overflow: hidden;
+      transition: max-height 0.3s ease;
+      background: var(--vscode-editor-background);
+    }
+
+    .intent-item.collapsed .intent-content {
+      max-height: 0;
+    }
+
+    /* Intent Card Expanded View */
+    .intent-card-inner {
+      padding: 16px;
+      background: var(--vscode-editor-background);
+      border-left: 3px solid var(--accent-primary);
+      margin: 0 12px 12px 12px;
+      border-radius: 0 8px 8px 0;
+    }
+
+    .intent-card-header-row {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+
+    .intent-progress-ring-large {
+      width: 64px;
+      height: 64px;
+      position: relative;
+    }
+
+    .intent-progress-ring-large svg {
+      transform: rotate(-90deg);
+    }
+
+    .intent-progress-ring-large .ring-bg {
+      fill: none;
+      stroke: var(--vscode-input-background);
+      stroke-width: 6;
+    }
+
+    .intent-progress-ring-large .ring-fill {
+      fill: none;
+      stroke: var(--status-complete);
+      stroke-width: 6;
+      stroke-linecap: round;
+      stroke-dasharray: 163.36;
+      transition: stroke-dashoffset 0.3s;
+    }
+
+    .intent-progress-ring-large .ring-fill.active {
+      stroke: var(--status-active);
+    }
+
+    .intent-progress-text {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--accent-primary);
+    }
+
+    .intent-stage-info {
+      flex: 1;
+    }
+
+    .intent-stage-title {
+      font-size: 13px;
+      margin-bottom: 4px;
+    }
+
+    .intent-stage-title span {
+      color: var(--accent-primary);
+      font-weight: 600;
+    }
+
+    .intent-stage-subtitle {
+      font-size: 11px;
+      color: var(--vscode-descriptionForeground);
+    }
+
+    .intent-status-badge {
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .intent-status-badge.active {
+      background: rgba(249, 115, 22, 0.2);
+      color: var(--status-active);
+      border: 1px solid var(--status-active);
+    }
+
+    .intent-status-badge.complete {
+      background: rgba(34, 197, 94, 0.2);
+      color: var(--status-complete);
+    }
+
+    .intent-status-badge.pending {
+      background: var(--vscode-input-background);
+      color: var(--vscode-descriptionForeground);
+    }
+
+    /* Unit Pipeline */
+    .unit-pipeline {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      margin-bottom: 16px;
+      padding: 12px 0;
+    }
+
+    .unit-pipeline-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      flex: 1;
+      position: relative;
+    }
+
+    .unit-pipeline-item:not(:last-child)::after {
+      content: '';
+      position: absolute;
+      top: 12px;
+      left: 50%;
+      width: 100%;
+      height: 3px;
+      background: var(--vscode-input-background);
+      z-index: 0;
+    }
+
+    .unit-pipeline-item.complete:not(:last-child)::after {
+      background: var(--status-complete);
+    }
+
+    .unit-pipeline-node {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      font-weight: 600;
+      z-index: 1;
+      background: var(--vscode-input-background);
+      color: var(--vscode-descriptionForeground);
+    }
+
+    .unit-pipeline-node.complete {
+      background: var(--status-complete);
+      color: white;
+    }
+
+    .unit-pipeline-node.active {
+      background: var(--status-active);
+      color: white;
+      box-shadow: 0 0 8px rgba(249, 115, 22, 0.5);
+    }
+
+    .unit-pipeline-label {
+      font-size: 8px;
+      text-transform: uppercase;
+      margin-top: 6px;
+      color: var(--vscode-descriptionForeground);
+      text-align: center;
+      max-width: 60px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .unit-pipeline-label.active {
+      color: var(--status-active);
+    }
+
+    .unit-pipeline-label.complete {
+      color: var(--status-complete);
+    }
+
+    /* Stories Section in Intent Card */
+    .intent-stories-section {
+      margin-bottom: 16px;
+    }
+
+    .intent-stories-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .intent-stories-title {
+      font-size: 11px;
+      color: var(--vscode-descriptionForeground);
+    }
+
+    .intent-stories-count {
+      font-size: 11px;
+      color: var(--vscode-editor-foreground);
+    }
+
+    .intent-stories-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      max-height: 180px;
+      overflow-y: auto;
+    }
+
+    .intent-story-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 12px;
+      background: var(--vscode-sideBar-background);
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .intent-story-item:hover {
+      background: var(--vscode-list-hoverBackground);
+    }
+
+    .intent-story-checkbox {
+      width: 18px;
+      height: 18px;
+      border-radius: 4px;
+      border: 2px solid var(--vscode-input-border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      flex-shrink: 0;
+    }
+
+    .intent-story-checkbox.complete {
+      background: var(--status-complete);
+      border-color: var(--status-complete);
+      color: white;
+    }
+
+    .intent-story-checkbox.active {
+      border-color: var(--status-active);
+      color: var(--status-active);
+    }
+
+    .intent-story-name {
+      flex: 1;
+      font-size: 11px;
+    }
+
+    .intent-story-name.complete {
+      color: var(--vscode-descriptionForeground);
+      text-decoration: line-through;
+    }
+
+    /* Intent Card Actions */
+    .intent-card-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .intent-btn {
+      flex: 1;
+      padding: 10px 16px;
+      font-size: 11px;
+      font-weight: 500;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.15s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .intent-btn-primary {
+      background: var(--accent-primary);
+      color: white;
+    }
+
+    .intent-btn-primary:hover {
+      filter: brightness(1.1);
+    }
+
+    .intent-btn-secondary {
+      background: var(--vscode-input-background);
+      color: var(--vscode-editor-foreground);
+      border: 1px solid var(--vscode-input-border);
+    }
+
+    .intent-btn-secondary:hover {
+      background: var(--vscode-list-hoverBackground);
+    }
+
+    .intent-btn-success {
+      background: var(--status-complete);
+      color: white;
+    }
+
+    .intent-btn-success:hover {
+      filter: brightness(1.1);
+    }
+
+    .unit-item {
+      border-bottom: 1px solid var(--vscode-input-border);
+    }
+
+    .unit-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px 8px 28px;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .unit-header:hover {
+      background: var(--vscode-list-hoverBackground);
+    }
+
+    .unit-expand {
+      font-size: 10px;
+      color: var(--vscode-descriptionForeground);
+      transition: transform 0.2s;
+    }
+
+    .unit-item.collapsed .unit-expand {
+      transform: rotate(-90deg);
+    }
+
+    .unit-name {
+      flex: 1;
+      font-size: 11px;
+    }
+
+    .unit-progress {
+      font-size: 9px;
+      color: var(--vscode-descriptionForeground);
+    }
+
+    .unit-content {
+      max-height: 1000px;
+      overflow: hidden;
+      transition: max-height 0.3s ease;
+    }
+
+    .unit-item.collapsed .unit-content {
+      max-height: 0;
+    }
+
+    .story-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 12px 6px 44px;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .story-item:hover {
+      background: var(--vscode-list-hoverBackground);
+    }
+
+    .story-item.hidden {
+      display: none;
+    }
+
+    .story-expand {
+      font-size: 8px;
+      color: var(--vscode-descriptionForeground);
+      transition: transform 0.2s;
+    }
+
+    .story-item.expanded .story-expand {
+      transform: rotate(90deg);
+    }
+
+    .story-status {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      border: 2px solid var(--vscode-input-border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 8px;
+    }
+
+    .story-status.complete {
+      background: var(--status-complete);
+      border-color: var(--status-complete);
+      color: white;
+    }
+
+    .story-status.active {
+      background: var(--status-active);
+      border-color: var(--status-active);
+      color: white;
+    }
+
+    .story-name {
+      flex: 1;
+      font-size: 11px;
+    }
+
+    .story-name.complete {
+      color: var(--vscode-descriptionForeground);
+    }
+
+    .story-details {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.2s ease;
+      background: var(--vscode-sideBar-background);
+      margin-left: 44px;
+      border-radius: 4px;
+    }
+
+    .story-details.visible {
+      max-height: 150px;
+      padding: 8px 10px;
+      margin-bottom: 4px;
+    }
+
+    .story-detail-row {
+      display: flex;
+      gap: 8px;
+      font-size: 10px;
+      margin-bottom: 4px;
+    }
+
+    .detail-label {
+      color: var(--vscode-descriptionForeground);
+      min-width: 50px;
+    }
+
+    .detail-value {
+      color: var(--vscode-editor-foreground);
+    }
+
+    .detail-value.status-complete {
+      color: var(--status-complete);
+    }
+
+    .detail-value.status-active {
+      color: var(--status-active);
+    }
+
+    .detail-value.status-pending {
+      color: var(--vscode-descriptionForeground);
+    }
+
+    .story-actions {
+      display: flex;
+      gap: 6px;
+      margin-top: 8px;
+    }
+
+    .story-btn {
+      padding: 4px 8px;
+      font-size: 9px;
+      background: var(--vscode-input-background);
+      border: 1px solid var(--vscode-input-border);
+      color: var(--vscode-editor-foreground);
+      border-radius: 3px;
+      cursor: pointer;
+    }
+
+    .story-btn:hover {
+      background: var(--vscode-list-hoverBackground);
+    }
+
+    /* Dashboard Content */
+    .dashboard-content {
+      padding: 16px 12px;
+    }
+
+    .metrics-title {
+      font-size: 9px;
+      text-transform: uppercase;
+      color: var(--vscode-descriptionForeground);
+      margin-bottom: 8px;
+      letter-spacing: 0.5px;
+    }
+
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+
+    .metric-item {
+      text-align: center;
+      padding: 8px 4px;
+      background: var(--vscode-editor-background);
+      border-radius: 4px;
+    }
+
+    .metric-value {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--vscode-editor-foreground);
+    }
+
+    .metric-value.highlight {
+      color: var(--accent-primary);
+    }
+
+    .metric-value.green {
+      color: var(--status-complete);
+    }
+
+    .metric-value.blue {
+      color: #3b82f6;
+    }
+
+    .metric-label {
+      font-size: 9px;
+      color: var(--vscode-descriptionForeground);
+      margin-top: 2px;
+    }
+
+    /* Theme Toggle */
+    .theme-toggle {
+      padding: 8px 12px;
+      background: var(--vscode-editor-background);
+      border-top: 1px solid var(--vscode-input-border);
+      display: flex;
+      gap: 8px;
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+    }
+
+    .theme-btn {
+      flex: 1;
+      padding: 6px;
+      font-size: 10px;
+      border: 1px solid var(--vscode-input-border);
+      background: var(--vscode-input-background);
+      color: var(--vscode-editor-foreground);
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .theme-btn.active {
+      background: var(--accent-primary);
+      border-color: var(--accent-primary);
+      color: white;
+    }
+
+    /* Empty State */
+    .empty-state {
+      padding: 24px;
+      text-align: center;
+      color: var(--vscode-descriptionForeground);
+      font-size: 11px;
+    }
+
+    /* File List Styles */
+    .files-section {
+      margin-top: 8px;
+      margin-bottom: 12px;
+    }
+
+    .files-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 6px;
+    }
+
+    .files-label {
+      font-size: 10px;
+      color: var(--vscode-descriptionForeground);
+    }
+
+    .files-toggle {
+      font-size: 9px;
+      color: var(--accent-primary);
+      background: none;
+      border: none;
+      cursor: pointer;
+    }
+
+    .files-toggle:hover {
+      text-decoration: underline;
+    }
+
+    .files-list {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.2s ease;
+    }
+
+    .files-list.visible {
+      max-height: 200px;
+    }
+
+    .file-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 8px;
+      background: var(--vscode-sideBar-background);
+      border-radius: 3px;
+      font-size: 10px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .file-item:hover {
+      background: var(--vscode-list-hoverBackground);
+    }
+
+    .file-item.missing {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    .file-icon {
+      font-size: 12px;
+    }
+
+    .file-icon.md { color: #519aba; }
+    .file-icon.missing { color: var(--vscode-descriptionForeground); }
+
+    .file-name {
+      flex: 1;
+    }
+
+    .file-status {
+      font-size: 8px;
+      padding: 1px 4px;
+      border-radius: 2px;
+    }
+
+    .file-status.exists {
+      background: rgba(34, 197, 94, 0.2);
+      color: var(--status-complete);
+    }
+
+    .file-status.pending {
+      background: var(--vscode-input-background);
+      color: var(--vscode-descriptionForeground);
+    }
+
+    /* Intent/Unit File Icons */
+    .spec-files-btn {
+      font-size: 10px;
+      color: var(--vscode-descriptionForeground);
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 2px 4px;
+      border-radius: 3px;
+    }
+
+    .spec-files-btn:hover {
+      background: var(--vscode-list-hoverBackground);
+      color: var(--accent-primary);
+    }
+  </style>
+</head>
+<body>
+  <div class="sidebar" id="sidebar">
+    <div class="header">
+      <span class="header-title">SpecsMD</span>
+      <div class="header-actions">
+        <button type="button" class="icon-btn" title="Refresh" onclick="renderBolts()">&#8635;</button>
+        <button type="button" class="icon-btn" title="Settings">&#9881;</button>
+      </div>
+    </div>
+
+    <!-- Main View Tabs -->
+    <div class="view-tabs">
+      <button type="button" class="view-tab" id="specs-tab" onclick="switchView('specs')">
+        &#128203; Specs
+      </button>
+      <button type="button" class="view-tab active" id="bolts-tab" onclick="switchView('bolts')">
+        &#9889; Bolts
+      </button>
+      <button type="button" class="view-tab" id="dashboard-tab" onclick="switchView('dashboard')">
+        &#128202; Dashboard
+      </button>
+    </div>
+
+    <!-- =========== SPECS VIEW =========== -->
+    <div class="view-container" id="specs-view">
+      <div class="toolbar">
+        <div class="toolbar-row">
+          <span class="toolbar-label">Filter</span>
+          <select class="toolbar-select" id="specs-filter" aria-label="Filter status" onchange="filterSpecs()">
+            <option value="all">All Status</option>
+            <option value="active">In Progress</option>
+            <option value="complete">Completed</option>
+            <option value="pending">Not Started</option>
+          </select>
+        </div>
+      </div>
+      <div class="specs-content" id="specs-content">
+        <!-- Will be rendered by JS -->
+      </div>
+    </div>
+
+    <!-- =========== BOLTS VIEW =========== -->
+    <div class="view-container active" id="bolts-view">
+      <div class="toolbar">
+        <div class="toolbar-row">
+          <span class="toolbar-label">Filter</span>
+          <select class="toolbar-select" id="intent-filter" aria-label="Filter intent" onchange="filterBolts()">
+            <option value="all">All Intents</option>
+          </select>
+          <select class="toolbar-select" id="status-filter" aria-label="Filter status" onchange="filterBolts()">
+            <option value="all">All Status</option>
+            <option value="active">In Progress</option>
+            <option value="complete">Completed</option>
+            <option value="pending">Backlog</option>
+          </select>
+        </div>
+        <div class="toolbar-row">
+          <span class="toolbar-label">Group</span>
+          <div class="group-by-buttons">
+            <button type="button" class="group-btn active" data-group="state" onclick="setGroupBy('state')">State</button>
+            <button type="button" class="group-btn" data-group="intent" onclick="setGroupBy('intent')">Intent</button>
+            <button type="button" class="group-btn" data-group="type" onclick="setGroupBy('type')">Type</button>
+            <button type="button" class="group-btn" data-group="none" onclick="setGroupBy('none')">None</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="summary-bar" id="summary-bar">
+        <!-- Will be rendered by JS -->
+      </div>
+
+      <div class="bolts-content" id="bolts-content">
+        <!-- Will be rendered by JS -->
+      </div>
+    </div>
+
+    <!-- =========== DASHBOARD VIEW =========== -->
+    <div class="view-container" id="dashboard-view">
+      <div class="dashboard-content">
+        <div class="metrics-title">Overall Progress</div>
+        <div class="metrics-grid">
+          <div class="metric-item">
+            <div class="metric-value green" id="metric-intents">1/2</div>
+            <div class="metric-label">Intents</div>
+          </div>
+          <div class="metric-item">
+            <div class="metric-value blue" id="metric-bolts">3/10</div>
+            <div class="metric-label">Bolts</div>
+          </div>
+          <div class="metric-item">
+            <div class="metric-value highlight" id="metric-complete">27%</div>
+            <div class="metric-label">Complete</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="theme-toggle">
+      <button type="button" class="theme-btn active" onclick="setTheme('dark')">Dark</button>
+      <button type="button" class="theme-btn" onclick="setTheme('light')">Light</button>
+    </div>
+  </div>
+
+  <script>
+    // ==================== DATA MODEL ====================
+    const intents = [
+      { id: 'intent-1', name: '001-admin-panel', units: ['unit-1', 'unit-2', 'unit-3'] },
+      { id: 'intent-2', name: '002-api-gateway', units: ['unit-4', 'unit-5', 'unit-6'] }
+    ];
+
+    const units = [
+      { id: 'unit-1', name: 'user-management', intentId: 'intent-1', stories: ['story-1', 'story-2', 'story-3', 'story-4'] },
+      { id: 'unit-2', name: 'role-permissions', intentId: 'intent-1', stories: ['story-5', 'story-6', 'story-7', 'story-8', 'story-9', 'story-10'] },
+      { id: 'unit-3', name: 'audit-logging', intentId: 'intent-1', stories: ['story-11', 'story-12', 'story-13', 'story-14'] },
+      { id: 'unit-4', name: 'rate-limiting', intentId: 'intent-2', stories: ['story-15', 'story-16', 'story-17'] },
+      { id: 'unit-5', name: 'authentication', intentId: 'intent-2', stories: ['story-18', 'story-19', 'story-20', 'story-21'] },
+      { id: 'unit-6', name: 'request-routing', intentId: 'intent-2', stories: ['story-22', 'story-23', 'story-24'] }
+    ];
+
+    const stories = [
+      { id: 'story-1', name: '001-create-user', unitId: 'unit-1', status: 'complete' },
+      { id: 'story-2', name: '002-view-user-list', unitId: 'unit-1', status: 'complete' },
+      { id: 'story-3', name: '003-update-user', unitId: 'unit-1', status: 'pending' },
+      { id: 'story-4', name: '004-delete-user', unitId: 'unit-1', status: 'pending' },
+      { id: 'story-5', name: '001-create-role', unitId: 'unit-2', status: 'complete' },
+      { id: 'story-6', name: '002-manage-permissions', unitId: 'unit-2', status: 'complete' },
+      { id: 'story-7', name: '003-view-roles', unitId: 'unit-2', status: 'complete' },
+      { id: 'story-8', name: '004-delete-role', unitId: 'unit-2', status: 'complete' },
+      { id: 'story-9', name: '005-view-role-users', unitId: 'unit-2', status: 'complete' },
+      { id: 'story-10', name: '006-effective-permissions', unitId: 'unit-2', status: 'complete' },
+      { id: 'story-11', name: '001-log-actions', unitId: 'unit-3', status: 'pending' },
+      { id: 'story-12', name: '002-view-audit-log', unitId: 'unit-3', status: 'pending' },
+      { id: 'story-13', name: '003-filter-logs', unitId: 'unit-3', status: 'pending' },
+      { id: 'story-14', name: '004-export-logs', unitId: 'unit-3', status: 'pending' },
+      { id: 'story-15', name: '001-configure-limits', unitId: 'unit-4', status: 'complete' },
+      { id: 'story-16', name: '002-throttle-requests', unitId: 'unit-4', status: 'active' },
+      { id: 'story-17', name: '003-burst-handling', unitId: 'unit-4', status: 'pending' },
+      { id: 'story-18', name: '001-jwt-validation', unitId: 'unit-5', status: 'complete' },
+      { id: 'story-19', name: '002-api-key-auth', unitId: 'unit-5', status: 'complete' },
+      { id: 'story-20', name: '003-oauth-integration', unitId: 'unit-5', status: 'active' },
+      { id: 'story-21', name: '004-token-refresh', unitId: 'unit-5', status: 'pending' },
+      { id: 'story-22', name: '001-path-routing', unitId: 'unit-6', status: 'pending' },
+      { id: 'story-23', name: '002-load-balancing', unitId: 'unit-6', status: 'pending' },
+      { id: 'story-24', name: '003-service-discovery', unitId: 'unit-6', status: 'pending' }
+    ];
+
+    // File templates by artifact type
+    const fileTemplates = {
+      intent: ['requirements.md', 'system-context.md', 'units.md', 'inception-log.md'],
+      unit: ['unit-brief.md', 'construction-log.md'],
+      story: (storyName) => [`${storyName}.md`],
+      bolt: {
+        'DDD': ['bolt.md', 'ddd-01-domain-model.md', 'ddd-02-technical-design.md', 'ddd-03-test-report.md'],
+        'Simple': ['bolt.md', 'implementation-plan.md', 'implementation-walkthrough.md', 'test-walkthrough.md']
+      }
+    };
+
+    // Function to get files for a bolt based on its type and stage completion
+    function getBoltFiles(bolt) {
+      const baseFiles = fileTemplates.bolt[bolt.type] || fileTemplates.bolt['Simple'];
+      const stageToFile = {
+        'DDD': { model: 'ddd-01-domain-model.md', design: 'ddd-02-technical-design.md', test: 'ddd-03-test-report.md' },
+        'Simple': { model: 'implementation-plan.md', implement: 'implementation-walkthrough.md', test: 'test-walkthrough.md' }
+      };
+
+      return baseFiles.map(file => {
+        const mapping = stageToFile[bolt.type];
+        let exists = file === 'bolt.md'; // bolt.md always exists
+
+        for (const [stage, stageFile] of Object.entries(mapping || {})) {
+          if (file === stageFile && (bolt.stages[stage] === 'complete' || bolt.stages[stage] === 'active')) {
+            exists = true;
+            break;
+          }
+        }
+
+        return { name: file, exists };
+      });
+    }
+
+    const bolts = [
+      {
+        id: 'bolt-1',
+        name: 'user-management-service-1',
+        type: 'DDD',
+        intentId: 'intent-1',
+        status: 'active',
+        stages: { model: 'complete', design: 'active', adr: 'pending', implement: 'pending', test: 'pending' },
+        stories: [
+          { name: '001-create-user', done: true },
+          { name: '002-view-user-list', done: true },
+          { name: '003-update-user', done: false },
+          { name: '004-delete-user', done: false }
+        ]
+      },
+      {
+        id: 'bolt-2',
+        name: 'role-permission-service-1',
+        type: 'DDD',
+        intentId: 'intent-1',
+        status: 'complete',
+        stages: { model: 'complete', design: 'complete', adr: 'complete', implement: 'complete', test: 'complete' },
+        stories: [
+          { name: '001-create-role', done: true },
+          { name: '002-manage-permissions', done: true },
+          { name: '003-view-roles', done: true },
+          { name: '004-delete-role', done: true },
+          { name: '005-view-role-users', done: true },
+          { name: '006-effective-permissions', done: true }
+        ]
+      },
+      {
+        id: 'bolt-3',
+        name: 'admin-panel-ui-1',
+        type: 'Simple',
+        intentId: 'intent-1',
+        status: 'pending',
+        stages: { model: 'pending', design: 'pending', adr: 'pending', implement: 'pending', test: 'pending' },
+        stories: [
+          { name: '001-panel-layout', done: false },
+          { name: '002-navigation', done: false },
+          { name: '003-dashboard', done: false },
+          { name: '004-settings', done: false }
+        ]
+      },
+      {
+        id: 'bolt-4',
+        name: 'admin-panel-ui-2',
+        type: 'Simple',
+        intentId: 'intent-1',
+        status: 'pending',
+        stages: { model: 'pending', design: 'pending', adr: 'pending', implement: 'pending', test: 'pending' },
+        stories: [
+          { name: '001-user-table', done: false },
+          { name: '002-role-table', done: false },
+          { name: '003-forms', done: false },
+          { name: '004-modals', done: false }
+        ]
+      },
+      {
+        id: 'bolt-5',
+        name: 'audit-service-1',
+        type: 'DDD',
+        intentId: 'intent-1',
+        status: 'pending',
+        stages: { model: 'pending', design: 'pending', adr: 'pending', implement: 'pending', test: 'pending' },
+        stories: [
+          { name: '001-log-actions', done: false },
+          { name: '002-query-logs', done: false }
+        ]
+      },
+      {
+        id: 'bolt-6',
+        name: 'user-management-service-2',
+        type: 'DDD',
+        intentId: 'intent-1',
+        status: 'pending',
+        stages: { model: 'pending', design: 'pending', adr: 'pending', implement: 'pending', test: 'pending' },
+        stories: [
+          { name: '001-bulk-create', done: false },
+          { name: '002-bulk-delete', done: false },
+          { name: '003-import-export', done: false },
+          { name: '004-user-search', done: false }
+        ]
+      },
+      // Intent 2: API Gateway Bolts
+      {
+        id: 'bolt-7',
+        name: 'rate-limiter-service-1',
+        type: 'DDD',
+        intentId: 'intent-2',
+        status: 'complete',
+        stages: { model: 'complete', design: 'complete', adr: 'complete', implement: 'complete', test: 'complete' },
+        stories: [
+          { name: '001-configure-limits', done: true },
+          { name: '002-throttle-requests', done: true },
+          { name: '003-burst-handling', done: true }
+        ]
+      },
+      {
+        id: 'bolt-8',
+        name: 'auth-gateway-1',
+        type: 'DDD',
+        intentId: 'intent-2',
+        status: 'active',
+        stages: { model: 'complete', design: 'complete', adr: 'active', implement: 'pending', test: 'pending' },
+        stories: [
+          { name: '001-jwt-validation', done: true },
+          { name: '002-api-key-auth', done: true },
+          { name: '003-oauth-integration', done: false },
+          { name: '004-token-refresh', done: false }
+        ]
+      },
+      {
+        id: 'bolt-9',
+        name: 'router-service-1',
+        type: 'Simple',
+        intentId: 'intent-2',
+        status: 'pending',
+        stages: { model: 'pending', design: 'pending', adr: 'pending', implement: 'pending', test: 'pending' },
+        stories: [
+          { name: '001-path-routing', done: false },
+          { name: '002-load-balancing', done: false },
+          { name: '003-service-discovery', done: false }
+        ]
+      },
+      {
+        id: 'bolt-10',
+        name: 'gateway-ui-1',
+        type: 'Simple',
+        intentId: 'intent-2',
+        status: 'pending',
+        stages: { model: 'pending', design: 'pending', adr: 'pending', implement: 'pending', test: 'pending' },
+        stories: [
+          { name: '001-dashboard', done: false },
+          { name: '002-route-editor', done: false },
+          { name: '003-metrics-view', done: false }
+        ]
+      }
+    ];
+
+    // ==================== STATE ====================
+    let currentGroupBy = 'state';
+    let currentIntentFilter = 'all';
+    let currentStatusFilter = 'all';
+    let currentSpecsFilter = 'all';
+    let expandedBoltId = 'bolt-1';
+    let expandedIntentId = 'intent-1';
+    let expandedUnitIds = ['unit-1'];
+    let expandedStoryId = null;
+    let collapsedGroups = [];
+
+    // ==================== RENDER FUNCTIONS ====================
+
+    function renderSummary() {
+      const activeCount = bolts.filter(b => b.status === 'active').length;
+      const completeCount = bolts.filter(b => b.status === 'complete').length;
+      const pendingCount = bolts.filter(b => b.status === 'pending').length;
+
+      document.getElementById('summary-bar').innerHTML = `
+        <div class="summary-item ${currentStatusFilter === 'active' ? 'active' : ''}" onclick="quickFilterStatus('active')">
+          <div class="summary-dot active"></div>
+          <span class="summary-value">${activeCount}</span>
+          <span class="summary-label">Active</span>
+        </div>
+        <div class="summary-item ${currentStatusFilter === 'complete' ? 'active' : ''}" onclick="quickFilterStatus('complete')">
+          <div class="summary-dot complete"></div>
+          <span class="summary-value">${completeCount}</span>
+          <span class="summary-label">Done</span>
+        </div>
+        <div class="summary-item ${currentStatusFilter === 'pending' ? 'active' : ''}" onclick="quickFilterStatus('pending')">
+          <div class="summary-dot pending"></div>
+          <span class="summary-value">${pendingCount}</span>
+          <span class="summary-label">Backlog</span>
+        </div>
+      `;
+    }
+
+    function renderBolts() {
+      const container = document.getElementById('bolts-content');
+      let filteredBolts = [...bolts];
+
+      // Apply filters
+      if (currentIntentFilter !== 'all') {
+        filteredBolts = filteredBolts.filter(b => b.intentId === currentIntentFilter);
+      }
+      if (currentStatusFilter !== 'all') {
+        filteredBolts = filteredBolts.filter(b => b.status === currentStatusFilter);
+      }
+
+      if (currentGroupBy === 'none') {
+        container.innerHTML = renderFlatList(filteredBolts);
+      } else {
+        container.innerHTML = renderGroupedList(filteredBolts);
+      }
+
+      renderSummary();
+      populateIntentFilter();
+    }
+
+    function renderFlatList(boltList) {
+      if (boltList.length === 0) {
+        return '<div class="empty-state">No bolts match your filters</div>';
+      }
+
+      let priority = 1;
+      return boltList.map(bolt => renderBoltCard(bolt, priority++)).join('');
+    }
+
+    function renderGroupedList(boltList) {
+      let groups = {};
+
+      if (currentGroupBy === 'state') {
+        groups = {
+          active: { title: 'In Progress', indicator: 'active', bolts: boltList.filter(b => b.status === 'active') },
+          complete: { title: 'Completed', indicator: 'complete', bolts: boltList.filter(b => b.status === 'complete') },
+          pending: { title: 'Backlog', indicator: 'pending', bolts: boltList.filter(b => b.status === 'pending') }
+        };
+      } else if (currentGroupBy === 'intent') {
+        intents.forEach(intent => {
+          groups[intent.id] = {
+            title: intent.name,
+            indicator: 'pending',
+            bolts: boltList.filter(b => b.intentId === intent.id)
+          };
+        });
+      } else if (currentGroupBy === 'type') {
+        groups = {
+          DDD: { title: 'DDD Bolts', indicator: 'active', bolts: boltList.filter(b => b.type === 'DDD') },
+          Simple: { title: 'Simple Bolts', indicator: 'pending', bolts: boltList.filter(b => b.type === 'Simple') }
+        };
+      }
+
+      let html = '';
+      let globalPriority = 1;
+
+      for (const [key, group] of Object.entries(groups)) {
+        if (group.bolts.length === 0) continue;
+
+        const isCollapsed = collapsedGroups.includes(key);
+        html += `
+          <div class="group-section ${isCollapsed ? 'collapsed' : ''}" id="group-${key}">
+            <div class="group-header" onclick="toggleGroup('${key}')">
+              <span class="group-expand">&#9660;</span>
+              <div class="group-indicator ${group.indicator}"></div>
+              <span class="group-title ${group.indicator}">${group.title}</span>
+              <span class="group-count">${group.bolts.length}</span>
+            </div>
+            <div class="group-content">
+              ${group.bolts.map(bolt => renderBoltCard(bolt, globalPriority++)).join('')}
+            </div>
+          </div>
+        `;
+      }
+
+      return html || '<div class="empty-state">No bolts match your filters</div>';
+    }
+
+    function renderBoltCard(bolt, priority) {
+      const isExpanded = bolt.id === expandedBoltId;
+      const doneStories = bolt.stories.filter(s => s.done).length;
+      const totalStories = bolt.stories.length;
+
+      const stageIcons = { model: 'M', design: 'D', adr: 'A', implement: 'I', test: 'T' };
+      const stageNames = { model: 'Model', design: 'Design', adr: 'ADR', implement: 'Impl', test: 'Test' };
+
+      const stagesHtml = Object.entries(bolt.stages).map(([stage, status]) => `
+        <div class="bolt-stage ${status}" title="${stageNames[stage]}: ${status}">${stageIcons[stage]}</div>
+      `).join('');
+
+      const stageDetailHtml = Object.entries(bolt.stages).map(([stage, status]) => `
+        <div class="bolt-stage-item ${status}">
+          <div class="bolt-stage-icon">${status === 'complete' ? '&#10003;' : status === 'active' ? '&#9679;' : '&#9675;'}</div>
+          <div class="bolt-stage-name">${stageNames[stage]}</div>
+        </div>
+      `).join('');
+
+      const storiesHtml = bolt.stories.map(s => `
+        <div class="bolt-story" onclick="event.stopPropagation()">
+          <div class="bolt-story-checkbox ${s.done ? 'done' : ''}">${s.done ? '&#10003;' : ''}</div>
+          <span class="bolt-story-name ${s.done ? 'done' : ''}">${s.name}</span>
+        </div>
+      `).join('');
+
+      // Get files for this bolt type
+      const boltFiles = getBoltFiles(bolt);
+      const existingFilesCount = boltFiles.filter(f => f.exists).length;
+      const filesHtml = boltFiles.map(f => `
+        <div class="file-item ${f.exists ? '' : 'missing'}" onclick="event.stopPropagation()">
+          <span class="file-icon ${f.exists ? 'md' : 'missing'}">&#128196;</span>
+          <span class="file-name">${f.name}</span>
+          <span class="file-status ${f.exists ? 'exists' : 'pending'}">${f.exists ? 'exists' : 'pending'}</span>
+        </div>
+      `).join('');
+
+      const actionBtn = '<button type="button" class="bolt-btn bolt-btn-secondary">Files</button>';
+
+      return `
+        <div class="bolt-card ${isExpanded ? 'expanded' : ''}" id="${bolt.id}">
+          <div class="bolt-card-header" onclick="toggleBolt('${bolt.id}')">
+            <div class="bolt-priority ${bolt.status === 'active' ? 'p1' : ''}">${bolt.status === 'complete' ? '-' : priority}</div>
+            <div class="bolt-info">
+              <div class="bolt-name">${bolt.name}</div>
+              <div class="bolt-meta">
+                <span class="bolt-type">${bolt.type}</span>
+                <span>${doneStories}/${totalStories} stories</span>
+              </div>
+            </div>
+            <div class="bolt-stages">${stagesHtml}</div>
+            <span class="bolt-expand">&#9660;</span>
+          </div>
+          <div class="bolt-card-content">
+            <div class="bolt-card-inner">
+              <div class="bolt-stage-row">${stageDetailHtml}</div>
+              <div class="bolt-stories-row">
+                <span class="bolt-stories-label">Stories</span>
+                <span class="bolt-stories-count">${doneStories}/${totalStories}</span>
+              </div>
+              <div class="bolt-stories-list">${storiesHtml}</div>
+              <div class="bolt-actions">${actionBtn}</div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function getCurrentStageName(bolt) {
+      for (const [stage, status] of Object.entries(bolt.stages)) {
+        if (status === 'active') {
+          return stage.charAt(0).toUpperCase() + stage.slice(1);
+        }
+      }
+      return 'Model';
+    }
+
+    function renderSpecs() {
+      const container = document.getElementById('specs-content');
+      let html = '';
+
+      intents.forEach(intent => {
+        const intentUnits = units.filter(u => u.unitId !== 'x' && intent.units.includes(u.id));
+        const allStories = intentUnits.flatMap(u => stories.filter(s => s.unitId === u.id));
+        const doneStories = allStories.filter(s => s.status === 'complete').length;
+        const activeStories = allStories.filter(s => s.status === 'active').length;
+        const progress = Math.round((doneStories / allStories.length) * 100);
+        const dashOffset = 69.115 - (69.115 * progress / 100);
+        const largeDashOffset = 163.36 - (163.36 * progress / 100);
+
+        const isExpanded = expandedIntentId === intent.id;
+
+        // Determine intent status
+        let intentStatus = 'pending';
+        if (progress === 100) intentStatus = 'complete';
+        else if (activeStories > 0 || doneStories > 0) intentStatus = 'active';
+
+        // Apply filter - skip intents that don't match the current filter
+        if (currentSpecsFilter !== 'all' && intentStatus !== currentSpecsFilter) {
+          return; // Skip this intent
+        }
+
+        // Find current unit (first with active stories, or first incomplete)
+        let currentUnit = intentUnits.find(u => {
+          const unitStories = stories.filter(s => s.unitId === u.id);
+          return unitStories.some(s => s.status === 'active');
+        }) || intentUnits.find(u => {
+          const unitStories = stories.filter(s => s.unitId === u.id);
+          return unitStories.some(s => s.status !== 'complete');
+        }) || intentUnits[0];
+
+        // Get bolts for this intent
+        const intentBolts = bolts.filter(b => b.intentId === intent.id);
+        const completedBolts = intentBolts.filter(b => b.status === 'complete').length;
+
+        // Bolt pipeline HTML
+        const boltPipelineHtml = intentBolts.slice(0, 5).map(bolt => {
+          return `
+            <div class="unit-pipeline-item ${bolt.status}">
+              <div class="unit-pipeline-node ${bolt.status}">${bolt.status === 'complete' ? '&#10003;' : bolt.name.charAt(0).toUpperCase()}</div>
+              <span class="unit-pipeline-label ${bolt.status}">${bolt.name.split('-').slice(0, 2).join('-')}</span>
+            </div>
+          `;
+        }).join('');
+
+        // Bolts for expanded view
+        const boltsHtml = intentBolts.map(bolt => {
+          const doneStagesCount = Object.values(bolt.stages).filter(s => s === 'complete').length;
+          const totalStagesCount = Object.keys(bolt.stages).length;
+
+          return `
+            <div class="intent-story-item">
+              <div class="intent-story-checkbox ${bolt.status}">${bolt.status === 'complete' ? '&#10003;' : ''}</div>
+              <span class="intent-story-name ${bolt.status}">${bolt.name}</span>
+              <span style="font-size: 10px; color: var(--vscode-descriptionForeground);">${doneStagesCount}/${totalStagesCount}</span>
+            </div>
+          `;
+        }).join('');
+
+        // Status badge text
+        const statusText = intentStatus === 'complete' ? 'Complete' : intentStatus === 'active' ? 'In Progress' : 'Not Started';
+
+        // Action buttons
+        const actionButtons = '<button type="button" class="intent-btn intent-btn-secondary">Files</button>';
+
+        html += `
+          <div class="intent-item ${isExpanded ? '' : 'collapsed'}" id="${intent.id}">
+            <div class="intent-header" onclick="toggleIntent('${intent.id}')">
+              <span class="intent-expand">&#9660;</span>
+              <span class="intent-icon">&#128203;</span>
+              <div class="intent-info">
+                <div class="intent-name">${intent.name}</div>
+                <div class="intent-meta">${intentUnits.length} units | ${allStories.length} stories</div>
+              </div>
+              <div class="intent-progress">
+                <div class="progress-ring">
+                  <svg width="28" height="28" viewBox="0 0 28 28">
+                    <circle class="progress-ring-bg" cx="14" cy="14" r="11"></circle>
+                    <circle class="progress-ring-fill" cx="14" cy="14" r="11" style="stroke-dashoffset: ${dashOffset}"></circle>
+                  </svg>
+                  <span class="progress-ring-text">${progress}%</span>
+                </div>
+              </div>
+            </div>
+            <div class="intent-content">
+              <div class="intent-card-inner">
+                <div class="intent-card-header-row">
+                  <div class="intent-progress-ring-large">
+                    <svg width="64" height="64" viewBox="0 0 64 64">
+                      <circle class="ring-bg" cx="32" cy="32" r="26"></circle>
+                      <circle class="ring-fill ${intentStatus === 'active' ? 'active' : ''}" cx="32" cy="32" r="26" style="stroke-dashoffset: ${largeDashOffset}"></circle>
+                    </svg>
+                    <span class="intent-progress-text">${progress}%</span>
+                  </div>
+                  <div class="intent-stage-info">
+                    <div class="intent-stage-title">Bolts: <span>${completedBolts}/${intentBolts.length}</span></div>
+                    <div class="intent-stage-subtitle">${doneStories} of ${allStories.length} stories complete</div>
+                  </div>
+                  <span class="intent-status-badge ${intentStatus}">${statusText}</span>
+                </div>
+
+                <div class="intent-stories-section">
+                  <div class="intent-stories-header">
+                    <span class="intent-stories-title">Bolts</span>
+                    <span class="intent-stories-count">${completedBolts}/${intentBolts.length}</span>
+                  </div>
+                  <div class="intent-stories-list">
+                    ${boltsHtml}
+                  </div>
+                </div>
+
+                <div class="intent-stories-section">
+                  <div class="intent-stories-header">
+                    <span class="intent-stories-title">Units</span>
+                    <span class="intent-stories-count">${intentUnits.filter(u => stories.filter(s => s.unitId === u.id).every(s => s.status === 'complete')).length}/${intentUnits.length}</span>
+                  </div>
+                  <div class="intent-stories-list">
+                    ${renderIntentUnits(intentUnits)}
+                  </div>
+                </div>
+
+                <div class="intent-card-actions">
+                  ${actionButtons}
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+      });
+
+      container.innerHTML = html;
+    }
+
+    function renderUnits(unitList) {
+      return unitList.map(unit => {
+        const unitStories = stories.filter(s => s.unitId === unit.id);
+        const doneStories = unitStories.filter(s => s.status === 'complete').length;
+        const isExpanded = expandedUnitIds.includes(unit.id);
+
+        // Apply filter
+        let filteredStories = unitStories;
+        if (currentSpecsFilter !== 'all') {
+          filteredStories = unitStories.filter(s => s.status === currentSpecsFilter);
+        }
+
+        return `
+          <div class="unit-item ${isExpanded ? '' : 'collapsed'}" id="${unit.id}">
+            <div class="unit-header" onclick="toggleUnit('${unit.id}')">
+              <span class="unit-expand">&#9660;</span>
+              <span class="unit-name">${unit.name}</span>
+              <span class="unit-progress">${doneStories}/${unitStories.length}</span>
+            </div>
+            <div class="unit-content">
+              ${filteredStories.map(story => `
+                <div class="story-item ${story.id === expandedStoryId ? 'expanded' : ''}" data-status="${story.status}" onclick="toggleStory('${story.id}')">
+                  <span class="story-expand">&#9654;</span>
+                  <div class="story-status ${story.status}">${story.status === 'complete' ? '&#10003;' : story.status === 'active' ? '&#9679;' : ''}</div>
+                  <span class="story-name ${story.status}">${story.name}</span>
+                </div>
+                <div class="story-details ${story.id === expandedStoryId ? 'visible' : ''}" id="story-details-${story.id}">
+                  <div class="story-detail-row"><span class="detail-label">Status:</span><span class="detail-value status-${story.status}">${story.status}</span></div>
+                  <div class="story-detail-row"><span class="detail-label">Unit:</span><span class="detail-value">${unit.name}</span></div>
+                  <div class="story-detail-row"><span class="detail-label">Type:</span><span class="detail-value">User Story</span></div>
+                  <div class="story-actions">
+                    <button type="button" class="story-btn" onclick="event.stopPropagation()">View Spec</button>
+                    <button type="button" class="story-btn" onclick="event.stopPropagation()">Open File</button>
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderIntentUnits(intentUnits) {
+      return intentUnits.map(unit => {
+        const unitStories = stories.filter(s => s.unitId === unit.id);
+        const unitDone = unitStories.filter(s => s.status === 'complete').length;
+        const unitComplete = unitDone === unitStories.length && unitStories.length > 0;
+        const unitActive = unitStories.some(s => s.status === 'active');
+        let unitStatus = 'pending';
+        if (unitComplete) unitStatus = 'complete';
+        else if (unitActive || unitDone > 0) unitStatus = 'active';
+        return `
+          <div class="intent-story-item">
+            <div class="intent-story-checkbox ${unitStatus}">${unitStatus === 'complete' ? '&#10003;' : ''}</div>
+            <span class="intent-story-name ${unitStatus}">${unit.name}</span>
+            <span style="font-size: 10px; color: var(--vscode-descriptionForeground);">${unitDone}/${unitStories.length}</span>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function populateIntentFilter() {
+      const select = document.getElementById('intent-filter');
+      select.innerHTML = '<option value="all">All Intents</option>' +
+        intents.map(i => `<option value="${i.id}">${i.name}</option>`).join('');
+      select.value = currentIntentFilter;
+    }
+
+    // ==================== EVENT HANDLERS ====================
+
+    function switchView(view) {
+      document.getElementById('specs-tab').classList.toggle('active', view === 'specs');
+      document.getElementById('bolts-tab').classList.toggle('active', view === 'bolts');
+      document.getElementById('dashboard-tab').classList.toggle('active', view === 'dashboard');
+      document.getElementById('specs-view').classList.toggle('active', view === 'specs');
+      document.getElementById('bolts-view').classList.toggle('active', view === 'bolts');
+      document.getElementById('dashboard-view').classList.toggle('active', view === 'dashboard');
+
+      if (view === 'specs') {
+        renderSpecs();
+      } else if (view === 'dashboard') {
+        renderMetrics();
+      }
+    }
+
+    function setGroupBy(type) {
+      currentGroupBy = type;
+      document.querySelectorAll('.group-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.group === type);
+      });
+      collapsedGroups = [];
+      renderBolts();
+    }
+
+    function toggleGroup(key) {
+      const idx = collapsedGroups.indexOf(key);
+      if (idx === -1) {
+        collapsedGroups.push(key);
+      } else {
+        collapsedGroups.splice(idx, 1);
+      }
+      const groupEl = document.getElementById('group-' + key);
+      if (groupEl) {
+        groupEl.classList.toggle('collapsed');
+      }
+    }
+
+    function toggleBolt(id) {
+      if (expandedBoltId === id) {
+        expandedBoltId = null;
+      } else {
+        expandedBoltId = id;
+      }
+      renderBolts();
+    }
+
+    function toggleStoriesList(boltId) {
+      const list = document.getElementById('stories-' + boltId);
+      const btn = list.previousElementSibling.querySelector('.bolt-stories-toggle');
+      list.classList.toggle('visible');
+      btn.textContent = list.classList.contains('visible') ? 'Hide' : 'Show';
+    }
+
+    function toggleFilesList(boltId) {
+      const list = document.getElementById('files-' + boltId);
+      const btn = list.previousElementSibling.querySelector('.files-toggle');
+      list.classList.toggle('visible');
+      btn.textContent = list.classList.contains('visible') ? 'Hide' : 'Show';
+    }
+
+    function toggleIntent(id) {
+      if (expandedIntentId === id) {
+        expandedIntentId = null;
+      } else {
+        expandedIntentId = id;
+      }
+      renderSpecs();
+    }
+
+    function toggleUnit(id) {
+      const idx = expandedUnitIds.indexOf(id);
+      if (idx === -1) {
+        expandedUnitIds.push(id);
+      } else {
+        expandedUnitIds.splice(idx, 1);
+      }
+      renderSpecs();
+    }
+
+    function toggleStory(storyId) {
+      if (expandedStoryId === storyId) {
+        expandedStoryId = null;
+      } else {
+        expandedStoryId = storyId;
+      }
+      renderSpecs();
+    }
+
+    function filterBolts() {
+      currentIntentFilter = document.getElementById('intent-filter').value;
+      currentStatusFilter = document.getElementById('status-filter').value;
+      renderBolts();
+    }
+
+    function quickFilterStatus(status) {
+      if (currentStatusFilter === status) {
+        currentStatusFilter = 'all';
+      } else {
+        currentStatusFilter = status;
+      }
+      document.getElementById('status-filter').value = currentStatusFilter;
+      renderBolts();
+    }
+
+    function filterSpecs() {
+      currentSpecsFilter = document.getElementById('specs-filter').value;
+      renderSpecs();
+    }
+
+    function setTheme(theme) {
+      const sidebar = document.getElementById('sidebar');
+      const buttons = document.querySelectorAll('.theme-btn');
+      buttons.forEach(btn => btn.classList.remove('active'));
+      event.target.classList.add('active');
+      if (theme === 'light') {
+        sidebar.classList.add('theme-light');
+      } else {
+        sidebar.classList.remove('theme-light');
+      }
+    }
+
+    function renderMetrics() {
+      // Calculate intents completion (based on all stories in intent being complete)
+      const totalIntents = intents.length;
+      const completedIntents = intents.filter(intent => {
+        const intentUnits = units.filter(u => intent.units.includes(u.id));
+        const intentStories = intentUnits.flatMap(u => stories.filter(s => s.unitId === u.id));
+        return intentStories.length > 0 && intentStories.every(s => s.status === 'complete');
+      }).length;
+
+      // Calculate bolts completion
+      const totalBolts = bolts.length;
+      const completedBolts = bolts.filter(b => b.status === 'complete').length;
+
+      // Calculate total completion rate (based on stages)
+      const totalStages = bolts.reduce((acc, b) => acc + Object.keys(b.stages).length, 0);
+      const completedStages = bolts.reduce((acc, b) => {
+        return acc + Object.values(b.stages).filter(s => s === 'complete').length;
+      }, 0);
+      const completePercent = Math.round((completedStages / totalStages) * 100);
+
+      document.getElementById('metric-intents').textContent = `${completedIntents}/${totalIntents}`;
+      document.getElementById('metric-bolts').textContent = `${completedBolts}/${totalBolts}`;
+      document.getElementById('metric-complete').textContent = completePercent + '%';
+    }
+
+    // ==================== INIT ====================
+    document.addEventListener('DOMContentLoaded', () => {
+      renderBolts();
+      renderSpecs();
+      renderMetrics();
+    });
+  </script>
+</body>
+</html>

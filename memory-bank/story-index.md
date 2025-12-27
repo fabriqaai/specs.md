@@ -6,52 +6,60 @@ Global index of all stories across intents and units.
 
 ## 001-multi-agent-orchestration
 
+> **Pre-specsmd**: Implemented before dogfooding. Stories not tracked in AI-DLC.
+
 | Unit | Stories | Status |
 |------|---------|--------|
-| master-agent | TBD | Pending |
-| inception-agent | TBD | Pending |
-| construction-agent | TBD | Pending |
-| operations-agent | TBD | Pending |
+| master-agent | — | ✅ Complete (pre-specsmd) |
+| inception-agent | — | ✅ Complete (pre-specsmd) |
+| construction-agent | — | ✅ Complete (pre-specsmd) |
+| operations-agent | — | ✅ Complete (pre-specsmd) |
 
 ---
 
 ## 002-agentic-coding-tool-integration
 
+> **Pre-specsmd**: Implemented before dogfooding. Stories not tracked in AI-DLC.
+
 | Unit | Stories | Status |
 |------|---------|--------|
-| installer-core | TBD | Pending |
-| cursor-installer | TBD | Pending |
-| claude-code-installer | TBD | Pending |
-| copilot-installer | TBD | Pending |
-| windsurf-installer | TBD | Pending |
-| cline-installer | TBD | Pending |
-| roo-installer | TBD | Pending |
-| kilo-installer | TBD | Pending |
-| kiro-installer | TBD | Pending |
-| gemini-installer | TBD | Pending |
-| codex-installer | TBD | Pending |
-| antigravity-installer | TBD | Pending |
-| opencode-installer | TBD | Pending |
+| installer-core | — | ✅ Complete (pre-specsmd) |
+| cursor-installer | — | ✅ Complete (pre-specsmd) |
+| claude-code-installer | — | ✅ Complete (pre-specsmd) |
+| copilot-installer | — | ✅ Complete (pre-specsmd) |
+| windsurf-installer | — | ✅ Complete (pre-specsmd) |
+| cline-installer | — | ✅ Complete (pre-specsmd) |
+| roo-installer | — | ✅ Complete (pre-specsmd) |
+| kilo-installer | — | ✅ Complete (pre-specsmd) |
+| kiro-installer | — | ✅ Complete (pre-specsmd) |
+| gemini-installer | — | ✅ Complete (pre-specsmd) |
+| codex-installer | — | ✅ Complete (pre-specsmd) |
+| antigravity-installer | — | ✅ Complete (pre-specsmd) |
+| opencode-installer | — | ✅ Complete (pre-specsmd) |
 
 ---
 
 ## 003-memory-bank-system
 
+> **Pre-specsmd**: Implemented before dogfooding. Stories not tracked in AI-DLC.
+
 | Unit | Stories | Status |
 |------|---------|--------|
-| configuration-schema | TBD | Pending |
-| context-loader | TBD | Pending |
-| artifact-storage | TBD | Pending |
+| configuration-schema | — | ✅ Complete (pre-specsmd) |
+| context-loader | — | ✅ Complete (pre-specsmd) |
+| artifact-storage | — | ✅ Complete (pre-specsmd) |
 
 ---
 
 ## 004-standards-system
 
+> **Pre-specsmd**: Implemented before dogfooding. Stories not tracked in AI-DLC.
+
 | Unit | Stories | Status |
 |------|---------|--------|
-| standards-catalog | TBD | Pending |
-| facilitation-guides | TBD | Pending |
-| standards-templates | TBD | Pending |
+| standards-catalog | — | ✅ Complete (pre-specsmd) |
+| facilitation-guides | — | ✅ Complete (pre-specsmd) |
+| standards-templates | — | ✅ Complete (pre-specsmd) |
 
 ---
 
@@ -109,20 +117,19 @@ Global index of all stories across intents and units.
 
 ## Summary
 
-| Intent | Units | Stories Defined | Stories Complete |
-|--------|-------|-----------------|------------------|
-| 001-multi-agent-orchestration | 4 | 0 | 0 |
-| 002-agentic-coding-tool-integration | 13 | 0 | 0 |
-| 003-memory-bank-system | 3 | 0 | 0 |
-| 004-standards-system | 3 | 0 | 0 |
-| 005-testing-strategy | 5 | 0 | 0 |
-| 006-brownfield-support | 0 | 0 | 0 |
-| 007-installer-analytics | 0 | 0 | 0 |
-| 008-terminal-dashboard | 0 | 0 | 0 |
-| 009-versioning-strategy | 0 | 0 | 0 |
-| 010-smart-unit-decomposition | 0 | 0 | 0 |
-| **Total** | **28** | **0** | **0** |
+| Intent | Units | Stories | Status |
+|--------|-------|---------|--------|
+| 001-multi-agent-orchestration | 4 | — | ✅ Complete (pre-specsmd) |
+| 002-agentic-coding-tool-integration | 13 | — | ✅ Complete (pre-specsmd) |
+| 003-memory-bank-system | 3 | — | ✅ Complete (pre-specsmd) |
+| 004-standards-system | 3 | — | ✅ Complete (pre-specsmd) |
+| 005-testing-strategy | 5 | 0 | Pending |
+| 006-brownfield-support | 0 | 0 | Pending |
+| 007-installer-analytics | 0 | 0 | Pending |
+| 008-terminal-dashboard | 0 | 0 | Pending |
+| 009-versioning-strategy | 0 | 0 | Pending |
+| 010-smart-unit-decomposition | 0 | 0 | Pending |
 
 ---
 
-*Note: Stories are defined during Inception phase when units are elaborated. Each story represents a discrete, implementable piece of functionality.*
+*Note: Intents 001-004 were implemented before specsmd dogfooding began. Stories for remaining intents will be defined during Inception phase.*

@@ -212,7 +212,7 @@ Establish execution order based on dependencies:
    └── {stage-artifacts}            ← Created during construction (varies by bolt type)
    ```
 
-   *Note: Artifact names depend on bolt type (e.g., DDD bolts create `ddd-01-domain-model.md`, simple bolts create `spec.md`).*
+   *Note: Artifact names depend on bolt type (e.g., DDD bolts create `ddd-01-domain-model.md`, simple bolts create `implementation-plan.md`).*
 
 3. **Bolt File Structure** (CRITICAL: Include all dependencies in frontmatter):
 

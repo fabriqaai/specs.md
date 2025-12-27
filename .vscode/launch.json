@@ -1,0 +1,48 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Run Extension",
+            "type": "extensionHost",
+            "request": "launch",
+            "args": [
+                "--disable-extensions",
+                "${workspaceFolder}",
+                "--extensionDevelopmentPath=${workspaceFolder}/vs-code-extension"
+            ],
+            "outFiles": [
+                "${workspaceFolder}/vs-code-extension/out/**/*.js"
+            ],
+            "preLaunchTask": "npm: compile - vs-code-extension"
+        },
+        {
+            "name": "Run Extension (No Build)",
+            "type": "extensionHost",
+            "request": "launch",
+            "args": [
+                "--disable-extensions",
+                "${workspaceFolder}",
+                "--extensionDevelopmentPath=${workspaceFolder}/vs-code-extension"
+            ],
+            "outFiles": [
+                "${workspaceFolder}/vs-code-extension/out/**/*.js"
+            ]
+        },
+        {
+            "name": "Extension Tests",
+            "type": "extensionHost",
+            "request": "launch",
+            "args": [
+                "--disable-extensions",
+                "${workspaceFolder}",
+                "--extensionDevelopmentPath=${workspaceFolder}/vs-code-extension",
+                "--extensionTestsPath=${workspaceFolder}/vs-code-extension/out/test/suite/index"
+            ],
+            "outFiles": [
+                "${workspaceFolder}/vs-code-extension/out/**/*.js",
+                "${workspaceFolder}/vs-code-extension/out/test/**/*.js"
+            ],
+            "preLaunchTask": "npm: compile - vs-code-extension"
+        }
+    ]
+}

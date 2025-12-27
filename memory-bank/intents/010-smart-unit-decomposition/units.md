@@ -63,7 +63,7 @@ This intent decomposes into 3 units that modify the inception flow to be project
 
 **Key Changes**:
 
-- Create `simple-construction-bolt.md` with 3 stages: Spec, Implement, Test
+- Create `simple-construction-bolt.md` with 3 stages: Plan, Implement, Test
 - No domain model or technical design artifacts required
 - Suitable for UI, integrations, utilities
 

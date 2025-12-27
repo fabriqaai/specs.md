@@ -1,0 +1,1222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Variation 8a: Command Center + Activity Timeline</title>
+  <style>
+    /* VS Code Theme Variables */
+    :root {
+      --vscode-editor-background: #1e1e1e;
+      --vscode-editor-foreground: #cccccc;
+      --vscode-sideBar-background: #252526;
+      --vscode-sideBarSectionHeader-background: #2d2d2d;
+      --vscode-input-background: #3c3c3c;
+      --vscode-input-border: #3c3c3c;
+      --vscode-list-hoverBackground: #2a2d2e;
+      --vscode-badge-background: #4d4d4d;
+      --vscode-badge-foreground: #ffffff;
+      --vscode-descriptionForeground: #858585;
+
+      --status-complete: #22c55e;
+      --status-active: #f97316;
+      --status-pending: #6b7280;
+      --status-blocked: #ef4444;
+      --status-info: #3b82f6;
+      --accent-primary: #f97316;
+    }
+
+    .theme-light {
+      --vscode-editor-background: #ffffff;
+      --vscode-editor-foreground: #333333;
+      --vscode-sideBar-background: #f3f3f3;
+      --vscode-sideBarSectionHeader-background: #e8e8e8;
+      --vscode-input-background: #ffffff;
+      --vscode-input-border: #cecece;
+      --vscode-list-hoverBackground: #e8e8e8;
+      --vscode-descriptionForeground: #717171;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--vscode-editor-background);
+      color: var(--vscode-editor-foreground);
+      font-size: 13px;
+    }
+
+    .sidebar {
+      width: 360px;
+      min-height: 100vh;
+      background: var(--vscode-sideBar-background);
+      border-right: 1px solid var(--vscode-input-border);
+    }
+
+    .header {
+      padding: 10px 12px;
+      background: var(--vscode-sideBarSectionHeader-background);
+      border-bottom: 1px solid var(--vscode-input-border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .header-title {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 4px;
+    }
+
+    .icon-btn {
+      background: none;
+      border: none;
+      color: var(--vscode-descriptionForeground);
+      cursor: pointer;
+      padding: 4px 6px;
+      border-radius: 4px;
+      font-size: 14px;
+      transition: all 0.15s;
+    }
+
+    .icon-btn:hover {
+      background: var(--vscode-list-hoverBackground);
+      color: var(--vscode-editor-foreground);
+    }
+
+    .icon-btn.active {
+      background: var(--accent-primary);
+      color: white;
+    }
+
+    /* Theme Toggle */
+    .theme-toggle {
+      padding: 8px 12px;
+      background: var(--vscode-editor-background);
+      border-bottom: 1px solid var(--vscode-input-border);
+      display: flex;
+      gap: 8px;
+    }
+
+    .theme-btn {
+      flex: 1;
+      padding: 6px;
+      font-size: 10px;
+      border: 1px solid var(--vscode-input-border);
+      background: var(--vscode-input-background);
+      color: var(--vscode-editor-foreground);
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .theme-btn.active {
+      background: var(--accent-primary);
+      border-color: var(--accent-primary);
+      color: white;
+    }
+
+    /* View Toggle */
+    .view-toggle {
+      padding: 8px 12px;
+      background: var(--vscode-sideBarSectionHeader-background);
+      border-bottom: 1px solid var(--vscode-input-border);
+      display: flex;
+      gap: 4px;
+    }
+
+    .view-btn {
+      flex: 1;
+      padding: 6px 8px;
+      font-size: 10px;
+      border: 1px solid var(--vscode-input-border);
+      background: var(--vscode-input-background);
+      color: var(--vscode-editor-foreground);
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.15s;
+      text-align: center;
+    }
+
+    .view-btn.active {
+      background: var(--accent-primary);
+      border-color: var(--accent-primary);
+      color: white;
+    }
+
+    .view-btn:hover:not(.active) {
+      background: var(--vscode-list-hoverBackground);
+    }
+
+    /* Mission Status */
+    .mission-status {
+      padding: 16px;
+      background: linear-gradient(135deg, var(--vscode-editor-background) 0%, rgba(249, 115, 22, 0.1) 100%);
+      border-bottom: 1px solid var(--vscode-input-border);
+    }
+
+    .mission-label {
+      font-size: 9px;
+      color: var(--accent-primary);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 4px;
+    }
+
+    .mission-title {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .mission-stats {
+      display: flex;
+      gap: 16px;
+    }
+
+    .mission-stat {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .mission-stat-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }
+
+    .mission-stat-value {
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .mission-stat-label {
+      font-size: 10px;
+      color: var(--vscode-descriptionForeground);
+    }
+
+    /* Focus Section */
+    .focus-section {
+      padding: 16px;
+      border-bottom: 1px solid var(--vscode-input-border);
+    }
+
+    .section-label {
+      font-size: 9px;
+      color: var(--vscode-descriptionForeground);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .section-label-icon {
+      font-size: 12px;
+    }
+
+    /* Focus Card */
+    .focus-card {
+      background: var(--vscode-sideBar-background);
+      border: 2px solid var(--accent-primary);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .focus-card-header {
+      padding: 12px;
+      background: rgba(249, 115, 22, 0.1);
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+
+    .focus-card-title {
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .focus-card-subtitle {
+      font-size: 10px;
+      color: var(--vscode-descriptionForeground);
+      margin-top: 2px;
+    }
+
+    .focus-card-badge {
+      font-size: 9px;
+      padding: 3px 8px;
+      border-radius: 12px;
+      background: var(--accent-primary);
+      color: white;
+    }
+
+    .focus-card-body {
+      padding: 12px;
+    }
+
+    /* Stage Pipeline */
+    .stage-pipeline {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+      padding: 8px;
+      background: var(--vscode-editor-background);
+      border-radius: 6px;
+    }
+
+    .pipeline-stage {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      cursor: pointer;
+      transition: transform 0.15s;
+    }
+
+    .pipeline-stage:hover {
+      transform: scale(1.1);
+    }
+
+    .pipeline-node {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+
+    .pipeline-node.complete {
+      background: var(--status-complete);
+      color: white;
+    }
+
+    .pipeline-node.active {
+      background: var(--accent-primary);
+      color: white;
+      box-shadow: 0 0 12px rgba(249, 115, 22, 0.6);
+    }
+
+    .pipeline-node.pending {
+      background: var(--vscode-input-background);
+      color: var(--vscode-descriptionForeground);
+      border: 1px dashed var(--vscode-input-border);
+    }
+
+    .pipeline-label {
+      font-size: 8px;
+      color: var(--vscode-descriptionForeground);
+      text-transform: uppercase;
+    }
+
+    .pipeline-connector {
+      flex: 1;
+      height: 2px;
+      background: var(--vscode-input-border);
+      margin: 0 -4px;
+      margin-bottom: 16px;
+    }
+
+    .pipeline-connector.complete {
+      background: var(--status-complete);
+    }
+
+    /* Quick Actions */
+    .focus-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .action-btn {
+      flex: 1;
+      padding: 10px;
+      font-size: 11px;
+      font-weight: 500;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.15s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .action-btn-primary {
+      background: var(--accent-primary);
+      color: white;
+    }
+
+    .action-btn-primary:hover {
+      filter: brightness(1.1);
+    }
+
+    .action-btn-secondary {
+      background: var(--vscode-input-background);
+      color: var(--vscode-editor-foreground);
+      border: 1px solid var(--vscode-input-border);
+    }
+
+    .action-btn-complete {
+      background: var(--status-complete);
+      color: white;
+    }
+
+    /* ==================== ACTIVITY TIMELINE ==================== */
+    .activity-section {
+      padding: 12px;
+      border-bottom: 1px solid var(--vscode-input-border);
+      max-height: 300px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .activity-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .activity-title {
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      color: var(--vscode-descriptionForeground);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .activity-title-icon {
+      font-size: 12px;
+    }
+
+    .activity-filter {
+      display: flex;
+      gap: 4px;
+    }
+
+    .activity-filter-btn {
+      padding: 3px 8px;
+      font-size: 9px;
+      border: 1px solid var(--vscode-input-border);
+      background: var(--vscode-input-background);
+      color: var(--vscode-editor-foreground);
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .activity-filter-btn.active {
+      background: var(--accent-primary);
+      border-color: var(--accent-primary);
+      color: white;
+    }
+
+    .activity-filter-btn:hover:not(.active) {
+      background: var(--vscode-list-hoverBackground);
+    }
+
+    .activity-list {
+      flex: 1;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .activity-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 8px 10px;
+      background: var(--vscode-editor-background);
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.15s;
+      position: relative;
+    }
+
+    .activity-item:hover {
+      background: var(--vscode-list-hoverBackground);
+    }
+
+    .activity-item::before {
+      content: '';
+      position: absolute;
+      left: 19px;
+      top: 32px;
+      bottom: -6px;
+      width: 2px;
+      background: var(--vscode-input-border);
+    }
+
+    .activity-item:last-child::before {
+      display: none;
+    }
+
+    .activity-icon {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      flex-shrink: 0;
+      z-index: 1;
+    }
+
+    .activity-icon.stage-complete {
+      background: rgba(34, 197, 94, 0.2);
+      color: var(--status-complete);
+    }
+
+    .activity-icon.stage-start {
+      background: rgba(249, 115, 22, 0.2);
+      color: var(--accent-primary);
+    }
+
+    .activity-icon.bolt-complete {
+      background: rgba(34, 197, 94, 0.3);
+      color: var(--status-complete);
+    }
+
+    .activity-icon.bolt-start {
+      background: rgba(59, 130, 246, 0.2);
+      color: var(--status-info);
+    }
+
+    .activity-icon.bolt-created {
+      background: rgba(139, 92, 246, 0.2);
+      color: #8b5cf6;
+    }
+
+    .activity-content {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .activity-text {
+      font-size: 11px;
+      line-height: 1.4;
+    }
+
+    .activity-text strong {
+      color: var(--accent-primary);
+    }
+
+    .activity-meta {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 3px;
+    }
+
+    .activity-target {
+      font-size: 9px;
+      color: var(--vscode-descriptionForeground);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .activity-tag {
+      font-size: 8px;
+      padding: 2px 6px;
+      border-radius: 8px;
+      background: var(--vscode-input-background);
+      color: var(--vscode-descriptionForeground);
+      text-transform: uppercase;
+    }
+
+    .activity-time {
+      font-size: 9px;
+      color: var(--vscode-descriptionForeground);
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .activity-empty {
+      padding: 20px;
+      text-align: center;
+      color: var(--vscode-descriptionForeground);
+      font-size: 11px;
+    }
+
+    /* System Section */
+    .system-section {
+      padding: 12px;
+      background: var(--vscode-editor-background);
+    }
+
+    .system-header {
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      color: var(--vscode-descriptionForeground);
+      margin-bottom: 8px;
+    }
+
+    .system-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+    }
+
+    .system-card {
+      background: var(--vscode-sideBar-background);
+      border-radius: 6px;
+      padding: 10px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      transition: all 0.15s;
+      border: 1px solid transparent;
+    }
+
+    .system-card:hover {
+      border-color: var(--vscode-input-border);
+    }
+
+    .system-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+    }
+
+    .system-icon.intents {
+      background: rgba(139, 92, 246, 0.2);
+      color: #8b5cf6;
+    }
+
+    .system-icon.standards {
+      background: rgba(59, 130, 246, 0.2);
+      color: var(--status-info);
+    }
+
+    .system-icon.stories {
+      background: rgba(34, 197, 94, 0.2);
+      color: var(--status-complete);
+    }
+
+    .system-icon.bolts {
+      background: rgba(249, 115, 22, 0.2);
+      color: var(--accent-primary);
+    }
+
+    .system-info {
+      flex: 1;
+    }
+
+    .system-value {
+      font-size: 16px;
+      font-weight: 700;
+    }
+
+    .system-label {
+      font-size: 9px;
+      color: var(--vscode-descriptionForeground);
+    }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      padding: 10px 20px;
+      background: var(--vscode-sideBar-background);
+      border: 1px solid var(--accent-primary);
+      border-radius: 6px;
+      font-size: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      opacity: 0;
+      transition: all 0.3s ease;
+      z-index: 1000;
+    }
+
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+
+    .toast.success {
+      border-color: var(--status-complete);
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--vscode-input-border);
+      border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--vscode-descriptionForeground);
+    }
+  </style>
+</head>
+<body>
+  <div class="sidebar" id="sidebar">
+    <div class="header">
+      <span class="header-title">SpecsMD Command</span>
+      <div class="header-actions">
+        <button type="button" class="icon-btn" id="refreshBtn" title="Refresh">&#8635;</button>
+        <button type="button" class="icon-btn" title="Settings">&#9881;</button>
+      </div>
+    </div>
+
+    <div class="theme-toggle">
+      <button type="button" class="theme-btn active" id="darkBtn">Dark</button>
+      <button type="button" class="theme-btn" id="lightBtn">Light</button>
+    </div>
+
+    <div class="view-toggle">
+      <button type="button" class="view-btn active" data-view="command">Command</button>
+      <button type="button" class="view-btn" data-view="activity">Activity</button>
+      <button type="button" class="view-btn" data-view="overview">Overview</button>
+    </div>
+
+    <div id="commandView">
+      <div class="mission-status">
+        <div class="mission-label">Current Mission</div>
+        <div class="mission-title">011-vscode-extension</div>
+        <div class="mission-stats" id="missionStats">
+          <!-- Dynamically rendered -->
+        </div>
+      </div>
+
+      <div class="focus-section">
+        <div class="section-label">
+          <span class="section-label-icon">&#127919;</span>
+          Current Focus
+        </div>
+        <div id="focusCardContainer">
+          <!-- Dynamically rendered -->
+        </div>
+      </div>
+
+      <!-- Activity Timeline Section -->
+      <div class="activity-section">
+        <div class="activity-header">
+          <div class="activity-title">
+            <span class="activity-title-icon">&#128340;</span>
+            Recent Activity
+          </div>
+          <div class="activity-filter">
+            <button type="button" class="activity-filter-btn active" data-filter="all">All</button>
+            <button type="button" class="activity-filter-btn" data-filter="stage">Stages</button>
+            <button type="button" class="activity-filter-btn" data-filter="bolt">Bolts</button>
+          </div>
+        </div>
+        <div class="activity-list" id="activityList">
+          <!-- Dynamically rendered -->
+        </div>
+      </div>
+    </div>
+
+    <div id="activityView" style="display: none;">
+      <!-- Full activity view -->
+      <div class="activity-section" style="max-height: none; height: calc(100vh - 140px);">
+        <div class="activity-header">
+          <div class="activity-title">
+            <span class="activity-title-icon">&#128340;</span>
+            Activity Timeline
+          </div>
+          <div class="activity-filter">
+            <button type="button" class="activity-filter-btn active" data-filter="all">All</button>
+            <button type="button" class="activity-filter-btn" data-filter="stage">Stages</button>
+            <button type="button" class="activity-filter-btn" data-filter="bolt">Bolts</button>
+          </div>
+        </div>
+        <div class="activity-list" id="activityListFull">
+          <!-- Dynamically rendered -->
+        </div>
+      </div>
+    </div>
+
+    <div id="overviewView" style="display: none;">
+      <div class="system-section" style="padding-top: 16px;">
+        <div class="system-header">System Overview</div>
+        <div class="system-grid" id="systemGrid">
+          <!-- Dynamically rendered -->
+        </div>
+      </div>
+    </div>
+
+    <div class="system-section" id="commandSystemSection">
+      <div class="system-header">System Overview</div>
+      <div class="system-grid" id="systemGridCommand">
+        <!-- Dynamically rendered -->
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    // ==================== DATA MODEL ====================
+    // Bolts with date information (simulating what we'd parse from frontmatter)
+    let bolts = [
+      {
+        id: 'bolt-extension-core-1',
+        name: 'bolt-extension-core-1',
+        type: 'Simple',
+        status: 'complete',
+        created: new Date('2025-12-25T17:00:00Z'),
+        started: new Date('2025-12-25T22:30:00Z'),
+        completed: new Date('2025-12-25T22:50:00Z'),
+        stages: { plan: 'complete', implement: 'complete', test: 'complete' },
+        stagesCompleted: [
+          { name: 'plan', completed: new Date('2025-12-25T22:30:00Z') },
+          { name: 'implement', completed: new Date('2025-12-25T22:45:00Z') },
+          { name: 'test', completed: new Date('2025-12-25T22:50:00Z') }
+        ]
+      },
+      {
+        id: 'bolt-artifact-parser-1',
+        name: 'bolt-artifact-parser-1',
+        type: 'Simple',
+        status: 'complete',
+        created: new Date('2025-12-25T17:00:00Z'),
+        started: new Date('2025-12-25T18:45:00Z'),
+        completed: new Date('2025-12-25T19:15:00Z'),
+        stages: { plan: 'complete', implement: 'complete', test: 'complete' },
+        stagesCompleted: [
+          { name: 'plan', completed: new Date('2025-12-25T18:50:00Z') },
+          { name: 'implement', completed: new Date('2025-12-25T19:00:00Z') },
+          { name: 'test', completed: new Date('2025-12-25T19:15:00Z') }
+        ]
+      },
+      {
+        id: 'bolt-sidebar-ui-1',
+        name: 'bolt-sidebar-ui-1',
+        type: 'DDD',
+        status: 'active',
+        created: new Date('2025-12-26T09:00:00Z'),
+        started: new Date('2025-12-26T10:00:00Z'),
+        completed: null,
+        stages: { model: 'complete', design: 'active', adr: 'pending', implement: 'pending', test: 'pending' },
+        stagesCompleted: [
+          { name: 'model', completed: new Date('2025-12-26T10:30:00Z') }
+        ]
+      },
+      {
+        id: 'bolt-file-watcher-1',
+        name: 'bolt-file-watcher-1',
+        type: 'Simple',
+        status: 'complete',
+        created: new Date('2025-12-25T17:00:00Z'),
+        started: new Date('2025-12-25T20:00:00Z'),
+        completed: new Date('2025-12-25T20:45:00Z'),
+        stages: { plan: 'complete', implement: 'complete', test: 'complete' },
+        stagesCompleted: [
+          { name: 'plan', completed: new Date('2025-12-25T20:10:00Z') },
+          { name: 'implement', completed: new Date('2025-12-25T20:30:00Z') },
+          { name: 'test', completed: new Date('2025-12-25T20:45:00Z') }
+        ]
+      }
+    ];
+
+    const intents = [
+      { id: 'intent-1', name: '011-vscode-extension', status: 'active', progress: 65 }
+    ];
+
+    const standards = [
+      { id: 'std-1', name: 'tech-stack.md' },
+      { id: 'std-2', name: 'coding-standards.md' },
+      { id: 'std-3', name: 'system-architecture.md' }
+    ];
+
+    // ==================== STATE ====================
+    let state = {
+      currentView: 'command',
+      activityFilter: 'all'
+    };
+
+    // ==================== ACTIVITY FEED BUILDER ====================
+    // This is the key function - derives activity from parsed bolt data
+    function buildActivityFeed(bolts) {
+      const events = [];
+
+      for (const bolt of bolts) {
+        // Bolt created
+        if (bolt.created) {
+          events.push({
+            id: `${bolt.id}-created`,
+            type: 'bolt-created',
+            icon: '&#43;',
+            iconClass: 'bolt-created',
+            text: `Created bolt <strong>${bolt.name}</strong>`,
+            target: bolt.name,
+            tag: 'bolt',
+            timestamp: bolt.created
+          });
+        }
+
+        // Bolt started
+        if (bolt.started) {
+          events.push({
+            id: `${bolt.id}-started`,
+            type: 'bolt-start',
+            icon: '&#9654;',
+            iconClass: 'bolt-start',
+            text: `Started <strong>${bolt.name}</strong>`,
+            target: bolt.name,
+            tag: 'bolt',
+            timestamp: bolt.started
+          });
+        }
+
+        // Stage completions
+        if (bolt.stagesCompleted) {
+          for (const stage of bolt.stagesCompleted) {
+            if (stage.completed) {
+              events.push({
+                id: `${bolt.id}-stage-${stage.name}`,
+                type: 'stage-complete',
+                icon: '&#10003;',
+                iconClass: 'stage-complete',
+                text: `Completed <strong>${stage.name}</strong> stage`,
+                target: bolt.name,
+                tag: 'stage',
+                timestamp: stage.completed
+              });
+            }
+          }
+        }
+
+        // Bolt completed
+        if (bolt.completed) {
+          events.push({
+            id: `${bolt.id}-completed`,
+            type: 'bolt-complete',
+            icon: '&#10004;',
+            iconClass: 'bolt-complete',
+            text: `Completed bolt <strong>${bolt.name}</strong>`,
+            target: bolt.name,
+            tag: 'bolt',
+            timestamp: bolt.completed
+          });
+        }
+      }
+
+      // Sort by timestamp descending (most recent first)
+      return events.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
+    }
+
+    // ==================== UTILITY FUNCTIONS ====================
+    function showToast(message, type = 'info') {
+      const toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.className = 'toast show' + (type === 'success' ? ' success' : '');
+      setTimeout(() => toast.classList.remove('show'), 2500);
+    }
+
+    function formatRelativeTime(date) {
+      const now = new Date();
+      const diffMs = now - date;
+      const diffMins = Math.floor(diffMs / 60000);
+      const diffHours = Math.floor(diffMs / 3600000);
+      const diffDays = Math.floor(diffMs / 86400000);
+
+      if (diffMins < 1) return 'Just now';
+      if (diffMins < 60) return `${diffMins}m ago`;
+      if (diffHours < 24) return `${diffHours}h ago`;
+      if (diffDays === 1) return 'Yesterday';
+      if (diffDays < 7) return `${diffDays}d ago`;
+      return date.toLocaleDateString();
+    }
+
+    function getActiveBolt() {
+      return bolts.find(b => b.status === 'active');
+    }
+
+    // ==================== RENDER FUNCTIONS ====================
+    function renderMissionStats() {
+      const stats = document.getElementById('missionStats');
+      const activeBolts = bolts.filter(b => b.status === 'active').length;
+      const pendingBolts = bolts.filter(b => b.status === 'pending').length;
+      const completeBolts = bolts.filter(b => b.status === 'complete').length;
+
+      stats.innerHTML = `
+        <div class="mission-stat">
+          <div class="mission-stat-dot" style="background: var(--status-active)"></div>
+          <span class="mission-stat-value">${activeBolts}</span>
+          <span class="mission-stat-label">Active</span>
+        </div>
+        <div class="mission-stat">
+          <div class="mission-stat-dot" style="background: var(--status-pending)"></div>
+          <span class="mission-stat-value">${pendingBolts}</span>
+          <span class="mission-stat-label">Queued</span>
+        </div>
+        <div class="mission-stat">
+          <div class="mission-stat-dot" style="background: var(--status-complete)"></div>
+          <span class="mission-stat-value">${completeBolts}</span>
+          <span class="mission-stat-label">Done</span>
+        </div>
+      `;
+    }
+
+    function renderFocusCard() {
+      const container = document.getElementById('focusCardContainer');
+      const activeBolt = getActiveBolt();
+
+      if (!activeBolt) {
+        container.innerHTML = `
+          <div style="padding: 20px; text-align: center; color: var(--vscode-descriptionForeground);">
+            <div style="font-size: 32px; margin-bottom: 8px; opacity: 0.5;">&#128640;</div>
+            <div style="font-size: 12px;">No active bolt</div>
+          </div>
+        `;
+        return;
+      }
+
+      const stageLabels = { model: 'Model', design: 'Design', adr: 'ADR', implement: 'Impl', test: 'Test', plan: 'Plan' };
+      const stages = activeBolt.type === 'DDD'
+        ? ['model', 'design', 'adr', 'implement', 'test']
+        : ['plan', 'implement', 'test'];
+
+      container.innerHTML = `
+        <div class="focus-card">
+          <div class="focus-card-header">
+            <div>
+              <div class="focus-card-title">${activeBolt.name}</div>
+              <div class="focus-card-subtitle">${activeBolt.type} Bolt</div>
+            </div>
+            <div class="focus-card-badge">In Progress</div>
+          </div>
+          <div class="focus-card-body">
+            <div class="stage-pipeline">
+              ${stages.map((stage, idx) => `
+                <div class="pipeline-stage" onclick="advanceStage('${activeBolt.id}', '${stage}')">
+                  <div class="pipeline-node ${activeBolt.stages[stage]}">
+                    ${activeBolt.stages[stage] === 'complete' ? '&#10003;' : stageLabels[stage].charAt(0)}
+                  </div>
+                  <span class="pipeline-label">${stageLabels[stage]}</span>
+                </div>
+                ${idx < stages.length - 1 ? `<div class="pipeline-connector ${activeBolt.stages[stage] === 'complete' ? 'complete' : ''}"></div>` : ''}
+              `).join('')}
+            </div>
+            <div class="focus-actions">
+              <button type="button" class="action-btn action-btn-primary" onclick="continueWork()">
+                <span>&#9654;</span> Continue
+              </button>
+              <button type="button" class="action-btn action-btn-secondary" onclick="openFiles()">
+                Files
+              </button>
+              <button type="button" class="action-btn action-btn-complete" onclick="completeBolt('${activeBolt.id}')">
+                Done
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderActivityList(containerId, limit = null) {
+      const container = document.getElementById(containerId);
+      let activities = buildActivityFeed(bolts);
+
+      // Apply filter
+      if (state.activityFilter !== 'all') {
+        activities = activities.filter(a => a.tag === state.activityFilter);
+      }
+
+      // Apply limit for compact view
+      if (limit) {
+        activities = activities.slice(0, limit);
+      }
+
+      if (activities.length === 0) {
+        container.innerHTML = `<div class="activity-empty">No activity matching filter</div>`;
+        return;
+      }
+
+      container.innerHTML = activities.map(activity => `
+        <div class="activity-item" onclick="showToast('Opening ${activity.target}...')">
+          <div class="activity-icon ${activity.iconClass}">${activity.icon}</div>
+          <div class="activity-content">
+            <div class="activity-text">${activity.text}</div>
+            <div class="activity-meta">
+              <span class="activity-target">${activity.target}</span>
+              <span class="activity-tag">${activity.tag}</span>
+            </div>
+          </div>
+          <div class="activity-time">${formatRelativeTime(activity.timestamp)}</div>
+        </div>
+      `).join('');
+    }
+
+    function renderSystemGrid(containerId) {
+      const container = document.getElementById(containerId);
+      const completedBolts = bolts.filter(b => b.status === 'complete').length;
+
+      container.innerHTML = `
+        <div class="system-card" onclick="showToast('Opening intents...')">
+          <div class="system-icon intents">&#128203;</div>
+          <div class="system-info">
+            <div class="system-value">${intents.length}</div>
+            <div class="system-label">Intents</div>
+          </div>
+        </div>
+        <div class="system-card" onclick="showToast('Opening bolts...')">
+          <div class="system-icon bolts">&#9889;</div>
+          <div class="system-info">
+            <div class="system-value">${bolts.length}</div>
+            <div class="system-label">Bolts</div>
+          </div>
+        </div>
+        <div class="system-card" onclick="showToast('Opening stories...')">
+          <div class="system-icon stories">&#128196;</div>
+          <div class="system-info">
+            <div class="system-value">${completedBolts}/${bolts.length}</div>
+            <div class="system-label">Complete</div>
+          </div>
+        </div>
+        <div class="system-card" onclick="showToast('Opening standards...')">
+          <div class="system-icon standards">&#128218;</div>
+          <div class="system-info">
+            <div class="system-value">${standards.length}</div>
+            <div class="system-label">Standards</div>
+          </div>
+        </div>
+      `;
+    }
+
+    function render() {
+      renderMissionStats();
+      renderFocusCard();
+      renderActivityList('activityList', 6); // Show 6 items in compact view
+      renderActivityList('activityListFull'); // Show all in full view
+      renderSystemGrid('systemGridCommand');
+      renderSystemGrid('systemGrid');
+    }
+
+    // ==================== EVENT HANDLERS ====================
+    function advanceStage(boltId, stage) {
+      const bolt = bolts.find(b => b.id === boltId);
+      if (!bolt) return;
+
+      const stageOrder = bolt.type === 'DDD'
+        ? ['model', 'design', 'adr', 'implement', 'test']
+        : ['plan', 'implement', 'test'];
+      const stageIdx = stageOrder.indexOf(stage);
+
+      if (bolt.stages[stage] === 'active') {
+        bolt.stages[stage] = 'complete';
+
+        // Add to stagesCompleted
+        bolt.stagesCompleted = bolt.stagesCompleted || [];
+        bolt.stagesCompleted.push({ name: stage, completed: new Date() });
+
+        showToast(`Completed ${stage} stage`, 'success');
+
+        // Auto-start next stage
+        if (stageIdx < stageOrder.length - 1) {
+          bolt.stages[stageOrder[stageIdx + 1]] = 'active';
+        }
+      }
+
+      render();
+    }
+
+    function completeBolt(boltId) {
+      const bolt = bolts.find(b => b.id === boltId);
+      if (!bolt) return;
+
+      Object.keys(bolt.stages).forEach(stage => bolt.stages[stage] = 'complete');
+      bolt.status = 'complete';
+      bolt.completed = new Date();
+
+      showToast(`Completed bolt: ${bolt.name}`, 'success');
+      render();
+    }
+
+    function continueWork() {
+      showToast('Opening workspace...');
+    }
+
+    function openFiles() {
+      showToast('Opening file explorer...');
+    }
+
+    function setTheme(theme) {
+      const sidebar = document.getElementById('sidebar');
+      document.getElementById('darkBtn').classList.toggle('active', theme === 'dark');
+      document.getElementById('lightBtn').classList.toggle('active', theme === 'light');
+      sidebar.classList.toggle('theme-light', theme === 'light');
+    }
+
+    function setView(view) {
+      state.currentView = view;
+      document.querySelectorAll('.view-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.view === view);
+      });
+
+      document.getElementById('commandView').style.display = view === 'command' ? 'block' : 'none';
+      document.getElementById('activityView').style.display = view === 'activity' ? 'block' : 'none';
+      document.getElementById('overviewView').style.display = view === 'overview' ? 'block' : 'none';
+      document.getElementById('commandSystemSection').style.display = view === 'command' ? 'block' : 'none';
+    }
+
+    function setActivityFilter(filter) {
+      state.activityFilter = filter;
+      document.querySelectorAll('.activity-filter-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.filter === filter);
+      });
+      render();
+    }
+
+    // ==================== EVENT LISTENERS ====================
+    document.getElementById('darkBtn').addEventListener('click', () => setTheme('dark'));
+    document.getElementById('lightBtn').addEventListener('click', () => setTheme('light'));
+
+    document.querySelectorAll('.view-btn').forEach(btn => {
+      btn.addEventListener('click', () => setView(btn.dataset.view));
+    });
+
+    document.querySelectorAll('.activity-filter-btn').forEach(btn => {
+      btn.addEventListener('click', () => setActivityFilter(btn.dataset.filter));
+    });
+
+    document.getElementById('refreshBtn').addEventListener('click', () => {
+      showToast('Refreshing...');
+      render();
+    });
+
+    // ==================== INITIALIZATION ====================
+    render();
+  </script>
+</body>
+</html>

@@ -162,7 +162,7 @@ The smallest iteration in AI-DLC, designed for rapid implementation. Unlike Spri
 | Type | Best For | Stages |
 |------|----------|--------|
 | **DDD Construction** | Complex business logic, domain modeling | Model → Design → ADR → Implement → Test |
-| **Simple Construction** | UI, integrations, utilities | Spec → Implement → Test |
+| **Simple Construction** | UI, integrations, utilities | Plan → Implement → Test |
 
 ### Memory Bank
 File-based storage for all project artifacts. Maintains context across agent sessions and provides traceability between artifacts.

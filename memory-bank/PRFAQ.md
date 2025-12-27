@@ -112,7 +112,7 @@ A: Three phases:
 A: Two bolt types:
 
 1. **DDD Construction Bolt** - Domain-Driven Design stages (model, design, ADR, implement, test)
-2. **Simple Construction Bolt** - Lightweight stages for UI, integrations, utilities (spec, implement, test)
+2. **Simple Construction Bolt** - Lightweight stages for UI, integrations, utilities (plan, implement, test)
 
 **Q: How do I choose a bolt type?**
 A: The Construction Agent recommends bolt types based on the unit's requirements. DDD is default for complex business logic, Simple for UI, integrations, and utilities.

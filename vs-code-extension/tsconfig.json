@@ -1,0 +1,30 @@
+{
+    "compilerOptions": {
+        "module": "commonjs",
+        "target": "ES2022",
+        "lib": ["ES2022"],
+        "outDir": "out",
+        "rootDir": "src",
+        "sourceMap": true,
+        "strict": true,
+        "esModuleInterop": true,
+        "skipLibCheck": true,
+        "forceConsistentCasingInFileNames": true,
+        "declaration": true,
+        "declarationMap": true,
+        "moduleResolution": "node",
+        "resolveJsonModule": true
+    },
+    "include": ["src/**/*"],
+    "exclude": [
+        "node_modules",
+        "out",
+        "test",
+        "src/webview/components/**/*",
+        "src/webview/styles/**/*",
+        "src/webview/types/**/*",
+        "src/webview/utils/**/*",
+        "src/webview/lit/**/*",
+        "src/webview/vscode-api.ts"
+    ]
+}

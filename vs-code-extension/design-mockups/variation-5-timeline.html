@@ -1,0 +1,890 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Variation 5: Timeline View</title>
+  <style>
+    /* VS Code Theme Variables */
+    :root {
+      --vscode-editor-background: #1e1e1e;
+      --vscode-editor-foreground: #cccccc;
+      --vscode-sideBar-background: #252526;
+      --vscode-sideBarSectionHeader-background: #2d2d2d;
+      --vscode-input-background: #3c3c3c;
+      --vscode-input-border: #3c3c3c;
+      --vscode-list-hoverBackground: #2a2d2e;
+      --vscode-badge-background: #4d4d4d;
+      --vscode-badge-foreground: #ffffff;
+      --vscode-descriptionForeground: #858585;
+      --vscode-focusBorder: #007fd4;
+
+      --status-complete: #22c55e;
+      --status-active: #f97316;
+      --status-pending: #6b7280;
+      --status-blocked: #ef4444;
+      --accent-primary: #f97316;
+    }
+
+    .theme-light {
+      --vscode-editor-background: #ffffff;
+      --vscode-editor-foreground: #333333;
+      --vscode-sideBar-background: #f3f3f3;
+      --vscode-sideBarSectionHeader-background: #e8e8e8;
+      --vscode-input-background: #ffffff;
+      --vscode-input-border: #cecece;
+      --vscode-list-hoverBackground: #e8e8e8;
+      --vscode-descriptionForeground: #717171;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--vscode-editor-background);
+      color: var(--vscode-editor-foreground);
+      font-size: 13px;
+    }
+
+    .sidebar {
+      width: 340px;
+      min-height: 100vh;
+      background: var(--vscode-sideBar-background);
+      border-right: 1px solid var(--vscode-input-border);
+    }
+
+    .header {
+      padding: 10px 12px;
+      background: var(--vscode-sideBarSectionHeader-background);
+      border-bottom: 1px solid var(--vscode-input-border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .header-title {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 4px;
+    }
+
+    .icon-btn {
+      background: none;
+      border: none;
+      color: var(--vscode-descriptionForeground);
+      cursor: pointer;
+      padding: 4px 6px;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+
+    .icon-btn:hover {
+      background: var(--vscode-list-hoverBackground);
+      color: var(--vscode-editor-foreground);
+    }
+
+    /* Theme Toggle */
+    .theme-toggle {
+      padding: 8px 12px;
+      background: var(--vscode-editor-background);
+      border-bottom: 1px solid var(--vscode-input-border);
+      display: flex;
+      gap: 8px;
+    }
+
+    .theme-btn {
+      flex: 1;
+      padding: 6px;
+      font-size: 10px;
+      border: 1px solid var(--vscode-input-border);
+      background: var(--vscode-input-background);
+      color: var(--vscode-editor-foreground);
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .theme-btn.active {
+      background: var(--accent-primary);
+      border-color: var(--accent-primary);
+      color: white;
+    }
+
+    /* Timeline Header - Stage Labels */
+    .timeline-header {
+      display: flex;
+      padding: 8px 12px;
+      background: var(--vscode-sideBarSectionHeader-background);
+      border-bottom: 1px solid var(--vscode-input-border);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .timeline-bolt-label {
+      width: 100px;
+      font-size: 9px;
+      color: var(--vscode-descriptionForeground);
+      text-transform: uppercase;
+      flex-shrink: 0;
+    }
+
+    .timeline-stages-header {
+      flex: 1;
+      display: flex;
+      justify-content: space-between;
+      padding: 0 4px;
+    }
+
+    .stage-label {
+      width: 32px;
+      text-align: center;
+      font-size: 9px;
+      font-weight: 600;
+      color: var(--vscode-descriptionForeground);
+    }
+
+    /* Timeline Content */
+    .timeline-content {
+      padding: 8px 0;
+    }
+
+    /* Intent Group */
+    .intent-group {
+      margin-bottom: 8px;
+    }
+
+    .intent-header {
+      padding: 8px 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      background: var(--vscode-editor-background);
+      border-bottom: 1px solid var(--vscode-input-border);
+      transition: background 0.15s;
+    }
+
+    .intent-header:hover {
+      background: var(--vscode-list-hoverBackground);
+    }
+
+    .intent-expand {
+      font-size: 10px;
+      color: var(--vscode-descriptionForeground);
+      transition: transform 0.2s;
+    }
+
+    .intent-group.collapsed .intent-expand {
+      transform: rotate(-90deg);
+    }
+
+    .intent-icon {
+      font-size: 14px;
+    }
+
+    .intent-name {
+      flex: 1;
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .intent-progress {
+      font-size: 10px;
+      color: var(--vscode-descriptionForeground);
+    }
+
+    .intent-content {
+      max-height: 1000px;
+      overflow: hidden;
+      transition: max-height 0.3s ease;
+    }
+
+    .intent-group.collapsed .intent-content {
+      max-height: 0;
+    }
+
+    /* Timeline Row */
+    .timeline-row {
+      display: flex;
+      align-items: center;
+      padding: 8px 12px;
+      border-bottom: 1px solid var(--vscode-input-border);
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .timeline-row:hover {
+      background: var(--vscode-list-hoverBackground);
+    }
+
+    .timeline-row.selected {
+      background: rgba(249, 115, 22, 0.1);
+      border-left: 3px solid var(--accent-primary);
+      padding-left: 9px;
+    }
+
+    .bolt-info {
+      width: 100px;
+      flex-shrink: 0;
+    }
+
+    .bolt-name-short {
+      font-size: 10px;
+      font-weight: 500;
+      color: var(--vscode-editor-foreground);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .bolt-type-badge {
+      font-size: 8px;
+      color: var(--vscode-descriptionForeground);
+      margin-top: 2px;
+    }
+
+    /* Timeline Track */
+    .timeline-track {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      padding: 0 4px;
+      position: relative;
+    }
+
+    .track-line {
+      position: absolute;
+      top: 50%;
+      left: 20px;
+      right: 20px;
+      height: 2px;
+      background: var(--vscode-input-border);
+      transform: translateY(-50%);
+      z-index: 0;
+    }
+
+    .track-progress {
+      position: absolute;
+      top: 50%;
+      left: 20px;
+      height: 2px;
+      background: var(--status-complete);
+      transform: translateY(-50%);
+      z-index: 1;
+      transition: width 0.3s;
+    }
+
+    .stage-nodes {
+      display: flex;
+      justify-content: space-between;
+      width: 100%;
+      position: relative;
+      z-index: 2;
+    }
+
+    .stage-node {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 9px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.15s, box-shadow 0.15s;
+      position: relative;
+    }
+
+    .stage-node:hover {
+      transform: scale(1.2);
+    }
+
+    .stage-node.complete {
+      background: var(--status-complete);
+      color: white;
+    }
+
+    .stage-node.active {
+      background: var(--status-active);
+      color: white;
+      box-shadow: 0 0 10px rgba(249, 115, 22, 0.6);
+      animation: node-pulse 2s infinite;
+    }
+
+    .stage-node.pending {
+      background: var(--vscode-sideBar-background);
+      border: 2px solid var(--vscode-input-border);
+      color: var(--vscode-descriptionForeground);
+    }
+
+    .stage-node.blocked {
+      background: var(--status-blocked);
+      color: white;
+    }
+
+    @keyframes node-pulse {
+      0%, 100% { box-shadow: 0 0 10px rgba(249, 115, 22, 0.6); }
+      50% { box-shadow: 0 0 20px rgba(249, 115, 22, 0.9); }
+    }
+
+    /* Tooltip */
+    .stage-node::after {
+      content: attr(data-stage);
+      position: absolute;
+      bottom: calc(100% + 6px);
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--vscode-editor-background);
+      border: 1px solid var(--vscode-input-border);
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 10px;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.15s;
+      z-index: 100;
+    }
+
+    .stage-node:hover::after {
+      opacity: 1;
+    }
+
+    /* Expanded Detail Panel */
+    .detail-panel {
+      max-height: 0;
+      overflow: hidden;
+      background: var(--vscode-editor-background);
+      transition: max-height 0.3s ease;
+    }
+
+    .timeline-row.selected + .detail-panel {
+      max-height: 400px;
+    }
+
+    .detail-inner {
+      padding: 12px;
+      border-bottom: 2px solid var(--accent-primary);
+    }
+
+    .detail-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .detail-title {
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .detail-status {
+      font-size: 10px;
+      padding: 3px 8px;
+      border-radius: 12px;
+      background: rgba(249, 115, 22, 0.2);
+      color: var(--accent-primary);
+    }
+
+    /* Large Timeline in Detail */
+    .detail-timeline {
+      margin-bottom: 16px;
+    }
+
+    .detail-track {
+      position: relative;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 0;
+    }
+
+    .detail-track-line {
+      position: absolute;
+      top: 50%;
+      left: 24px;
+      right: 24px;
+      height: 4px;
+      background: var(--vscode-input-border);
+      transform: translateY(-50%);
+      border-radius: 2px;
+    }
+
+    .detail-track-progress {
+      position: absolute;
+      top: 50%;
+      left: 24px;
+      height: 4px;
+      background: linear-gradient(90deg, var(--status-complete) 0%, var(--status-active) 100%);
+      transform: translateY(-50%);
+      border-radius: 2px;
+      transition: width 0.3s;
+    }
+
+    .detail-node {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.15s;
+      z-index: 1;
+    }
+
+    .detail-node:hover {
+      transform: scale(1.1);
+    }
+
+    .detail-node span {
+      font-size: 8px;
+      margin-top: 2px;
+    }
+
+    /* Stories in Detail */
+    .detail-stories {
+      margin-bottom: 12px;
+    }
+
+    .detail-stories-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .detail-stories-title {
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      color: var(--vscode-descriptionForeground);
+    }
+
+    .stories-progress {
+      font-size: 10px;
+      color: var(--status-complete);
+    }
+
+    .story-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 6px;
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease;
+    }
+
+    .story-grid.visible {
+      max-height: 200px;
+    }
+
+    .story-chip {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 8px;
+      background: var(--vscode-sideBar-background);
+      border-radius: 4px;
+      font-size: 10px;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .story-chip:hover {
+      background: var(--vscode-list-hoverBackground);
+    }
+
+    .story-chip-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }
+
+    .story-chip-dot.done {
+      background: var(--status-complete);
+    }
+
+    .story-chip-dot.pending {
+      background: var(--vscode-input-border);
+    }
+
+    .story-chip-name {
+      flex: 1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .story-chip-name.done {
+      color: var(--vscode-descriptionForeground);
+      text-decoration: line-through;
+    }
+
+    /* Detail Actions */
+    .detail-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .detail-btn {
+      flex: 1;
+      padding: 10px;
+      font-size: 11px;
+      font-weight: 500;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .detail-btn-primary {
+      background: var(--accent-primary);
+      color: white;
+    }
+
+    .detail-btn-primary:hover {
+      filter: brightness(1.1);
+    }
+
+    .detail-btn-secondary {
+      background: var(--vscode-input-background);
+      color: var(--vscode-editor-foreground);
+      border: 1px solid var(--vscode-input-border);
+    }
+
+    .detail-btn-secondary:hover {
+      background: var(--vscode-list-hoverBackground);
+    }
+
+    /* Toggle Button */
+    .toggle-stories-btn {
+      background: none;
+      border: none;
+      color: var(--accent-primary);
+      font-size: 10px;
+      cursor: pointer;
+      padding: 2px 6px;
+    }
+
+    .toggle-stories-btn:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="sidebar" id="sidebar">
+    <div class="header">
+      <span class="header-title">SpecsMD Timeline</span>
+      <div class="header-actions">
+        <button type="button" class="icon-btn" title="Refresh">&#8635;</button>
+        <button type="button" class="icon-btn" title="Settings">&#9881;</button>
+      </div>
+    </div>
+
+    <div class="theme-toggle">
+      <button type="button" class="theme-btn active" onclick="setTheme('dark')">Dark</button>
+      <button type="button" class="theme-btn" onclick="setTheme('light')">Light</button>
+    </div>
+
+    <div class="timeline-header">
+      <div class="timeline-bolt-label">Bolt</div>
+      <div class="timeline-stages-header">
+        <span class="stage-label">M</span>
+        <span class="stage-label">D</span>
+        <span class="stage-label">A</span>
+        <span class="stage-label">I</span>
+        <span class="stage-label">T</span>
+      </div>
+    </div>
+
+    <div class="timeline-content">
+      <!-- Intent Group -->
+      <div class="intent-group" id="intent-1">
+        <div class="intent-header" onclick="toggleIntent('intent-1')">
+          <span class="intent-expand">&#9660;</span>
+          <span class="intent-icon">&#128203;</span>
+          <span class="intent-name">001-admin-panel</span>
+          <span class="intent-progress">2/6</span>
+        </div>
+        <div class="intent-content">
+          <!-- Row 1 - Active -->
+          <div class="timeline-row selected" onclick="selectRow(this)">
+            <div class="bolt-info">
+              <div class="bolt-name-short">user-mgmt-svc-1</div>
+              <div class="bolt-type-badge">DDD</div>
+            </div>
+            <div class="timeline-track">
+              <div class="track-line"></div>
+              <div class="track-progress" style="width: 25%"></div>
+              <div class="stage-nodes">
+                <div class="stage-node complete" data-stage="Model">M</div>
+                <div class="stage-node active" data-stage="Design">D</div>
+                <div class="stage-node pending" data-stage="ADR">A</div>
+                <div class="stage-node pending" data-stage="Implement">I</div>
+                <div class="stage-node pending" data-stage="Test">T</div>
+              </div>
+            </div>
+          </div>
+          <div class="detail-panel">
+            <div class="detail-inner">
+              <div class="detail-header">
+                <span class="detail-title">user-management-service-1</span>
+                <span class="detail-status">In Progress</span>
+              </div>
+
+              <div class="detail-timeline">
+                <div class="detail-track">
+                  <div class="detail-track-line"></div>
+                  <div class="detail-track-progress" style="width: 25%"></div>
+                  <div class="detail-node complete">M<span>done</span></div>
+                  <div class="detail-node active">D<span>active</span></div>
+                  <div class="detail-node pending">A<span></span></div>
+                  <div class="detail-node pending">I<span></span></div>
+                  <div class="detail-node pending">T<span></span></div>
+                </div>
+              </div>
+
+              <div class="detail-stories">
+                <div class="detail-stories-header">
+                  <span class="detail-stories-title">Stories</span>
+                  <span class="stories-progress">2/4 done</span>
+                  <button type="button" class="toggle-stories-btn" onclick="toggleDetailStories(this)">Show</button>
+                </div>
+                <div class="story-grid" id="stories-detail-1">
+                  <div class="story-chip">
+                    <div class="story-chip-dot done"></div>
+                    <span class="story-chip-name done">001-create-user</span>
+                  </div>
+                  <div class="story-chip">
+                    <div class="story-chip-dot done"></div>
+                    <span class="story-chip-name done">002-view-user-list</span>
+                  </div>
+                  <div class="story-chip">
+                    <div class="story-chip-dot pending"></div>
+                    <span class="story-chip-name">003-update-user</span>
+                  </div>
+                  <div class="story-chip">
+                    <div class="story-chip-dot pending"></div>
+                    <span class="story-chip-name">004-delete-user</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="detail-actions">
+                <button type="button" class="detail-btn detail-btn-primary">Continue Design Stage</button>
+                <button type="button" class="detail-btn detail-btn-secondary">Files</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Row 2 - Pending -->
+          <div class="timeline-row" onclick="selectRow(this)">
+            <div class="bolt-info">
+              <div class="bolt-name-short">admin-panel-ui-1</div>
+              <div class="bolt-type-badge">Simple</div>
+            </div>
+            <div class="timeline-track">
+              <div class="track-line"></div>
+              <div class="track-progress" style="width: 0%"></div>
+              <div class="stage-nodes">
+                <div class="stage-node pending" data-stage="Model">M</div>
+                <div class="stage-node pending" data-stage="Design">D</div>
+                <div class="stage-node pending" data-stage="ADR">A</div>
+                <div class="stage-node pending" data-stage="Implement">I</div>
+                <div class="stage-node pending" data-stage="Test">T</div>
+              </div>
+            </div>
+          </div>
+          <div class="detail-panel">
+            <div class="detail-inner">
+              <div class="detail-header">
+                <span class="detail-title">admin-panel-ui-1</span>
+                <span class="detail-status" style="background: rgba(107, 114, 128, 0.2); color: #9ca3af;">Pending</span>
+              </div>
+              <div class="detail-actions">
+                <button type="button" class="detail-btn detail-btn-primary">Start Bolt</button>
+                <button type="button" class="detail-btn detail-btn-secondary">Preview</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Row 3 - Pending -->
+          <div class="timeline-row" onclick="selectRow(this)">
+            <div class="bolt-info">
+              <div class="bolt-name-short">admin-panel-ui-2</div>
+              <div class="bolt-type-badge">Simple</div>
+            </div>
+            <div class="timeline-track">
+              <div class="track-line"></div>
+              <div class="track-progress" style="width: 0%"></div>
+              <div class="stage-nodes">
+                <div class="stage-node pending" data-stage="Model">M</div>
+                <div class="stage-node pending" data-stage="Design">D</div>
+                <div class="stage-node pending" data-stage="ADR">A</div>
+                <div class="stage-node pending" data-stage="Implement">I</div>
+                <div class="stage-node pending" data-stage="Test">T</div>
+              </div>
+            </div>
+          </div>
+          <div class="detail-panel">
+            <div class="detail-inner">
+              <div class="detail-header">
+                <span class="detail-title">admin-panel-ui-2</span>
+                <span class="detail-status" style="background: rgba(107, 114, 128, 0.2); color: #9ca3af;">Pending</span>
+              </div>
+              <div class="detail-actions">
+                <button type="button" class="detail-btn detail-btn-primary">Start Bolt</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Row 4 - Pending -->
+          <div class="timeline-row" onclick="selectRow(this)">
+            <div class="bolt-info">
+              <div class="bolt-name-short">audit-service-1</div>
+              <div class="bolt-type-badge">DDD</div>
+            </div>
+            <div class="timeline-track">
+              <div class="track-line"></div>
+              <div class="track-progress" style="width: 0%"></div>
+              <div class="stage-nodes">
+                <div class="stage-node pending" data-stage="Model">M</div>
+                <div class="stage-node pending" data-stage="Design">D</div>
+                <div class="stage-node pending" data-stage="ADR">A</div>
+                <div class="stage-node pending" data-stage="Implement">I</div>
+                <div class="stage-node pending" data-stage="Test">T</div>
+              </div>
+            </div>
+          </div>
+          <div class="detail-panel">
+            <div class="detail-inner">
+              <div class="detail-header">
+                <span class="detail-title">audit-service-1</span>
+                <span class="detail-status" style="background: rgba(107, 114, 128, 0.2); color: #9ca3af;">Pending</span>
+              </div>
+              <div class="detail-actions">
+                <button type="button" class="detail-btn detail-btn-primary">Start Bolt</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Row 5 - Complete -->
+          <div class="timeline-row" onclick="selectRow(this)">
+            <div class="bolt-info">
+              <div class="bolt-name-short">role-perm-svc-1</div>
+              <div class="bolt-type-badge">DDD</div>
+            </div>
+            <div class="timeline-track">
+              <div class="track-line"></div>
+              <div class="track-progress" style="width: 100%"></div>
+              <div class="stage-nodes">
+                <div class="stage-node complete" data-stage="Model">M</div>
+                <div class="stage-node complete" data-stage="Design">D</div>
+                <div class="stage-node complete" data-stage="ADR">A</div>
+                <div class="stage-node complete" data-stage="Implement">I</div>
+                <div class="stage-node complete" data-stage="Test">T</div>
+              </div>
+            </div>
+          </div>
+          <div class="detail-panel">
+            <div class="detail-inner">
+              <div class="detail-header">
+                <span class="detail-title">role-permission-service-1</span>
+                <span class="detail-status" style="background: rgba(34, 197, 94, 0.2); color: #22c55e;">Complete</span>
+              </div>
+              <div class="detail-actions">
+                <button type="button" class="detail-btn detail-btn-secondary">View Files</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Row 6 - Pending -->
+          <div class="timeline-row" onclick="selectRow(this)">
+            <div class="bolt-info">
+              <div class="bolt-name-short">user-mgmt-svc-2</div>
+              <div class="bolt-type-badge">DDD</div>
+            </div>
+            <div class="timeline-track">
+              <div class="track-line"></div>
+              <div class="track-progress" style="width: 0%"></div>
+              <div class="stage-nodes">
+                <div class="stage-node pending" data-stage="Model">M</div>
+                <div class="stage-node pending" data-stage="Design">D</div>
+                <div class="stage-node pending" data-stage="ADR">A</div>
+                <div class="stage-node pending" data-stage="Implement">I</div>
+                <div class="stage-node pending" data-stage="Test">T</div>
+              </div>
+            </div>
+          </div>
+          <div class="detail-panel">
+            <div class="detail-inner">
+              <div class="detail-header">
+                <span class="detail-title">user-management-service-2</span>
+                <span class="detail-status" style="background: rgba(107, 114, 128, 0.2); color: #9ca3af;">Pending</span>
+              </div>
+              <div class="detail-actions">
+                <button type="button" class="detail-btn detail-btn-primary">Start Bolt</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function toggleIntent(id) {
+      const intent = document.getElementById(id);
+      intent.classList.toggle('collapsed');
+    }
+
+    function selectRow(row) {
+      const wasSelected = row.classList.contains('selected');
+
+      // Deselect all rows
+      document.querySelectorAll('.timeline-row').forEach(r => r.classList.remove('selected'));
+
+      // Toggle selection
+      if (!wasSelected) {
+        row.classList.add('selected');
+      }
+    }
+
+    function toggleDetailStories(btn) {
+      const grid = btn.closest('.detail-stories').querySelector('.story-grid');
+      grid.classList.toggle('visible');
+      btn.textContent = grid.classList.contains('visible') ? 'Hide' : 'Show';
+    }
+
+    function setTheme(theme) {
+      const sidebar = document.getElementById('sidebar');
+      const buttons = document.querySelectorAll('.theme-btn');
+
+      buttons.forEach(btn => btn.classList.remove('active'));
+      event.target.classList.add('active');
+
+      if (theme === 'light') {
+        sidebar.classList.add('theme-light');
+      } else {
+        sidebar.classList.remove('theme-light');
+      }
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,923 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Variation 6: Activity Feed View</title>
+  <style>
+    /* VS Code Theme Variables */
+    :root {
+      --vscode-editor-background: #1e1e1e;
+      --vscode-editor-foreground: #cccccc;
+      --vscode-sideBar-background: #252526;
+      --vscode-sideBarSectionHeader-background: #2d2d2d;
+      --vscode-input-background: #3c3c3c;
+      --vscode-input-border: #3c3c3c;
+      --vscode-list-hoverBackground: #2a2d2e;
+      --vscode-badge-background: #4d4d4d;
+      --vscode-badge-foreground: #ffffff;
+      --vscode-descriptionForeground: #858585;
+
+      --status-complete: #22c55e;
+      --status-active: #f97316;
+      --status-pending: #6b7280;
+      --status-blocked: #ef4444;
+      --status-info: #3b82f6;
+      --accent-primary: #f97316;
+    }
+
+    .theme-light {
+      --vscode-editor-background: #ffffff;
+      --vscode-editor-foreground: #333333;
+      --vscode-sideBar-background: #f3f3f3;
+      --vscode-sideBarSectionHeader-background: #e8e8e8;
+      --vscode-input-background: #ffffff;
+      --vscode-input-border: #cecece;
+      --vscode-list-hoverBackground: #e8e8e8;
+      --vscode-descriptionForeground: #717171;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--vscode-editor-background);
+      color: var(--vscode-editor-foreground);
+      font-size: 13px;
+    }
+
+    .sidebar {
+      width: 320px;
+      min-height: 100vh;
+      background: var(--vscode-sideBar-background);
+      border-right: 1px solid var(--vscode-input-border);
+    }
+
+    .header {
+      padding: 10px 12px;
+      background: var(--vscode-sideBarSectionHeader-background);
+      border-bottom: 1px solid var(--vscode-input-border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .header-title {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 4px;
+    }
+
+    .icon-btn {
+      background: none;
+      border: none;
+      color: var(--vscode-descriptionForeground);
+      cursor: pointer;
+      padding: 4px 6px;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+
+    .icon-btn:hover {
+      background: var(--vscode-list-hoverBackground);
+      color: var(--vscode-editor-foreground);
+    }
+
+    /* Theme Toggle */
+    .theme-toggle {
+      padding: 8px 12px;
+      background: var(--vscode-editor-background);
+      border-bottom: 1px solid var(--vscode-input-border);
+      display: flex;
+      gap: 8px;
+    }
+
+    .theme-btn {
+      flex: 1;
+      padding: 6px;
+      font-size: 10px;
+      border: 1px solid var(--vscode-input-border);
+      background: var(--vscode-input-background);
+      color: var(--vscode-editor-foreground);
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .theme-btn.active {
+      background: var(--accent-primary);
+      border-color: var(--accent-primary);
+      color: white;
+    }
+
+    /* Summary Stats */
+    .summary-bar {
+      display: flex;
+      padding: 12px;
+      gap: 8px;
+      background: var(--vscode-editor-background);
+      border-bottom: 1px solid var(--vscode-input-border);
+    }
+
+    .summary-stat {
+      flex: 1;
+      text-align: center;
+      padding: 8px;
+      background: var(--vscode-sideBar-background);
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.15s;
+      border: 1px solid transparent;
+    }
+
+    .summary-stat:hover {
+      border-color: var(--accent-primary);
+    }
+
+    .summary-stat.selected {
+      border-color: var(--accent-primary);
+      background: rgba(249, 115, 22, 0.1);
+    }
+
+    .summary-value {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--vscode-editor-foreground);
+    }
+
+    .summary-label {
+      font-size: 9px;
+      color: var(--vscode-descriptionForeground);
+      text-transform: uppercase;
+    }
+
+    /* Filter Tabs */
+    .filter-tabs {
+      display: flex;
+      padding: 8px 12px;
+      gap: 4px;
+      background: var(--vscode-sideBarSectionHeader-background);
+      border-bottom: 1px solid var(--vscode-input-border);
+      overflow-x: auto;
+    }
+
+    .filter-tab {
+      padding: 6px 12px;
+      font-size: 10px;
+      border: none;
+      border-radius: 12px;
+      background: var(--vscode-input-background);
+      color: var(--vscode-descriptionForeground);
+      cursor: pointer;
+      transition: all 0.15s;
+      white-space: nowrap;
+    }
+
+    .filter-tab:hover {
+      color: var(--vscode-editor-foreground);
+    }
+
+    .filter-tab.active {
+      background: var(--accent-primary);
+      color: white;
+    }
+
+    /* Activity Feed */
+    .feed-container {
+      padding: 8px 0;
+    }
+
+    .feed-date-group {
+      margin-bottom: 8px;
+    }
+
+    .feed-date-header {
+      padding: 6px 12px;
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--vscode-descriptionForeground);
+      text-transform: uppercase;
+      background: var(--vscode-editor-background);
+      border-bottom: 1px solid var(--vscode-input-border);
+      position: sticky;
+      top: 0;
+      z-index: 5;
+    }
+
+    /* Activity Item */
+    .activity-item {
+      display: flex;
+      padding: 10px 12px;
+      gap: 10px;
+      cursor: pointer;
+      transition: background 0.15s;
+      border-left: 3px solid transparent;
+    }
+
+    .activity-item:hover {
+      background: var(--vscode-list-hoverBackground);
+    }
+
+    .activity-item.expanded {
+      background: var(--vscode-list-hoverBackground);
+      border-left-color: var(--accent-primary);
+    }
+
+    /* Activity Icon */
+    .activity-icon {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      flex-shrink: 0;
+    }
+
+    .icon-stage-complete {
+      background: rgba(34, 197, 94, 0.2);
+      color: var(--status-complete);
+    }
+
+    .icon-stage-started {
+      background: rgba(249, 115, 22, 0.2);
+      color: var(--status-active);
+    }
+
+    .icon-story-complete {
+      background: rgba(59, 130, 246, 0.2);
+      color: var(--status-info);
+    }
+
+    .icon-bolt-started {
+      background: rgba(249, 115, 22, 0.2);
+      color: var(--status-active);
+    }
+
+    .icon-bolt-complete {
+      background: rgba(34, 197, 94, 0.2);
+      color: var(--status-complete);
+    }
+
+    /* Activity Content */
+    .activity-content {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .activity-main {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 4px;
+    }
+
+    .activity-text {
+      font-size: 11px;
+      color: var(--vscode-editor-foreground);
+      line-height: 1.4;
+    }
+
+    .activity-text strong {
+      color: var(--accent-primary);
+    }
+
+    .activity-time {
+      font-size: 9px;
+      color: var(--vscode-descriptionForeground);
+      flex-shrink: 0;
+      margin-left: 8px;
+    }
+
+    .activity-meta {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .activity-bolt {
+      font-size: 10px;
+      color: var(--vscode-descriptionForeground);
+      background: var(--vscode-input-background);
+      padding: 2px 6px;
+      border-radius: 3px;
+    }
+
+    /* Stage Progress Mini */
+    .mini-progress {
+      display: flex;
+      gap: 2px;
+    }
+
+    .mini-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+    }
+
+    .mini-dot.complete {
+      background: var(--status-complete);
+    }
+
+    .mini-dot.active {
+      background: var(--status-active);
+    }
+
+    .mini-dot.pending {
+      background: var(--vscode-input-border);
+    }
+
+    /* Expanded Activity Detail */
+    .activity-detail {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease;
+    }
+
+    .activity-item.expanded .activity-detail {
+      max-height: 300px;
+    }
+
+    .activity-detail-inner {
+      padding: 10px 0 0 38px;
+    }
+
+    .detail-card {
+      background: var(--vscode-sideBar-background);
+      border: 1px solid var(--vscode-input-border);
+      border-radius: 6px;
+      padding: 10px;
+    }
+
+    .detail-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .detail-card-title {
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .detail-card-badge {
+      font-size: 9px;
+      padding: 2px 6px;
+      border-radius: 3px;
+    }
+
+    .badge-active {
+      background: rgba(249, 115, 22, 0.2);
+      color: var(--status-active);
+    }
+
+    .badge-complete {
+      background: rgba(34, 197, 94, 0.2);
+      color: var(--status-complete);
+    }
+
+    /* Stage Track in Detail */
+    .detail-stages {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      margin-bottom: 10px;
+    }
+
+    .detail-stage {
+      width: 28px;
+      height: 20px;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 9px;
+      font-weight: 600;
+    }
+
+    .detail-stage.complete {
+      background: var(--status-complete);
+      color: white;
+    }
+
+    .detail-stage.active {
+      background: var(--status-active);
+      color: white;
+    }
+
+    .detail-stage.pending {
+      background: var(--vscode-input-background);
+      color: var(--vscode-descriptionForeground);
+      border: 1px dashed var(--vscode-input-border);
+    }
+
+    .detail-stage-arrow {
+      color: var(--vscode-descriptionForeground);
+      font-size: 10px;
+    }
+
+    /* Stories in Detail */
+    .detail-stories {
+      margin-bottom: 10px;
+    }
+
+    .detail-stories-label {
+      font-size: 9px;
+      color: var(--vscode-descriptionForeground);
+      margin-bottom: 4px;
+    }
+
+    .detail-story-list {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.2s ease;
+    }
+
+    .detail-story-list.visible {
+      max-height: 120px;
+      overflow-y: auto;
+    }
+
+    .detail-story {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 10px;
+      padding: 4px 6px;
+      background: var(--vscode-editor-background);
+      border-radius: 3px;
+    }
+
+    .detail-story-check {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      border: 1px solid var(--vscode-input-border);
+    }
+
+    .detail-story-check.done {
+      background: var(--status-complete);
+      border-color: var(--status-complete);
+    }
+
+    .detail-story-name {
+      flex: 1;
+    }
+
+    .detail-story-name.done {
+      color: var(--vscode-descriptionForeground);
+      text-decoration: line-through;
+    }
+
+    /* Actions in Detail */
+    .detail-actions {
+      display: flex;
+      gap: 6px;
+    }
+
+    .detail-btn {
+      flex: 1;
+      padding: 6px;
+      font-size: 10px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .detail-btn-primary {
+      background: var(--accent-primary);
+      color: white;
+    }
+
+    .detail-btn-primary:hover {
+      filter: brightness(1.1);
+    }
+
+    .detail-btn-secondary {
+      background: var(--vscode-input-background);
+      color: var(--vscode-editor-foreground);
+      border: 1px solid var(--vscode-input-border);
+    }
+
+    .detail-btn-secondary:hover {
+      background: var(--vscode-list-hoverBackground);
+    }
+
+    /* Stories Toggle */
+    .stories-toggle {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+      padding: 4px 0;
+    }
+
+    .stories-toggle-btn {
+      font-size: 9px;
+      color: var(--accent-primary);
+      background: none;
+      border: none;
+      cursor: pointer;
+    }
+
+    .stories-toggle-btn:hover {
+      text-decoration: underline;
+    }
+
+    /* Empty State */
+    .empty-feed {
+      padding: 32px 16px;
+      text-align: center;
+      color: var(--vscode-descriptionForeground);
+    }
+
+    .empty-feed-icon {
+      font-size: 32px;
+      margin-bottom: 8px;
+    }
+
+    .empty-feed-text {
+      font-size: 12px;
+    }
+  </style>
+</head>
+<body>
+  <div class="sidebar" id="sidebar">
+    <div class="header">
+      <span class="header-title">SpecsMD Activity</span>
+      <div class="header-actions">
+        <button type="button" class="icon-btn" title="Refresh">&#8635;</button>
+        <button type="button" class="icon-btn" title="Settings">&#9881;</button>
+      </div>
+    </div>
+
+    <div class="theme-toggle">
+      <button type="button" class="theme-btn active" onclick="setTheme('dark')">Dark</button>
+      <button type="button" class="theme-btn" onclick="setTheme('light')">Light</button>
+    </div>
+
+    <div class="summary-bar">
+      <div class="summary-stat selected" onclick="selectStat(this)">
+        <div class="summary-value">1</div>
+        <div class="summary-label">Active</div>
+      </div>
+      <div class="summary-stat" onclick="selectStat(this)">
+        <div class="summary-value">4</div>
+        <div class="summary-label">Pending</div>
+      </div>
+      <div class="summary-stat" onclick="selectStat(this)">
+        <div class="summary-value">1</div>
+        <div class="summary-label">Complete</div>
+      </div>
+    </div>
+
+    <div class="filter-tabs">
+      <button type="button" class="filter-tab active" onclick="selectFilter(this)">All Activity</button>
+      <button type="button" class="filter-tab" onclick="selectFilter(this)">Stages</button>
+      <button type="button" class="filter-tab" onclick="selectFilter(this)">Stories</button>
+      <button type="button" class="filter-tab" onclick="selectFilter(this)">Bolts</button>
+    </div>
+
+    <div class="feed-container">
+      <!-- Today -->
+      <div class="feed-date-group">
+        <div class="feed-date-header">Today</div>
+
+        <!-- Activity 1 -->
+        <div class="activity-item expanded" onclick="toggleActivity(this)">
+          <div class="activity-icon icon-stage-started">&#9654;</div>
+          <div class="activity-content">
+            <div class="activity-main">
+              <span class="activity-text">Started <strong>design</strong> stage</span>
+              <span class="activity-time">2h ago</span>
+            </div>
+            <div class="activity-meta">
+              <span class="activity-bolt">user-mgmt-svc-1</span>
+              <div class="mini-progress">
+                <div class="mini-dot complete"></div>
+                <div class="mini-dot active"></div>
+                <div class="mini-dot pending"></div>
+                <div class="mini-dot pending"></div>
+                <div class="mini-dot pending"></div>
+              </div>
+            </div>
+
+            <div class="activity-detail">
+              <div class="activity-detail-inner">
+                <div class="detail-card">
+                  <div class="detail-card-header">
+                    <span class="detail-card-title">user-management-service-1</span>
+                    <span class="detail-card-badge badge-active">In Progress</span>
+                  </div>
+                  <div class="detail-stages">
+                    <div class="detail-stage complete">M</div>
+                    <span class="detail-stage-arrow">&#8594;</span>
+                    <div class="detail-stage active">D</div>
+                    <span class="detail-stage-arrow">&#8594;</span>
+                    <div class="detail-stage pending">A</div>
+                    <span class="detail-stage-arrow">&#8594;</span>
+                    <div class="detail-stage pending">I</div>
+                    <span class="detail-stage-arrow">&#8594;</span>
+                    <div class="detail-stage pending">T</div>
+                  </div>
+                  <div class="detail-stories">
+                    <div class="stories-toggle" onclick="event.stopPropagation(); toggleStories('stories-1')">
+                      <span class="detail-stories-label">Stories (2/4)</span>
+                      <button type="button" class="stories-toggle-btn">Show</button>
+                    </div>
+                    <div class="detail-story-list" id="stories-1">
+                      <div class="detail-story">
+                        <div class="detail-story-check done"></div>
+                        <span class="detail-story-name done">001-create-user</span>
+                      </div>
+                      <div class="detail-story">
+                        <div class="detail-story-check done"></div>
+                        <span class="detail-story-name done">002-view-user-list</span>
+                      </div>
+                      <div class="detail-story">
+                        <div class="detail-story-check"></div>
+                        <span class="detail-story-name">003-update-user</span>
+                      </div>
+                      <div class="detail-story">
+                        <div class="detail-story-check"></div>
+                        <span class="detail-story-name">004-delete-user</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="detail-actions">
+                    <button type="button" class="detail-btn detail-btn-primary">Continue</button>
+                    <button type="button" class="detail-btn detail-btn-secondary">Files</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Activity 2 -->
+        <div class="activity-item" onclick="toggleActivity(this)">
+          <div class="activity-icon icon-stage-complete">&#10003;</div>
+          <div class="activity-content">
+            <div class="activity-main">
+              <span class="activity-text">Completed <strong>model</strong> stage</span>
+              <span class="activity-time">4h ago</span>
+            </div>
+            <div class="activity-meta">
+              <span class="activity-bolt">user-mgmt-svc-1</span>
+              <div class="mini-progress">
+                <div class="mini-dot complete"></div>
+                <div class="mini-dot active"></div>
+                <div class="mini-dot pending"></div>
+                <div class="mini-dot pending"></div>
+                <div class="mini-dot pending"></div>
+              </div>
+            </div>
+
+            <div class="activity-detail">
+              <div class="activity-detail-inner">
+                <div class="detail-card">
+                  <div class="detail-card-header">
+                    <span class="detail-card-title">Model Stage Complete</span>
+                    <span class="detail-card-badge badge-complete">Done</span>
+                  </div>
+                  <div class="detail-actions">
+                    <button type="button" class="detail-btn detail-btn-secondary">View Model</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Activity 3 -->
+        <div class="activity-item" onclick="toggleActivity(this)">
+          <div class="activity-icon icon-story-complete">&#128203;</div>
+          <div class="activity-content">
+            <div class="activity-main">
+              <span class="activity-text">Completed story <strong>002-view-user-list</strong></span>
+              <span class="activity-time">5h ago</span>
+            </div>
+            <div class="activity-meta">
+              <span class="activity-bolt">user-mgmt-svc-1</span>
+            </div>
+
+            <div class="activity-detail">
+              <div class="activity-detail-inner">
+                <div class="detail-card">
+                  <div class="detail-card-header">
+                    <span class="detail-card-title">002-view-user-list</span>
+                    <span class="detail-card-badge badge-complete">Done</span>
+                  </div>
+                  <div class="detail-actions">
+                    <button type="button" class="detail-btn detail-btn-secondary">View Story</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Activity 4 -->
+        <div class="activity-item" onclick="toggleActivity(this)">
+          <div class="activity-icon icon-story-complete">&#128203;</div>
+          <div class="activity-content">
+            <div class="activity-main">
+              <span class="activity-text">Completed story <strong>001-create-user</strong></span>
+              <span class="activity-time">6h ago</span>
+            </div>
+            <div class="activity-meta">
+              <span class="activity-bolt">user-mgmt-svc-1</span>
+            </div>
+
+            <div class="activity-detail">
+              <div class="activity-detail-inner">
+                <div class="detail-card">
+                  <div class="detail-card-header">
+                    <span class="detail-card-title">001-create-user</span>
+                    <span class="detail-card-badge badge-complete">Done</span>
+                  </div>
+                  <div class="detail-actions">
+                    <button type="button" class="detail-btn detail-btn-secondary">View Story</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Yesterday -->
+      <div class="feed-date-group">
+        <div class="feed-date-header">Yesterday</div>
+
+        <!-- Activity 5 -->
+        <div class="activity-item" onclick="toggleActivity(this)">
+          <div class="activity-icon icon-bolt-started">&#9889;</div>
+          <div class="activity-content">
+            <div class="activity-main">
+              <span class="activity-text">Started bolt <strong>user-management-service-1</strong></span>
+              <span class="activity-time">1d ago</span>
+            </div>
+            <div class="activity-meta">
+              <span class="activity-bolt">DDD Bolt</span>
+            </div>
+
+            <div class="activity-detail">
+              <div class="activity-detail-inner">
+                <div class="detail-card">
+                  <div class="detail-card-header">
+                    <span class="detail-card-title">user-management-service-1</span>
+                    <span class="detail-card-badge badge-active">In Progress</span>
+                  </div>
+                  <div class="detail-actions">
+                    <button type="button" class="detail-btn detail-btn-primary">Go to Bolt</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Activity 6 -->
+        <div class="activity-item" onclick="toggleActivity(this)">
+          <div class="activity-icon icon-bolt-complete">&#10003;</div>
+          <div class="activity-content">
+            <div class="activity-main">
+              <span class="activity-text">Completed bolt <strong>role-permission-service-1</strong></span>
+              <span class="activity-time">1d ago</span>
+            </div>
+            <div class="activity-meta">
+              <span class="activity-bolt">DDD Bolt</span>
+              <div class="mini-progress">
+                <div class="mini-dot complete"></div>
+                <div class="mini-dot complete"></div>
+                <div class="mini-dot complete"></div>
+                <div class="mini-dot complete"></div>
+                <div class="mini-dot complete"></div>
+              </div>
+            </div>
+
+            <div class="activity-detail">
+              <div class="activity-detail-inner">
+                <div class="detail-card">
+                  <div class="detail-card-header">
+                    <span class="detail-card-title">role-permission-service-1</span>
+                    <span class="detail-card-badge badge-complete">Complete</span>
+                  </div>
+                  <div class="detail-stages">
+                    <div class="detail-stage complete">M</div>
+                    <span class="detail-stage-arrow">&#8594;</span>
+                    <div class="detail-stage complete">D</div>
+                    <span class="detail-stage-arrow">&#8594;</span>
+                    <div class="detail-stage complete">A</div>
+                    <span class="detail-stage-arrow">&#8594;</span>
+                    <div class="detail-stage complete">I</div>
+                    <span class="detail-stage-arrow">&#8594;</span>
+                    <div class="detail-stage complete">T</div>
+                  </div>
+                  <div class="detail-actions">
+                    <button type="button" class="detail-btn detail-btn-secondary">View Files</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Last Week -->
+      <div class="feed-date-group">
+        <div class="feed-date-header">Last Week</div>
+
+        <!-- Activity 7 -->
+        <div class="activity-item" onclick="toggleActivity(this)">
+          <div class="activity-icon icon-stage-complete">&#10003;</div>
+          <div class="activity-content">
+            <div class="activity-main">
+              <span class="activity-text">Completed <strong>test</strong> stage</span>
+              <span class="activity-time">5d ago</span>
+            </div>
+            <div class="activity-meta">
+              <span class="activity-bolt">role-perm-svc-1</span>
+            </div>
+
+            <div class="activity-detail">
+              <div class="activity-detail-inner">
+                <div class="detail-card">
+                  <div class="detail-card-header">
+                    <span class="detail-card-title">Test Stage Complete</span>
+                    <span class="detail-card-badge badge-complete">Done</span>
+                  </div>
+                  <div class="detail-actions">
+                    <button type="button" class="detail-btn detail-btn-secondary">View Tests</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function toggleActivity(item) {
+      const wasExpanded = item.classList.contains('expanded');
+
+      // Collapse all items
+      document.querySelectorAll('.activity-item').forEach(i => i.classList.remove('expanded'));
+
+      // Toggle clicked item
+      if (!wasExpanded) {
+        item.classList.add('expanded');
+      }
+    }
+
+    function toggleStories(id) {
+      const list = document.getElementById(id);
+      const btn = list.previousElementSibling.querySelector('.stories-toggle-btn');
+      list.classList.toggle('visible');
+      btn.textContent = list.classList.contains('visible') ? 'Hide' : 'Show';
+    }
+
+    function selectStat(stat) {
+      document.querySelectorAll('.summary-stat').forEach(s => s.classList.remove('selected'));
+      stat.classList.add('selected');
+    }
+
+    function selectFilter(tab) {
+      document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+    }
+
+    function setTheme(theme) {
+      const sidebar = document.getElementById('sidebar');
+      const buttons = document.querySelectorAll('.theme-btn');
+
+      buttons.forEach(btn => btn.classList.remove('active'));
+      event.target.classList.add('active');
+
+      if (theme === 'light') {
+        sidebar.classList.add('theme-light');
+      } else {
+        sidebar.classList.remove('theme-light');
+      }
+    }
+  </script>
+</body>
+</html>

@@ -84,7 +84,7 @@ A bolt type using Domain-Driven Design principles for complex business logic. St
 
 ### Simple Construction Bolt
 
-A lightweight bolt type for UI, integrations, and utilities. Stages: Spec → Implement → Test.
+A lightweight bolt type for UI, integrations, and utilities. Stages: Plan → Implement → Test.
 
 ### Spike Bolt
 

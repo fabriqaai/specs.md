@@ -1,0 +1,23 @@
+{
+    "compilerOptions": {
+        "target": "ES2020",
+        "module": "ESNext",
+        "lib": ["ES2020", "DOM"],
+        "moduleResolution": "bundler",
+        "strict": true,
+        "esModuleInterop": true,
+        "skipLibCheck": true,
+        "forceConsistentCasingInFileNames": true,
+        "experimentalDecorators": true,
+        "useDefineForClassFields": false,
+        "noEmit": true
+    },
+    "include": [
+        "src/webview/components/**/*",
+        "src/webview/styles/**/*",
+        "src/webview/types/**/*",
+        "src/webview/utils/**/*",
+        "src/webview/lit/**/*",
+        "src/webview/vscode-api.ts"
+    ]
+}
