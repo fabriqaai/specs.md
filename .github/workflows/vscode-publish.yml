@@ -49,6 +49,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -59,27 +60,32 @@ jobs:
         working-directory: vs-code-extension
         run: npm ci
 
-      - name: Get current version
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Bump patch version
         id: version
         working-directory: vs-code-extension
-        run: echo "version=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
-
-      - name: Check if version tag exists
-        id: tag_check
         run: |
-          if git rev-parse "vscode-v${{ steps.version.outputs.version }}" >/dev/null 2>&1; then
-            echo "exists=true" >> $GITHUB_OUTPUT
-          else
-            echo "exists=false" >> $GITHUB_OUTPUT
-          fi
+          # Bump patch version (e.g., 1.0.5 -> 1.0.6)
+          npm version patch --no-git-tag-version
+          NEW_VERSION=$(node -p "require('./package.json').version")
+          echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
+          echo "Bumped to version $NEW_VERSION"
+
+      - name: Commit version bump
+        run: |
+          git add vs-code-extension/package.json vs-code-extension/package-lock.json
+          git commit -m "chore(vscode): bump version to ${{ steps.version.outputs.version }} [skip ci]"
+          git push origin main
 
       - name: Package extension
-        if: steps.tag_check.outputs.exists == 'false'
         working-directory: vs-code-extension
         run: npm run package
 
       - name: Validate package
-        if: steps.tag_check.outputs.exists == 'false'
         working-directory: vs-code-extension
         run: |
           # Check VSIX was created
@@ -88,20 +94,16 @@ jobs:
           npx vsce ls
 
       - name: Publish to VS Code Marketplace
-        if: steps.tag_check.outputs.exists == 'false'
         working-directory: vs-code-extension
         run: npx vsce publish -p ${{ secrets.VSCE_PAT }}
 
       - name: Create GitHub Release with VSIX
-        if: steps.tag_check.outputs.exists == 'false'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
           # Create tag
-          git tag -a "vscode-v${{ steps.version.outputs.version }}" -m "VS Code Extension v${{ steps.version.outputs.version }}" || true
-          git push origin "vscode-v${{ steps.version.outputs.version }}" || echo "Tag already exists on remote"
+          git tag -a "vscode-v${{ steps.version.outputs.version }}" -m "VS Code Extension v${{ steps.version.outputs.version }}"
+          git push origin "vscode-v${{ steps.version.outputs.version }}"
           # Create GitHub release with VSIX attached
           gh release create "vscode-v${{ steps.version.outputs.version }}" \
             --title "VS Code Extension v${{ steps.version.outputs.version }}" \
@@ -109,7 +111,3 @@ jobs:
 
           Install from [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=fabriqaai.specsmd) or download the VSIX below." \
             vs-code-extension/*.vsix
-
-      - name: Skip message
-        if: steps.tag_check.outputs.exists == 'true'
-        run: echo "Version ${{ steps.version.outputs.version }} already published. Bump version in package.json to publish a new release."

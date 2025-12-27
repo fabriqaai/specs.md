@@ -57,7 +57,7 @@ PRIVACY.md was created during Inception phase at:
 ## Deliverables
 
 - [x] PRIVACY.md created at repo root
-- [ ] README.md updated with analytics section (pending - to be done with analytics-tracker bolt)
+- [x] README.md updated with analytics section
 
 ## Success Criteria
 
@@ -65,8 +65,8 @@ PRIVACY.md was created during Inception phase at:
 - [x] PRIVACY.md lists all collected data points
 - [x] PRIVACY.md explains opt-out methods
 - [x] PRIVACY.md states legal basis (legitimate interest)
-- [ ] README.md references PRIVACY.md (pending)
+- [x] README.md references PRIVACY.md
 
 ## Notes
 
-- README update will be done as part of the analytics-tracker bolt integration
+- README updated with Analytics & Privacy section linking to PRIVACY.md

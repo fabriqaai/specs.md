@@ -284,6 +284,29 @@ specsmd is designed for building complex systems that demand architectural compl
 - [AI-DLC Specification (AWS)](https://aws.amazon.com/blogs/devops/ai-driven-development-life-cycle/)
 - [specs.md](https://specs.md)
 
+---
+
+## Analytics & Privacy
+
+specsmd collects **anonymous** usage analytics during installation only. This helps us understand adoption and improve the product.
+
+**What we collect**: OS, shell type, selected IDEs, installation success/failure, approximate location (country level).
+
+**What we don't collect**: No usernames, no file paths, no project contents, no IP addresses stored.
+
+### Opt-Out
+
+```bash
+# Option 1: Environment variable
+SPECSMD_TELEMETRY_DISABLED=1 npx specsmd@latest install
+
+# Option 2: DO_NOT_TRACK standard
+DO_NOT_TRACK=1 npx specsmd@latest install
+```
+
+Analytics are automatically disabled in CI environments.
+
+See [PRIVACY.md](PRIVACY.md) for full details.
 
 ---
 

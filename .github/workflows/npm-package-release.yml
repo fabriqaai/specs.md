@@ -43,8 +43,6 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-      issues: write
-      pull-requests: write
     steps:
       - uses: actions/checkout@v4
         with:
@@ -61,13 +59,49 @@ jobs:
         working-directory: src
         run: npm ci
 
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Bump patch version
+        id: version
+        working-directory: src
+        run: |
+          # Bump patch version (e.g., 1.0.5 -> 1.0.6)
+          npm version patch --no-git-tag-version
+          NEW_VERSION=$(node -p "require('./package.json').version")
+          echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
+          echo "Bumped to version $NEW_VERSION"
+
+      - name: Commit version bump
+        run: |
+          git add src/package.json src/package-lock.json
+          git commit -m "chore(npm): bump version to ${{ steps.version.outputs.version }} [skip ci]"
+          git push origin main
+
       - name: Copy README to src for npm package
         run: cp README.md src/README.md
 
-      - name: Run semantic-release
+      - name: Publish to npm
         working-directory: src
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: npx semantic-release
+        run: npm publish --access public
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Create tag
+          git tag -a "v${{ steps.version.outputs.version }}" -m "specsmd v${{ steps.version.outputs.version }}"
+          git push origin "v${{ steps.version.outputs.version }}"
+          # Create GitHub release
+          gh release create "v${{ steps.version.outputs.version }}" \
+            --title "specsmd v${{ steps.version.outputs.version }}" \
+            --notes "## specsmd v${{ steps.version.outputs.version }}
+
+          Install from npm:
+          \`\`\`bash
+          npx specsmd@${{ steps.version.outputs.version }} install
+          \`\`\`"

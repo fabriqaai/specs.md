@@ -5,9 +5,55 @@ const yaml = require('js-yaml');
 const CLIUtils = require('./cli-utils');
 const InstallerFactory = require('./InstallerFactory');
 const { FLOWS } = require('./constants');
+const analytics = require('./analytics');
 
 // Use theme from CLIUtils for consistent styling
 const { theme } = CLIUtils;
+
+/**
+ * Categorize an error for analytics tracking
+ * @param {Error} error - The error to categorize
+ * @returns {string} Error category
+ */
+function categorizeError(error) {
+    const message = (error.message || '').toLowerCase();
+
+    if (message.includes('permission') || message.includes('eacces')) {
+        return 'file_permission';
+    }
+    if (message.includes('enoent') || message.includes('not found')) {
+        return 'file_not_found';
+    }
+    if (message.includes('network') || message.includes('enotfound') || message.includes('timeout')) {
+        return 'network';
+    }
+    if (message.includes('enospc') || message.includes('disk')) {
+        return 'disk_space';
+    }
+    return 'unknown';
+}
+
+/**
+ * Count files in a directory recursively
+ * @param {string} dir - Directory path
+ * @returns {Promise<number>} File count
+ */
+async function countFiles(dir) {
+    let count = 0;
+    try {
+        const entries = await fs.readdir(dir, { withFileTypes: true });
+        for (const entry of entries) {
+            if (entry.isDirectory()) {
+                count += await countFiles(path.join(dir, entry.name));
+            } else {
+                count++;
+            }
+        }
+    } catch {
+        // Ignore errors (directory might not exist)
+    }
+    return count;
+}
 
 async function detectTools() {
   const detected = [];
@@ -22,6 +68,12 @@ async function detectTools() {
 }
 
 async function install() {
+  // Initialize analytics (respects opt-out env vars)
+  analytics.init();
+  analytics.trackInstallerStarted();
+
+  const installStartTime = Date.now();
+
   await CLIUtils.displayLogo();
   CLIUtils.displayHeader('Installation', '');
 
@@ -67,6 +119,9 @@ async function install() {
     process.exit(1);
   }
 
+  // Track IDE selection
+  analytics.trackIdesConfirmed(selectedToolKeys);
+
   // Step 3: Select Flow
   console.log('');
   CLIUtils.displayStep(3, 4, 'Select SDLC flow');
@@ -88,12 +143,21 @@ async function install() {
     process.exit(1);
   }
 
+  // Track flow selection
+  analytics.trackFlowSelected(selectedFlow);
+
   // Step 4: Install flow files
   console.log('');
   CLIUtils.displayStep(4, 4, `Installing ${FLOWS[selectedFlow].name} flow...`);
 
   try {
-    await installFlow(selectedFlow, selectedToolKeys);
+    const filesCreated = await installFlow(selectedFlow, selectedToolKeys);
+
+    // Track successful installation for each tool
+    const durationMs = Date.now() - installStartTime;
+    for (const toolKey of selectedToolKeys) {
+      analytics.trackInstallationCompleted(toolKey, selectedFlow, durationMs, filesCreated);
+    }
 
     CLIUtils.displaySuccess(`${FLOWS[selectedFlow].name} flow installed successfully!`, 'Installation Complete');
 
@@ -108,6 +172,12 @@ async function install() {
     ];
     CLIUtils.displayNextSteps(nextSteps);
   } catch (error) {
+    // Track installation failure
+    const errorCategory = categorizeError(error);
+    for (const toolKey of selectedToolKeys) {
+      analytics.trackInstallationFailed(toolKey, errorCategory, selectedFlow);
+    }
+
     CLIUtils.displayError(`Installation failed: ${error.message}`);
     console.log(theme.dim('\nRolling back changes...'));
     await rollback(selectedFlow, selectedToolKeys);
@@ -199,6 +269,10 @@ async function installFlow(flowKey, toolKeys) {
   );
 
   CLIUtils.displayStatus('', 'Created installation manifest', 'success');
+
+  // Count files created for analytics
+  const filesCreated = await countFiles(specsmdDir);
+  return filesCreated;
 }
 
 async function rollback(flowKey, toolKeys) {
