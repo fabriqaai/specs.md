@@ -49,7 +49,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          token: ${{ secrets.GH_PAT }}
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -99,7 +99,7 @@ jobs:
 
       - name: Create GitHub Release with VSIX
         env:
-          GH_TOKEN: ${{ secrets.GH_PAT }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           # Create tag
           git tag -a "vscode-v${{ steps.version.outputs.version }}" -m "VS Code Extension v${{ steps.version.outputs.version }}"
