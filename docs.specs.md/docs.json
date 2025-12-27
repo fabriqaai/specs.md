@@ -4,10 +4,10 @@
   "name": "specs.md",
   "description": "AI-native software development with multi-agent orchestration",
   "logo": {
-    "dark": "/images/specs_md_pixel_logo.png",
-    "light": "/images/specs_md_pixel_logo.png"
+    "dark": "/images/logo.png",
+    "light": "/images/logo.png"
   },
-  "favicon": "/images/favicon.svg",
+  "favicon": "/images/favicon.png",
   "colors": {
     "primary": "#CD6B4D",
     "light": "#D17A5E",
@@ -26,7 +26,7 @@
       "href": "/getting-started/installation"
     }
   },
- 
+  "navigation": {
     "tabs": [
       {
         "tab": "Documentation",
