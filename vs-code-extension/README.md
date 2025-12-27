@@ -193,3 +193,4 @@ Tabs persist across VS Code sessions. The extension saves your active tab choice
 ## Contributing
 
 For architecture details, development setup, and publishing instructions, see the [Developer Guide](./DEVGUIDE.md).
+
