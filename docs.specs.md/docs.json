@@ -27,6 +27,14 @@
     }
   },
   "navigation": {
+    "global": {
+      "products": [
+        {
+          "product": "test",
+          "href": ""
+        }
+      ]
+    },
     "tabs": [
       {
         "tab": "Documentation",
