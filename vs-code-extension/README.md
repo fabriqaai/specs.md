@@ -4,7 +4,7 @@
 
 A VS Code extension for managing AI-DLC (AI Development Life Cycle) artifacts including intents, units, stories, and bolts.
 
-![Extension Preview](resources/extension-preview.png)
+![Extension Preview](https://raw.githubusercontent.com/fabriqaai/specs.md/main/vs-code-extension/resources/extension-preview.png)
 
 ## Sidebar Views
 
