@@ -103,7 +103,7 @@
         "esbuild": "^0.24.0",
         "eslint": "^8.54.0",
         "glob": "^10.3.10",
-        "mocha": "^10.2.0",
+        "mocha": "^11.7.5",
         "typescript": "^5.3.2"
     },
     "dependencies": {
