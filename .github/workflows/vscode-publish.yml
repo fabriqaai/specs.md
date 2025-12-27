@@ -12,7 +12,7 @@ on:
       - 'vs-code-extension/**'
 
 jobs:
-  test:
+  vs-code-extension-test:
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -43,8 +43,8 @@ jobs:
         working-directory: vs-code-extension
         run: npm test
 
-  publish:
-    needs: test
+  vs-code-extension-publish:
+    needs: vs-code-extension-test
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     runs-on: ubuntu-latest
     permissions:
