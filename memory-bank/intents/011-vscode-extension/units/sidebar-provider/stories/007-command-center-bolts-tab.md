@@ -2,11 +2,11 @@
 id: vscode-extension-story-sp-007
 unit: sidebar-provider
 intent: 011-vscode-extension
-status: draft
+status: complete
 priority: must
 created: 2025-12-26
-assigned_bolt: null
-implemented: false
+assigned_bolt: bolt-sidebar-provider-3
+implemented: true
 ---
 
 # Story: Command Center (Bolts Tab)

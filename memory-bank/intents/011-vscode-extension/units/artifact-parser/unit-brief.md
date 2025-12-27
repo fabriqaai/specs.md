@@ -2,9 +2,9 @@
 unit: artifact-parser
 intent: 011-vscode-extension
 phase: construction
-status: in-progress
-created: 2025-12-25
-updated: 2025-12-26
+status: complete
+created: 2025-12-25T17:00:00Z
+updated: 2025-12-27T16:30:00Z
 default_bolt_type: simple-construction-bolt
 ---
 
@@ -107,14 +107,14 @@ Parse memory-bank directory structure and artifact files to build a model of AI-
 
 ### Stories
 
-| Story ID | Title | Priority | Status |
-|----------|-------|----------|--------|
-| 001 | Memory Bank Schema Class | Must | Planned |
-| 002 | Project Detection | Must | Planned |
-| 003 | Artifact Parsing | Must | Planned |
-| 004 | Frontmatter Parser | Must | Planned |
-| 005 | Bolt Dependency Parsing | Must | Planned |
-| 006 | Activity Feed Derivation | Must | Planned |
+| Story ID | Title | Priority | Status | Bolt |
+|----------|-------|----------|--------|------|
+| 001 | Memory Bank Schema Class | Must | Complete | bolt-1 |
+| 002 | Project Detection | Must | Complete | bolt-1 |
+| 003 | Artifact Parsing | Must | Complete | bolt-1 |
+| 004 | Frontmatter Parser | Must | Complete | bolt-1 |
+| 005 | Bolt Dependency Parsing | Must | Complete | bolt-2 |
+| 006 | Activity Feed Derivation | Must | Complete | bolt-2 |
 
 ---
 
@@ -209,10 +209,10 @@ Parse memory-bank directory structure and artifact files to build a model of AI-
 
 ## Bolt Suggestions
 
-| Bolt | Type | Stories | Objective |
-|------|------|---------|-----------|
-| bolt-artifact-parser-1 | Simple | 001, 002, 003, 004 | Core parsing functionality (COMPLETE) |
-| bolt-artifact-parser-2 | Simple | 005, 006 | Dependency parsing and activity derivation |
+| Bolt | Type | Stories | Objective | Status |
+|------|------|---------|-----------|--------|
+| bolt-artifact-parser-1 | Simple | 001, 002, 003, 004 | Core parsing functionality | Complete |
+| bolt-artifact-parser-2 | Simple | 005, 006 | Dependency parsing and activity derivation | Complete |
 
 ---
 

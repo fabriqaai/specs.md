@@ -1,8 +1,9 @@
 ---
 id: webview-lit-migration
 intent: 011-vscode-extension
-status: in-progress
-created: 2025-12-26
+status: complete
+created: 2025-12-26T14:00:00Z
+updated: 2025-12-27T16:30:00Z
 ---
 
 # Unit: Webview Lit Migration
@@ -86,10 +87,11 @@ src/webview/
 
 ### Requires
 
-- bolt-sidebar-provider-5 (current webview implementation)
+- sidebar-provider unit (existing webview to migrate)
 
 ### Enables
 
+- sidebar-provider bolt-5 stories (modernized components)
 - Future UI enhancements with component reuse
 - Shared components with potential desktop app
 
@@ -112,3 +114,20 @@ src/webview/
 - [Lit Documentation](https://lit.dev/)
 - [VS Code Webview API](https://code.visualstudio.com/api/extension-guides/webview)
 - [GitKraken Blog: Web Components with Lit](https://www.gitkraken.com/blog/web-components-are-lit-with-lit)
+
+## Completion Notes
+
+**Implementation approach changed:** Instead of a full Lit migration, a hybrid approach was adopted:
+
+1. **Bolts view**: Uses Lit components (`<specsmd-app>`, `<view-tabs>`, etc.)
+2. **Specs view**: Server-rendered HTML (simpler, sufficient for tree rendering)
+3. **Overview view**: Server-rendered HTML (simpler, sufficient for dashboard)
+
+All 5 bolts in this unit completed successfully:
+- bolt-webview-lit-migration-1: Infinite rerender fix, esbuild setup
+- bolt-webview-lit-migration-2: Lit scaffold and tabs component
+- bolt-webview-lit-migration-3: Bolts view Lit components
+- bolt-webview-lit-migration-4: Hybrid approach for Specs/Overview
+- bolt-webview-lit-migration-5: State context and typed messaging
+
+The migration also implemented many sidebar-provider bolt-5 stories as part of the modernization effort.

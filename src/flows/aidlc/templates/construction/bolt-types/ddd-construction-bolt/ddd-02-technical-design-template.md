@@ -3,7 +3,7 @@ unit: {unit-name}
 bolt: {bolt-id}
 stage: design
 status: complete
-updated: {date}
+updated: {YYYY-MM-DDTHH:MM:SSZ}
 ---
 
 # Technical Design - {Unit Name}

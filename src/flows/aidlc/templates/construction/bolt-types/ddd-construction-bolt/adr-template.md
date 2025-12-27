@@ -1,6 +1,6 @@
 ---
 bolt: {bolt-id}
-created: {timestamp}
+created: {YYYY-MM-DDTHH:MM:SSZ}
 status: proposed | accepted | deprecated | superseded
 superseded_by: {adr-number if applicable}
 ---

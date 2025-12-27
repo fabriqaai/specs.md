@@ -2,14 +2,14 @@
 intent: vscode-extension
 phase: construction
 status: construction
-updated: 2025-12-26
+updated: 2025-12-27T16:30:00Z
 ---
 
 # Units: VS Code Extension
 
 ## Overview
 
-The VS Code extension is decomposed into 5 units based on functional responsibility. Each unit has a single purpose and can be developed/tested independently.
+The VS Code extension is decomposed into 6 units based on functional responsibility. Each unit has a single purpose and can be developed/tested independently.
 
 ## Requirement-to-Unit Mapping
 
@@ -74,6 +74,16 @@ The VS Code extension is decomposed into 5 units based on functional responsibil
 
 **Dependencies**: `artifact-parser` (for detection)
 
+### 6. webview-lit-migration
+
+**Purpose**: Migrate webview from raw HTML template strings to Lit web components
+
+**Assigned Requirements**: N/A (architecture improvement, not functional requirement)
+
+**Dependencies**: `sidebar-provider` (existing webview to migrate)
+
+**Note**: This unit was added during construction to address maintainability issues and fix the infinite re-render bug. It modernized the webview architecture using a hybrid approach (Lit for Bolts view, server-rendered HTML for Specs/Overview).
+
 ## Dependency Graph
 
 ```
@@ -108,11 +118,12 @@ The VS Code extension is decomposed into 5 units based on functional responsibil
 
 ## Unit Summary
 
-| Unit | Stories | Priority | Complexity | Notes |
-|------|---------|----------|------------|-------|
-| artifact-parser | ~6 | Must | Medium | +2 for dependency parsing, activity derivation |
-| file-watcher | ~2 | Must | Low | Unchanged |
-| sidebar-provider | ~10 | Must | High | +5 for tabs, command center, activity UI |
-| welcome-view | ~3 | Must | Medium | Unchanged |
-| extension-core | ~3 | Must | Medium | Unchanged |
-| **Total** | **~24** | | | +7 from mockup scope |
+| Unit | Stories | Priority | Status | Notes |
+|------|---------|----------|--------|-------|
+| artifact-parser | 6 | Must | Complete | Core parsing and activity feed |
+| file-watcher | 2 | Must | Complete | File watching |
+| sidebar-provider | 19 | Must | Complete | Tabs, command center, activity UI |
+| welcome-view | 3 | Must | Complete | Installation flow |
+| extension-core | 4 | Must | Complete | Extension lifecycle |
+| webview-lit-migration | 10 | Must | Complete | Lit components |
+| **Total** | **44** | | | All units complete |

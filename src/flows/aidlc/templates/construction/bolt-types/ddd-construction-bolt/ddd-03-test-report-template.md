@@ -3,7 +3,7 @@ unit: {unit-name}
 bolt: {bolt-id}
 stage: test
 status: complete
-updated: {date}
+updated: {YYYY-MM-DDTHH:MM:SSZ}
 ---
 
 # Test Report - {Unit Name}

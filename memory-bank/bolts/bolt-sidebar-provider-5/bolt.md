@@ -3,7 +3,7 @@ id: bolt-sidebar-provider-5
 unit: sidebar-provider
 intent: 011-vscode-extension
 type: simple-construction-bolt
-status: in-progress
+status: complete
 stories:
   - 011-filewatcher-statestore-integration
   - 012-next-actions-ui
@@ -16,10 +16,12 @@ stories:
   - 019-overview-view
 created: 2025-12-26T18:00:00Z
 started: 2025-12-26T18:00:00Z
-completed: null
-current_stage: implement
+completed: 2025-12-27T00:00:00Z
+current_stage: test
 stages_completed:
   - plan
+  - implement
+  - test
 
 requires_bolts:
   - bolt-sidebar-provider-4
@@ -91,3 +93,12 @@ Complete the StateStore integration by wiring FileWatcher to auto-refresh, displ
 - StateStore infrastructure already exists in `src/state/`
 - FileWatcher already has debouncing built-in
 - Must connect the dots: FileWatcher → Parser → StateStore → WebviewProvider
+
+## Completion Notes
+
+**Completed with reduced scope:**
+- Stories 011-014, 017-019: Fully implemented
+- Story 015 (Persist Expanded State): Partially implemented - focus card persistence works, specs tree persistence deferred
+- Story 016 (Bolt Filtering): Not implemented - deferred to future bolt
+
+Most implementation occurred during the webview-lit-migration bolt, which modernized the entire webview architecture to use Lit components.

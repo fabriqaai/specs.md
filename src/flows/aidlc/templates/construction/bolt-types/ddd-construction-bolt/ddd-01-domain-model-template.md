@@ -3,7 +3,7 @@ unit: {unit-name}
 bolt: {bolt-id}
 stage: model
 status: complete
-updated: {date}
+updated: {YYYY-MM-DDTHH:MM:SSZ}
 ---
 
 # Static Model - {Unit Name}

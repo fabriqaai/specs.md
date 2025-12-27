@@ -2,11 +2,11 @@
 id: vscode-extension-story-sp-015
 unit: sidebar-provider
 intent: 011-vscode-extension
-status: draft
+status: in-progress
 priority: should
 created: 2025-12-26
 assigned_bolt: bolt-sidebar-provider-5
-implemented: false
+implemented: partial
 ---
 
 # Story: Persist Expanded State

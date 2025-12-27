@@ -109,7 +109,7 @@ This bolt type implements Domain-Driven Design (DDD) methodology through five se
 ---
 stage: model
 bolt: {bolt-id}
-created: {timestamp}
+created: {YYYY-MM-DDTHH:MM:SSZ}
 ---
 
 ## Static Model: {unit-name}
@@ -189,7 +189,7 @@ created: {timestamp}
 ---
 stage: design
 bolt: {bolt-id}
-created: {timestamp}
+created: {YYYY-MM-DDTHH:MM:SSZ}
 ---
 
 ## Technical Design: {unit-name}
@@ -440,7 +440,7 @@ tests/
 ---
 stage: test
 bolt: {bolt-id}
-created: {timestamp}
+created: {YYYY-MM-DDTHH:MM:SSZ}
 ---
 
 ## Test Report: {unit-name}

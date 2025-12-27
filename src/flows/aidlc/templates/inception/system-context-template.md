@@ -2,7 +2,7 @@
 intent: {intent-name}
 phase: inception
 status: context-defined
-updated: {date}
+updated: {YYYY-MM-DDTHH:MM:SSZ}
 ---
 
 # {Intent Name} - System Context

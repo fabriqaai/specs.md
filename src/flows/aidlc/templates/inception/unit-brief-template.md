@@ -12,8 +12,8 @@ unit: {unit-name}
 intent: {intent-name}
 phase: inception
 status: draft|ready
-created: {YYYY-MM-DD}
-updated: {YYYY-MM-DD}
+created: {YYYY-MM-DDTHH:MM:SSZ}
+updated: {YYYY-MM-DDTHH:MM:SSZ}
 ---
 ```
 

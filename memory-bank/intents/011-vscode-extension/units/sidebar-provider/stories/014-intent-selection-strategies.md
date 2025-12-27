@@ -2,11 +2,11 @@
 id: vscode-extension-story-sp-014
 unit: sidebar-provider
 intent: 011-vscode-extension
-status: draft
+status: complete
 priority: could
 created: 2025-12-26
 assigned_bolt: bolt-sidebar-provider-5
-implemented: false
+implemented: true
 ---
 
 # Story: Additional Intent Selection Strategies

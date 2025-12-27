@@ -13,7 +13,7 @@ unit: {unit-name}
 intent: {intent-name}
 status: draft
 priority: must|should|could
-created: {YYYY-MM-DD}
+created: {YYYY-MM-DDTHH:MM:SSZ}
 assigned_bolt: null
 implemented: false
 ---
@@ -96,7 +96,7 @@ unit: auth-service
 intent: user-authentication
 status: ready
 priority: must
-created: 2024-12-05
+created: 2024-12-05T10:00:00Z
 assigned_bolt: bolt-auth-service-1
 implemented: false
 ---

@@ -2,9 +2,9 @@
 unit: sidebar-provider
 intent: 011-vscode-extension
 phase: construction
-status: in-progress
-created: 2025-12-25
-updated: 2025-12-26
+status: complete
+created: 2025-12-25T16:45:00Z
+updated: 2025-12-27T16:30:00Z
 default_bolt_type: simple-construction-bolt
 ---
 
@@ -123,25 +123,37 @@ Implement VS Code WebviewViewProvider to render a tabbed sidebar with three view
 
 | Metric | Count |
 |--------|-------|
-| Total Stories | 10 |
-| Must Have | 9 |
-| Should Have | 1 |
-| Could Have | 0 |
+| Total Stories | 19 |
+| Must Have | 11 |
+| Should Have | 6 |
+| Could Have | 2 |
+| Complete | 17 |
+| In Progress | 1 |
+| Draft | 1 |
 
 ### Stories
 
-| Story ID | Title | Priority | Status |
-|----------|-------|----------|--------|
-| 001 | Tree Data Provider Setup | Must | Complete |
-| 002 | Intent/Unit/Story Tree | Must | Complete |
-| 003 | Bolt Tree with Stages and Stories | Must | Planned |
-| 004 | Status Icons and Badges | Must | Planned |
-| 005 | Pixel Logo Footer | Should | Planned |
-| 006 | Webview Tab Architecture | Must | Planned |
-| 007 | Command Center (Bolts Tab) | Must | Planned |
-| 008 | Current Focus Card | Must | Planned |
-| 009 | Up Next Queue with Dependencies | Must | Planned |
-| 010 | Activity Feed UI | Must | Planned |
+| Story ID | Title | Priority | Status | Bolt |
+|----------|-------|----------|--------|------|
+| 001 | Tree Data Provider Setup | Must | Complete | bolt-1 |
+| 002 | Intent/Unit/Story Tree | Must | Complete | bolt-1 |
+| 003 | Bolt Tree with Stages and Stories | Must | Complete | bolt-2 |
+| 004 | Status Icons and Badges | Must | Complete | bolt-2 |
+| 005 | Pixel Logo Footer | Should | Complete | bolt-2 |
+| 006 | Webview Tab Architecture | Must | Complete | bolt-3 |
+| 007 | Command Center (Bolts Tab) | Must | Complete | bolt-3 |
+| 008 | Current Focus Card | Must | Complete | bolt-4 |
+| 009 | Up Next Queue with Dependencies | Must | Complete | bolt-4 |
+| 010 | Activity Feed UI | Must | Complete | bolt-4 |
+| 011 | FileWatcher StateStore Integration | Must | Complete | bolt-5 |
+| 012 | Next Actions UI | Should | Complete | bolt-5 |
+| 013 | Start Bolt Action | Should | Complete | bolt-5 |
+| 014 | Intent Selection Strategies | Could | Complete | bolt-5 |
+| 015 | Persist Expanded State | Should | In Progress | bolt-5 |
+| 016 | Bolt Filtering | Could | Draft | bolt-5 |
+| 017 | Activity Open Button | Should | Complete | bolt-5 |
+| 018 | Specs View Implementation | Must | Complete | bolt-5 |
+| 019 | Overview View Implementation | Must | Complete | bolt-5 |
 
 ---
 
@@ -246,12 +258,15 @@ Implement VS Code WebviewViewProvider to render a tabbed sidebar with three view
 
 ## Bolt Suggestions
 
-| Bolt | Type | Stories | Objective |
-|------|------|---------|-----------|
-| bolt-sidebar-provider-1 | Simple | 001, 002 | Basic tree structure (COMPLETE) |
-| bolt-sidebar-provider-2 | Simple | 003, 004, 005 | Bolts, status, footer (COMPLETE) |
-| bolt-sidebar-provider-3 | Simple | 006, 007 | Webview architecture + command center |
-| bolt-sidebar-provider-4 | Simple | 008, 009, 010 | Focus card, queue, activity UI |
+| Bolt | Type | Stories | Objective | Status |
+|------|------|---------|-----------|--------|
+| bolt-sidebar-provider-1 | Simple | 001, 002 | Basic tree structure | Complete |
+| bolt-sidebar-provider-2 | Simple | 003, 004, 005 | Bolts, status, footer | Complete |
+| bolt-sidebar-provider-3 | Simple | 006, 007 | Webview architecture + command center | Complete |
+| bolt-sidebar-provider-4 | Simple | 008, 009, 010 | Focus card, queue, activity UI | Complete |
+| bolt-sidebar-provider-5 | Simple | 011-019 | StateStore integration, views, actions | Complete* |
+
+*Note: bolt-5 complete with reduced scope (015 partial, 016 deferred)
 
 ---
 

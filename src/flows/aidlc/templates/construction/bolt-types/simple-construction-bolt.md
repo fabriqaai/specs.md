@@ -107,7 +107,7 @@ This bolt type provides a lightweight construction process for work that doesn't
 ---
 stage: plan
 bolt: {bolt-id}
-created: {timestamp}
+created: {YYYY-MM-DDTHH:MM:SSZ}
 ---
 
 ## Implementation Plan: {unit-name}
@@ -175,7 +175,7 @@ created: {timestamp}
 ---
 stage: implement
 bolt: {bolt-id}
-created: {timestamp}
+created: {YYYY-MM-DDTHH:MM:SSZ}
 ---
 
 ## Implementation Walkthrough: {unit-name}
@@ -260,7 +260,7 @@ created: {timestamp}
 ---
 stage: test
 bolt: {bolt-id}
-created: {timestamp}
+created: {YYYY-MM-DDTHH:MM:SSZ}
 ---
 
 ## Test Report: {unit-name}

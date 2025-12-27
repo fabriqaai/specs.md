@@ -2,7 +2,7 @@
 intent: {intent-name}
 phase: inception
 status: units-decomposed
-updated: {date}
+updated: {YYYY-MM-DDTHH:MM:SSZ}
 ---
 
 # {Intent Name} - Unit Decomposition

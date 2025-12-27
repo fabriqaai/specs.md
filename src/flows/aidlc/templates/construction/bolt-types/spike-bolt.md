@@ -80,7 +80,7 @@ This bolt type is for research and proof-of-concept work when there are unknowns
 ---
 stage: explore
 bolt: {bolt-id}
-created: {timestamp}
+created: {YYYY-MM-DDTHH:MM:SSZ}
 time_box: {hours}
 ---
 
@@ -142,7 +142,7 @@ time_box: {hours}
 ---
 stage: document
 bolt: {bolt-id}
-created: {timestamp}
+created: {YYYY-MM-DDTHH:MM:SSZ}
 ---
 
 ## Spike Report: {topic}

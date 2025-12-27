@@ -11,8 +11,8 @@ Use this template when documenting requirements for an intent.
 intent: {intent-name}
 phase: inception
 status: draft|in-progress|complete
-created: {YYYY-MM-DD}
-updated: {YYYY-MM-DD}
+created: {YYYY-MM-DDTHH:MM:SSZ}
+updated: {YYYY-MM-DDTHH:MM:SSZ}
 ---
 ```
 

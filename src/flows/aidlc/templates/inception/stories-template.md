@@ -2,7 +2,7 @@
 intent: {intent-name}
 phase: inception
 status: stories-created
-updated: {date}
+updated: {YYYY-MM-DDTHH:MM:SSZ}
 ---
 
 # {Intent Name} - Stories

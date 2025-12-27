@@ -2,11 +2,11 @@
 id: vscode-extension-story-sp-002
 unit: sidebar-provider
 intent: 011-vscode-extension
-status: draft
+status: complete
 priority: must
 created: 2025-12-25
-assigned_bolt: null
-implemented: false
+assigned_bolt: bolt-sidebar-provider-1
+implemented: true
 ---
 
 # Story: Intent/Unit/Story Tree

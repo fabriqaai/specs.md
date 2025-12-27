@@ -15,8 +15,8 @@ Use this template to track inception progress and decisions for an intent.
 ```markdown
 ---
 intent: {intent-name}
-created: {YYYY-MM-DD}
-completed: {YYYY-MM-DD or null}
+created: {YYYY-MM-DDTHH:MM:SSZ}
+completed: {YYYY-MM-DDTHH:MM:SSZ or null}
 status: {in-progress | complete}
 ---
 

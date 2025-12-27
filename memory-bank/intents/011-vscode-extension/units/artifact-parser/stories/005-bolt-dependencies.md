@@ -2,11 +2,11 @@
 id: vscode-extension-story-ap-005
 unit: artifact-parser
 intent: 011-vscode-extension
-status: draft
+status: complete
 priority: must
-created: 2025-12-26
-assigned_bolt: null
-implemented: false
+created: 2025-12-26T10:00:00Z
+assigned_bolt: bolt-artifact-parser-2
+implemented: true
 ---
 
 # Story: Bolt Dependency Parsing

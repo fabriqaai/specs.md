@@ -2,11 +2,11 @@
 id: vscode-extension-story-ap-002
 unit: artifact-parser
 intent: 011-vscode-extension
-status: draft
+status: complete
 priority: must
-created: 2025-12-25
-assigned_bolt: null
-implemented: false
+created: 2025-12-25T17:00:00Z
+assigned_bolt: bolt-artifact-parser-1
+implemented: true
 ---
 
 # Story: Project Detection

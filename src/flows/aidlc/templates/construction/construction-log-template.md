@@ -16,8 +16,8 @@ Use this template to track construction progress and replanning decisions for a 
 ---
 unit: {unit-name}
 intent: {intent-name}
-created: {YYYY-MM-DD}
-last_updated: {YYYY-MM-DD}
+created: {YYYY-MM-DDTHH:MM:SSZ}
+last_updated: {YYYY-MM-DDTHH:MM:SSZ}
 ---
 
 # Construction Log: {unit-name}
