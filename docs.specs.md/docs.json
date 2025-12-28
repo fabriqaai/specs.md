@@ -108,7 +108,8 @@
             "group": "Resources",
             "pages": [
               "faq",
-              "feedback"
+              "feedback",
+              "community"
             ]
           }
         ]
@@ -117,7 +118,9 @@
   },
   "footer": {
     "socials": {
-      "github": "https://github.com/fabriqaai/specs.md"
+      "github": "https://github.com/fabriqaai/specs.md",
+      "discord": "https://discord.gg/X8pfZpZHnR",
+      "x": "https://x.com/specsmd"
     }
   },
   "integrations": {
