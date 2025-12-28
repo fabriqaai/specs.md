@@ -70,7 +70,7 @@ async function detectTools() {
 async function install() {
   // Initialize analytics (respects opt-out env vars)
   analytics.init();
-  analytics.trackInstallerStarted();
+  await analytics.trackInstallerStarted();
 
   const installStartTime = Date.now();
 
@@ -119,8 +119,8 @@ async function install() {
     process.exit(1);
   }
 
-  // Track IDE selection
-  analytics.trackIdesConfirmed(selectedToolKeys);
+  // Track IDE selection (await to ensure delivery before potential cancel)
+  await analytics.trackIdesConfirmed(selectedToolKeys);
 
   // Step 3: Select Flow
   console.log('');
@@ -143,8 +143,8 @@ async function install() {
     process.exit(1);
   }
 
-  // Track flow selection
-  analytics.trackFlowSelected(selectedFlow);
+  // Track flow selection (await to ensure delivery before potential cancel)
+  await analytics.trackFlowSelected(selectedFlow);
 
   // Step 4: Install flow files
   console.log('');

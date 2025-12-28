@@ -101,18 +101,34 @@ class AnalyticsTracker {
      *
      * @param {string} eventName - Name of the event
      * @param {Object} properties - Additional event properties
+     * @param {boolean} waitForDelivery - Wait for event to be sent
+     * @returns {Promise<void>} Resolves when event is sent (if waitForDelivery is true)
      */
-    track(eventName, properties = {}) {
+    track(eventName, properties = {}, waitForDelivery = false) {
         if (!this.enabled || !this.mixpanel) {
-            return;
+            return waitForDelivery ? Promise.resolve() : undefined;
+        }
+
+        const eventData = {
+            ...this.baseProperties,
+            ...properties
+        };
+
+        if (waitForDelivery) {
+            return new Promise((resolve) => {
+                try {
+                    this.mixpanel.track(eventName, eventData, (err) => {
+                        // Resolve regardless of error - silent failure
+                        resolve();
+                    });
+                } catch {
+                    resolve();
+                }
+            });
         }
 
         try {
-            this.mixpanel.track(eventName, {
-                ...this.baseProperties,
-                ...properties
-            });
-            // No await - fire and forget
+            this.mixpanel.track(eventName, eventData);
         } catch {
             // Silent failure
         }
@@ -121,9 +137,11 @@ class AnalyticsTracker {
     /**
      * Track installer_started event
      * Called when the installer begins
+     * @returns {Promise<void>} Resolves when event is sent
      */
     trackInstallerStarted() {
-        this.track('installer_started');
+        // Wait for delivery - critical funnel event
+        return this.track('installer_started', {}, true);
     }
 
     /**
@@ -131,12 +149,14 @@ class AnalyticsTracker {
      * Called after user confirms IDE/tool selection
      *
      * @param {string[]} ides - Array of selected IDE keys (e.g., ['claude-code', 'cursor'])
+     * @returns {Promise<void>} Resolves when event is sent
      */
     trackIdesConfirmed(ides) {
-        this.track('ides_confirmed', {
+        // Wait for delivery - critical funnel event
+        return this.track('ides_confirmed', {
             ide_count: ides.length,
             ides: ides
-        });
+        }, true);
     }
 
     /**
@@ -144,11 +164,13 @@ class AnalyticsTracker {
      * Called after user selects an SDLC flow
      *
      * @param {string} flow - Flow key (e.g., 'aidlc', 'agile')
+     * @returns {Promise<void>} Resolves when event is sent
      */
     trackFlowSelected(flow) {
-        this.track('flow_selected', {
+        // Wait for delivery - critical funnel event
+        return this.track('flow_selected', {
             flow: flow
-        });
+        }, true);
     }
 
     /**
