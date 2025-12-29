@@ -56,7 +56,8 @@ class AnalyticsTracker {
             const Mixpanel = require('mixpanel');
             this.mixpanel = Mixpanel.init(MIXPANEL_TOKEN, {
                 protocol: 'https',
-                host: 'api-eu.mixpanel.com'  // EU endpoint for GDPR compliance
+                host: 'api-eu.mixpanel.com',  // EU endpoint for GDPR compliance
+                geolocate: true               // Enable IP-based geolocation
             });
 
             // Generate IDs
