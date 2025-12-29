@@ -413,6 +413,7 @@ export class SpecsmdWebviewProvider implements vscode.WebviewViewProvider {
      */
     private _transformActiveBolt(bolt: Bolt): ActiveBoltData {
         const stagesComplete = bolt.stages.filter(s => s.status === ArtifactStatus.Complete).length;
+        const files = this._scanBoltArtifactFiles(bolt.path);
 
         return {
             id: bolt.id,
@@ -431,7 +432,9 @@ export class SpecsmdWebviewProvider implements vscode.WebviewViewProvider {
                 id,
                 name: id,
                 status: 'pending' as const // Would need story status lookup
-            }))
+            })),
+            path: bolt.path,
+            files
         };
     }
 

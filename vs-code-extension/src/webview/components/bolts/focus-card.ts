@@ -12,6 +12,15 @@ import type { StageData } from '../shared/stage-pipeline.js';
 import type { StoryData } from './stories-list.js';
 
 /**
+ * Artifact file data.
+ */
+export interface ArtifactFileData {
+    name: string;
+    path: string;
+    type: 'walkthrough' | 'test-report' | 'plan' | 'design' | 'other';
+}
+
+/**
  * Active bolt data.
  */
 export interface ActiveBoltData {
@@ -25,6 +34,8 @@ export interface ActiveBoltData {
     storiesTotal: number;
     stages: StageData[];
     stories: StoryData[];
+    path: string;
+    files: ArtifactFileData[];
 }
 
 /**
@@ -41,6 +52,7 @@ function formatStageName(name: string): string {
  * @fires continue-bolt - When Continue button is clicked
  * @fires view-files - When Files button is clicked
  * @fires open-bolt - When magnifier button is clicked
+ * @fires open-file - When an artifact file is clicked
  *
  * @example
  * ```html
@@ -212,6 +224,67 @@ export class FocusCard extends BaseElement {
             .action-btn-secondary:hover {
                 background: rgba(255, 255, 255, 0.15);
             }
+
+            .artifacts-section {
+                margin-top: 16px;
+                padding-top: 12px;
+                border-top: 1px solid var(--border-color);
+            }
+
+            .artifacts-header {
+                font-size: 10px;
+                font-weight: 600;
+                color: var(--description-foreground, #858585);
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+                margin-bottom: 8px;
+            }
+
+            .artifact-item {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                padding: 6px 8px;
+                margin: 2px 0;
+                border-radius: 4px;
+                font-size: 13px;
+                color: var(--foreground, #cccccc);
+                cursor: pointer;
+                transition: background 0.1s;
+            }
+
+            .artifact-item:hover {
+                background: var(--vscode-input-background, #3c3c3c);
+            }
+
+            .artifact-icon {
+                font-size: 14px;
+                flex-shrink: 0;
+            }
+
+            .artifact-name {
+                flex: 1;
+                min-width: 0;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+            }
+
+            .artifact-type {
+                font-size: 10px;
+                padding: 2px 6px;
+                border-radius: 4px;
+                background: var(--vscode-input-background, #3c3c3c);
+                color: var(--description-foreground, #858585);
+                text-transform: uppercase;
+            }
+
+            .no-artifacts {
+                font-size: 12px;
+                color: var(--description-foreground, #858585);
+                font-style: italic;
+                padding: 8px 0;
+            }
         `
     ];
 
@@ -264,6 +337,8 @@ export class FocusCard extends BaseElement {
                         </stories-list>
                     ` : ''}
 
+                    ${this._renderArtifacts()}
+
                     <div class="actions">
                         <button class="action-btn action-btn-primary" @click=${this._handleContinue}>Continue</button>
                         <button class="action-btn action-btn-secondary" @click=${this._handleViewFiles}>Files</button>
@@ -303,6 +378,46 @@ export class FocusCard extends BaseElement {
         e.stopPropagation();
         this.dispatchEvent(new CustomEvent('open-bolt', {
             detail: { boltId: this.bolt.id },
+            bubbles: true,
+            composed: true
+        }));
+    }
+
+    private _renderArtifacts() {
+        const hasFiles = this.bolt.files && this.bolt.files.length > 0;
+
+        if (!hasFiles) {
+            return html``;
+        }
+
+        return html`
+            <div class="artifacts-section">
+                <div class="artifacts-header">Artifacts</div>
+                ${this.bolt.files.map(file => html`
+                    <div class="artifact-item" @click=${(e: Event) => this._handleFileClick(e, file.path)}>
+                        <span class="artifact-icon">${this._getFileIcon(file.type)}</span>
+                        <span class="artifact-name">${file.name}</span>
+                        <span class="artifact-type">${file.type}</span>
+                    </div>
+                `)}
+            </div>
+        `;
+    }
+
+    private _getFileIcon(type: string): string {
+        switch (type) {
+            case 'walkthrough': return '📖';
+            case 'test-report': return '📋';
+            case 'plan': return '📄';
+            case 'design': return '🔧';
+            default: return '📄';
+        }
+    }
+
+    private _handleFileClick(e: Event, path: string): void {
+        e.stopPropagation();
+        this.dispatchEvent(new CustomEvent('open-file', {
+            detail: { path },
             bubbles: true,
             composed: true
         }));

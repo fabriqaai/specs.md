@@ -118,6 +118,10 @@ export interface ActiveBoltData {
         name: string;
         status: 'complete' | 'active' | 'pending';
     }[];
+    /** Path to bolt directory */
+    path: string;
+    /** Artifact files in the bolt directory */
+    files: ArtifactFileData[];
 }
 
 /**

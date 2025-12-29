@@ -165,7 +165,9 @@ suite('Webview Messaging Test Suite', () => {
                     ],
                     stories: [
                         { id: '001', name: 'Story 1', status: 'complete' }
-                    ]
+                    ],
+                    path: '/test/bolts/bolt-1',
+                    files: []
                 }],
                 upNextQueue: [
                     {
@@ -240,7 +242,11 @@ suite('Webview Messaging Test Suite', () => {
                     { name: 'test', status: 'pending' },
                     { name: 'integrate', status: 'pending' }
                 ],
-                stories: []
+                stories: [],
+                path: '/test/bolts/bolt-test',
+                files: [
+                    { name: 'walkthrough.md', path: '/test/bolts/bolt-test/walkthrough.md', type: 'walkthrough' }
+                ]
             };
 
             assert.strictEqual(bolt.stagesComplete, 2);
@@ -260,7 +266,9 @@ suite('Webview Messaging Test Suite', () => {
                 storiesComplete: 0,
                 storiesTotal: 2,
                 stages: [],
-                stories: []
+                stories: [],
+                path: '/test/bolts/bolt-test',
+                files: []
             };
 
             assert.strictEqual(bolt.currentStage, null);
