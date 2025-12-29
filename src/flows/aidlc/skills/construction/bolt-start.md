@@ -182,6 +182,23 @@ Ready to proceed?
 
 If the bolt type specifies automatic validation criteria, follow those rules.
 
+### 8b. Final Stage Checkpoint (CRITICAL RE-READ)
+
+**⚠️ If this is the FINAL stage of the bolt**, before presenting completion:
+
+1. **STOP** and re-read **Step 10** from this skill
+2. This step is often skipped due to context distance - re-reading prevents this
+3. Do NOT report bolt as complete until you have executed Step 10
+
+```text
+┌─────────────────────────────────────────────────────────────┐
+│  FINAL STAGE DETECTED                                       │
+│  → Re-read Step 10 NOW                                     │
+│  → You MUST run: node .specsmd/scripts/bolt-complete.js    │
+│  → Do NOT manually edit story files                        │
+└─────────────────────────────────────────────────────────────┘
+```
+
 ### 9. Update Bolt File on Stage Completion
 
 **Trigger**: After EACH stage completion (not just final stage).
@@ -210,11 +227,22 @@ stages_completed:
 
 ---
 
-### 10. Mark Bolt Complete (CRITICAL - MANDATORY ON FINAL STAGE)
+### 10. Mark Bolt Complete (HARD GATE - MANDATORY ON FINAL STAGE)
 
 **Trigger**: ONLY when this is the FINAL stage.
 
-**⚠️ DO NOT SKIP THIS STEP. When the final stage completes, you MUST run the command below.**
+```text
+⛔ HARD GATE - SCRIPT EXECUTION REQUIRED
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+You CANNOT report bolt completion without:
+1. Running the bolt-complete.js script
+2. Showing the script output to the user
+
+If you skip this, the memory-bank becomes inconsistent.
+Do NOT manually edit story files - the script handles everything.
+```
+
+**Run this command:**
 
 ```bash
 node .specsmd/scripts/bolt-complete.js {bolt-id}
