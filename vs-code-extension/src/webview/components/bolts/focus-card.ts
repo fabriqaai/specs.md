@@ -81,8 +81,8 @@ export class FocusCard extends BaseElement {
             }
 
             .card {
-                background: linear-gradient(135deg, rgba(249, 115, 22, 0.08) 0%, rgba(249, 115, 22, 0.02) 100%);
-                border-left: 4px solid #f97316;
+                background: linear-gradient(135deg, var(--card-active-gradient-start, rgba(249, 115, 22, 0.08)) 0%, var(--card-active-gradient-end, rgba(249, 115, 22, 0.02)) 100%);
+                border-left: 4px solid var(--card-active-border, #f97316);
                 border-radius: 8px;
                 overflow: hidden;
             }
@@ -122,7 +122,7 @@ export class FocusCard extends BaseElement {
                 font-weight: 600;
                 padding: 6px 14px;
                 border-radius: 16px;
-                background: #f97316;
+                background: var(--card-active-border, #f97316);
                 color: white;
                 flex-shrink: 0;
                 margin-left: 12px;

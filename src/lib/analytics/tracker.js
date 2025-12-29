@@ -57,7 +57,11 @@ class AnalyticsTracker {
             this.mixpanel = Mixpanel.init(MIXPANEL_TOKEN, {
                 protocol: 'https',
                 host: 'api-eu.mixpanel.com',  // EU endpoint for GDPR compliance
-                geolocate: true               // Enable IP-based geolocation
+                // Note: geolocate: true enables IP-based geolocation for analytics.
+                // This data is used solely for aggregate usage insights (e.g., country-level
+                // adoption patterns). No personal identifiers are collected. Users can
+                // opt out via the --no-telemetry flag or SPECSMD_NO_TELEMETRY env var.
+                geolocate: true
             });
 
             // Generate IDs
@@ -118,7 +122,7 @@ class AnalyticsTracker {
         if (waitForDelivery) {
             return new Promise((resolve) => {
                 try {
-                    this.mixpanel.track(eventName, eventData, (err) => {
+                    this.mixpanel.track(eventName, eventData, () => {
                         // Resolve regardless of error - silent failure
                         resolve();
                     });

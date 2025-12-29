@@ -511,6 +511,29 @@ async function updateIntentStatus(bolt) {
 }
 
 /**
+ * Validate bolt status before allowing completion
+ *
+ * Pre-flight checks to ensure:
+ * - Bolt is in "in-progress" status (can't complete already-complete or not-started bolts)
+ * - Bolt has not already been completed
+ */
+function validateBoltStatus(bolt) {
+    const status = bolt.frontmatter.status || 'unknown';
+
+    // Cannot complete a bolt that's already complete
+    if (status === 'complete') {
+        return { valid: false, reason: 'Bolt is already complete' };
+    }
+
+    // Bolt should be in-progress before completing
+    if (status !== 'in-progress') {
+        return { valid: false, reason: `Bolt status is "${status}", expected "in-progress"` };
+    }
+
+    return { valid: true };
+}
+
+/**
  * Main: Mark bolt as complete with all dependent updates
  */
 async function boltMarkComplete(boltId, lastStage) {
@@ -521,6 +544,14 @@ async function boltMarkComplete(boltId, lastStage) {
     try {
         // Step 1: Read bolt file
         const bolt = await readBolt(boltId);
+
+        // Step 1.5: Validate bolt status before proceeding
+        const validation = validateBoltStatus(bolt);
+        if (!validation.valid) {
+            console.error(`\n${colors.red}Error:${colors.reset} ${validation.reason}`);
+            console.error(`${colors.dim}Use bolt-status command to check current state.${colors.reset}`);
+            return 1;
+        }
 
         console.log(`${colors.dim}Bolt: ${bolt.id}${colors.reset}`);
         console.log(`${colors.dim}Intent: ${bolt.frontmatter.intent}${colors.reset}`);
@@ -537,11 +568,11 @@ async function boltMarkComplete(boltId, lastStage) {
         console.log(`\n${colors.dim}Stories: ${colors.green}${storyResults.updated} updated${colors.reset}, ${colors.dim}${storyResults.skipped} skipped${colors.reset}${storyResults.errors > 0 ? `, ${colors.red}${storyResults.errors} errors${colors.reset}` : ''}\n`);
 
         // Step 4: Update unit status
-        const unitResult = await updateUnitStatus(bolt);
+        await updateUnitStatus(bolt);
         console.log();
 
         // Step 5: Update intent status
-        const intentResult = await updateIntentStatus(bolt);
+        await updateIntentStatus(bolt);
         console.log();
 
         // Final summary
