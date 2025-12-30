@@ -1,6 +1,6 @@
 ---
 id: 016-analytics-tracker
-unit: analytics-tracker
+unit: 001-analytics-tracker
 intent: 007-installer-analytics
 type: simple-construction-bolt
 status: complete
@@ -19,7 +19,7 @@ stories:
   - 012-geolocation-support
 created: 2025-12-28T12:00:00Z
 started: 2025-12-28T18:30:00Z
-completed: 2025-12-28T19:00:00Z
+completed: "2025-12-28T17:29:23Z"
 current_stage: null
 stages_completed:
   - name: plan
@@ -31,13 +31,11 @@ stages_completed:
   - name: test
     completed: 2025-12-28T19:00:00Z
     artifact: test-walkthrough.md
-
 requires_bolts: []
 enables_bolts:
   - 017-privacy-documentation
 requires_units: []
 blocks: false
-
 complexity:
   avg_complexity: 2
   avg_uncertainty: 1

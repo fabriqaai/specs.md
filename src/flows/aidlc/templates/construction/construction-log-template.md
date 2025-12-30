@@ -14,8 +14,8 @@ Use this template to track construction progress and replanning decisions for a 
 
 ```markdown
 ---
-unit: {unit-name}
-intent: {intent-name}
+unit: {UUU}-{unit-name}
+intent: {NNN}-{intent-name}
 created: {YYYY-MM-DDTHH:MM:SSZ}
 last_updated: {YYYY-MM-DDTHH:MM:SSZ}
 ---

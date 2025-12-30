@@ -1,5 +1,5 @@
 ---
-intent: {intent-name}
+intent: {NNN}-{intent-name}
 phase: inception
 status: units-decomposed
 updated: {YYYY-MM-DDTHH:MM:SSZ}

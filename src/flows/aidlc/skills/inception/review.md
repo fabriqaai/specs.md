@@ -126,7 +126,7 @@ Update these sections:
 
 ```markdown
 ---
-intent: {intent-name}
+intent: {NNN}-{intent-name}
 created: {original-date}
 completed: {today}
 status: complete

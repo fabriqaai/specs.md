@@ -8,9 +8,9 @@ Use this template when creating individual story files during story creation.
 
 ```yaml
 ---
-id: {intent-name}-story-{n}
-unit: {unit-name}
-intent: {intent-name}
+id: {SSS}-{title-slug}
+unit: {UUU}-{unit-name}
+intent: {NNN}-{intent-name}
 status: draft
 priority: must|should|could
 created: {YYYY-MM-DDTHH:MM:SSZ}
@@ -24,7 +24,7 @@ implemented: false
 ## Content
 
 ```markdown
-# Story: {intent-name}-story-{n}
+# Story: {SSS}-{title-slug}
 
 ## User Story
 
@@ -91,19 +91,19 @@ implemented: false
 
 ```yaml
 ---
-id: user-authentication-story-1
-unit: auth-service
-intent: user-authentication
+id: 001-user-signup
+unit: 001-auth-service
+intent: 001-user-authentication
 status: ready
 priority: must
 created: 2024-12-05T10:00:00Z
-assigned_bolt: bolt-auth-service-1
+assigned_bolt: 001-auth-service
 implemented: false
 ---
 ```
 
 ```markdown
-# Story: user-authentication-story-1
+# Story: 001-user-signup
 
 ## User Story
 
@@ -129,8 +129,8 @@ implemented: false
 - None (first story)
 
 ### Enables
-- story-2 (User login)
-- story-3 (Email verification)
+- 002-user-login (User login)
+- 003-email-verification (Email verification)
 
 ## Edge Cases
 

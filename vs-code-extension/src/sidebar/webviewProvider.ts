@@ -413,6 +413,7 @@ export class SpecsmdWebviewProvider implements vscode.WebviewViewProvider {
      */
     private _transformActiveBolt(bolt: Bolt): ActiveBoltData {
         const stagesComplete = bolt.stages.filter(s => s.status === ArtifactStatus.Complete).length;
+        const files = this._scanBoltArtifactFiles(bolt.path);
 
         return {
             id: bolt.id,
@@ -431,7 +432,9 @@ export class SpecsmdWebviewProvider implements vscode.WebviewViewProvider {
                 id,
                 name: id,
                 status: 'pending' as const // Would need story status lookup
-            }))
+            })),
+            path: bolt.path,
+            files
         };
     }
 
@@ -776,7 +779,7 @@ export class SpecsmdWebviewProvider implements vscode.WebviewViewProvider {
         const command = `/specsmd-construction-agent --bolt-id="${boltId}"`;
 
         const result = await vscode.window.showInformationMessage(
-            `Run this command in Claude Code to start the bolt:\n\n${command}`,
+            `Run this command to start the bolt:\n\n${command}`,
             { modal: true },
             'Copy to Clipboard'
         );
@@ -795,7 +798,7 @@ export class SpecsmdWebviewProvider implements vscode.WebviewViewProvider {
         const command = `/specsmd-construction-agent --bolt-id="${boltId}"`;
 
         const result = await vscode.window.showInformationMessage(
-            `Continue working on "${displayName}":\n\nRun this command in Claude Code:\n\n${command}`,
+            `Continue working on "${displayName}":\n\nIf you're not already running this bolt in your AI agent, run this command:\n\n${command}`,
             { modal: true },
             'Copy to Clipboard'
         );

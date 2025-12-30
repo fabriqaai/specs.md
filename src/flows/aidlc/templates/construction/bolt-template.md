@@ -27,8 +27,8 @@ memory-bank/bolts/{bolt-id}/
 ```yaml
 ---
 id: bolt-{unit}-{sequence}
-unit: {unit-name}
-intent: {intent-name}
+unit: {UUU}-{unit-name}
+intent: {NNN}-{intent-name}
 type: ddd-construction-bolt
 status: planned
 stories:
@@ -54,6 +54,27 @@ complexity:
   testing_scope: 2         # 1=Unit, 2=Integration, 3=E2E
 ---
 ```
+
+---
+
+## Required Frontmatter Fields (VALIDATION CHECKLIST)
+
+Before creating a bolt, verify ALL required fields are present:
+
+| Field | Required | Description |
+|-------|----------|-------------|
+| `id` | **YES** | Bolt identifier (format: `{BBB}-{unit-name}`) |
+| `unit` | **YES** | Parent unit ID |
+| `intent` | **YES** | Parent intent ID |
+| `type` | **YES** | Bolt type (`ddd-construction-bolt` or `simple-construction-bolt`) |
+| `status` | **YES** | Current status (`planned`, `in-progress`, `completed`, `blocked`) |
+| `stories` | **YES** | Array of story IDs included in this bolt |
+| `created` | **YES** | Creation timestamp |
+| `requires_bolts` | **YES** | Array of bolt IDs this depends on (can be empty `[]`) |
+| `enables_bolts` | **YES** | Array of bolt IDs waiting on this (can be empty `[]`) |
+| `complexity` | **YES** | Complexity assessment block |
+
+**If any required field is missing, the bolt is INVALID.**
 
 ---
 
@@ -132,8 +153,8 @@ complexity:
 ```yaml
 ---
 id: bolt-auth-service-1
-unit: auth-service
-intent: user-authentication
+unit: 001-auth-service
+intent: 001-user-authentication
 type: ddd-construction-bolt
 status: in-progress
 stories:

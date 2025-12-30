@@ -152,11 +152,13 @@ When `frontend.enabled: true` in the project type configuration, create a fronte
 
 ```yaml
 ---
-unit: {intent}-ui
+unit: {UUU}-{intent}-ui
 unit_type: frontend
 default_bolt_type: simple-construction-bolt
 ---
 ```
+
+**Note**: The `unit` field uses the full folder name including the numeric prefix (e.g., `001-auth-service`, `002-auth-service-ui`). This matches the folder structure and enables direct path construction in scripts.
 
 ---
 
@@ -193,10 +195,10 @@ Present proposed decomposition with their assigned requirements:
    Update `units.md` with all units for this intent
 
 3. **Create Unit Directories**:
-   For each unit: `{schema.units}/{unit-name}/`
+   For each unit: `{schema.units}/{UUU}-{unit-name}/`
 
 4. **Create Unit Brief** (CRITICAL):
-   For each unit, create `unit-brief.md` using `.specsmd/aidlc/templates/inception/unit-brief-template.md`
+   For each unit, create `{UUU}-{unit-name}/unit-brief.md` using `.specsmd/aidlc/templates/inception/unit-brief-template.md`
 
    This brief is the **input for Construction Agent**. Include:
    - Purpose and scope
@@ -209,14 +211,16 @@ Present proposed decomposition with their assigned requirements:
 
    ```yaml
    ---
-   unit: auth-service
-   intent: 001-user-authentication
+   unit: {UUU}-{unit-name}
+   intent: {NNN}-{intent-name}
    phase: inception
    status: draft
    ---
    ```
 
-   Note: Story naming uses the story title (e.g., `001-user-signup.md`). No prefix field needed.
+   **Note**: The `unit` field uses the full folder name including the numeric prefix. This matches the folder structure and enables direct path construction in scripts.
+
+   Story naming uses the story title (e.g., `001-user-signup.md`). No prefix field needed.
 
    **For frontend units**, also include:
 
@@ -239,25 +243,25 @@ For each unit, verify:
 ## Output
 
 ```markdown
-## Unit Decomposition: {intent-name}
+## Unit Decomposition: {NNN}-{intent-name}
 
 ### Units Created
 
-- [ ] **{unit-1}**: {purpose} - Dependencies: None - Stories: ~{n}
-- [ ] **{unit-2}**: {purpose} - Dependencies: `{unit-1}` - Stories: ~{n}
+- [ ] **{UUU}-{unit-1}**: {purpose} - Dependencies: None - Stories: ~{n}
+- [ ] **{UUU}-{unit-2}**: {purpose} - Dependencies: `{UUU}-{unit-1}` - Stories: ~{n}
 
 ### Dependency Graph
 
-    {unit-1} ──► {unit-2} ──► {unit-3}
+    {UUU}-{unit-1} ──► {UUU}-{unit-2} ──► {UUU}-{unit-3}
                     │
                     ▼
-                {unit-4}
+                {UUU}-{unit-4}
 
 ### Artifacts Created
 
 ✅ `{intent-path}/units.md`
-✅ `{intent-path}/units/{unit-1}/unit-brief.md`
-✅ `{intent-path}/units/{unit-2}/unit-brief.md`
+✅ `{intent-path}/units/{UUU}-{unit-1}/unit-brief.md`
+✅ `{intent-path}/units/{UUU}-{unit-2}/unit-brief.md`
 
 ```
 

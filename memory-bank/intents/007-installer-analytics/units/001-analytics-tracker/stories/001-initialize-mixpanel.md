@@ -1,12 +1,12 @@
 ---
-id: 007-analytics-story-1
-unit: analytics-tracker
+id: 001-initialize-mixpanel
+unit: 001-analytics-tracker
 intent: 007-installer-analytics
-status: ready
+status: complete
 priority: must
 created: 2025-12-28T12:30:00Z
-assigned_bolt: bolt-analytics-tracker-1
-implemented: false
+assigned_bolt: 016-analytics-tracker
+implemented: true
 ---
 
 # Story: Initialize Mixpanel with Machine and Session IDs

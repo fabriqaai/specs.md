@@ -1,11 +1,11 @@
 ---
-id: 007-analytics-story-6
-unit: analytics-tracker
+id: 006-cli-no-telemetry-flag
+unit: 001-analytics-tracker
 intent: 007-installer-analytics
 status: ready
 priority: should
 created: 2025-12-28T12:30:00Z
-assigned_bolt: bolt-analytics-tracker-1
+assigned_bolt: 016-analytics-tracker
 implemented: false
 ---
 

@@ -1,0 +1,59 @@
+name: NPM Package Dev Release
+
+on:
+  push:
+    branches: [dev]
+  workflow_dispatch:
+
+jobs:
+  npm-package-dev:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Install dependencies
+        working-directory: src
+        run: npm ci
+
+      - name: Run tests
+        working-directory: src
+        run: npm test
+
+      - name: Set incremental dev version
+        working-directory: src
+        run: |
+          # Get current @dev version from npm
+          CURRENT=$(npm view specsmd@dev version 2>/dev/null || echo "0.0.0-dev.0")
+          # Extract and increment dev number (e.g., 0.1.2-dev.5 -> 0.1.2-dev.6)
+          if [[ $CURRENT =~ (.+-dev\.)([0-9]+) ]]; then
+            PREFIX="${BASH_REMATCH[1]}"
+            NUM="${BASH_REMATCH[2]}"
+            NEXT_VERSION="$PREFIX$((NUM + 1))"
+          elif [[ $CURRENT =~ ^([0-9]+\.[0-9]+\.[0-9]+) ]]; then
+            # Preserve base version if format is standard (e.g., 1.2.3 -> 1.2.3-dev.1)
+            BASE="${BASH_REMATCH[1]}"
+            NEXT_VERSION="$BASE-dev.1"
+          else
+            # Fallback for first dev release
+            NEXT_VERSION="0.0.0-dev.1"
+          fi
+          echo "Setting version: $NEXT_VERSION (previous: $CURRENT)"
+          npm version "$NEXT_VERSION" --no-git-tag-version
+
+      - name: Copy README to src for npm package
+        run: cp README.md src/README.md
+
+      - name: Publish to npm (dev tag)
+        working-directory: src
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm publish --tag dev --access public

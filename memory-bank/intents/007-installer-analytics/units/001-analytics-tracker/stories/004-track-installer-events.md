@@ -1,11 +1,11 @@
 ---
-id: 007-analytics-story-4
-unit: analytics-tracker
+id: 004-track-installer-events
+unit: 001-analytics-tracker
 intent: 007-installer-analytics
 status: ready
 priority: must
 created: 2025-12-28T12:30:00Z
-assigned_bolt: bolt-analytics-tracker-1
+assigned_bolt: 016-analytics-tracker
 implemented: false
 ---
 

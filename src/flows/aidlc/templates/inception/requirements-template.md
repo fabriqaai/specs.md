@@ -8,7 +8,7 @@ Use this template when documenting requirements for an intent.
 
 ```yaml
 ---
-intent: {intent-name}
+intent: {NNN}-{intent-name}
 phase: inception
 status: draft|in-progress|complete
 created: {YYYY-MM-DDTHH:MM:SSZ}

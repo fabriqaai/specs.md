@@ -141,7 +141,7 @@ Create/update `deployment/monitoring.md`:
 
 ```markdown
 ---
-unit: {unit-name}
+unit: {UUU}-{unit-name}
 configured: {timestamp}
 ---
 

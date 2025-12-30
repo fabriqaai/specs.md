@@ -270,6 +270,11 @@ created: {YYYY-MM-DDTHH:MM:SSZ}
 - **Tests**: {passed}/{total} passed
 - **Coverage**: {percentage}%
 
+### Test Files
+
+- [x] `{path/to/test-file.test.ts}` - {what this test file covers}
+- [x] `{path/to/another.test.ts}` - {what this test file covers}
+
 ### Acceptance Criteria Validation
 
 - ✅/❌ **{Criterion}**: {Status}

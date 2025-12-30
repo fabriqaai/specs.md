@@ -1,6 +1,6 @@
 ---
-unit: {unit-name}
-bolt: {bolt-id}
+unit: {UUU}-{unit-name}
+bolt: {BBB}-{unit-name}
 stage: model
 status: complete
 updated: {YYYY-MM-DDTHH:MM:SSZ}

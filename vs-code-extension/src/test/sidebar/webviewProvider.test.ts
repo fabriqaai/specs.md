@@ -56,6 +56,10 @@ suite('Webview Provider Test Suite', () => {
                 ],
                 stories: [
                     { id: '001', name: 'Story One', status: 'complete' }
+                ],
+                path: '/test/bolts/bolt-test-1',
+                files: [
+                    { name: 'walkthrough.md', path: '/test/bolts/bolt-test-1/walkthrough.md', type: 'walkthrough' }
                 ]
             };
 

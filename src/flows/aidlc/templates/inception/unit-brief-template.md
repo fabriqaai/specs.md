@@ -8,8 +8,8 @@ Use this template when creating unit briefs during decomposition. This is the **
 
 ```yaml
 ---
-unit: {unit-name}
-intent: {intent-name}
+unit: {UUU}-{unit-name}
+intent: {NNN}-{intent-name}
 phase: inception
 status: draft|ready
 created: {YYYY-MM-DDTHH:MM:SSZ}
@@ -17,7 +17,7 @@ updated: {YYYY-MM-DDTHH:MM:SSZ}
 ---
 ```
 
-Note: Story naming uses the story title (e.g., `001-user-signup.md`). No prefix field needed.
+**Note**: The `unit` field uses the full folder name including the 3-digit prefix (e.g., `001-auth-service`). This matches the folder structure and enables direct path construction in scripts. Story naming uses the story title (e.g., `001-user-signup.md`).
 
 ---
 
