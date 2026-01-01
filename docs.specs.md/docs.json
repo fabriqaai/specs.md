@@ -26,6 +26,10 @@
       {
         "label": "vscode extension",
         "href": "https://marketplace.visualstudio.com/items?itemName=fabriqaai.specsmd"
+      },
+      {
+        "label": "product hunt",
+        "href": "https://www.producthunt.com/products/specs-md"
       }
     ],
     "primary": {
