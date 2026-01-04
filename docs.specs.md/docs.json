@@ -154,6 +154,12 @@
       "cursor",
       "vscode",
       {
+        "title": "Explore with DeepWiki",
+        "description": "Explore with DeepWiki",
+        "icon": "book",
+        "href": "https://deepwiki.com/fabriqaai/specs.md"
+      },
+      {
         "title": "Feature Request",
         "description": "Suggest a new feature",
         "icon": "lightbulb",
