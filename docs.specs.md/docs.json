@@ -144,5 +144,21 @@
     "ga4": {
       "measurementId": "G-Z6L00G5P4N"
     }
+  },
+  "contextual": {
+    "options": [
+      "copy",
+      "view",
+      "chatgpt",
+      "claude",
+      "cursor",
+      "vscode",
+      {
+        "title": "Feature Request",
+        "description": "Suggest a new feature",
+        "icon": "lightbulb",
+        "href": "https://github.com/fabriqaai/specs.md/issues/new?template=feature_request.md"
+      }
+    ]
   }
 }
