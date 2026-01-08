@@ -10,6 +10,7 @@ import { scanMemoryBank } from './parser/artifactParser';
 import { SpecsmdWebviewProvider, createWebviewProvider } from './sidebar/webviewProvider';
 import { FileWatcher } from './watcher';
 import { WelcomeViewProvider, createInstallationWatcher } from './welcome';
+import { tracker, trackActivation, trackError, projectMetricsTracker } from './analytics';
 
 let webviewProvider: SpecsmdWebviewProvider | undefined;
 let fileWatcher: FileWatcher | undefined;
@@ -20,16 +21,44 @@ let installationWatcher: vscode.Disposable | undefined;
  * Called when the extension is first activated.
  */
 export async function activate(context: vscode.ExtensionContext): Promise<void> {
+    // Initialize analytics first (fire-and-forget, never blocks)
+    tracker.init(context);
+
     const workspacePath = getWorkspacePath();
 
-    // Set initial project context
-    await updateProjectContext(workspacePath);
+    // Scan memory bank and set project context
+    let isSpecsmdProject = false;
+    if (workspacePath) {
+        try {
+            const model = await scanMemoryBank(workspacePath);
+            isSpecsmdProject = model.isProject;
+            await vscode.commands.executeCommand('setContext', 'specsmd.isProject', isSpecsmdProject);
+        } catch {
+            trackError('activation', 'SCAN_FAILED', 'artifactParser', true);
+            await vscode.commands.executeCommand('setContext', 'specsmd.isProject', false);
+        }
+    } else {
+        await vscode.commands.executeCommand('setContext', 'specsmd.isProject', false);
+    }
+
+    // Track activation after project detection
+    trackActivation(context, isSpecsmdProject);
+
+    // Initialize project metrics tracking (fires project_snapshot for specsmd projects)
+    if (workspacePath && isSpecsmdProject) {
+        try {
+            const model = await scanMemoryBank(workspacePath);
+            projectMetricsTracker.init(model);
+        } catch {
+            // Silent failure - metrics are optional
+        }
+    }
 
     // Create and register webview provider
     webviewProvider = createWebviewProvider(context, workspacePath);
 
     // Register welcome view provider
-    const welcomeProvider = new WelcomeViewProvider(context.extensionUri);
+    const welcomeProvider = new WelcomeViewProvider(context.extensionUri, context);
     context.subscriptions.push(
         vscode.window.registerWebviewViewProvider(
             WelcomeViewProvider.viewType,
@@ -54,6 +83,8 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     installationWatcher = createInstallationWatcher(async () => {
         await webviewProvider?.refresh();
         await updateProjectContext(workspacePath);
+        // Track successful installation completion from welcome view
+        welcomeProvider.onInstallationComplete();
     });
     context.subscriptions.push(installationWatcher);
 
@@ -68,6 +99,9 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
  * Called when the extension is deactivated.
  */
 export function deactivate(): void {
+    // Clean up project metrics tracker timers
+    projectMetricsTracker.dispose();
+
     // Resources are cleaned up via context.subscriptions
     webviewProvider?.dispose();
     webviewProvider = undefined;

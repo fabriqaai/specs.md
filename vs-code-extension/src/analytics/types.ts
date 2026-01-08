@@ -177,3 +177,93 @@ export interface FilterChangedEventProperties {
     /** New filter value (sanitized) */
     filter_value: string;
 }
+
+// ============================================
+// Project Metrics Event Types
+// ============================================
+
+/**
+ * Snapshot of project entity counts (internal)
+ */
+export interface ProjectCounts {
+    /** Number of intents */
+    intentCount: number;
+    /** Number of units across all intents */
+    unitCount: number;
+    /** Number of stories across all units */
+    storyCount: number;
+    /** Total number of bolts */
+    boltCount: number;
+    /** Bolts currently in-progress */
+    activeBolts: number;
+    /** Bolts pending (draft/unknown) */
+    queuedBolts: number;
+    /** Bolts completed */
+    completedBolts: number;
+    /** Bolts blocked by dependencies */
+    blockedBolts: number;
+}
+
+/**
+ * Properties for project_snapshot event
+ */
+export interface ProjectSnapshotEventProperties {
+    /** Number of intents */
+    intent_count: number;
+    /** Number of units */
+    unit_count: number;
+    /** Number of stories */
+    story_count: number;
+    /** Number of bolts */
+    bolt_count: number;
+    /** Bolts in-progress */
+    active_bolts: number;
+    /** Bolts pending */
+    queued_bolts: number;
+    /** Bolts completed */
+    completed_bolts: number;
+    /** Bolts blocked */
+    blocked_bolts: number;
+    /** Average units per intent */
+    avg_units_per_intent: number;
+    /** Average stories per unit */
+    avg_stories_per_unit: number;
+}
+
+/**
+ * Change type categories for project_changed event
+ */
+export type ProjectChangeType =
+    | 'bolt_added'
+    | 'bolt_completed'
+    | 'intent_added'
+    | 'story_added'
+    | 'entities_removed';
+
+/**
+ * Properties for project_changed event
+ */
+export interface ProjectChangedEventProperties {
+    /** Type of change detected */
+    change_type: ProjectChangeType;
+    /** Delta in intent count (if non-zero) */
+    intents_delta?: number;
+    /** Delta in unit count (if non-zero) */
+    units_delta?: number;
+    /** Delta in story count (if non-zero) */
+    stories_delta?: number;
+    /** Delta in bolt count (if non-zero) */
+    bolts_delta?: number;
+    /** Delta in active bolts (if non-zero) */
+    active_bolts_delta?: number;
+    /** Delta in completed bolts (if non-zero) */
+    completed_bolts_delta?: number;
+    /** New total intent count */
+    intent_count: number;
+    /** New total unit count */
+    unit_count: number;
+    /** New total story count */
+    story_count: number;
+    /** New total bolt count */
+    bolt_count: number;
+}

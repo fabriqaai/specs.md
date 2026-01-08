@@ -65,6 +65,7 @@ import {
     trackFilterChanged,
     normalizeBoltType,
     normalizeBoltStatus,
+    projectMetricsTracker,
 } from '../analytics';
 
 /**
@@ -182,6 +183,9 @@ export class SpecsmdWebviewProvider implements vscode.WebviewViewProvider {
         if (workspacePath) {
             const model = await scanMemoryBank(workspacePath);
             this._store.loadFromModel(model, workspacePath);
+
+            // Notify project metrics tracker of scan completion (debounced)
+            projectMetricsTracker.onScanComplete(model);
         } else {
             // Reset store to empty state
             this._store.setEntities({

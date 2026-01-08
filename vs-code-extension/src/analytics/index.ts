@@ -39,6 +39,13 @@ export {
     ENGAGEMENT_EVENTS,
 } from './engagementEvents';
 
+// Project metrics event exports
+export {
+    projectMetricsTracker,
+    ProjectMetricsTracker,
+    PROJECT_EVENTS,
+} from './projectMetricsEvents';
+
 // Type exports
 export type {
     IDEInfo,
@@ -62,4 +69,9 @@ export type {
     BoltActionEventProperties,
     ArtifactOpenedEventProperties,
     FilterChangedEventProperties,
+    // Project metrics event types
+    ProjectCounts,
+    ProjectSnapshotEventProperties,
+    ProjectChangeType,
+    ProjectChangedEventProperties,
 } from './types';
