@@ -3,7 +3,8 @@ story: 002-generate-machine-session-ids
 unit: 001-analytics-core
 intent: 012-vscode-extension-analytics
 priority: must
-status: planned
+status: complete
+implemented: true
 created: 2025-01-08T12:30:00Z
 ---
 

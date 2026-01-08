@@ -3,7 +3,7 @@ id: bolt-vscode-analytics-core-1
 unit: 001-analytics-core
 intent: 012-vscode-extension-analytics
 type: simple-construction-bolt
-status: planned
+status: complete
 stories:
   - 001-initialize-mixpanel-tracker
   - 002-generate-machine-session-ids
@@ -11,10 +11,19 @@ stories:
   - 004-implement-privacy-controls
   - 005-error-isolation-wrappers
 created: 2025-01-08T12:50:00Z
-started: null
-completed: null
+started: 2025-01-09T10:00:00Z
+completed: 2025-01-09T10:50:00Z
 current_stage: null
-stages_completed: []
+stages_completed:
+  - name: plan
+    completed: 2025-01-09T10:10:00Z
+    artifact: implementation-plan.md
+  - name: implement
+    completed: 2025-01-09T10:35:00Z
+    artifact: implementation-walkthrough.md
+  - name: test
+    completed: 2025-01-09T10:50:00Z
+    artifact: test-walkthrough.md
 
 requires_bolts: []
 enables_bolts:
