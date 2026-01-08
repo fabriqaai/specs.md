@@ -1,5 +1,13 @@
 import * as vscode from 'vscode';
 import { handleInstallCommand } from './installHandler';
+import {
+    trackWelcomeViewDisplayed,
+    trackWelcomeCopyCommandClicked,
+    trackWelcomeInstallClicked,
+    trackWelcomeWebsiteClicked,
+    trackWelcomeInstallCompleted,
+    trackError,
+} from '../analytics';
 
 /**
  * Provides the welcome view webview for non-specsmd workspaces.
@@ -9,8 +17,12 @@ export class WelcomeViewProvider implements vscode.WebviewViewProvider {
     public static readonly viewType = 'specsmdWelcome';
 
     private _view?: vscode.WebviewView;
+    private _installClickedAt?: number;
 
-    constructor(private readonly _extensionUri: vscode.Uri) {}
+    constructor(
+        private readonly _extensionUri: vscode.Uri,
+        private readonly _context?: vscode.ExtensionContext
+    ) {}
 
     public resolveWebviewView(
         webviewView: vscode.WebviewView,
@@ -28,21 +40,49 @@ export class WelcomeViewProvider implements vscode.WebviewViewProvider {
 
         webviewView.webview.html = this._getHtmlContent(webviewView.webview);
 
+        // Track welcome view displayed
+        trackWelcomeViewDisplayed();
+
         // Handle messages from the webview
         webviewView.webview.onDidReceiveMessage(async (message) => {
-            switch (message.command) {
-                case 'openWebsite':
-                    vscode.env.openExternal(vscode.Uri.parse('https://specs.md'));
-                    break;
-                case 'copyCommand':
-                    await vscode.env.clipboard.writeText('npx specsmd@latest install');
-                    vscode.window.showInformationMessage('Command copied to clipboard!');
-                    break;
-                case 'install':
-                    await handleInstallCommand();
-                    break;
+            try {
+                switch (message.command) {
+                    case 'openWebsite':
+                        trackWelcomeWebsiteClicked();
+                        vscode.env.openExternal(vscode.Uri.parse('https://specs.md'));
+                        break;
+                    case 'copyCommand':
+                        trackWelcomeCopyCommandClicked();
+                        await vscode.env.clipboard.writeText('npx specsmd@latest install');
+                        vscode.window.showInformationMessage('Command copied to clipboard!');
+                        break;
+                    case 'install':
+                        trackWelcomeInstallClicked();
+                        this._installClickedAt = Date.now();
+                        await handleInstallCommand();
+                        break;
+                }
+            } catch {
+                trackError('webview', 'MESSAGE_ERROR', 'welcomeViewProvider', true);
             }
         });
+    }
+
+    /**
+     * Called when installation is detected complete by the installation watcher
+     * Used to track the welcome_install_completed event with duration
+     */
+    public onInstallationComplete(): void {
+        try {
+            const durationMs = this._installClickedAt
+                ? Date.now() - this._installClickedAt
+                : undefined;
+            trackWelcomeInstallCompleted(durationMs);
+            // Reset the timestamp
+            this._installClickedAt = undefined;
+        } catch {
+            // Silent failure
+        }
     }
 
     private _getHtmlContent(webview: vscode.Webview): string {

@@ -50,7 +50,7 @@ A: Currently supported:
 A: Install via npx:
 
 ```bash
-npx specsmd install
+npx specsmd@latest install
 ```
 
 The installer will detect available agentic coding tools and guide you through setup.

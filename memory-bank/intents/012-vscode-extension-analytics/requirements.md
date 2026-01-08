@@ -1,9 +1,9 @@
 ---
 intent: 012-vscode-extension-analytics
 phase: inception
-status: draft
-created: 2025-01-08T12:00:00Z
-updated: 2025-01-08T12:00:00Z
+status: complete
+created: 2025-01-08T12:00:00.000Z
+updated: 2025-01-08T12:00:00.000Z
 ---
 
 # Requirements: VS Code Extension Analytics
