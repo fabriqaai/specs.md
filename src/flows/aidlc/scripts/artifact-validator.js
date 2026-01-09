@@ -10,9 +10,9 @@
  * - Timestamp format (ISO 8601 without milliseconds)
  *
  * Usage:
- *   node .specsmd/scripts/artifact-validator.js
- *   node .specsmd/scripts/artifact-validator.js --json
- *   node .specsmd/scripts/artifact-validator.js --fix
+ *   node .specsmd/aidlc/scripts/artifact-validator.js
+ *   node .specsmd/aidlc/scripts/artifact-validator.js --json
+ *   node .specsmd/aidlc/scripts/artifact-validator.js --fix
  *
  * Cross-platform: Works on Linux, macOS, Windows via Node.js
  */

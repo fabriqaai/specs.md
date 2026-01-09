@@ -128,6 +128,10 @@ export interface Bolt {
     startedAt?: Date;
     /** When bolt was completed (ISO 8601) */
     completedAt?: Date;
+
+    // Unit artifact fields
+    /** Path to the unit's construction log file (if exists) */
+    constructionLogPath?: string;
 }
 
 /**

@@ -34,6 +34,18 @@ async function readFileSafe(filePath: string): Promise<string | null> {
 }
 
 /**
+ * Checks if a file exists.
+ */
+async function fileExists(filePath: string): Promise<boolean> {
+    try {
+        await fs.access(filePath);
+        return true;
+    } catch {
+        return false;
+    }
+}
+
+/**
  * Parses an ISO 8601 timestamp string into a Date.
  * Returns undefined for null, invalid, or malformed timestamps.
  */
@@ -354,6 +366,25 @@ export async function parseBolt(boltPath: string, workspacePath?: string): Promi
     const startedAt = frontmatter.started ? parseTimestamp(frontmatter.started as string) : undefined;
     const completedAt = frontmatter.completed ? parseTimestamp(frontmatter.completed as string) : undefined;
 
+    // Resolve construction log path if unit and intent are available
+    let constructionLogPath: string | undefined;
+    const unit = (frontmatter.unit as string) || '';
+    const intent = (frontmatter.intent as string) || '';
+    if (workspacePath && unit && intent) {
+        const logPath = path.join(
+            workspacePath,
+            'memory-bank',
+            'intents',
+            intent,
+            'units',
+            unit,
+            'construction-log.md'
+        );
+        if (await fileExists(logPath)) {
+            constructionLogPath = logPath;
+        }
+    }
+
     return {
         id: boltId,
         unit: (frontmatter.unit as string) || '',
@@ -375,7 +406,9 @@ export async function parseBolt(boltPath: string, workspacePath?: string): Promi
         // Timestamp fields
         createdAt,
         startedAt,
-        completedAt
+        completedAt,
+        // Unit artifact fields
+        constructionLogPath
     };
 }
 

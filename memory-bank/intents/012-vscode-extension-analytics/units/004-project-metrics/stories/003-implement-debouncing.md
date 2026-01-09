@@ -3,8 +3,9 @@ story: 003-implement-debouncing
 unit: 004-project-metrics
 intent: 012-vscode-extension-analytics
 priority: could
-status: planned
-created: 2025-01-08T12:45:00Z
+status: complete
+created: 2025-01-08T12:45:00.000Z
+implemented: true
 ---
 
 # Story: Implement Debouncing for File Changes

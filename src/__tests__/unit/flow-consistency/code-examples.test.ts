@@ -87,7 +87,7 @@ describe('Flow Files - Code Example Validity', () => {
   describe('Bash command examples should be syntactically plausible', () => {
     it('should have valid node command syntax', async () => {
       const content = await readFlowFile('skills/construction/bolt-start.md');
-      expect(content).toMatch(/node\s+\.specsmd\/scripts\/bolt-complete\.js/);
+      expect(content).toMatch(/node\s+\.specsmd\/aidlc\/scripts\/bolt-complete\.js/);
     });
   });
 });

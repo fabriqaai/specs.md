@@ -333,6 +333,122 @@ stages_completed:
             // test should be Draft
             assert.strictEqual(result.stages[4].status, ArtifactStatus.Draft);
         });
+
+        test('should resolve constructionLogPath when file exists', async () => {
+            // Create workspace structure with memory-bank
+            const workspacePath = tempDir;
+            const intentPath = path.join(workspacePath, 'memory-bank', 'intents', '001-test-intent');
+            const unitPath = path.join(intentPath, 'units', '001-test-unit');
+            const boltPath = path.join(workspacePath, 'memory-bank', 'bolts', 'bolt-test-1');
+
+            fs.mkdirSync(unitPath, { recursive: true });
+            fs.mkdirSync(boltPath, { recursive: true });
+
+            // Create construction log
+            createFile(path.join(unitPath, 'construction-log.md'), `---
+unit: 001-test-unit
+intent: 001-test-intent
+---
+# Construction Log`);
+
+            // Create bolt referencing the unit/intent
+            createFile(path.join(boltPath, 'bolt.md'), `---
+type: simple-construction-bolt
+status: complete
+unit: 001-test-unit
+intent: 001-test-intent
+---
+# Bolt`);
+
+            const result = await parseBolt(boltPath, workspacePath);
+
+            assert.ok(result);
+            assert.ok(result.constructionLogPath);
+            assert.strictEqual(
+                result.constructionLogPath,
+                path.join(unitPath, 'construction-log.md')
+            );
+        });
+
+        test('should not set constructionLogPath when file does not exist', async () => {
+            const workspacePath = tempDir;
+            const boltPath = path.join(workspacePath, 'memory-bank', 'bolts', 'bolt-test-1');
+
+            fs.mkdirSync(boltPath, { recursive: true });
+
+            // Create bolt but no construction log
+            createFile(path.join(boltPath, 'bolt.md'), `---
+type: simple-construction-bolt
+status: complete
+unit: 001-test-unit
+intent: 001-test-intent
+---
+# Bolt`);
+
+            const result = await parseBolt(boltPath, workspacePath);
+
+            assert.ok(result);
+            assert.strictEqual(result.constructionLogPath, undefined);
+        });
+
+        test('should not set constructionLogPath when unit is missing', async () => {
+            const workspacePath = tempDir;
+            const boltPath = path.join(workspacePath, 'memory-bank', 'bolts', 'bolt-test-1');
+
+            fs.mkdirSync(boltPath, { recursive: true });
+
+            // Create bolt without unit field
+            createFile(path.join(boltPath, 'bolt.md'), `---
+type: simple-construction-bolt
+status: complete
+intent: 001-test-intent
+---
+# Bolt`);
+
+            const result = await parseBolt(boltPath, workspacePath);
+
+            assert.ok(result);
+            assert.strictEqual(result.constructionLogPath, undefined);
+        });
+
+        test('should not set constructionLogPath when intent is missing', async () => {
+            const workspacePath = tempDir;
+            const boltPath = path.join(workspacePath, 'memory-bank', 'bolts', 'bolt-test-1');
+
+            fs.mkdirSync(boltPath, { recursive: true });
+
+            // Create bolt without intent field
+            createFile(path.join(boltPath, 'bolt.md'), `---
+type: simple-construction-bolt
+status: complete
+unit: 001-test-unit
+---
+# Bolt`);
+
+            const result = await parseBolt(boltPath, workspacePath);
+
+            assert.ok(result);
+            assert.strictEqual(result.constructionLogPath, undefined);
+        });
+
+        test('should not set constructionLogPath when workspacePath is not provided', async () => {
+            const boltPath = path.join(tempDir, 'bolt-test-1');
+            fs.mkdirSync(boltPath, { recursive: true });
+
+            createFile(path.join(boltPath, 'bolt.md'), `---
+type: simple-construction-bolt
+status: complete
+unit: 001-test-unit
+intent: 001-test-intent
+---
+# Bolt`);
+
+            // Call without workspacePath
+            const result = await parseBolt(boltPath);
+
+            assert.ok(result);
+            assert.strictEqual(result.constructionLogPath, undefined);
+        });
     });
 
     suite('parseStandard', () => {

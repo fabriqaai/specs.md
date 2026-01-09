@@ -235,4 +235,51 @@ See `/dev_release_guide.md` for full workflow documentation.
 
 ---
 
-*Last updated: 2025-12-25 - Added semantic versioning commit guidelines*
+## 10. **Testing Requirements**
+
+**MANDATORY**: Always run tests for projects with code changes before considering work complete.
+
+### Test Commands by Project
+
+| Project | Directory | Test Command | Framework |
+|---------|-----------|--------------|-----------|
+| **NPM Package** | `src/` | `cd src && npm run test` | Vitest |
+| **VS Code Extension** | `vs-code-extension/` | `cd vs-code-extension && npm run test` | Mocha |
+
+### When to Run Tests
+
+Run tests when you have made changes to:
+- Any `.ts` or `.js` files in the respective project
+- Configuration files that affect runtime behavior
+- Dependencies or imports
+
+### Testing Workflow
+
+1. **Before committing**: Always run the test suite for any project you modified
+2. **After fixing bugs**: Run tests to verify the fix and prevent regressions
+3. **After refactoring**: Ensure no tests are broken by the changes
+4. **When adding features**: Write tests first or alongside the feature, then run the full suite
+
+### Test Commands Quick Reference
+
+```bash
+# Run NPM package tests (src/)
+cd src && npm run test
+
+# Run VS Code extension tests
+cd vs-code-extension && npm run test
+
+# Run all validation (tests + linting) for NPM package
+cd src && npm run validate:all
+```
+
+### Handling Test Failures
+
+- **DO NOT** commit code with failing tests
+- **DO NOT** skip tests without explicit user approval
+- If tests fail, fix the issues before proceeding
+- Report test failures to the user with clear error messages
+
+---
+
+*Last updated: 2026-01-09 - Added testing requirements section*

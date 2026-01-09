@@ -229,6 +229,9 @@ async function installFlow(flowKey, toolKeys) {
   if (await fs.pathExists(path.join(flowPath, 'shared'))) {
     await fs.copy(path.join(flowPath, 'shared'), path.join(targetFlowDir, 'shared'));
   }
+  if (await fs.pathExists(path.join(flowPath, 'scripts'))) {
+    await fs.copy(path.join(flowPath, 'scripts'), path.join(targetFlowDir, 'scripts'));
+  }
 
   // Copy config files
   if (await fs.pathExists(path.join(flowPath, 'memory-bank.yaml'))) {
@@ -249,20 +252,6 @@ async function installFlow(flowKey, toolKeys) {
   }
 
   CLIUtils.displayStatus('', 'Installed flow resources', 'success');
-
-  // Step 2.5: Install local scripts for deterministic operations
-  // These scripts are version-matched to the installed specsmd version
-  const scriptsDir = path.join(specsmdDir, 'scripts');
-  await fs.ensureDir(scriptsDir);
-
-  const sourceScriptsDir = path.join(__dirname, '..', 'scripts');
-  if (await fs.pathExists(sourceScriptsDir)) {
-    await fs.copy(sourceScriptsDir, scriptsDir);
-    CLIUtils.displayStatus('', 'Installed local scripts', 'success');
-  }
-
-  // Note: Scripts are invoked directly via relative path (e.g., node .specsmd/scripts/bolt-complete.js)
-  // No npm scripts added to package.json to avoid dependency on package.json for execution
 
   // NOTE: memory-bank/ is NOT created during installation
   // It will be created when user runs project-init

@@ -224,6 +224,8 @@ export interface CompletedBoltData {
     relativeTime: string;
     path: string;
     files: ArtifactFileData[];
+    /** Path to the unit's construction log file (if exists) */
+    constructionLogPath?: string;
 }
 
 /**

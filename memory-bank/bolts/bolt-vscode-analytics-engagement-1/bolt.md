@@ -3,24 +3,28 @@ id: bolt-vscode-analytics-engagement-1
 unit: 003-engagement-events
 intent: 012-vscode-extension-analytics
 type: simple-construction-bolt
-status: planned
+status: complete
 stories:
   - 001-track-tab-navigation
   - 002-track-bolt-actions
   - 003-track-artifact-opened
   - 004-track-filter-changes
-created: 2025-01-08T12:50:00Z
-started: null
-completed: null
+created: 2025-01-08T12:50:00.000Z
+started: 2025-01-09T10:00:00.000Z
+completed: "2026-01-08T22:34:06Z"
 current_stage: null
-stages_completed: []
-
+stages_completed:
+  - name: plan
+    completed: 2025-01-09T10:15:00.000Z
+    artifact: implementation-plan.md
+  - name: implement
+    completed: 2025-01-09T10:30:00.000Z
+    artifact: implementation-walkthrough.md
 requires_bolts:
   - bolt-vscode-analytics-core-1
 enables_bolts: []
 requires_units: []
 blocks: false
-
 complexity:
   avg_complexity: 1
   avg_uncertainty: 1

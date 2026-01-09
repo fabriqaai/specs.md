@@ -15,7 +15,7 @@ import { ValidationIssues, readFlowFile } from './helpers';
 
 const ROOT_DIR = path.resolve(__dirname, '../../..');
 const FLOWS_PATH = path.join(ROOT_DIR, 'flows/aidlc');
-const SCRIPTS_PATH = path.join(ROOT_DIR, 'scripts');
+const SCRIPTS_PATH = path.join(FLOWS_PATH, 'scripts');
 
 let skillFiles: string[] = [];
 

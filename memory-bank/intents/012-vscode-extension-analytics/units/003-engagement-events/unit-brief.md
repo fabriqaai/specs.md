@@ -2,9 +2,9 @@
 unit: 003-engagement-events
 intent: 012-vscode-extension-analytics
 phase: inception
-status: ready
-created: 2025-01-08T12:20:00Z
-updated: 2025-01-08T12:20:00Z
+status: complete
+created: 2025-01-08T12:20:00.000Z
+updated: 2025-01-08T12:20:00.000Z
 ---
 
 # Unit Brief: Engagement Events

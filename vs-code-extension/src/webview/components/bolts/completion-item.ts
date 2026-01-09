@@ -26,6 +26,8 @@ export interface CompletedBoltData {
     relativeTime: string;
     path: string;
     files: ArtifactFileData[];
+    /** Path to the unit's construction log file (if exists) */
+    constructionLogPath?: string;
 }
 
 /**
@@ -223,6 +225,8 @@ export class CompletionItem extends BaseElement {
         }
 
         const hasFiles = this.bolt.files && this.bolt.files.length > 0;
+        const hasConstructionLog = !!this.bolt.constructionLogPath;
+        const hasExpandableContent = hasFiles || hasConstructionLog;
 
         return html`
             <div class="header" @click=${this._toggleExpand}>
@@ -230,7 +234,7 @@ export class CompletionItem extends BaseElement {
                 <div class="info">
                     <div class="name">
                         ${this.bolt.name}
-                        ${hasFiles ? html`
+                        ${hasExpandableContent ? html`
                             <span class="expand-icon ${this._expanded ? 'expanded' : ''}">&#9654;</span>
                         ` : ''}
                     </div>
@@ -240,16 +244,26 @@ export class CompletionItem extends BaseElement {
                 </div>
                 <button class="open-btn" @click=${this._handleOpenBolt} title="Open bolt.md">🔍</button>
             </div>
-            ${hasFiles ? html`
+            ${hasExpandableContent ? html`
                 <div class="files-section ${this._expanded ? 'expanded' : ''}">
-                    <div class="files-header">Artifacts</div>
-                    ${this.bolt.files.map(file => html`
-                        <div class="file-item" @click=${(e: Event) => this._handleFileClick(e, file.path)}>
-                            <span class="file-icon">${this._getFileIcon(file.type)}</span>
-                            <span class="file-name">${file.name}</span>
-                            <span class="file-type">${file.type}</span>
+                    ${hasFiles ? html`
+                        <div class="files-header">Artifacts</div>
+                        ${this.bolt.files.map(file => html`
+                            <div class="file-item" @click=${(e: Event) => this._handleFileClick(e, file.path)}>
+                                <span class="file-icon">${this._getFileIcon(file.type)}</span>
+                                <span class="file-name">${file.name}</span>
+                                <span class="file-type">${file.type}</span>
+                            </div>
+                        `)}
+                    ` : ''}
+                    ${hasConstructionLog ? html`
+                        <div class="files-header">Unit Artifacts</div>
+                        <div class="file-item" @click=${(e: Event) => this._handleFileClick(e, this.bolt.constructionLogPath!)}>
+                            <span class="file-icon">📋</span>
+                            <span class="file-name">construction-log.md</span>
+                            <span class="file-type">construction-log</span>
                         </div>
-                    `)}
+                    ` : ''}
                 </div>
             ` : html`
                 <div class="files-section ${this._expanded ? 'expanded' : ''}">

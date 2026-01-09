@@ -115,11 +115,11 @@
  *
  *   From agent skill (bolt-start.md Step 10):
  *
- *     node .specsmd/scripts/bolt-complete.js 016-analytics-tracker
+ *     node .specsmd/aidlc/scripts/bolt-complete.js 016-analytics-tracker
  *
  *   With optional stage name:
  *
- *     node .specsmd/scripts/bolt-complete.js 016-analytics-tracker --last-stage test
+ *     node .specsmd/aidlc/scripts/bolt-complete.js 016-analytics-tracker --last-stage test
  *
  * ═══════════════════════════════════════════════════════════════════════════════
  */

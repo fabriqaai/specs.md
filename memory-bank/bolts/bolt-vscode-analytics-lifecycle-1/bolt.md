@@ -3,24 +3,28 @@ id: bolt-vscode-analytics-lifecycle-1
 unit: 002-lifecycle-events
 intent: 012-vscode-extension-analytics
 type: simple-construction-bolt
-status: planned
+status: complete
 stories:
   - 001-track-extension-activation
   - 002-track-welcome-view-funnel
   - 003-detect-first-time-installation
   - 004-track-categorize-errors
-created: 2025-01-08T12:50:00Z
-started: null
-completed: null
+created: 2025-01-08T12:50:00.000Z
+started: 2026-01-09T15:30:00.000Z
+completed: "2026-01-08T22:16:49Z"
 current_stage: null
-stages_completed: []
-
+stages_completed:
+  - name: plan
+    completed: 2026-01-09T15:40:00.000Z
+    artifact: implementation-plan.md
+  - name: implement
+    completed: 2026-01-09T16:05:00.000Z
+    artifact: implementation-walkthrough.md
 requires_bolts:
   - bolt-vscode-analytics-core-1
 enables_bolts: []
 requires_units: []
 blocks: false
-
 complexity:
   avg_complexity: 2
   avg_uncertainty: 1

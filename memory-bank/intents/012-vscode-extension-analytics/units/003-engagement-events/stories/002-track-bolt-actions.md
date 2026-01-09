@@ -3,8 +3,9 @@ story: 002-track-bolt-actions
 unit: 003-engagement-events
 intent: 012-vscode-extension-analytics
 priority: should
-status: planned
-created: 2025-01-08T12:40:00Z
+status: complete
+created: 2025-01-08T12:40:00.000Z
+implemented: true
 ---
 
 # Story: Track Bolt Actions

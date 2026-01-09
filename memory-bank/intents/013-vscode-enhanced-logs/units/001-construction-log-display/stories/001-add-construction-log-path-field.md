@@ -2,11 +2,11 @@
 id: 001-add-construction-log-path-field
 unit: 001-construction-log-display
 intent: 013-vscode-enhanced-logs
-status: draft
+status: complete
 priority: must
-created: 2026-01-09T07:10:00Z
+created: 2026-01-09T07:10:00.000Z
 assigned_bolt: 017-construction-log-display
-implemented: false
+implemented: true
 ---
 
 # Story: 001-add-construction-log-path-field

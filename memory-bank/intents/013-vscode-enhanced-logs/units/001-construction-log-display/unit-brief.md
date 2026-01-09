@@ -2,9 +2,9 @@
 unit: 001-construction-log-display
 intent: 013-vscode-enhanced-logs
 phase: inception
-status: ready
-created: 2026-01-09T07:05:00Z
-updated: 2026-01-09T07:05:00Z
+status: complete
+created: 2026-01-09T07:05:00.000Z
+updated: 2026-01-09T07:05:00.000Z
 unit_type: frontend
 bolt_type: simple-construction-bolt
 ---

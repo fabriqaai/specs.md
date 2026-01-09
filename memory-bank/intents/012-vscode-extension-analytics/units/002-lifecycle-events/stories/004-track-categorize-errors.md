@@ -3,8 +3,9 @@ story: 004-track-categorize-errors
 unit: 002-lifecycle-events
 intent: 012-vscode-extension-analytics
 priority: should
-status: planned
-created: 2025-01-08T12:35:00Z
+status: complete
+created: 2025-01-08T12:35:00.000Z
+implemented: true
 ---
 
 # Story: Track and Categorize Errors

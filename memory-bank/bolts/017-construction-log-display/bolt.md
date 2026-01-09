@@ -3,22 +3,29 @@ id: 017-construction-log-display
 unit: 001-construction-log-display
 intent: 013-vscode-enhanced-logs
 type: simple-construction-bolt
-status: planned
+status: complete
 stories:
   - 001-add-construction-log-path-field
   - 002-resolve-construction-log-path
   - 003-display-unit-artifacts-section
-created: 2026-01-09T07:15:00Z
-started: null
-completed: null
+created: 2026-01-09T07:15:00.000Z
+started: 2026-01-09T12:30:00.000Z
+completed: "2026-01-09T10:40:36Z"
 current_stage: null
-stages_completed: []
-
+stages_completed:
+  - name: plan
+    completed: 2026-01-09T12:40:00.000Z
+    artifact: implementation-plan.md
+  - name: implement
+    completed: 2026-01-09T12:55:00.000Z
+    artifact: implementation-walkthrough.md
+  - name: test
+    completed: 2026-01-09T13:05:00.000Z
+    artifact: test-walkthrough.md
 requires_bolts: []
 enables_bolts: []
 requires_units: []
 blocks: false
-
 complexity:
   avg_complexity: 1
   avg_uncertainty: 1

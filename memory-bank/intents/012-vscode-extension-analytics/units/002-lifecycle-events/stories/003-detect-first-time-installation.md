@@ -3,8 +3,9 @@ story: 003-detect-first-time-installation
 unit: 002-lifecycle-events
 intent: 012-vscode-extension-analytics
 priority: must
-status: planned
-created: 2025-01-08T12:35:00Z
+status: complete
+created: 2025-01-08T12:35:00.000Z
+implemented: true
 ---
 
 # Story: Detect First-Time Installation

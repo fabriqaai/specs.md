@@ -194,7 +194,7 @@ If the bolt type specifies automatic validation criteria, follow those rules.
 ┌─────────────────────────────────────────────────────────────┐
 │  FINAL STAGE DETECTED                                       │
 │  → Re-read Step 10 NOW                                     │
-│  → You MUST run: node .specsmd/scripts/bolt-complete.js    │
+│  → You MUST run: node .specsmd/aidlc/scripts/bolt-complete.js │
 │  → Do NOT manually edit story files                        │
 └─────────────────────────────────────────────────────────────┘
 ```
@@ -245,7 +245,7 @@ Do NOT manually edit story files - the script handles everything.
 **Run this command:**
 
 ```bash
-node .specsmd/scripts/bolt-complete.js {bolt-id}
+node .specsmd/aidlc/scripts/bolt-complete.js {bolt-id}
 ```
 
 **What this command does (deterministically):**
