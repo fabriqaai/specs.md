@@ -13,10 +13,14 @@ export interface StoryData {
     id: string;
     name: string;
     status: 'complete' | 'active' | 'pending';
+    /** Path to the story file for click-to-open */
+    path?: string;
 }
 
 /**
  * Stories list component.
+ *
+ * @fires open-file - When a story with a path is clicked
  *
  * @example
  * ```html
@@ -117,6 +121,37 @@ export class StoriesList extends BaseElement {
                 color: var(--status-active);
                 font-weight: 500;
             }
+
+            /* Magnifier button - appears on hover */
+            .name {
+                flex: 1;
+            }
+
+            .open-btn {
+                background: none;
+                border: none;
+                color: var(--description-foreground);
+                cursor: pointer;
+                padding: 2px 4px;
+                font-size: 11px;
+                border-radius: 3px;
+                opacity: 0;
+                transition: all 0.15s;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                flex-shrink: 0;
+            }
+
+            .story:hover .open-btn {
+                opacity: 0.7;
+            }
+
+            .open-btn:hover {
+                opacity: 1 !important;
+                background: var(--vscode-list-hoverBackground);
+                color: var(--foreground);
+            }
         `
     ];
 
@@ -137,10 +172,29 @@ export class StoriesList extends BaseElement {
                             ${story.status === 'complete' ? '✓' : story.status === 'active' ? '●' : ''}
                         </div>
                         <span class="name">${story.id}</span>
+                        ${story.path ? html`
+                            <button
+                                class="open-btn"
+                                @click=${(e: Event) => this._handleStoryClick(e, story.path!)}
+                                title="Open story file"
+                            >🔍</button>
+                        ` : ''}
                     </div>
                 `)}
             </div>
         `;
+    }
+
+    /**
+     * Handle story click - dispatch open-file event.
+     */
+    private _handleStoryClick(e: Event, path: string): void {
+        e.stopPropagation();
+        this.dispatchEvent(new CustomEvent('open-file', {
+            detail: { path },
+            bubbles: true,
+            composed: true
+        }));
     }
 }
 

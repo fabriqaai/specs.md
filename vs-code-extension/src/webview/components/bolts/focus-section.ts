@@ -17,6 +17,7 @@ import type { ActiveBoltData } from './focus-card.js';
  * @fires continue-bolt - When Continue button is clicked
  * @fires view-files - When Files button is clicked
  * @fires open-bolt - When magnifier button is clicked
+ * @fires open-file - When a story file is clicked (bubbles from stories-list)
  *
  * @example
  * ```html

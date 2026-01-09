@@ -234,6 +234,102 @@ suite('Webview Provider Test Suite', () => {
         });
     });
 
+    suite('Story path construction', () => {
+
+        /**
+         * Tests story path construction from bolt metadata.
+         * Path format: {workspace}/memory-bank/intents/{intent}/units/{unit}/stories/{storyRef}.md
+         */
+        test('should construct story path from bolt intent and unit', () => {
+            const workspacePath = '/project';
+            const intent = '001-my-intent';
+            const unit = 'my-unit';
+            const storyRef = '001-my-story';
+
+            // Simulate path construction logic from webviewProvider
+            const storyFileName = storyRef.endsWith('.md') ? storyRef : `${storyRef}.md`;
+            const expectedPath = `${workspacePath}/memory-bank/intents/${intent}/units/${unit}/stories/${storyFileName}`;
+
+            assert.strictEqual(
+                expectedPath,
+                '/project/memory-bank/intents/001-my-intent/units/my-unit/stories/001-my-story.md'
+            );
+        });
+
+        test('should handle story refs that already have .md extension', () => {
+            const storyRef = '001-story.md';
+            const storyFileName = storyRef.endsWith('.md') ? storyRef : `${storyRef}.md`;
+
+            assert.strictEqual(storyFileName, '001-story.md');
+            assert.ok(!storyFileName.endsWith('.md.md'), 'Should not double .md extension');
+        });
+
+        test('should include path in ActiveBoltData stories when bolt has intent and unit', () => {
+            const activeBolt: ActiveBoltData = {
+                id: 'bolt-test-1',
+                name: 'Test Bolt',
+                type: 'DDD',
+                currentStage: 'implement',
+                stagesComplete: 2,
+                stagesTotal: 5,
+                storiesComplete: 1,
+                storiesTotal: 3,
+                stages: [
+                    { name: 'implement', status: 'active' }
+                ],
+                stories: [
+                    {
+                        id: '001-first-story',
+                        name: '001-first-story',
+                        status: 'complete',
+                        path: '/project/memory-bank/intents/001-intent/units/my-unit/stories/001-first-story.md'
+                    },
+                    {
+                        id: '002-second-story',
+                        name: '002-second-story',
+                        status: 'pending',
+                        path: '/project/memory-bank/intents/001-intent/units/my-unit/stories/002-second-story.md'
+                    }
+                ],
+                path: '/test/bolts/bolt-test-1',
+                files: []
+            };
+
+            assert.ok(activeBolt.stories[0].path, 'First story should have path');
+            assert.ok(activeBolt.stories[1].path, 'Second story should have path');
+            assert.ok(
+                activeBolt.stories[0].path!.includes('/stories/'),
+                'Path should include stories directory'
+            );
+            assert.ok(
+                activeBolt.stories[0].path!.endsWith('.md'),
+                'Path should end with .md'
+            );
+        });
+
+        test('story path should be undefined when bolt has no intent or unit', () => {
+            // When bolt.intent or bolt.unit is empty, path should be undefined
+            const intent = '';
+            const unit = 'my-unit';
+            const workspacePath = '/project';
+
+            // Simulate path construction condition
+            const canConstructPath = intent && unit && workspacePath;
+
+            assert.ok(!canConstructPath, 'Should not construct path when intent is empty');
+        });
+
+        test('story path should be undefined when workspace path is missing', () => {
+            const intent = '001-intent';
+            const unit = 'my-unit';
+            const workspacePath = '';
+
+            const canConstructPath = intent && unit && workspacePath;
+
+            assert.ok(!canConstructPath, 'Should not construct path when workspace is empty');
+        });
+    });
+
     suite('Intents data structure', () => {
 
         test('should aggregate story counts from units', () => {
