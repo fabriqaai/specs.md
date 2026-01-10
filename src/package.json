@@ -61,7 +61,7 @@
     "markdownlint": "^0.40.0",
     "markdownlint-cli": "^0.46.0",
     "remark-parse": "^11.0.0",
-    "semantic-release": "^24.2.0",
+    "semantic-release": "^25.0.2",
     "typescript": "^5.9.3",
     "unified": "^11.0.5",
     "unist-util-visit": "^5.0.0",
