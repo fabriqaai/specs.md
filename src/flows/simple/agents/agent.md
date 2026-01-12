@@ -150,9 +150,49 @@ Recognize these as feedback (NOT approval):
 
 ## Entry Points
 
+### No Arguments - Multi-Spec Handling
+User: `/specsmd-agent` (with no arguments)
+Action:
+1. Scan `memory-bank/specs/` for existing spec directories
+2. If NO specs exist:
+   - Prompt: "What feature would you like to spec out?"
+3. If ONE spec exists:
+   - Auto-select it, detect state, resume at appropriate phase
+4. If MULTIPLE specs exist:
+   - List all specs with their status (see format below)
+   - Ask user to choose or create new
+
+**Status display format:**
+```
+Existing specs:
+| Spec | Status |
+|------|--------|
+| user-auth | Execution (3/10 tasks done) |
+| payment-flow | Design Pending |
+| dashboard | Requirements In Progress |
+
+Which spec would you like to work on? Or describe a new feature to create.
+```
+
 ### New Spec
 User: "Create a spec for [feature idea]"
 Action: Start requirements phase with derived feature name
+
+**Feature Name Derivation Rules:**
+1. Convert to kebab-case (lowercase, hyphens)
+2. Remove articles (a, an, the)
+3. Use nouns over verbs
+4. Max 3-4 words
+5. Be specific but concise
+
+**Examples:**
+| User Input | Derived Name |
+|------------|--------------|
+| "Add user authentication" | `user-auth` |
+| "Create a dashboard for analytics" | `analytics-dashboard` |
+| "Implement payment processing with Stripe" | `stripe-payment` |
+| "Build a file upload feature" | `file-upload` |
+| "I want to track user sessions" | `session-tracking` |
 
 ### Resume Spec
 User: "Continue working on [feature]" or just "/specsmd-agent"
@@ -250,15 +290,45 @@ Action: Load all specs, recommend or execute requested task
 
 ```mermaid
 stateDiagram-v2
+  [*] --> ListSpecs : No Args
   [*] --> Requirements : New Spec
+  ListSpecs --> Requirements : Create New
+  ListSpecs --> Resume : Select Existing
+
+  Resume --> Requirements : req only
+  Resume --> Design : req+design
+  Resume --> Execute : all files
+
   Requirements --> ReviewReq : Complete
   ReviewReq --> Requirements : Feedback
   ReviewReq --> Design : Approved
+
   Design --> ReviewDesign : Complete
   ReviewDesign --> Design : Feedback
+  ReviewDesign --> Requirements : Req Gap Found
   ReviewDesign --> Tasks : Approved
+
   Tasks --> ReviewTasks : Complete
   ReviewTasks --> Tasks : Feedback
+  ReviewTasks --> Design : Design Gap Found
   ReviewTasks --> Execute : Approved
+
+  Execute --> Execute : Next Task
+  Execute --> Tasks : Task Gap Found
+  Execute --> Design : Design Flaw Found
   Execute --> [*] : All Tasks Done
 ```
+
+## Phase Regression Triggers
+
+Suggest returning to a previous phase when:
+
+| Current Phase | Trigger | Action |
+|---------------|---------|--------|
+| Design | Requirement is ambiguous or missing | "I noticed we need clarity on X. Should we update requirements?" |
+| Design | Feature scope expanded | "This requires new requirements. Should we add them?" |
+| Tasks | Design doesn't cover all requirements | "Design is missing coverage for req X. Should we update design?" |
+| Tasks | Implementation approach unclear | "The design needs more detail on X. Should we update it?" |
+| Execute | Task is blocked by missing task | "We need an additional task for X. Should I add it?" |
+| Execute | Implementation reveals design flaw | "The design for X won't work because Y. Should we revise?" |
+| Execute | Requirement can't be satisfied | "Requirement X isn't feasible. Should we update requirements?" |

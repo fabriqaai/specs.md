@@ -36,9 +36,20 @@ Execute implementation tasks from an approved tasks.md file. This is the post-sp
 If user specifies a task:
 - Execute that specific task
 
-If user asks for recommendation:
-- Find first unchecked task that has all prerequisites completed
-- Recommend it to user for confirmation
+If user asks for recommendation ("what's next?", "continue", etc.):
+- Use the Task Recommendation Algorithm below
+- Present the recommended task to user for confirmation
+
+### Task Recommendation Algorithm
+
+1. Parse all tasks from tasks.md
+2. Build task list with status (complete/incomplete)
+3. For each incomplete task in order:
+   - If task has sub-tasks, check if all previous sub-tasks are complete
+   - If task has no sub-tasks, check if all previous numbered tasks are complete
+   - Skip optional tasks (`*`) unless user specifically asks
+4. Return first incomplete task with all prerequisites met
+5. If no incomplete tasks remain, announce completion (see Output section)
 
 ### Task Execution
 
@@ -50,12 +61,21 @@ If user asks for recommendation:
    - Interfaces to implement
    - Data models involved
 3. **Implement the task**:
-   - Write/modify code as needed
+   - Write MINIMAL code needed to satisfy the task
    - Follow design specifications
    - Match coding standards if defined
-4. **Mark task complete**:
+4. **Verify implementation**:
+   - Check code satisfies referenced requirements
+   - Run relevant tests if they exist for this component
+   - If tests fail, fix before proceeding
+5. **Mark task complete**:
    - Update tasks.md: `- [ ]` → `- [x]`
-5. **STOP and wait for user review**
+   - Only mark complete AFTER verification passes
+6. **Recommend next task**:
+   - Parse remaining incomplete tasks
+   - Identify next task with all prerequisites met
+   - If no tasks remain, announce completion
+7. **STOP and wait for user review**
 
 ## Critical Rules
 
@@ -91,9 +111,27 @@ Changes made:
 - [File 1]: [What was done]
 - [File 2]: [What was done]
 
-The task satisfies requirements: [X.Y, X.Z]
+Verification:
+- Requirements [X.Y, X.Z]: ✓ Satisfied
+- Tests: ✓ Passing (or N/A if no tests for this component)
+
+Next recommended task: [X.Z] - [Task description]
 
 Ready for the next task? Or would you like to review the changes first?
+```
+
+When ALL tasks are complete:
+```
+All tasks complete!
+
+Summary:
+- [X] tasks executed
+- All requirements covered
+- Tests passing
+
+The feature implementation is complete. Consider:
+- Manual testing of the feature
+- Code review before merging
 ```
 
 ## Task Execution Checklist
@@ -108,7 +146,9 @@ Before executing:
 
 After executing:
 - [ ] Code changes complete
+- [ ] Verification passed (requirements + tests)
 - [ ] Task marked `[x]` in tasks.md
+- [ ] Next task recommended (or completion announced)
 - [ ] Summary provided to user
 - [ ] STOPPED - waiting for user
 
@@ -121,6 +161,17 @@ If task cannot be completed:
    - Missing dependency → Execute prerequisite first
    - Design gap → Return to design phase
    - Requirement unclear → Return to requirements phase
+
+## Handling Repeated Failures
+
+If implementation fails twice on the same task:
+1. STOP attempting the same approach
+2. Explain what has been tried and why it failed
+3. Suggest alternatives:
+   - Different implementation approach
+   - Breaking task into smaller sub-tasks
+   - Returning to design for clarification
+4. Ask user for guidance before proceeding
 
 ## Sub-task Handling
 

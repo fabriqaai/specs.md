@@ -54,13 +54,20 @@ Generate an implementation plan with coding tasks based on the approved design. 
 3. **Incremental Progress**
    - Tasks build on previous tasks
    - No orphaned code that isn't integrated
-   - Include "Checkpoint" tasks to verify tests pass
+   - Include "Checkpoint" tasks every 2-3 implementation tasks
 
-4. **Task Format**
+4. **Checkpoint Tasks (REQUIRED)**
+   - Add checkpoint after every 2-3 implementation tasks
+   - Checkpoint MUST run the test suite
+   - If tests fail during checkpoint, fix before proceeding
+   - Checkpoints are BLOCKING (not optional) - do NOT mark with `*`
+   - Format: `- [ ] X. Checkpoint - Verify all tests pass`
+
+5. **Task Format**
    - `- [ ]` for pending, `- [x]` for done
    - `- [ ]*` for optional tasks
 
-5. **Numbering Rules**
+6. **Numbering Rules**
    - Top-level tasks: `1.`, `2.`, `3.`
    - Sub-tasks: `2.1`, `2.2`, `2.3`
    - Maximum 2 levels (no `2.1.1`)
@@ -69,7 +76,7 @@ Generate an implementation plan with coding tasks based on the approved design. 
    - Tasks without sub-tasks are directly executable
    - Use sub-tasks when a feature has 3+ related implementation steps
 
-6. **Approval Gate**
+7. **Approval Gate**
    - Workflow COMPLETE when tasks approved
    - Inform user they can now execute tasks
 

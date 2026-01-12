@@ -63,6 +63,18 @@ EARS (Easy Approach to Requirements Syntax) patterns:
 | **Optional** | WHERE [option], THE [system] SHALL [response] | Feature flags |
 | **Complex** | [WHERE] [WHILE] [WHEN/IF] THE [system] SHALL [response] | Combined conditions |
 
+## INCOSE Quality Rules
+
+Before finalizing requirements, verify each criterion passes these checks:
+
+| Rule | Check | Bad Example | Good Example |
+|------|-------|-------------|--------------|
+| **Singular** | One capability per criterion (no "and") | "System SHALL log and notify" | "System SHALL log" + "System SHALL notify" |
+| **Complete** | All conditions stated | "System SHALL respond quickly" | "System SHALL respond within 200ms" |
+| **Verifiable** | Can be tested/measured | "System SHALL be user-friendly" | "System SHALL complete checkout in ≤3 clicks" |
+| **Unambiguous** | Only one interpretation | "System SHALL handle large files" | "System SHALL handle files up to 100MB" |
+| **Consistent** | No conflicts with other requirements | Req 1: "Always online" + Req 2: "Offline mode" | Reconcile or clarify conditions |
+
 ## Guidelines
 
 1. **Use glossary terms consistently** - Every system/component mentioned should be defined in glossary
