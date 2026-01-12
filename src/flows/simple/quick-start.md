@@ -182,10 +182,9 @@ During execution, only one task per interaction. Review before continuing.
 ## Tips for Success
 
 1. **Be specific** - "User auth with email/password and session management" beats "Login feature"
-2. **Use the glossary** - Define domain terms for consistent language
-3. **Check INCOSE rules** - Singular, Complete, Verifiable, Unambiguous, Consistent
-4. **Include edge cases** - Error scenarios in acceptance criteria
-5. **Review checkpoints** - Verify tests pass during execution
+2. **Check INCOSE rules** - Singular, Complete, Verifiable, Unambiguous, Consistent
+3. **Include edge cases** - Error scenarios in acceptance criteria
+4. **Review checkpoints** - Verify tests pass during execution
 
 ---
 
