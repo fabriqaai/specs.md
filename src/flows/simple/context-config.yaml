@@ -1,0 +1,34 @@
+# Context Configuration for Simple Flow
+# Defines what context the agent should load
+
+# Files to load on agent activation
+context:
+  always_load:
+    - path: ".specsmd/simple/memory-bank.yaml"
+      description: "Storage structure and workflow configuration"
+    - path: ".specsmd/simple/agents/agent.md"
+      description: "Agent definition and behavior rules"
+
+  load_on_phase:
+    requirements:
+      - path: ".specsmd/simple/skills/requirements.md"
+      - path: ".specsmd/simple/templates/requirements-template.md"
+    design:
+      - path: ".specsmd/simple/skills/design.md"
+      - path: ".specsmd/simple/templates/design-template.md"
+      - path: "specs/{feature}/requirements.md"
+    tasks:
+      - path: ".specsmd/simple/skills/tasks.md"
+      - path: ".specsmd/simple/templates/tasks-template.md"
+      - path: "specs/{feature}/requirements.md"
+      - path: "specs/{feature}/design.md"
+    execute:
+      - path: ".specsmd/simple/skills/execute.md"
+      - path: "specs/{feature}/requirements.md"
+      - path: "specs/{feature}/design.md"
+      - path: "specs/{feature}/tasks.md"
+
+# Scan directories on activation
+scan:
+  - path: "specs/"
+    purpose: "Detect existing specs for state detection"

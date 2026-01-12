@@ -322,7 +322,7 @@ For each ADR created, add an entry to `memory-bank/standards/decision-index.md`:
 - **Read when**: {Generate guidance based on the ADR's domain - describe scenarios when agents should read this ADR}
 ```
 
-1. Update frontmatter: increment `total_decisions`, update `last_updated` timestamp
+Update frontmatter: increment `total_decisions`, update `last_updated` timestamp
 
 **"Read when" Guidance Examples**:
 

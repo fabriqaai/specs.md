@@ -1,0 +1,113 @@
+---
+title: "Simple Flow Overview"
+description: "Lightweight spec-driven development for simpler projects"
+---
+
+## What is Simple Flow?
+
+Simple Flow is a lightweight spec-driven development workflow for projects that don't need the full complexity of AI-DLC. It guides you through three phases to transform a feature idea into an actionable implementation plan.
+
+<Info>
+**Think of it as**: Kiro-style spec-driven development that works with any AI coding tool—Claude Code, Cursor, GitHub Copilot, and more.
+</Info>
+
+---
+
+## Three Phases
+
+| Phase | Output | Purpose |
+|-------|--------|---------|
+| **Requirements** | `requirements.md` | Define what to build with user stories and EARS criteria |
+| **Design** | `design.md` | Create technical design with architecture and Mermaid diagrams |
+| **Tasks** | `tasks.md` | Generate implementation checklist with coding tasks |
+
+One agent (`/specsmd-agent`) guides you through all phases.
+
+---
+
+## When to Use Simple Flow
+
+<CardGroup cols={2}>
+  <Card title="Use Simple Flow when:" icon="check">
+    - Building prototypes or MVPs
+    - Working on small-to-medium features
+    - Solo or small team projects
+    - You want minimal overhead
+    - You need quick feature specs
+  </Card>
+  <Card title="Use AI-DLC Flow when:" icon="building">
+    - Building complex, multi-team systems
+    - You need DDD integration and domain modeling
+    - Managing architectural trade-offs
+    - Regulated or enterprise environments
+    - You want Mob rituals for team alignment
+  </Card>
+</CardGroup>
+
+<Info>
+**Independent Flows**: Simple Flow and AI-DLC are independent flows designed for different project types. Install one or the other based on your needs—not both. There is no "upgrade path" from Simple Flow to AI-DLC; choose the right flow for your project from the start.
+</Info>
+
+---
+
+## Key Differences from AI-DLC
+
+| Aspect | Simple Flow | AI-DLC Flow |
+|--------|-------------|-------------|
+| **Phases** | 3: Requirements → Design → Tasks | 3: Inception → Construction → Operations |
+| **Agents** | 1 (Agent) | 4 (Master, Inception, Construction, Operations) |
+| **Output** | `specs/` folder with 3 markdown files | Full `memory-bank/` hierarchy |
+| **DDD Stages** | Not included | Full DDD stages in Construction |
+| **Bolts** | No concept | Time-boxed execution sessions |
+| **Hierarchy** | Flat (`specs/{feature}/`) | Nested (intents/units/stories) |
+| **Overhead** | Minimal | Significant structure |
+
+---
+
+## Output Structure
+
+Simple Flow creates a clean, flat structure:
+
+```
+specs/
+└── {feature-name}/
+    ├── requirements.md    # What to build
+    ├── design.md          # How to build it
+    └── tasks.md           # Step-by-step plan
+```
+
+No complex memory-bank hierarchy—just specs.
+
+---
+
+## Core Principles
+
+### Generate First, Ask Later
+
+The agent generates a draft document immediately based on your feature idea. This serves as a starting point for discussion rather than requiring extensive Q&A upfront.
+
+### Explicit Approval Gates
+
+You must explicitly approve each phase before proceeding. Say "yes", "approved", or "looks good" to continue. Any feedback triggers revision.
+
+### One Phase at a Time
+
+The agent focuses on one document per interaction. Complete each phase before moving to the next.
+
+### One Task at a Time
+
+During execution, only one task is implemented per interaction. This allows careful review of each change.
+
+---
+
+## Getting Started
+
+<CardGroup cols={2}>
+  <Card title="Quick Start" icon="rocket" href="/simple-flow/quick-start">
+    Get started with Simple Flow in minutes
+  </Card>
+  <Card title="Three Phases" icon="list-check" href="/simple-flow/three-phases">
+    Learn about Requirements, Design, and Tasks
+  </Card>
+</CardGroup>
+

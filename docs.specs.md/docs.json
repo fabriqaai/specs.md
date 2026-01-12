@@ -113,6 +113,14 @@
             ]
           },
           {
+            "group": "Simple Flow",
+            "pages": [
+              "simple-flow/overview",
+              "simple-flow/three-phases",
+              "simple-flow/quick-start"
+            ]
+          },
+          {
             "group": "Compare",
             "pages": [
               "compare/overview",
@@ -125,6 +133,7 @@
           {
             "group": "Resources",
             "pages": [
+              "changelog",
               "faq",
               "feedback",
               "community"

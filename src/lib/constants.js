@@ -17,12 +17,10 @@ const FLOWS = {
         description: 'AI-Driven Development Life Cycle - Best for greenfield projects with AI-native development',
         path: 'aidlc'
     },
-    agile: {
-        name: 'Agile',
-        description: 'Sprint-based Agile development - Best for iterative development with changing requirements',
-        path: 'agile',
-        disabled: true, // Not implemented yet
-        message: '(Coming soon)'
+    simple: {
+        name: 'Simple',
+        description: 'Spec-driven development - Best for quick feature specs without full methodology overhead',
+        path: 'simple'
     }
 };
 

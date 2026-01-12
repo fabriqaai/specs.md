@@ -1,0 +1,215 @@
+---
+title: "Quick Start"
+description: "Get started with Simple Flow in minutes"
+---
+
+## Installation
+
+```bash
+npx specsmd@latest install
+```
+
+Select **Simple** when prompted for the SDLC flow.
+
+The installer will:
+1. Detect available agentic coding tools (Claude Code, Cursor, Kiro, etc.)
+2. Install the spec agent and skills
+3. Set up slash commands for your tools
+
+---
+
+## Your First Spec
+
+### Step 1: Create a New Spec
+
+Open your AI coding tool and invoke the agent:
+
+```
+/specsmd-agent Create a todo app with local storage
+```
+
+The agent will:
+1. Derive a feature name (`todo-app`)
+2. Generate a requirements document
+3. Ask for your approval
+
+### Step 2: Review Requirements
+
+The agent generates:
+
+```markdown
+# Requirements Document
+
+## Introduction
+A simple todo application that allows users to manage their daily tasks...
+
+## Glossary
+- **Todo_System**: The complete todo application
+- **Task**: A single todo item with description and completion status
+- **Task_List**: The collection of all tasks
+
+## Requirements
+
+### Requirement 1
+**User Story:** As a user, I want to add new tasks...
+
+#### Acceptance Criteria
+1. WHEN user types a task and presses Enter, THE Todo_System SHALL create a new task
+2. WHEN user attempts to add empty task, THE Todo_System SHALL prevent addition
+```
+
+**To approve:** Say "yes", "approved", or "looks good"
+
+**To revise:** Provide specific feedback
+
+### Step 3: Review Design
+
+After approval, the agent generates a technical design:
+
+```markdown
+# Design Document
+
+## Overview
+The todo application uses a simple client-side architecture...
+
+## Architecture
+[Mermaid diagram]
+
+## Components
+- TaskInput: Handles new task creation
+- TaskList: Renders all tasks
+- TaskItem: Individual task with actions
+
+## Data Models
+interface Task {
+  id: string;
+  description: string;
+  completed: boolean;
+  createdAt: Date;
+}
+```
+
+### Step 4: Review Tasks
+
+After design approval:
+
+```markdown
+# Implementation Tasks
+
+- [ ] 1. Set up project structure
+  _Requirements: Setup_
+
+- [ ] 2. Create Task data model
+  - [ ] 2.1 Define Task interface
+  - [ ] 2.2 Add validation
+  _Requirements: 1.1_
+
+- [ ] 3. Checkpoint - Verify tests pass
+
+- [ ] 4. Implement TaskInput component
+  _Requirements: 1.1, 1.2_
+```
+
+### Step 5: Execute Tasks
+
+Once tasks are approved:
+
+```
+/specsmd-agent What's the next task?
+```
+
+The agent executes one task, then waits for your review.
+
+---
+
+## Commands Reference
+
+| Action | Command |
+|--------|---------|
+| Create new spec | `/specsmd-agent Create a [feature idea]` |
+| Continue existing | `/specsmd-agent` |
+| Resume specific spec | `/specsmd-agent --spec="todo-app"` |
+| Ask what's next | `/specsmd-agent What's the next task?` |
+| Execute specific task | `/specsmd-agent Execute task 2.1` |
+
+---
+
+## File Structure
+
+After installation:
+
+```
+.specsmd/
+├── manifest.yaml              # Installation manifest
+└── simple/                    # Simple flow resources
+    ├── agents/agent.md        # Agent definition
+    ├── skills/                # Agent skills
+    ├── templates/             # Document templates
+    └── memory-bank.yaml       # Storage schema
+
+specs/                         # Your feature specs
+└── todo-app/
+    ├── requirements.md
+    ├── design.md
+    └── tasks.md
+```
+
+---
+
+## Tips for Success
+
+<AccordionGroup>
+  <Accordion title="Be specific with your feature idea">
+    **Good**: "User auth with email/password and session management"
+
+    **Too vague**: "Login feature"
+
+    The more specific you are, the better the generated specs.
+  </Accordion>
+
+  <Accordion title="Review checkpoints">
+    Checkpoint tasks run the test suite. Don't skip them—they catch issues early.
+  </Accordion>
+
+  <Accordion title="One task at a time (default)">
+    The agent pauses after each task for review. If you're happy with progress, tell it to keep going (e.g., "continue until done", "go yolo").
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Agent doesn't remember context">
+    The agent is stateless—it reads spec files at startup. Ensure documents are saved after each step.
+  </Accordion>
+
+  <Accordion title="Multiple specs exist">
+    Run `/specsmd-agent` without arguments to see all specs and choose which to work on.
+  </Accordion>
+
+  <Accordion title="Want to start over">
+    Delete the spec folder:
+    ```bash
+    rm -rf specs/{feature-name}
+    ```
+  </Accordion>
+
+  <Accordion title="Input too vague">
+    If your feature idea is too vague, the agent will ask a clarifying question before generating. Provide more specific details.
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Three Phases" icon="list-check" href="/simple-flow/three-phases">
+    Deep dive into Requirements, Design, and Tasks
+  </Card>
+  <Card title="Compare with AI-DLC" icon="scale-balanced" href="/simple-flow/overview">
+    When to use Simple Flow vs full AI-DLC
+  </Card>
+</CardGroup>
