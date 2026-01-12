@@ -7,10 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.8] - 2026-01-13
+
 ### Added
 
 - Simple Flow: Lightweight 3-phase workflow (Requirements → Design → Tasks)
 - Simple Flow documentation pages
+- Changelog page in documentation
+- Kiro installer with specs symlink support for Simple Flow
+
+### Changed
+
+- Clarified Simple Flow and AI-DLC as independent flows (not an upgrade path)
+
+### Fixed
+
+- Markdown lint errors in DDD construction bolt template
 
 ## [0.1.7] - 2026-01-10
 
@@ -106,7 +118,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-[Unreleased]: https://github.com/fabriqaai/specs.md/compare/v0.1.7...HEAD
+[Unreleased]: https://github.com/fabriqaai/specs.md/compare/v0.1.8...HEAD
+[0.1.8]: https://github.com/fabriqaai/specs.md/compare/v0.1.7...v0.1.8
 [0.1.7]: https://github.com/fabriqaai/specs.md/compare/v0.1.6...v0.1.7
 [0.1.6]: https://github.com/fabriqaai/specs.md/compare/v0.1.5...v0.1.6
 [0.1.5]: https://github.com/fabriqaai/specs.md/compare/v0.1.4...v0.1.5
