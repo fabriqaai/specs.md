@@ -322,9 +322,10 @@ For each ADR created, add an entry to `memory-bank/standards/decision-index.md`:
 - **Read when**: {Generate guidance based on the ADR's domain - describe scenarios when agents should read this ADR}
 ```
 
-3. Update frontmatter: increment `total_decisions`, update `last_updated` timestamp
+Update frontmatter: increment `total_decisions`, update `last_updated` timestamp
 
 **"Read when" Guidance Examples**:
+
 - "Working on authentication flows or session management"
 - "Implementing caching strategies or data persistence patterns"
 - "Designing API contracts or integration points"
@@ -533,14 +534,17 @@ status: in-progress
 4. Consider these decisions as constraints or guidance for the current work
 
 **Example**: If working on a bolt for "user-service" and the decision index contains:
-```
+
+```text
 ### ADR-001: Use JWT for Authentication
 - **Read when**: Working on authentication flows or user services
 ```
+
 → Load and consider `ADR-001` before starting design work.
 
 **Present relevant ADRs to user** at bolt start:
-```
+
+```text
 ## Relevant Prior Decisions
 
 Found {n} ADR(s) that may apply to this bolt:
