@@ -83,10 +83,12 @@ Generate a technical design document based on approved requirements. This is Pha
 ## Phase Transitions
 
 **Backward**: If user identifies missing requirements:
+
 - "Let's go back to requirements to add [X]"
 - Return to requirements skill, update, get approval, then return here
 
 **Forward**: On explicit approval:
+
 - Proceed to tasks skill to generate implementation plan
 
 ## Template Reference

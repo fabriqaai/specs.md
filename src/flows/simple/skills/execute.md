@@ -34,9 +34,11 @@ Execute implementation tasks from an approved tasks.md file. This is the post-sp
 ### Task Selection
 
 If user specifies a task:
+
 - Execute that specific task
 
 If user asks for recommendation ("what's next?", "continue", etc.):
+
 - Use the Task Recommendation Algorithm below
 - Present the recommended task to user for confirmation
 
@@ -104,7 +106,8 @@ If user asks for recommendation ("what's next?", "continue", etc.):
 ## Output
 
 After task completion:
-```
+
+```text
 Task [X.Y] complete: [Task description]
 
 Changes made:
@@ -121,7 +124,8 @@ Ready for the next task? Or would you like to review the changes first?
 ```
 
 When ALL tasks are complete:
-```
+
+```text
 All tasks complete!
 
 Summary:
@@ -137,6 +141,7 @@ The feature implementation is complete. Consider:
 ## Task Execution Checklist
 
 Before executing:
+
 - [ ] Read requirements.md
 - [ ] Read design.md
 - [ ] Read tasks.md
@@ -145,6 +150,7 @@ Before executing:
 - [ ] Review relevant design sections
 
 After executing:
+
 - [ ] Code changes complete
 - [ ] Verification passed (requirements + tests)
 - [ ] Task marked `[x]` in tasks.md
@@ -155,6 +161,7 @@ After executing:
 ## Handling Blocked Tasks
 
 If task cannot be completed:
+
 1. Do NOT mark as complete
 2. Explain the blocker
 3. Suggest resolution:
@@ -165,6 +172,7 @@ If task cannot be completed:
 ## Handling Repeated Failures
 
 If implementation fails twice on the same task:
+
 1. STOP attempting the same approach
 2. Explain what has been tried and why it failed
 3. Suggest alternatives:
@@ -176,6 +184,7 @@ If implementation fails twice on the same task:
 ## Sub-task Handling
 
 For tasks with sub-tasks (e.g., 2.1, 2.2, 2.3):
+
 - Execute sub-tasks in order
 - Each sub-task is ONE execution
 - Parent task (e.g., 2.) marked complete only when all sub-tasks done

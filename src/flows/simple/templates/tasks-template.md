@@ -55,11 +55,13 @@ Use this template when generating tasks.md for a feature spec.
 ## Task Format Rules
 
 ### Checkbox Format
+
 - `- [ ]` - Pending task
 - `- [x]` - Completed task
 - `- [ ]*` - Optional task (nice-to-have, not blocking)
 
 ### Numbering Rules
+
 - Top-level tasks: `1.`, `2.`, `3.`
 - Sub-tasks: `2.1`, `2.2`, `2.3`
 - Maximum 2 levels (no `2.1.1`)
@@ -69,12 +71,15 @@ Use this template when generating tasks.md for a feature spec.
 - Use sub-tasks when a feature has 3+ related implementation steps
 
 ### Requirement References
+
 - Always include: `_Requirements: X.Y, X.Z_`
 - Reference specific acceptance criteria numbers
 - Every requirement should be covered by at least one task
 
 ### Task Content
+
 Each task should include:
+
 1. **Clear objective** - What to implement
 2. **Implementation details** - Sub-bullets with specifics
 3. **Requirement reference** - Traceability

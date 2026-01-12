@@ -1,0 +1,117 @@
+# Changelog
+
+All notable changes to this project will be documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [Unreleased]
+
+### Added
+
+- Simple Flow: Lightweight 3-phase workflow (Requirements → Design → Tasks)
+- Simple Flow documentation pages
+
+## [0.1.7] - 2026-01-10
+
+### Fixed
+
+- OpenCode installer now uses correct command directory and frontmatter
+
+## [0.1.6] - 2026-01-10
+
+### Added
+
+- VS Code: Markdown editor selection setting
+- VS Code: Clickable stories in bolt widget
+- ADR (Architecture Decision Record) tracking with decision index across bolts
+
+### Fixed
+
+- Markdown lint errors in DDD construction bolt template
+- Security vulnerabilities in dependencies
+
+## [0.1.5] - 2026-01-09
+
+### Added
+
+- VS Code: Construction log display for completed bolts
+- VS Code: Analytics module with lifecycle, engagement, and project metrics tracking
+- VS Code: Open VSX marketplace publishing (works with Cursor, Windsurf, etc.)
+- VS Code: Enhanced logs inception artifacts
+
+### Changed
+
+- Moved scripts into aidlc flow folder for better organization
+
+### Fixed
+
+- Test paths after scripts reorganization
+
+## [0.1.4] - 2026-01-06
+
+### Added
+
+- Contextual options menu (copy, AI tools, feature request)
+- DeepWiki integration for codebase exploration
+- Workflow descriptions for Google Antigravity navigation
+- SEO metadata and social sharing tags to docs
+- Product Hunt launch integration
+
+## [0.1.3] - 2025-12-30
+
+### Added
+
+- Artifacts display in active bolt view
+- Manual workflow dispatch trigger for releases
+- Dev branch auto-publish workflow
+
+### Fixed
+
+- Bolt-start guardrails to prevent skipping story updates
+- Active bolt UI improvements and IDE-agnostic messages
+- Frontmatter validation for bolt creation
+- Geolocation in Mixpanel analytics tracker
+
+## [0.1.2] - 2025-12-28
+
+### Fixed
+
+- Analytics events now properly sent before process exit
+
+## [0.1.1] - 2025-12-27
+
+### Added
+
+- Mixpanel analytics for installer events
+- VS Code extension with bolt visualization and progress tracking
+- Dynamic status discovery for specs filter
+- Extension marketplace publishing workflow
+
+### Fixed
+
+- Intent matching by combined format in selector
+- Markdown lint errors in bolt-plan skill
+
+## [0.1.0] - 2025-12-27
+
+### Added
+
+- Initial release of specsmd
+- AI-DLC Flow with 4 agents (Master, Inception, Construction, Operations)
+- Memory Bank for persistent project context
+- Support for Claude Code, Cursor, GitHub Copilot, and other AI coding tools
+- DDD construction bolt type
+- Installer with automatic tool detection
+
+---
+
+[Unreleased]: https://github.com/fabriqaai/specs.md/compare/v0.1.7...HEAD
+[0.1.7]: https://github.com/fabriqaai/specs.md/compare/v0.1.6...v0.1.7
+[0.1.6]: https://github.com/fabriqaai/specs.md/compare/v0.1.5...v0.1.6
+[0.1.5]: https://github.com/fabriqaai/specs.md/compare/v0.1.4...v0.1.5
+[0.1.4]: https://github.com/fabriqaai/specs.md/compare/v0.1.3...v0.1.4
+[0.1.3]: https://github.com/fabriqaai/specs.md/compare/v0.1.2...v0.1.3
+[0.1.2]: https://github.com/fabriqaai/specs.md/compare/v0.1.1...v0.1.2
+[0.1.1]: https://github.com/fabriqaai/specs.md/compare/v0.1.0...v0.1.1
+[0.1.0]: https://github.com/fabriqaai/specs.md/releases/tag/v0.1.0

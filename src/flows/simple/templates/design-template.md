@@ -28,6 +28,7 @@ graph TD
 ```
 
 **Key Architectural Principles:**
+
 - [Principle 1: e.g., "Single responsibility per module"]
 - [Principle 2: e.g., "Event-driven for loose coupling"]
 - [Principle 3: e.g., "Immediate persistence on state change"]
@@ -39,6 +40,7 @@ graph TD
 [Brief description of component responsibility]
 
 **Key Methods:**
+
 - `methodName(param1: Type, param2: Type): ReturnType` - [Description]
 - `methodName2(): ReturnType` - [Description]
 
@@ -72,6 +74,7 @@ interface EntityName {
 ```
 
 **Validation Rules:**
+
 - `id`: [Validation rule]
 - `field1`: [Validation rule]
 - `field2`: [Validation rule]
@@ -104,12 +107,14 @@ interface EntityName {
 ### Unit Tests
 
 [What to test at unit level]
+
 - [Component 1]: [What to verify]
 - [Component 2]: [What to verify]
 
 ### Integration Tests
 
 [What to test at integration level]
+
 - [Flow 1]: [End-to-end scenario]
 - [Flow 2]: [End-to-end scenario]
 

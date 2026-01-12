@@ -35,22 +35,26 @@ When this command is invoked, the agent should:
 
 ## Usage Examples
 
-```
+```text
 /specsmd-agent Create a todo app with local storage
 ```
+
 → Creates new spec "todo-app", starts requirements phase
 
-```
+```text
 /specsmd-agent --spec="todo-app"
 ```
+
 → Continues existing spec at current phase
 
-```
+```text
 /specsmd-agent --spec="todo-app" --execute
 ```
+
 → Enter task execution mode for completed spec
 
-```
+```text
 /specsmd-agent
 ```
+
 → Lists existing specs or prompts for feature idea

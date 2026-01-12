@@ -45,6 +45,7 @@ Open your AI coding tool and invoke the agent with your feature idea:
 ```
 
 The agent will:
+
 1. Derive a feature name (`user-auth`)
 2. Generate a requirements document
 3. Ask for your approval
@@ -52,6 +53,7 @@ The agent will:
 ### Step 2: Review Requirements
 
 The agent generates:
+
 - **Introduction** - Feature summary
 - **Glossary** - Domain terms
 - **Requirements** - User stories with EARS acceptance criteria
@@ -63,6 +65,7 @@ The agent generates:
 ### Step 3: Review Design
 
 After requirements approval, the agent generates:
+
 - **Architecture** - System overview with Mermaid diagrams
 - **Components** - Interfaces and responsibilities
 - **Data Models** - Types with validation rules
@@ -72,6 +75,7 @@ After requirements approval, the agent generates:
 ### Step 4: Review Tasks
 
 After design approval, the agent generates:
+
 - **Numbered checkbox list** - Incremental coding steps
 - **Requirement references** - Traceability to requirements
 - **Checkpoint tasks** - Verification points
@@ -147,7 +151,8 @@ Requirements use EARS (Easy Approach to Requirements Syntax):
 | **Optional** | WHERE [option], THE [system] SHALL [response] |
 
 Example:
-```
+
+```text
 WHEN user submits login form, THE Auth_System SHALL validate credentials
 IF password is invalid, THEN THE Auth_System SHALL display error message
 ```
@@ -157,15 +162,19 @@ IF password is invalid, THEN THE Auth_System SHALL display error message
 ## Key Principles
 
 ### Generate First, Ask Later
+
 The agent generates a draft immediately. Your feedback refines it.
 
 ### Explicit Approval Required
+
 You must explicitly approve each phase before proceeding.
 
 ### One Phase at a Time
+
 Complete each phase before moving to the next.
 
 ### One Task at a Time
+
 During execution, only one task per interaction. Review before continuing.
 
 ---
@@ -183,15 +192,19 @@ During execution, only one task per interaction. Review before continuing.
 ## Troubleshooting
 
 ### Agent doesn't remember context
+
 The agent is stateless. It reads spec files at startup. Ensure documents are saved.
 
 ### Multiple specs exist
+
 When you run `/specsmd-agent` without arguments, it lists existing specs and asks which to work on.
 
 ### Want to start over
+
 Delete the spec folder: `rm -rf specs/{feature-name}`
 
 ### Get help
+
 Ask the agent: `/specsmd-agent How do I add a new requirement?`
 
 ---

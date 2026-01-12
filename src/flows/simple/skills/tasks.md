@@ -108,7 +108,8 @@ Generate an implementation plan with coding tasks based on the approved design. 
 ## Completion Message
 
 When tasks are approved:
-```
+
+```text
 The spec is complete. You now have:
 - requirements.md - What to build
 - design.md - How to build it
@@ -121,10 +122,12 @@ or I can recommend the next task to work on.
 ## Phase Transitions
 
 **Backward**: If user identifies gaps:
+
 - Design changes → Return to design skill
 - Requirement changes → Return to requirements skill
 
 **Forward**: On approval:
+
 - Workflow complete
 - User can now request task execution
 
