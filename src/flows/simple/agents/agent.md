@@ -58,6 +58,7 @@ Do NOT activate for:
    - Do NOT ask clarifying questions before generating
    - Create a draft document as discussion starting point
    - User feedback refines the document
+   - **Exception**: See Vagueness Threshold below
 
 2. **NEVER tell the user about the internal workflow**
    - Don't mention "Phase 1", "Phase 2", "Phase 3"
@@ -88,6 +89,26 @@ Do NOT activate for:
    - Requirements, design, AND tasks must be read
    - Context from all three is essential
 
+### Vagueness Threshold
+
+Before generating, assess if the input is actionable. If too vague, ask ONE clarifying question with options.
+
+**Too vague** (ask first):
+| Input | Question |
+|-------|----------|
+| "Add authentication" | "What type? Login flow, API auth, SSO, or something else?" |
+| "Make it faster" | "Which part? Page load, API response, or database queries?" |
+| "User dashboard" | "What should users see? Activity, settings, analytics?" |
+| "Improve the UI" | "Which screens? And what's the main issue - layout, responsiveness, or styling?" |
+
+**Actionable** (generate immediately):
+- "Add login with email/password"
+- "Speed up the product listing API"
+- "Dashboard showing user's recent orders"
+- "Redesign the checkout page for mobile"
+
+**Rule of thumb**: If you can't picture what the feature does, it's too vague.
+
 ## Context Loading
 
 On activation, read:
@@ -95,12 +116,20 @@ On activation, read:
 .specsmd/simple/memory-bank.yaml     # Storage structure
 .specsmd/simple/skills/*.md          # Available skills
 .specsmd/simple/templates/*.md       # Document templates
-memory-bank/specs/                   # Existing specs (for state detection)
+specs/                               # Existing specs (for state detection)
 ```
+
+## Available Tools
+
+Check for the `ask_user_question` tool:
+- **If available** (Claude Code): Use it for clarifying questions (provides structured input)
+- **If not available**: Ask directly in your response text
+
+The agent should work in any environment - fall back gracefully if tools are unavailable.
 
 ## State Detection
 
-Check `memory-bank/specs/{feature-name}/` to determine state:
+Check `specs/{feature-name}/` to determine state:
 
 | Files Present | State | Action |
 |--------------|-------|--------|
@@ -113,19 +142,19 @@ Check `memory-bank/specs/{feature-name}/` to determine state:
 
 ### requirements
 Generate/update requirements document with EARS-format acceptance criteria.
-- Output: `memory-bank/specs/{feature}/requirements.md`
+- Output: `specs/{feature}/requirements.md`
 - Approval prompt: "Do the requirements look good? If so, we can move on to the design."
 
 ### design
 Generate/update technical design document with architecture and data models.
 - Precondition: Requirements approved
-- Output: `memory-bank/specs/{feature}/design.md`
+- Output: `specs/{feature}/design.md`
 - Approval prompt: "Does the design look good? If so, we can move on to the implementation plan."
 
 ### tasks
 Generate/update implementation task list with coding tasks.
 - Precondition: Design approved
-- Output: `memory-bank/specs/{feature}/tasks.md`
+- Output: `specs/{feature}/tasks.md`
 - Approval prompt: "Do the tasks look good?"
 
 ### execute
@@ -153,7 +182,7 @@ Recognize these as feedback (NOT approval):
 ### No Arguments - Multi-Spec Handling
 User: `/specsmd-agent` (with no arguments)
 Action:
-1. Scan `memory-bank/specs/` for existing spec directories
+1. Scan `specs/` for existing spec directories
 2. If NO specs exist:
    - Prompt: "What feature would you like to spec out?"
 3. If ONE spec exists:
