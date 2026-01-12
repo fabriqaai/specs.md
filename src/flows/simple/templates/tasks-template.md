@@ -59,10 +59,14 @@ Use this template when generating tasks.md for a feature spec.
 - `- [x]` - Completed task
 - `- [ ]*` - Optional task (nice-to-have, not blocking)
 
-### Numbering
-- Top-level: `1.`, `2.`, `3.` etc.
-- Sub-tasks: `2.1`, `2.2`, `2.3` etc.
-- Maximum 2 levels of hierarchy
+### Numbering Rules
+- Top-level tasks: `1.`, `2.`, `3.`
+- Sub-tasks: `2.1`, `2.2`, `2.3`
+- Maximum 2 levels (no `2.1.1`)
+- Parent tasks with sub-tasks are GROUP HEADERS (not directly executed)
+  - Mark parent complete only when ALL sub-tasks are done
+- Tasks without sub-tasks are directly executable
+- Use sub-tasks when a feature has 3+ related implementation steps
 
 ### Requirement References
 - Always include: `_Requirements: X.Y, X.Z_`

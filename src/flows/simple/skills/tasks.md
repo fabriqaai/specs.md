@@ -59,9 +59,17 @@ Generate an implementation plan with coding tasks based on the approved design. 
 4. **Task Format**
    - `- [ ]` for pending, `- [x]` for done
    - `- [ ]*` for optional tasks
-   - Numbering: `1.`, `2.`, with sub-tasks `2.1`, `2.2`
 
-5. **Approval Gate**
+5. **Numbering Rules**
+   - Top-level tasks: `1.`, `2.`, `3.`
+   - Sub-tasks: `2.1`, `2.2`, `2.3`
+   - Maximum 2 levels (no `2.1.1`)
+   - Parent tasks with sub-tasks are GROUP HEADERS (not directly executed)
+     - Mark parent complete only when ALL sub-tasks are done
+   - Tasks without sub-tasks are directly executable
+   - Use sub-tasks when a feature has 3+ related implementation steps
+
+6. **Approval Gate**
    - Workflow COMPLETE when tasks approved
    - Inform user they can now execute tasks
 
