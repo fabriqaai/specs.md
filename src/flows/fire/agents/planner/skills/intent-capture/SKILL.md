@@ -85,7 +85,7 @@ Capture user intent through guided conversation.
 
   <step n="4" title="Generate Intent Brief">
     <action>Create intent ID from title (kebab-case)</action>
-    <action>Generate intent brief using template</action>
+    <action>Generate intent brief using template: templates/brief.md.hbs</action>
     <action>Create directory: .specs-fire/intents/{intent-id}/</action>
     <action>Save: .specs-fire/intents/{intent-id}/brief.md</action>
   </step>

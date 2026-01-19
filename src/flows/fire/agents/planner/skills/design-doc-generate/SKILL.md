@@ -119,7 +119,8 @@ Generate design documents for Validate mode work items (Checkpoint 1).
 
   <step n="9" title="Handle Response">
     <check if="response == y">
-      <action>Save design doc to .specs-fire/intents/{intent-id}/work-items/{id}-design.md</action>
+      <action>Generate design doc using template: templates/design.md.hbs</action>
+      <action>Save to: .specs-fire/intents/{intent-id}/work-items/{id}-design.md</action>
       <action>Mark checkpoint 1 as passed</action>
       <output>
         Design approved. Ready for implementation planning.

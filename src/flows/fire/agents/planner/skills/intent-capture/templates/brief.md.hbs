@@ -1,0 +1,40 @@
+---
+id: {{id}}
+title: {{title}}
+status: {{status}}
+created: {{created}}
+---
+
+# Intent: {{title}}
+
+## Goal
+
+{{goal}}
+
+## Users
+
+{{users}}
+
+## Problem
+
+{{problem}}
+
+## Success Criteria
+
+{{#each success_criteria}}
+- {{this}}
+{{/each}}
+
+## Constraints
+
+{{#each constraints}}
+- {{this}}
+{{/each}}
+
+## Notes
+
+{{#if notes}}
+{{notes}}
+{{else}}
+(none)
+{{/if}}

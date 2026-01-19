@@ -132,7 +132,8 @@ Break an intent into discrete, executable work items.
   <step n="7" title="Save Work Items">
     <check if="approved">
       <action>Create .specs-fire/intents/{intent-id}/work-items/</action>
-      <action>For each work item, save to {work-item-id}.md</action>
+      <action>For each work item, generate using template: templates/work-item.md.hbs</action>
+      <action>Save each to: .specs-fire/intents/{intent-id}/work-items/{work-item-id}.md</action>
       <action>Update state.yaml with work items list</action>
     </check>
   </step>

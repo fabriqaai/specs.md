@@ -61,7 +61,7 @@ Generate implementation walkthrough for human review after run completion.
   </step>
 
   <step n="5" title="Generate Walkthrough">
-    <action script="scripts/render-walkthrough.ts">Render walkthrough from template</action>
+    <action>Generate walkthrough using template: templates/walkthrough.md.hbs</action>
     <action>Save to: .specs-fire/runs/{run-id}/walkthrough.md</action>
     <output>
       Walkthrough generated: .specs-fire/runs/{run-id}/walkthrough.md

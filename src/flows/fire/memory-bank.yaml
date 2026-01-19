@@ -79,6 +79,7 @@ schema:
   work-item: ".specs-fire/intents/{intent-id}/work-items/{work-item-id}.md"
   runs: ".specs-fire/runs/"
   run-folder: ".specs-fire/runs/{run-id}/"
+  plan: ".specs-fire/runs/{run-id}/plan.md"
   run-log: ".specs-fire/runs/{run-id}/run.md"
   walkthrough: ".specs-fire/runs/{run-id}/walkthrough.md"
   standards: ".specs-fire/standards/"

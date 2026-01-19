@@ -105,6 +105,10 @@ Before executing scripts, ensure required dependencies are installed:
       <action>Adjust plan</action>
       <goto step="3b"/>
     </check>
+    <check if="response == y">
+      <action>Save approved plan using template: templates/plan.md.hbs</action>
+      <action>Write to: .specs-fire/runs/{run-id}/plan.md</action>
+    </check>
     <goto step="5"/>
   </step>
 
@@ -135,6 +139,11 @@ Before executing scripts, ensure required dependencies are installed:
       <ask>What changes to the plan?</ask>
       <action>Adjust plan</action>
       <goto step="3c"/>
+    </check>
+    <check if="response == y">
+      <action>Save approved plan using template: templates/plan.md.hbs</action>
+      <action>Write to: .specs-fire/runs/{run-id}/plan.md</action>
+      <action>Include reference to design doc in plan</action>
     </check>
     <goto step="5"/>
   </step>

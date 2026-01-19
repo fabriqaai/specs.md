@@ -1,0 +1,76 @@
+---
+work_item: {{work_item_id}}
+intent: {{intent_id}}
+created: {{created}}
+mode: validate
+checkpoint_1: {{checkpoint_status}}
+---
+
+# Design: {{title}}
+
+## Summary
+
+{{summary}}
+
+## Key Decisions
+
+| Decision | Choice | Rationale |
+|----------|--------|-----------|
+{{#each decisions}}
+| {{this.decision}} | {{this.choice}} | {{this.rationale}} |
+{{/each}}
+
+{{#if domain_model}}
+## Domain Model
+
+### Entities
+{{#each domain_model.entities}}
+- **{{this.name}}**: {{this.description}}
+{{/each}}
+
+### Value Objects
+{{#each domain_model.value_objects}}
+- **{{this.name}}**: {{this.description}}
+{{/each}}
+{{/if}}
+
+## Technical Approach
+
+### Component Diagram
+
+```
+{{component_diagram}}
+```
+
+{{#if api_endpoints}}
+### API Endpoints
+
+{{#each api_endpoints}}
+- `{{this.method}} {{this.path}}` - {{this.description}}
+{{/each}}
+{{/if}}
+
+{{#if database_changes}}
+### Database Changes
+
+```sql
+{{database_changes}}
+```
+{{/if}}
+
+## Risks & Mitigations
+
+| Risk | Impact | Mitigation |
+|------|--------|------------|
+{{#each risks}}
+| {{this.risk}} | {{this.impact}} | {{this.mitigation}} |
+{{/each}}
+
+## Implementation Checklist
+
+{{#each checklist}}
+- [ ] {{this}}
+{{/each}}
+
+---
+*Checkpoint 1 approved: {{approved_at}}*
