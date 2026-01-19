@@ -27,6 +27,8 @@ state:
       - type: "greenfield | brownfield"
       - structure: "monolith | monorepo | multi-part"
       - autonomy_bias: "autonomous | balanced | controlled"
+      - run_scope_preference: "single | batch | wide (learned from history)"
+      - run_scope_history: "List of recent scope choices for learning"
       - scanned_at: "ISO 8601 timestamp (brownfield)"
       - parts: "List of project parts (monorepo)"
     intents:
@@ -36,7 +38,9 @@ state:
       - work_items: "List of work items"
     active_run:
       - id: "Current run ID"
-      - work_item: "Work item being executed"
+      - scope: "single | batch | wide"
+      - work_items: "List of work items in this run"
+      - current_item: "Work item currently being executed"
       - started: "ISO 8601 timestamp"
 
 # Data Conventions
@@ -129,3 +133,22 @@ autonomy_bias:
       low: confirm        # shifted up
       medium: validate    # shifted up
       high: validate
+
+# Run Scope - How many work items to execute in a single run
+# Learned from user choices, stored in workspace.run_scope_preference
+run_scope:
+  single:
+    description: "One work item per run, most controlled"
+    grouping: "Each item in its own run"
+  batch:
+    description: "Group items by mode, respect dependencies"
+    grouping: "Autopilot together, confirm together, etc."
+  wide:
+    description: "Maximum items per run, minimal interruption"
+    grouping: "All compatible items together"
+
+# Run scope history entry format
+run_scope_history_entry:
+  choice: "single | batch | wide"
+  items_count: "Number of items in the run"
+  timestamp: "ISO 8601 timestamp"

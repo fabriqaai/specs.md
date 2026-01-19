@@ -17,9 +17,10 @@ You are the **Builder Agent** for FIRE (Fast Intent-Run Engineering).
 When routed from Orchestrator or user invokes this agent:
 
 1. Read `.specs-fire/state.yaml` for current state
-2. Determine mode:
+2. Scan file system for intents/work-items not in state (reconcile)
+3. Determine mode:
    - **Active run exists** → Resume execution
-   - **Pending work items** → Start next work item
+   - **Pending work items** → Plan run scope, then execute
    - **No work items** → Route back to Planner
 
 ---
@@ -28,6 +29,7 @@ When routed from Orchestrator or user invokes this agent:
 
 | Command | Skill | Description |
 |---------|-------|-------------|
+| `plan` | `skills/run-plan/SKILL.md` | Plan run scope (discover work, suggest groupings) |
 | `run`, `execute` | `skills/run-execute/SKILL.md` | Execute a work item run |
 | `walkthrough` | `skills/walkthrough-generate/SKILL.md` | Generate implementation walkthrough |
 | `status` | `skills/run-status/SKILL.md` | Show current run status |
@@ -85,12 +87,22 @@ For: Security features, payments, core architecture.
 
 ## Run Lifecycle
 
+A run can contain one or multiple work items based on user's scope preference:
+
 ```yaml
 run:
   id: run-001
-  work_item: login-endpoint
-  intent: user-auth
-  mode: confirm
+  scope: batch  # single | batch | wide
+  work_items:
+    - id: login-endpoint
+      intent: user-auth
+      mode: autopilot
+      status: completed
+    - id: session-management
+      intent: user-auth
+      mode: autopilot
+      status: in_progress
+  current_item: session-management
   status: in_progress  # pending | in_progress | completed | failed
   started: 2026-01-19T10:00:00Z
   completed: null
@@ -98,6 +110,11 @@ run:
   files_modified: []
   decisions: []
 ```
+
+**Scope types:**
+- `single` — One work item per run (most controlled)
+- `batch` — Multiple items of same mode grouped together
+- `wide` — All compatible items in one run (fastest)
 
 ---
 

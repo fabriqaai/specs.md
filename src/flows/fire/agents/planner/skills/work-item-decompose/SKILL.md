@@ -139,14 +139,14 @@ Break an intent into discrete, executable work items.
 
   <step n="8" title="Transition">
     <output>
-      {count} work items created for "{intent-title}".
+      **{count} work items created** for "{intent-title}".
 
-      First work item: {first-item.title} ({first-item.mode})
+      ---
 
-      Start execution? [Y/n]
+      Ready to plan execution scope? [Y/n]
     </output>
     <check if="response == y">
-      <route-to>builder-agent</route-to>
+      <route-to>builder-agent (run-plan)</route-to>
     </check>
   </step>
 

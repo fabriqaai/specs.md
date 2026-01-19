@@ -16,8 +16,11 @@ Analyze project state and route user to the appropriate agent.
 ```xml
 <skill name="route">
 
-  <step n="1" title="Read State">
+  <step n="1" title="Discover and Read State">
     <action>Read .specs-fire/state.yaml</action>
+    <action>Scan .specs-fire/intents/ for briefs not in state</action>
+    <action>Scan .specs-fire/intents/*/work-items/ for items not in state</action>
+    <action>Reconcile: add discovered items to state as pending</action>
     <action>Parse current project state</action>
   </step>
 
@@ -25,30 +28,25 @@ Analyze project state and route user to the appropriate agent.
     <check if="active_run exists and status == in_progress">
       <output>
         Resuming active run: {active_run.id}
-        Work item: {active_run.work_item}
-        Mode: {active_run.mode}
+        Scope: {active_run.scope}
+        Current item: {active_run.current_item}
+        Progress: {completed_count}/{total_count} items
       </output>
-      <route-to>builder-agent</route-to>
+      <route-to>builder-agent (run-execute)</route-to>
       <stop/>
     </check>
   </step>
 
   <step n="3" title="Check Pending Work Items">
-    <action>Find work items with status == pending</action>
+    <action>Find work items with status == pending across all intents</action>
     <check if="pending work items exist">
       <output>
-        Ready to execute: {next_work_item.title}
-        Complexity: {next_work_item.complexity}
-        Mode: {next_work_item.mode}
+        **{pending_count} pending work items** found across {intent_count} intent(s).
 
-        Start execution? [Y/n/skip]
+        Plan run scope and start execution? [Y/n]
       </output>
       <check if="response == y">
-        <route-to>builder-agent</route-to>
-      </check>
-      <check if="response == skip">
-        <action>Mark work item as skipped</action>
-        <action>Re-evaluate next work item</action>
+        <route-to>builder-agent (run-plan)</route-to>
       </check>
       <stop/>
     </check>
@@ -94,15 +92,15 @@ Analyze project state and route user to the appropriate agent.
 ## Routing Decision Tree
 
 ```
-state.yaml
+state.yaml + file system scan
     │
-    ├── active_run? ──────────────> Builder (resume)
+    ├── active_run? ──────────────> Builder (run-execute, resume)
     │
-    ├── pending work items? ──────> Builder (execute)
+    ├── pending work items? ──────> Builder (run-plan, then execute)
     │
-    ├── intent without work items? > Planner (decompose)
+    ├── intent without work items? > Planner (work-item-decompose)
     │
-    └── no active intents ────────> Planner (capture)
+    └── no active intents ────────> Planner (intent-capture)
 ```
 
 ---
@@ -119,8 +117,7 @@ context:
 **To Builder:**
 ```yaml
 context:
-  action: execute | resume
-  work_item_id: {work item to execute}
+  action: run-plan | run-execute | resume
+  pending_items: [{list of pending work items}]  # for run-plan
   run_id: {if resuming}
-  mode: autopilot | confirm | validate
 ```
