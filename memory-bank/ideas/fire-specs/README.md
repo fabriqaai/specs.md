@@ -8,7 +8,7 @@
 
 *New methodology cuts AI-assisted development checkpoints by 85% while maintaining quality*
 
-**San Francisco, CA** — fabriqa today announced FIRE (Fast Intent-Run Engineering), a streamlined AI-native development methodology that enables teams to ship features in hours instead of weeks. FIRE reduces the overhead of traditional AI-assisted development from 10-26 checkpoints per feature down to just 0-2, while maintaining the quality and traceability teams need.
+**Earth** — fabriqa today announced FIRE (Fast Intent-Run Engineering), a streamlined AI-native development methodology that enables teams to ship features in hours instead of weeks. FIRE reduces the overhead of traditional AI-assisted development from 10-26 checkpoints per feature down to just 0-2, while maintaining the quality and traceability teams need.
 
 "Developers are spending more time managing their AI tools than building software," said the fabriqa team. "FIRE flips this equation. Tell the AI what you want, and it figures out the rest—checking in only when it truly needs human judgment."
 
@@ -140,6 +140,63 @@ For greenfield projects, FIRE offers two initialization paths:
 1. Answer questions about each standard
 2. Explicit choices for tech stack, conventions
 3. Full control over every decision
+
+### How does FIRE handle monorepos?
+
+FIRE fully supports monorepo structures for both brownfield and greenfield projects.
+
+**Brownfield Monorepos**
+
+The workspace-detect skill identifies monorepos through:
+
+- `pnpm-workspace.yaml`, `lerna.json`, `nx.json`, `turbo.json`
+- `package.json` with `workspaces` field
+- `packages/` or `apps/` directories
+
+Deep scan (10-30 min) maps the full structure:
+
+```yaml
+workspace:
+  structure: monorepo
+  parts:
+    - name: web-app
+      path: apps/web
+      tech: [typescript, next.js]
+    - name: api
+      path: apps/api
+      tech: [typescript, express]
+    - name: shared
+      path: packages/shared
+      tech: [typescript]
+  integrations:
+    - from: web-app
+      to: api
+      type: http
+    - from: web-app
+      to: shared
+      type: npm-dependency
+```
+
+**Greenfield Monorepos**
+
+For new projects, standards-init guides you through setup:
+
+1. Describe your project (multiple apps/services)
+2. FIRE suggests monorepo structure
+3. Choose tooling (pnpm workspaces, Turborepo, Nx, Lerna)
+4. FIRE scaffolds the structure
+
+**Work Item Scoping**
+
+Work items in monorepos specify which parts they affect:
+
+```yaml
+work_item:
+  id: add-auth-middleware
+  affects: [api, shared]
+```
+
+The builder agent loads only relevant package context for each run, avoiding bloat.
 
 ### What are the FIRE agents?
 
