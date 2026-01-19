@@ -26,7 +26,6 @@ Display current FIRE project status.
 
       **Project**: {project.name}
       **Workspace**: {workspace.type} / {workspace.structure}
-      **Default Mode**: {workspace.default_mode}
 
       ## Intents
 
@@ -72,7 +71,6 @@ Display current FIRE project status.
 
 **Project**: my-saas-app
 **Workspace**: brownfield / monolith
-**Default Mode**: confirm
 
 ## Intents
 

@@ -97,10 +97,10 @@ Before executing scripts, ensure required dependencies are installed:
         {list test files}
 
         ---
-        Approve plan? [Y/n/modify]
+        Approve plan? [Y/n/edit]
       </output>
     </checkpoint>
-    <check if="response == modify">
+    <check if="response == edit">
       <ask>What changes to the plan?</ask>
       <action>Adjust plan</action>
       <goto step="3b"/>
@@ -128,10 +128,10 @@ Before executing scripts, ensure required dependencies are installed:
 
         ---
         This is Checkpoint 2 of Validate mode.
-        Approve implementation plan? [Y/n/modify]
+        Approve implementation plan? [Y/n/edit]
       </output>
     </checkpoint>
-    <check if="response == modify">
+    <check if="response == edit">
       <ask>What changes to the plan?</ask>
       <action>Adjust plan</action>
       <goto step="3c"/>

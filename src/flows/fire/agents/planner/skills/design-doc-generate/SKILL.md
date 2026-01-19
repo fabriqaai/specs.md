@@ -112,7 +112,7 @@ Generate design documents for Validate mode work items (Checkpoint 1).
         ---
         This is Checkpoint 1 of Validate mode.
 
-        Approve design? [Y/n/modify]
+        Approve design? [Y/n/edit]
       </output>
     </checkpoint>
   </step>
@@ -123,10 +123,11 @@ Generate design documents for Validate mode work items (Checkpoint 1).
       <action>Mark checkpoint 1 as passed</action>
       <output>
         Design approved. Ready for implementation planning.
-        Route to Builder for Checkpoint 2 (implementation plan)?
+
+        Route to Builder for Checkpoint 2 (implementation plan)? [Y/n]
       </output>
     </check>
-    <check if="response == modify">
+    <check if="response == edit">
       <ask>What changes are needed?</ask>
       <action>Incorporate feedback</action>
       <goto step="8"/>

@@ -75,9 +75,9 @@ Capture user intent through guided conversation.
       - {constraint 1}
       - {constraint 2}
 
-      Is this accurate? [Y/n/clarify]
+      Is this accurate? [Y/n/edit]
     </output>
-    <check if="response == n or clarify">
+    <check if="response == n or edit">
       <action>Ask specific clarifying questions</action>
       <goto step="3"/>
     </check>

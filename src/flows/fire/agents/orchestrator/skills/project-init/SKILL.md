@@ -67,7 +67,7 @@ Initialize a new FIRE project by detecting workspace type and setting up standar
       **Framework**: {suggested_framework}
       **Database**: {suggested_database}
 
-      Accept these suggestions? [Y/n/modify]
+      Accept these suggestions? [Y/n/edit]
     </output>
   </step>
 

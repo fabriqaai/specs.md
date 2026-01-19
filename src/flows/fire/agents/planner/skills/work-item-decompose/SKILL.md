@@ -108,7 +108,7 @@ Break an intent into discrete, executable work items.
 
       ---
 
-      Approve this plan? [Y/n/modify]
+      Approve this plan? [Y/n/edit]
     </output>
   </step>
 
