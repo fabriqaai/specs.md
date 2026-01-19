@@ -61,13 +61,23 @@ Capture user intent through guided conversation.
       Let me make sure I understand:
 
       **Goal**: {summarized goal}
+
       **Users**: {who benefits}
+
       **Problem**: {what pain this solves}
-      **Success**: {how to measure}
+
+      **Success Criteria**:
+      - {criterion 1}
+      - {criterion 2}
+      - {criterion 3}
+
+      **Constraints**:
+      - {constraint 1}
+      - {constraint 2}
 
       Is this accurate? [Y/n/clarify]
     </output>
-    <check if="response == clarify">
+    <check if="response == n or clarify">
       <action>Ask specific clarifying questions</action>
       <goto step="3"/>
     </check>
@@ -87,8 +97,11 @@ Capture user intent through guided conversation.
 
   <step n="6" title="Transition">
     <output>
-      Intent captured: "{intent-title}"
+      **Intent captured**: "{intent-title}"
+
       Saved to: .specs-fire/intents/{intent-id}/brief.md
+
+      ---
 
       Ready to break this into work items? [Y/n]
     </output>

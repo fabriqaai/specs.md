@@ -12,19 +12,19 @@ const THEME_COLORS = {
 };
 
 const FLOWS = {
-    aidlc: {
-        name: 'AI-DLC',
-        description: 'AI-Driven Development Life Cycle - Best for greenfield projects with AI-native development',
-        path: 'aidlc'
-    },
     fire: {
         name: 'FIRE',
-        description: 'Fast Intent-Run Engineering - Lightweight flow for quick iterations with minimal overhead',
+        description: 'Rapid execution - Solo devs or small teams, brownfield, 0-2 adaptive checkpoints',
         path: 'fire'
+    },
+    aidlc: {
+        name: 'AI-DLC',
+        description: 'Full methodology with DDD - Teams, complex domains, 10-26 checkpoints',
+        path: 'aidlc'
     },
     simple: {
         name: 'Simple',
-        description: 'Spec-driven development - Best for quick feature specs without full methodology overhead',
+        description: 'Spec generation only (Kiro style) - Creates requirement/design/task docs, no execution tracking',
         path: 'simple'
     }
 };
