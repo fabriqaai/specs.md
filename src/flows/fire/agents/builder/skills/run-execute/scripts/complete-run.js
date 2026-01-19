@@ -3,15 +3,24 @@
 /**
  * FIRE Run Completion Script
  *
- * Finalizes a run by:
- * 1. Recording the completed run in state.yaml runs.completed history
- * 2. Updating work item status to completed
- * 3. Clearing active_run
- * 4. Updating run.md with completion data
+ * Supports both single and batch/wide runs.
  *
- * Usage: node complete-run.js <rootPath> <runId> [--files-created=JSON] [--files-modified=JSON] [--decisions=JSON] [--tests=N] [--coverage=N]
+ * For single runs: Completes the run and clears active_run.
+ * For batch/wide runs:
+ *   - --complete-item: Marks current work item done, moves to next
+ *   - --complete-run: Marks all items done and finalizes entire run
  *
- * Example: node complete-run.js /project run-003 --tests=5 --coverage=85
+ * Usage:
+ *   Complete current item:  node complete-run.js <rootPath> <runId> --complete-item [options]
+ *   Complete entire run:    node complete-run.js <rootPath> <runId> --complete-run [options]
+ *   Complete (single/auto): node complete-run.js <rootPath> <runId> [options]
+ *
+ * Options:
+ *   --files-created=JSON   - JSON array of {path, purpose}
+ *   --files-modified=JSON  - JSON array of {path, changes}
+ *   --decisions=JSON       - JSON array of {decision, choice, rationale}
+ *   --tests=N              - Number of tests added
+ *   --coverage=N           - Coverage percentage
  */
 
 const fs = require('fs');
@@ -131,7 +140,7 @@ function writeState(statePath, state) {
 // Run Log Operations
 // =============================================================================
 
-function updateRunLog(runLogPath, params, completedTime) {
+function updateRunLog(runLogPath, activeRun, params, completedTime, isFullCompletion) {
   let content;
   try {
     content = fs.readFileSync(runLogPath, 'utf8');
@@ -143,40 +152,72 @@ function updateRunLog(runLogPath, params, completedTime) {
     );
   }
 
-  // Update status
-  content = content.replace(/status: in_progress/, 'status: completed');
-  content = content.replace(/completed: null/, `completed: ${completedTime}`);
+  // If full completion, update run status
+  if (isFullCompletion) {
+    content = content.replace(/status: in_progress/, 'status: completed');
+    content = content.replace(/completed: null/, `completed: ${completedTime}`);
+  }
 
-  // Format file lists
-  const filesCreatedText = params.filesCreated.length > 0
-    ? params.filesCreated.map(f => `- \`${f.path}\`: ${f.purpose || '(no purpose)'}`).join('\n')
-    : '(none)';
+  // Update work items status in frontmatter
+  if (activeRun.work_items && Array.isArray(activeRun.work_items)) {
+    for (const item of activeRun.work_items) {
+      // Update status in YAML frontmatter
+      const statusPattern = new RegExp(`(id: ${item.id}\\n\\s+intent: [^\\n]+\\n\\s+mode: [^\\n]+\\n\\s+status: )(\\w+)`);
+      content = content.replace(statusPattern, `$1${item.status}`);
 
-  const filesModifiedText = params.filesModified.length > 0
-    ? params.filesModified.map(f => `- \`${f.path}\`: ${f.changes || '(no changes)'}`).join('\n')
-    : '(none)';
+      // Update status in markdown body
+      const bodyPattern = new RegExp(`(\\*\\*${item.id}\\*\\* \\([^)]+\\) — )(\\w+)`);
+      content = content.replace(bodyPattern, `$1${item.status}`);
+    }
 
-  const decisionsText = params.decisions.length > 0
-    ? params.decisions.map(d => `- **${d.decision}**: ${d.choice} (${d.rationale || 'no rationale'})`).join('\n')
-    : '(none)';
+    // Update current_item in frontmatter
+    content = content.replace(/current_item: [^\n]+/, `current_item: ${activeRun.current_item || 'none'}`);
 
-  // Replace placeholder sections
-  content = content.replace('## Files Created\n(none yet)', `## Files Created\n${filesCreatedText}`);
-  content = content.replace('## Files Modified\n(none yet)', `## Files Modified\n${filesModifiedText}`);
-  content = content.replace('## Decisions\n(none yet)', `## Decisions\n${decisionsText}`);
+    // Update Current Item section
+    if (activeRun.current_item) {
+      const currentItem = activeRun.work_items.find(i => i.id === activeRun.current_item);
+      if (currentItem) {
+        content = content.replace(/## Current Item\n[^\n]+/, `## Current Item\n${currentItem.id} (${currentItem.mode})`);
+      }
+    } else {
+      content = content.replace(/## Current Item\n[^\n]+/, `## Current Item\n(all completed)`);
+    }
+  }
 
-  // Add summary if not present
-  if (!content.includes('## Summary')) {
-    content += `
+  // Format file lists (only on full completion)
+  if (isFullCompletion) {
+    const filesCreatedText = params.filesCreated.length > 0
+      ? params.filesCreated.map(f => `- \`${f.path}\`: ${f.purpose || '(no purpose)'}`).join('\n')
+      : '(none)';
+
+    const filesModifiedText = params.filesModified.length > 0
+      ? params.filesModified.map(f => `- \`${f.path}\`: ${f.changes || '(no changes)'}`).join('\n')
+      : '(none)';
+
+    const decisionsText = params.decisions.length > 0
+      ? params.decisions.map(d => `- **${d.decision}**: ${d.choice} (${d.rationale || 'no rationale'})`).join('\n')
+      : '(none)';
+
+    // Replace placeholder sections
+    content = content.replace('## Files Created\n(none yet)', `## Files Created\n${filesCreatedText}`);
+    content = content.replace('## Files Modified\n(none yet)', `## Files Modified\n${filesModifiedText}`);
+    content = content.replace('## Decisions\n(none yet)', `## Decisions\n${decisionsText}`);
+
+    // Add summary if not present
+    if (!content.includes('## Summary')) {
+      const itemCount = activeRun.work_items ? activeRun.work_items.length : 1;
+      content += `
 
 ## Summary
 
+- Work items completed: ${itemCount}
 - Files created: ${params.filesCreated.length}
 - Files modified: ${params.filesModified.length}
 - Tests added: ${params.testsAdded}
 - Coverage: ${params.coverage}%
 - Completed: ${completedTime}
 `;
+    }
   }
 
   try {
@@ -191,11 +232,10 @@ function updateRunLog(runLogPath, params, completedTime) {
 }
 
 // =============================================================================
-// Main Function
+// Complete Current Item (for batch runs)
 // =============================================================================
 
-function completeRun(rootPath, runId, params = {}) {
-  // Defaults for optional params
+function completeCurrentItem(rootPath, runId, params = {}) {
   const completionParams = {
     filesCreated: params.filesCreated || [],
     filesModified: params.filesModified || [],
@@ -204,16 +244,10 @@ function completeRun(rootPath, runId, params = {}) {
     coverage: params.coverage || 0,
   };
 
-  // Validate inputs
   validateInputs(rootPath, runId);
-
-  // Validate FIRE project structure
   const { statePath, runLogPath } = validateFireProject(rootPath, runId);
-
-  // Read state
   const state = readState(statePath);
 
-  // Validate active run matches
   if (!state.active_run) {
     throw fireError(
       'No active run found in state.yaml.',
@@ -230,19 +264,120 @@ function completeRun(rootPath, runId, params = {}) {
     );
   }
 
-  // Extract work item and intent from active run
-  const workItemId = state.active_run.work_item;
-  const intentId = state.active_run.intent;
   const completedTime = new Date().toISOString();
+  const workItems = state.active_run.work_items || [];
+  const currentItemId = state.active_run.current_item;
+
+  // Find and mark current item as completed
+  let currentItemIndex = -1;
+  for (let i = 0; i < workItems.length; i++) {
+    if (workItems[i].id === currentItemId) {
+      workItems[i].status = 'completed';
+      workItems[i].completed_at = completedTime;
+      currentItemIndex = i;
+      break;
+    }
+  }
+
+  if (currentItemIndex === -1) {
+    throw fireError(
+      `Current item "${currentItemId}" not found in work items.`,
+      'COMPLETE_050',
+      'The run state may be corrupted.'
+    );
+  }
+
+  // Find next pending item
+  let nextItem = null;
+  for (let i = currentItemIndex + 1; i < workItems.length; i++) {
+    if (workItems[i].status === 'pending') {
+      workItems[i].status = 'in_progress';
+      nextItem = workItems[i];
+      break;
+    }
+  }
+
+  // Update state
+  state.active_run.work_items = workItems;
+  state.active_run.current_item = nextItem ? nextItem.id : null;
 
   // Update run log
-  updateRunLog(runLogPath, completionParams, completedTime);
+  updateRunLog(runLogPath, state.active_run, completionParams, completedTime, false);
+
+  // Save state
+  writeState(statePath, state);
+
+  return {
+    success: true,
+    runId: runId,
+    completedItem: currentItemId,
+    nextItem: nextItem ? nextItem.id : null,
+    remainingItems: workItems.filter(i => i.status === 'pending').length,
+    allItemsCompleted: nextItem === null,
+    completedAt: completedTime,
+  };
+}
+
+// =============================================================================
+// Complete Entire Run
+// =============================================================================
+
+function completeRun(rootPath, runId, params = {}) {
+  const completionParams = {
+    filesCreated: params.filesCreated || [],
+    filesModified: params.filesModified || [],
+    decisions: params.decisions || [],
+    testsAdded: params.testsAdded || 0,
+    coverage: params.coverage || 0,
+  };
+
+  validateInputs(rootPath, runId);
+  const { statePath, runLogPath } = validateFireProject(rootPath, runId);
+  const state = readState(statePath);
+
+  if (!state.active_run) {
+    throw fireError(
+      'No active run found in state.yaml.',
+      'COMPLETE_040',
+      'The run may have already been completed or was never started.'
+    );
+  }
+
+  if (state.active_run.id !== runId) {
+    throw fireError(
+      `Run ID mismatch. Active run is "${state.active_run.id}" but trying to complete "${runId}".`,
+      'COMPLETE_041',
+      `Complete the active run "${state.active_run.id}" first.`
+    );
+  }
+
+  const completedTime = new Date().toISOString();
+  const workItems = state.active_run.work_items || [];
+  const scope = state.active_run.scope || 'single';
+
+  // Mark all items as completed
+  for (const item of workItems) {
+    if (item.status !== 'completed') {
+      item.status = 'completed';
+      item.completed_at = completedTime;
+    }
+  }
+
+  state.active_run.work_items = workItems;
+  state.active_run.current_item = null;
+
+  // Update run log
+  updateRunLog(runLogPath, state.active_run, completionParams, completedTime, true);
 
   // Build completed run record
   const completedRun = {
     id: runId,
-    work_item: workItemId,
-    intent: intentId,
+    scope: scope,
+    work_items: workItems.map(i => ({
+      id: i.id,
+      intent: i.intent,
+      mode: i.mode,
+    })),
     completed: completedTime,
   };
 
@@ -255,16 +390,17 @@ function completeRun(rootPath, runId, params = {}) {
 
   // Update work item status in intents
   if (Array.isArray(state.intents)) {
-    for (const intent of state.intents) {
-      if (intent.id === intentId && Array.isArray(intent.work_items)) {
-        for (const workItem of intent.work_items) {
-          if (workItem.id === workItemId) {
-            workItem.status = 'completed';
-            workItem.run_id = runId;
-            break;
+    for (const workItem of workItems) {
+      for (const intent of state.intents) {
+        if (intent.id === workItem.intent && Array.isArray(intent.work_items)) {
+          for (const wi of intent.work_items) {
+            if (wi.id === workItem.id) {
+              wi.status = 'completed';
+              wi.run_id = runId;
+              break;
+            }
           }
         }
-        break;
       }
     }
   }
@@ -278,12 +414,11 @@ function completeRun(rootPath, runId, params = {}) {
   // Save state
   writeState(statePath, state);
 
-  // Return result
   return {
     success: true,
     runId: runId,
-    workItemId: workItemId,
-    intentId: intentId,
+    scope: scope,
+    workItemsCompleted: workItems.length,
     completedAt: completedTime,
     filesCreated: completionParams.filesCreated.length,
     filesModified: completionParams.filesModified.length,
@@ -300,6 +435,8 @@ function parseArgs(args) {
   const result = {
     rootPath: args[0],
     runId: args[1],
+    completeItem: false,
+    completeRunFlag: false,
     filesCreated: [],
     filesModified: [],
     decisions: [],
@@ -309,7 +446,11 @@ function parseArgs(args) {
 
   for (let i = 2; i < args.length; i++) {
     const arg = args[i];
-    if (arg.startsWith('--files-created=')) {
+    if (arg === '--complete-item') {
+      result.completeItem = true;
+    } else if (arg === '--complete-run') {
+      result.completeRunFlag = true;
+    } else if (arg.startsWith('--files-created=')) {
       try {
         result.filesCreated = JSON.parse(arg.substring('--files-created='.length));
       } catch (e) {
@@ -337,6 +478,32 @@ function parseArgs(args) {
   return result;
 }
 
+function printUsage() {
+  console.error('Usage:');
+  console.error('  Complete current item: node complete-run.js <rootPath> <runId> --complete-item [options]');
+  console.error('  Complete entire run:   node complete-run.js <rootPath> <runId> --complete-run [options]');
+  console.error('  Auto (single runs):    node complete-run.js <rootPath> <runId> [options]');
+  console.error('');
+  console.error('Arguments:');
+  console.error('  rootPath  - Project root directory');
+  console.error('  runId     - Run ID to complete (e.g., run-003)');
+  console.error('');
+  console.error('Flags:');
+  console.error('  --complete-item  - Complete only the current work item (batch/wide runs)');
+  console.error('  --complete-run   - Complete the entire run');
+  console.error('');
+  console.error('Options:');
+  console.error('  --files-created=JSON   - JSON array of {path, purpose}');
+  console.error('  --files-modified=JSON  - JSON array of {path, changes}');
+  console.error('  --decisions=JSON       - JSON array of {decision, choice, rationale}');
+  console.error('  --tests=N              - Number of tests added');
+  console.error('  --coverage=N           - Coverage percentage');
+  console.error('');
+  console.error('Examples:');
+  console.error('  node complete-run.js /project run-003 --complete-item');
+  console.error('  node complete-run.js /project run-003 --complete-run --tests=5 --coverage=85');
+}
+
 // =============================================================================
 // CLI Interface
 // =============================================================================
@@ -345,34 +512,32 @@ if (require.main === module) {
   const args = process.argv.slice(2);
 
   if (args.length < 2) {
-    console.error('Usage: node complete-run.js <rootPath> <runId> [options]');
-    console.error('');
-    console.error('Arguments:');
-    console.error('  rootPath  - Project root directory');
-    console.error('  runId     - Run ID to complete (e.g., run-003)');
-    console.error('');
-    console.error('Options:');
-    console.error('  --files-created=JSON   - JSON array of {path, purpose}');
-    console.error('  --files-modified=JSON  - JSON array of {path, changes}');
-    console.error('  --decisions=JSON       - JSON array of {decision, choice, rationale}');
-    console.error('  --tests=N              - Number of tests added');
-    console.error('  --coverage=N           - Coverage percentage');
-    console.error('');
-    console.error('Example:');
-    console.error('  node complete-run.js /my/project run-003 --tests=5 --coverage=85');
+    printUsage();
     process.exit(1);
   }
 
   const params = parseArgs(args);
 
   try {
-    const result = completeRun(params.rootPath, params.runId, {
-      filesCreated: params.filesCreated,
-      filesModified: params.filesModified,
-      decisions: params.decisions,
-      testsAdded: params.testsAdded,
-      coverage: params.coverage,
-    });
+    let result;
+    if (params.completeItem) {
+      result = completeCurrentItem(params.rootPath, params.runId, {
+        filesCreated: params.filesCreated,
+        filesModified: params.filesModified,
+        decisions: params.decisions,
+        testsAdded: params.testsAdded,
+        coverage: params.coverage,
+      });
+    } else {
+      // Default: complete entire run
+      result = completeRun(params.rootPath, params.runId, {
+        filesCreated: params.filesCreated,
+        filesModified: params.filesModified,
+        decisions: params.decisions,
+        testsAdded: params.testsAdded,
+        coverage: params.coverage,
+      });
+    }
     console.log(JSON.stringify(result, null, 2));
     process.exit(0);
   } catch (err) {
@@ -381,4 +546,4 @@ if (require.main === module) {
   }
 }
 
-module.exports = { completeRun };
+module.exports = { completeRun, completeCurrentItem };

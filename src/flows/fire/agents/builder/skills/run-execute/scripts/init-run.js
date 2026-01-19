@@ -4,13 +4,19 @@
  * FIRE Run Initialization Script
  *
  * Creates run record in state.yaml and run folder structure.
+ * Supports both single work item and batch/wide runs with multiple items.
+ *
  * Ensures deterministic run ID generation by checking BOTH:
  * - runs.completed history in state.yaml
  * - existing run folders in .specs-fire/runs/
  *
- * Usage: node init-run.js <rootPath> <workItemId> <intentId> <mode>
+ * Usage:
+ *   Single item: node init-run.js <rootPath> <workItemId> <intentId> <mode>
+ *   Batch/Wide:  node init-run.js <rootPath> --batch '<workItemsJson>'
  *
- * Example: node init-run.js /project login-endpoint user-auth confirm
+ * Examples:
+ *   node init-run.js /project login-endpoint user-auth confirm
+ *   node init-run.js /project --batch '[{"id":"wi-1","intent":"int-1","mode":"autopilot"}]'
  */
 
 const fs = require('fs');
@@ -33,26 +39,11 @@ function fireError(message, code, suggestion) {
 // =============================================================================
 
 const VALID_MODES = ['autopilot', 'confirm', 'validate'];
+const VALID_SCOPES = ['single', 'batch', 'wide'];
 
-function validateInputs(rootPath, workItemId, intentId, mode) {
+function validateRootPath(rootPath) {
   if (!rootPath || typeof rootPath !== 'string' || rootPath.trim() === '') {
     throw fireError('rootPath is required.', 'INIT_001', 'Provide a valid project root path.');
-  }
-
-  if (!workItemId || typeof workItemId !== 'string' || workItemId.trim() === '') {
-    throw fireError('workItemId is required.', 'INIT_010', 'Provide a valid work item ID.');
-  }
-
-  if (!intentId || typeof intentId !== 'string' || intentId.trim() === '') {
-    throw fireError('intentId is required.', 'INIT_020', 'Provide a valid intent ID.');
-  }
-
-  if (!mode || !VALID_MODES.includes(mode)) {
-    throw fireError(
-      `Invalid mode: "${mode}".`,
-      'INIT_030',
-      `Valid modes are: ${VALID_MODES.join(', ')}`
-    );
   }
 
   if (!fs.existsSync(rootPath)) {
@@ -62,6 +53,44 @@ function validateInputs(rootPath, workItemId, intentId, mode) {
       'Ensure the path exists and is accessible.'
     );
   }
+}
+
+function validateWorkItem(item, index) {
+  if (!item.id || typeof item.id !== 'string' || item.id.trim() === '') {
+    throw fireError(
+      `Work item at index ${index} missing 'id'.`,
+      'INIT_010',
+      'Each work item must have an id.'
+    );
+  }
+
+  if (!item.intent || typeof item.intent !== 'string' || item.intent.trim() === '') {
+    throw fireError(
+      `Work item "${item.id}" missing 'intent'.`,
+      'INIT_020',
+      'Each work item must have an intent.'
+    );
+  }
+
+  if (!item.mode || !VALID_MODES.includes(item.mode)) {
+    throw fireError(
+      `Work item "${item.id}" has invalid mode: "${item.mode}".`,
+      'INIT_030',
+      `Valid modes are: ${VALID_MODES.join(', ')}`
+    );
+  }
+}
+
+function validateWorkItems(workItems) {
+  if (!Array.isArray(workItems) || workItems.length === 0) {
+    throw fireError(
+      'Work items array is empty or invalid.',
+      'INIT_011',
+      'Provide at least one work item.'
+    );
+  }
+
+  workItems.forEach((item, index) => validateWorkItem(item, index));
 }
 
 function validateFireProject(rootPath) {
@@ -172,6 +201,19 @@ function generateRunId(runsPath, state) {
 }
 
 // =============================================================================
+// Scope Detection
+// =============================================================================
+
+function detectScope(workItems) {
+  if (workItems.length === 1) {
+    return 'single';
+  }
+  // For multiple items, default to batch
+  // (wide would be explicitly set by the caller if all compatible items are included)
+  return 'batch';
+}
+
+// =============================================================================
 // Run Folder Creation
 // =============================================================================
 
@@ -187,12 +229,21 @@ function createRunFolder(runPath) {
   }
 }
 
-function createRunLog(runPath, runId, workItemId, intentId, mode, startTime) {
+function createRunLog(runPath, runId, workItems, scope, startTime) {
+  // Format work items for run.md
+  const workItemsList = workItems.map((item, index) => {
+    const status = index === 0 ? 'in_progress' : 'pending';
+    return `  - id: ${item.id}\n    intent: ${item.intent}\n    mode: ${item.mode}\n    status: ${status}`;
+  }).join('\n');
+
+  const currentItem = workItems[0];
+
   const runLog = `---
 id: ${runId}
-work_item: ${workItemId}
-intent: ${intentId}
-mode: ${mode}
+scope: ${scope}
+work_items:
+${workItemsList}
+current_item: ${currentItem.id}
 status: in_progress
 started: ${startTime}
 completed: null
@@ -200,8 +251,14 @@ completed: null
 
 # Run: ${runId}
 
-## Work Item
-${workItemId}
+## Scope
+${scope} (${workItems.length} work item${workItems.length > 1 ? 's' : ''})
+
+## Work Items
+${workItems.map((item, i) => `${i + 1}. **${item.id}** (${item.mode}) — ${i === 0 ? 'in_progress' : 'pending'}`).join('\n')}
+
+## Current Item
+${currentItem.id} (${currentItem.mode})
 
 ## Files Created
 (none yet)
@@ -229,9 +286,30 @@ ${workItemId}
 // Main Function
 // =============================================================================
 
-function initRun(rootPath, workItemId, intentId, mode) {
-  // Validate inputs
-  validateInputs(rootPath, workItemId, intentId, mode);
+/**
+ * Initialize a run with one or more work items.
+ *
+ * @param {string} rootPath - Project root directory
+ * @param {Array<{id: string, intent: string, mode: string}>} workItems - Work items to include in run
+ * @param {string} [scope] - Optional scope override ('single', 'batch', 'wide')
+ * @returns {object} Result with runId, runPath, workItems, scope, started
+ */
+function initRun(rootPath, workItems, scope) {
+  // Validate root path
+  validateRootPath(rootPath);
+
+  // Validate work items
+  validateWorkItems(workItems);
+
+  // Detect or validate scope
+  const detectedScope = scope || detectScope(workItems);
+  if (scope && !VALID_SCOPES.includes(scope)) {
+    throw fireError(
+      `Invalid scope: "${scope}".`,
+      'INIT_035',
+      `Valid scopes are: ${VALID_SCOPES.join(', ')}`
+    );
+  }
 
   // Validate FIRE project structure
   const { statePath, runsPath } = validateFireProject(rootPath);
@@ -257,14 +335,22 @@ function initRun(rootPath, workItemId, intentId, mode) {
 
   // Create run log
   const startTime = new Date().toISOString();
-  createRunLog(runPath, runId, workItemId, intentId, mode, startTime);
+  createRunLog(runPath, runId, workItems, detectedScope, startTime);
+
+  // Prepare work items for state with status tracking
+  const stateWorkItems = workItems.map((item, index) => ({
+    id: item.id,
+    intent: item.intent,
+    mode: item.mode,
+    status: index === 0 ? 'in_progress' : 'pending',
+  }));
 
   // Update state with active run
   state.active_run = {
     id: runId,
-    work_item: workItemId,
-    intent: intentId,
-    mode: mode,
+    scope: detectedScope,
+    work_items: stateWorkItems,
+    current_item: workItems[0].id,
     started: startTime,
   };
 
@@ -276,9 +362,9 @@ function initRun(rootPath, workItemId, intentId, mode) {
     success: true,
     runId: runId,
     runPath: runPath,
-    workItemId: workItemId,
-    intentId: intentId,
-    mode: mode,
+    scope: detectedScope,
+    workItems: stateWorkItems,
+    currentItem: workItems[0].id,
     started: startTime,
   };
 }
@@ -287,27 +373,76 @@ function initRun(rootPath, workItemId, intentId, mode) {
 // CLI Interface
 // =============================================================================
 
+function printUsage() {
+  console.error('Usage:');
+  console.error('  Single item: node init-run.js <rootPath> <workItemId> <intentId> <mode>');
+  console.error('  Batch/Wide:  node init-run.js <rootPath> --batch \'<workItemsJson>\' [--scope=<scope>]');
+  console.error('');
+  console.error('Arguments:');
+  console.error('  rootPath      - Project root directory');
+  console.error('  workItemId    - Work item ID (single mode)');
+  console.error('  intentId      - Intent ID (single mode)');
+  console.error('  mode          - Execution mode: autopilot, confirm, validate');
+  console.error('');
+  console.error('Options:');
+  console.error('  --batch       - JSON array of work items');
+  console.error('  --scope       - Override scope: single, batch, wide');
+  console.error('');
+  console.error('Work item JSON format:');
+  console.error('  [{"id": "wi-1", "intent": "int-1", "mode": "autopilot"}, ...]');
+  console.error('');
+  console.error('Examples:');
+  console.error('  node init-run.js /project login-endpoint user-auth confirm');
+  console.error('  node init-run.js /project --batch \'[{"id":"wi-1","intent":"int-1","mode":"autopilot"}]\'');
+}
+
 if (require.main === module) {
   const args = process.argv.slice(2);
 
-  if (args.length < 4) {
-    console.error('Usage: node init-run.js <rootPath> <workItemId> <intentId> <mode>');
-    console.error('');
-    console.error('Arguments:');
-    console.error('  rootPath    - Project root directory');
-    console.error('  workItemId  - Work item ID to execute');
-    console.error('  intentId    - Intent ID containing the work item');
-    console.error('  mode        - Execution mode (autopilot, confirm, validate)');
-    console.error('');
-    console.error('Example:');
-    console.error('  node init-run.js /my/project login-endpoint user-auth confirm');
+  if (args.length < 2) {
+    printUsage();
     process.exit(1);
   }
 
-  const [rootPath, workItemId, intentId, mode] = args;
+  const rootPath = args[0];
+  let workItems = [];
+  let scope = null;
+
+  // Check if batch mode
+  if (args[1] === '--batch') {
+    if (args.length < 3) {
+      console.error('Error: --batch requires a JSON array of work items');
+      printUsage();
+      process.exit(1);
+    }
+
+    try {
+      workItems = JSON.parse(args[2]);
+    } catch (err) {
+      console.error(`Error: Failed to parse work items JSON: ${err.message}`);
+      process.exit(1);
+    }
+
+    // Check for --scope option
+    for (let i = 3; i < args.length; i++) {
+      if (args[i].startsWith('--scope=')) {
+        scope = args[i].substring('--scope='.length);
+      }
+    }
+  } else {
+    // Single item mode (backwards compatible)
+    if (args.length < 4) {
+      printUsage();
+      process.exit(1);
+    }
+
+    const [, workItemId, intentId, mode] = args;
+    workItems = [{ id: workItemId, intent: intentId, mode: mode }];
+    scope = 'single';
+  }
 
   try {
-    const result = initRun(rootPath, workItemId, intentId, mode);
+    const result = initRun(rootPath, workItems, scope);
     console.log(JSON.stringify(result, null, 2));
     process.exit(0);
   } catch (err) {
