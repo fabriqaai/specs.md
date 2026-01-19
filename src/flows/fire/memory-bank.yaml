@@ -26,7 +26,7 @@ state:
     workspace:
       - type: "greenfield | brownfield"
       - structure: "monolith | monorepo | multi-part"
-      - default_mode: "autopilot | confirm | validate"
+      - autonomy_bias: "autonomous | balanced | controlled"
       - scanned_at: "ISO 8601 timestamp (brownfield)"
       - parts: "List of project parts (monorepo)"
     intents:
@@ -102,8 +102,30 @@ execution_modes:
     complexity: high
     description: "Design doc review, then plan confirmation, then execution"
 
-# Work Item Complexity Mapping
+# Work Item Complexity Mapping (default, when autonomy_bias = balanced)
 complexity_modes:
   low: autopilot
   medium: confirm
   high: validate
+
+# Autonomy Bias - Shifts complexity→mode thresholds
+# User preference captured at project init, stored in workspace.autonomy_bias
+autonomy_bias:
+  autonomous:
+    description: "AI executes more freely, fewer checkpoints"
+    mapping:
+      low: autopilot
+      medium: autopilot   # shifted down
+      high: confirm       # shifted down
+  balanced:
+    description: "Standard checkpoints based on complexity"
+    mapping:
+      low: autopilot
+      medium: confirm
+      high: validate
+  controlled:
+    description: "More human oversight, more checkpoints"
+    mapping:
+      low: confirm        # shifted up
+      medium: validate    # shifted up
+      high: validate

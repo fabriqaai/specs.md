@@ -26,6 +26,7 @@ Display current FIRE project status.
 
       **Project**: {project.name}
       **Workspace**: {workspace.type} / {workspace.structure}
+      **Autonomy**: {workspace.autonomy_bias}
 
       ## Intents
 
@@ -71,6 +72,7 @@ Display current FIRE project status.
 
 **Project**: my-saas-app
 **Workspace**: brownfield / monolith
+**Autonomy**: balanced
 
 ## Intents
 

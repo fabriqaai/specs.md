@@ -46,14 +46,13 @@ Break an intent into discrete, executable work items.
   </step>
 
   <step n="3" title="Assess Complexity">
-    <action>For each work item, assess complexity:</action>
+    <action>For each work item, assess RAW complexity:</action>
 
     <complexity level="low">
       - Single file or few files
       - Well-understood pattern
       - No external dependencies
       - Examples: bug fix, config change, simple utility
-      → Mode: autopilot
     </complexity>
 
     <complexity level="medium">
@@ -61,7 +60,6 @@ Break an intent into discrete, executable work items.
       - Standard patterns with some decisions
       - May touch existing code
       - Examples: new endpoint, new component, feature addition
-      → Mode: confirm
     </complexity>
 
     <complexity level="high">
@@ -69,8 +67,27 @@ Break an intent into discrete, executable work items.
       - Security or data implications
       - Core system changes
       - Examples: auth system, payment flow, database migration
-      → Mode: validate
     </complexity>
+  </step>
+
+  <step n="3b" title="Apply Autonomy Bias">
+    <action>Read workspace.autonomy_bias from state.yaml</action>
+    <action>Apply bias to determine final execution mode:</action>
+
+    <bias-table>
+      | Raw Complexity | autonomous | balanced | controlled |
+      |----------------|------------|----------|------------|
+      | low            | autopilot  | autopilot| confirm    |
+      | medium         | autopilot  | confirm  | validate   |
+      | high           | confirm    | validate | validate   |
+    </bias-table>
+
+    <note>
+      This allows user preference to shift thresholds:
+      - autonomous: trusts AI more, fewer checkpoints
+      - balanced: standard behavior (default)
+      - controlled: more human oversight
+    </note>
   </step>
 
   <step n="4" title="Define Acceptance Criteria">

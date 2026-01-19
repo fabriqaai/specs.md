@@ -71,17 +71,44 @@ Initialize a new FIRE project by detecting workspace type and setting up standar
     </output>
   </step>
 
-  <step n="4" title="Create Structure">
+  <step n="4" title="Choose Autonomy Level">
+    <output>
+      How autonomous should FIRE be when executing work items?
+
+      **[1] Autonomous** — AI executes more freely, fewer checkpoints
+           (medium complexity → autopilot, high → confirm)
+
+      **[2] Balanced** — Standard checkpoints based on complexity (Recommended)
+           (low → autopilot, medium → confirm, high → validate)
+
+      **[3] Controlled** — More human oversight, more checkpoints
+           (low → confirm, medium/high → validate)
+
+      Choose [1/2/3]:
+    </output>
+    <check if="response == 1">
+      <set>workspace.autonomy_bias = autonomous</set>
+    </check>
+    <check if="response == 2">
+      <set>workspace.autonomy_bias = balanced</set>
+    </check>
+    <check if="response == 3">
+      <set>workspace.autonomy_bias = controlled</set>
+    </check>
+    <note>Can be changed later in .specs-fire/state.yaml</note>
+  </step>
+
+  <step n="5" title="Create Structure">
     <action>Create .specs-fire/ directory</action>
     <action>Create .specs-fire/intents/</action>
     <action>Create .specs-fire/runs/</action>
     <action>Create .specs-fire/standards/</action>
-    <action>Generate .specs-fire/state.yaml</action>
+    <action>Generate .specs-fire/state.yaml (include autonomy_bias)</action>
     <action>Generate .specs-fire/standards/tech-stack.md</action>
     <action>Generate .specs-fire/standards/coding-standards.md</action>
   </step>
 
-  <step n="5" title="Complete">
+  <step n="6" title="Complete">
     <output>
       FIRE initialized!
 
