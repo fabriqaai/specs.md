@@ -4,6 +4,31 @@ Execute a work item based on its assigned mode (autopilot, confirm, validate).
 
 ---
 
+## Prerequisites
+
+Before executing scripts, ensure required dependencies are installed:
+
+```xml
+<prerequisite-check>
+  <step n="1" title="Check yaml Package">
+    <action>Run: npm list yaml --depth=0 2>/dev/null || echo "NOT_FOUND"</action>
+    <check if="output contains NOT_FOUND">
+      <output>
+        Installing required dependency: yaml
+      </output>
+      <action>Run: npm install yaml</action>
+    </check>
+  </step>
+</prerequisite-check>
+```
+
+**Required packages:**
+| Package | Purpose | Install Command |
+|---------|---------|-----------------|
+| `yaml` | Parse/stringify state.yaml | `npm install yaml` |
+
+---
+
 ## Trigger
 
 - Pending work item ready for execution

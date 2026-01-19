@@ -17,6 +17,11 @@ const FLOWS = {
         description: 'AI-Driven Development Life Cycle - Best for greenfield projects with AI-native development',
         path: 'aidlc'
     },
+    fire: {
+        name: 'FIRE',
+        description: 'Fast Intent-Run Engineering - Lightweight flow for quick iterations with minimal overhead',
+        path: 'fire'
+    },
     simple: {
         name: 'Simple',
         description: 'Spec-driven development - Best for quick feature specs without full methodology overhead',
