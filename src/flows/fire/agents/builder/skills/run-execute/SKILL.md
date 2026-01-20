@@ -286,7 +286,8 @@ For runs with multiple work items:
   </step>
 
   <step n="6b" title="Code Review">
-    <note>Run code review as subagent after tests pass</note>
+    <critical>ALWAYS run code review after tests pass</critical>
+    <output>Running code review...</output>
 
     <action>Invoke code-review skill with context:</action>
     <code>
