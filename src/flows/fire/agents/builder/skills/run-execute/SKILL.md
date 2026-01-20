@@ -87,10 +87,24 @@ For runs with multiple work items:
 
   <mandate>
     USE SCRIPTS — Never bypass init-run.js or complete-run.js.
+    ALWAYS CREATE plan.md — Create plan BEFORE implementation starts (all modes).
+    ALWAYS CREATE test-report.md — Create test report AFTER tests complete.
     TRACK ALL FILE OPERATIONS — Every create, modify must be recorded.
     NEVER skip tests — Tests are mandatory, not optional.
     FOLLOW BROWNFIELD RULES — Read before write, match existing patterns.
   </mandate>
+
+  <artifact-timing critical="true">
+    Artifacts MUST be created at these points:
+    | Artifact | When Created | Created By |
+    |----------|--------------|------------|
+    | run.md | Start of run | init-run.js script |
+    | plan.md | BEFORE implementation (Step 4) | Agent using template |
+    | test-report.md | AFTER tests pass (Step 6) | Agent using template |
+    | walkthrough.md | After run completes (Step 8) | walkthrough-generate skill |
+
+    For batch runs: Append each work item's section to plan.md and test-report.md.
+  </artifact-timing>
 
   <step n="1" title="Initialize Run">
     <critical>
@@ -137,11 +151,16 @@ For runs with multiple work items:
       Executing in Autopilot mode (0 checkpoints).
       Work item: {title}
     </output>
-    <goto step="5"/>
+    <goto step="4"/>
   </step>
 
   <step n="3b" title="Confirm Mode" if="mode == confirm">
     <action>Generate implementation plan</action>
+    <action>Save plan IMMEDIATELY using template: templates/plan.md.hbs</action>
+    <action>Write to: .specs-fire/runs/{run-id}/plan.md</action>
+    <output>
+      Plan saved to: .specs-fire/runs/{run-id}/plan.md
+    </output>
     <checkpoint>
       <output>
         ## Implementation Plan for "{title}"
@@ -165,11 +184,8 @@ For runs with multiple work items:
     <check if="response == edit">
       <ask>What changes to the plan?</ask>
       <action>Adjust plan</action>
+      <action>Update plan.md with changes</action>
       <goto step="3b"/>
-    </check>
-    <check if="response == y">
-      <action>Save approved plan using template: templates/plan.md.hbs</action>
-      <action>Write to: .specs-fire/runs/{run-id}/plan.md</action>
     </check>
     <goto step="5"/>
   </step>
@@ -177,6 +193,12 @@ For runs with multiple work items:
   <step n="3c" title="Validate Mode" if="mode == validate">
     <action>Load design doc from .specs-fire/intents/{intent}/work-items/{id}-design.md</action>
     <action>Generate implementation plan based on design</action>
+    <action>Save plan IMMEDIATELY using template: templates/plan.md.hbs</action>
+    <action>Write to: .specs-fire/runs/{run-id}/plan.md</action>
+    <action>Include reference to design doc in plan</action>
+    <output>
+      Plan saved to: .specs-fire/runs/{run-id}/plan.md
+    </output>
     <checkpoint>
       <output>
         ## Implementation Plan for "{title}"
@@ -200,14 +222,22 @@ For runs with multiple work items:
     <check if="response == edit">
       <ask>What changes to the plan?</ask>
       <action>Adjust plan</action>
+      <action>Update plan.md with changes</action>
       <goto step="3c"/>
     </check>
-    <check if="response == y">
-      <action>Save approved plan using template: templates/plan.md.hbs</action>
-      <action>Write to: .specs-fire/runs/{run-id}/plan.md</action>
-      <action>Include reference to design doc in plan</action>
-    </check>
     <goto step="5"/>
+  </step>
+
+  <step n="4" title="Generate Plan (Autopilot Only)" if="mode == autopilot">
+    <note>Confirm and Validate modes already saved plan in Step 3b/3c</note>
+    <action>Generate implementation plan</action>
+    <action>Save plan using template: templates/plan.md.hbs</action>
+    <action>Write to: .specs-fire/runs/{run-id}/plan.md</action>
+    <output>
+      Plan saved to: .specs-fire/runs/{run-id}/plan.md
+      (Autopilot mode - continuing without checkpoint)
+    </output>
+    <note>No checkpoint in autopilot - human can review plan.md while agent works</note>
   </step>
 
   <step n="5" title="Execute Implementation">
@@ -241,6 +271,18 @@ For runs with multiple work items:
     </check>
 
     <action>Validate acceptance criteria from work item</action>
+
+    <critical>Create test report AFTER tests pass</critical>
+    <action>Generate test report using template: templates/test-report.md.hbs</action>
+    <action>Write to: .specs-fire/runs/{run-id}/test-report.md</action>
+    <action>Include in test report:</action>
+    <substep>Test results summary (passed/failed/skipped)</substep>
+    <substep>Code coverage percentage</substep>
+    <substep>Acceptance criteria validation results</substep>
+    <substep>Any test warnings or notes</substep>
+    <output>
+      Test report saved to: .specs-fire/runs/{run-id}/test-report.md
+    </output>
   </step>
 
   <step n="7" title="Complete Current Work Item">
@@ -288,6 +330,8 @@ For runs with multiple work items:
 
       Artifacts:
       - Run Log: .specs-fire/runs/{run-id}/run.md
+      - Plan: .specs-fire/runs/{run-id}/plan.md
+      - Test Report: .specs-fire/runs/{run-id}/test-report.md
       - Walkthrough: .specs-fire/runs/{run-id}/walkthrough.md
     </output>
   </step>
@@ -392,9 +436,16 @@ After init-run.js creates a run:
 ```
 .specs-fire/runs/run-001/
 ├── run.md          # Created by init-run.js, updated by complete-run.js
-├── plan.md         # Created during confirm/validate mode (optional)
+├── plan.md         # Created BEFORE implementation (ALL modes - required)
+├── test-report.md  # Created AFTER tests pass (required)
 └── walkthrough.md  # Created by walkthrough-generate skill
 ```
+
+**Artifact Creation Timeline:**
+1. `run.md` — Created at run start by init-run.js
+2. `plan.md` — Created BEFORE implementation begins (Step 4)
+3. `test-report.md` — Created AFTER tests pass (Step 6)
+4. `walkthrough.md` — Created after run completes (Step 8)
 
 The run.md contains:
 - All work items with their statuses

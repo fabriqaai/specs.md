@@ -198,14 +198,25 @@ Each run creates a folder with its artifacts:
 - **test-report.md** — Test results and acceptance criteria validation
 - **walkthrough.md** — Human-readable summary after completion
 
-| Artifact | Location | Created By |
-|----------|----------|------------|
-| Plan | `.specs-fire/runs/{run-id}/plan.md` | Agent (template: `skills/run-execute/templates/plan.md.hbs`) |
-| Run Log | `.specs-fire/runs/{run-id}/run.md` | **init-run.js script** (NEVER create manually) |
-| Test Report | `.specs-fire/runs/{run-id}/test-report.md` | Agent (template: `skills/run-execute/templates/test-report.md.hbs`) |
-| Walkthrough | `.specs-fire/runs/{run-id}/walkthrough.md` | Agent (template: `skills/walkthrough-generate/templates/walkthrough.md.hbs`) |
+| Artifact | Location | Created By | When |
+|----------|----------|------------|------|
+| Run Log | `.specs-fire/runs/{run-id}/run.md` | **init-run.js script** | At run START |
+| Plan | `.specs-fire/runs/{run-id}/plan.md` | Agent (template) | BEFORE implementation |
+| Test Report | `.specs-fire/runs/{run-id}/test-report.md` | Agent (template) | AFTER tests pass |
+| Walkthrough | `.specs-fire/runs/{run-id}/walkthrough.md` | Agent (template) | After run END |
 
-**IMPORTANT**: The run folder and run.md are created by `init-run.js`. Do NOT use mkdir or Write tool to create these.
+**CRITICAL - Artifact Timing**:
+```
+1. init-run.js → creates run.md (with all work items listed)
+2. BEFORE implementation → create plan.md (ALL modes, not just confirm/validate)
+3. AFTER tests pass → create test-report.md
+4. After run completes → create walkthrough.md via skill
+```
+
+**IMPORTANT**:
+- The run folder and run.md are created by `init-run.js`. Do NOT use mkdir or Write tool to create these.
+- plan.md is REQUIRED for ALL modes (autopilot, confirm, validate). In autopilot mode, the plan is created but no checkpoint pause occurs.
+- test-report.md is REQUIRED after tests complete.
 
 ---
 
