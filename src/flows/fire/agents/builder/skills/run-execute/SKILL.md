@@ -285,6 +285,51 @@ For runs with multiple work items:
     </output>
   </step>
 
+  <step n="6b" title="Code Review">
+    <note>Run code review as subagent after tests pass</note>
+
+    <action>Invoke code-review skill with context:</action>
+    <code>
+      invoke-skill: code-review
+      context:
+        files_created: {files_created}
+        files_modified: {files_modified}
+        run_id: {run_id}
+        intent_id: {intent_id}
+    </code>
+
+    <invoke-skill>code-review</invoke-skill>
+
+    <note>
+      Code review skill will:
+      1. Review all files created/modified in this work item
+      2. Auto-fix no-brainer issues (unused imports, console.log, etc.)
+      3. Present suggestions requiring approval
+      4. Create review-report.md artifact
+    </note>
+
+    <check if="code-review returns suggestions">
+      <note>User interaction happens within code-review skill</note>
+      <action>Wait for code-review skill to complete</action>
+    </check>
+
+    <check if="code-review applied fixes">
+      <action>Re-run tests to verify fixes didn't break anything</action>
+      <check if="tests fail">
+        <output>
+          Code review fixes caused test failure. Reverting...
+        </output>
+        <action>Revert code review changes</action>
+        <action>Re-run tests to confirm passing</action>
+      </check>
+    </check>
+
+    <output>
+      Code review complete.
+      Review report: .specs-fire/runs/{run-id}/review-report.md
+    </output>
+  </step>
+
   <step n="7" title="Complete Current Work Item">
     <critical>
       MUST call complete-run.js script. Check if more items remain.
@@ -332,6 +377,7 @@ For runs with multiple work items:
       - Run Log: .specs-fire/runs/{run-id}/run.md
       - Plan: .specs-fire/runs/{run-id}/plan.md
       - Test Report: .specs-fire/runs/{run-id}/test-report.md
+      - Code Review: .specs-fire/runs/{run-id}/review-report.md
       - Walkthrough: .specs-fire/runs/{run-id}/walkthrough.md
     </output>
   </step>
@@ -435,17 +481,19 @@ After init-run.js creates a run:
 
 ```
 .specs-fire/runs/run-001/
-├── run.md          # Created by init-run.js, updated by complete-run.js
-├── plan.md         # Created BEFORE implementation (ALL modes - required)
-├── test-report.md  # Created AFTER tests pass (required)
-└── walkthrough.md  # Created by walkthrough-generate skill
+├── run.md           # Created by init-run.js, updated by complete-run.js
+├── plan.md          # Created BEFORE implementation (ALL modes - required)
+├── test-report.md   # Created AFTER tests pass (required)
+├── review-report.md # Created by code-review skill (Step 6b)
+└── walkthrough.md   # Created by walkthrough-generate skill
 ```
 
 **Artifact Creation Timeline:**
 1. `run.md` — Created at run start by init-run.js
 2. `plan.md` — Created BEFORE implementation begins (Step 4)
 3. `test-report.md` — Created AFTER tests pass (Step 6)
-4. `walkthrough.md` — Created after run completes (Step 8)
+4. `review-report.md` — Created by code-review skill (Step 6b)
+5. `walkthrough.md` — Created after run completes (Step 8)
 
 The run.md contains:
 - All work items with their statuses

@@ -38,6 +38,7 @@ When routed from Orchestrator or user invokes this agent:
 |---------|-------|-------------|
 | `plan` | `skills/run-plan/SKILL.md` | Plan run scope (discover work, suggest groupings) |
 | `run`, `execute` | `skills/run-execute/SKILL.md` | Execute a work item run |
+| `review` | `skills/code-review/SKILL.md` | Review code, auto-fix issues, suggest improvements |
 | `walkthrough` | `skills/walkthrough-generate/SKILL.md` | Generate implementation walkthrough |
 | `status` | `skills/run-status/SKILL.md` | Show current run status |
 
@@ -210,6 +211,7 @@ Each run creates a folder with its artifacts:
 | Run Log | `.specs-fire/runs/{run-id}/run.md` | **init-run.js script** | At run START |
 | Plan | `.specs-fire/runs/{run-id}/plan.md` | Agent (template) | BEFORE implementation |
 | Test Report | `.specs-fire/runs/{run-id}/test-report.md` | Agent (template) | AFTER tests pass |
+| Code Review | `.specs-fire/runs/{run-id}/review-report.md` | **code-review skill** | AFTER test report |
 | Walkthrough | `.specs-fire/runs/{run-id}/walkthrough.md` | Agent (template) | After run END |
 
 **CRITICAL - Artifact Timing**:
@@ -217,7 +219,8 @@ Each run creates a folder with its artifacts:
 1. init-run.js → creates run.md (with all work items listed)
 2. BEFORE implementation → create plan.md (ALL modes, not just confirm/validate)
 3. AFTER tests pass → create test-report.md
-4. After run completes → create walkthrough.md via skill
+4. AFTER test report → invoke code-review skill → creates review-report.md
+5. After run completes → create walkthrough.md via skill
 ```
 
 **IMPORTANT**:
