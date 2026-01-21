@@ -1,37 +1,57 @@
-# Skill: Code Review
+---
+name: code-review
+description: Review code written during a run, auto-fix no-brainer issues, and suggest improvements requiring confirmation. Invoked after tests pass.
+version: 1.0.0
+---
 
+<objective>
 Review code written during a run, auto-fix no-brainer issues, and suggest improvements requiring confirmation.
+</objective>
 
----
+<triggers>
+  - Invoked by run-execute after tests pass (Step 6b)
+  - Receives: files_created, files_modified, run_id, intent context
+</triggers>
 
-## Trigger
+<degrees_of_freedom>
+  - **AUTO-FIX**: LOW — Only mechanical, non-semantic changes
+  - **SUGGESTIONS**: MEDIUM — Present options, let user decide
+</degrees_of_freedom>
 
-- Invoked by run-execute after tests pass (Step 6b)
-- Receives: files_created, files_modified, run_id, intent context
+<llm critical="true">
+  <mandate>REVIEW all files created/modified in current run</mandate>
+  <mandate>AUTO-FIX only mechanical, non-semantic issues</mandate>
+  <mandate>ALWAYS CONFIRM security, architecture, and behavioral changes</mandate>
+  <mandate>RESPECT project coding standards from .specs-fire/standards/</mandate>
+  <mandate>NEVER break working code — if tests passed, be conservative</mandate>
+  <mandate>RE-RUN tests after auto-fixes — revert if tests fail</mandate>
+</llm>
 
----
+<input_context>
+  The skill receives from run-execute:
 
-## Degrees of Freedom
+  ```yaml
+  files_created:
+    - path: src/auth/login.ts
+      purpose: Login endpoint handler
+    - path: src/auth/login.test.ts
+      purpose: Unit tests for login
 
-**LOW for auto-fixes** — Only mechanical, non-semantic changes.
-**MEDIUM for suggestions** — Present options, let user decide.
+  files_modified:
+    - path: src/routes/index.ts
+      changes: Added login route
 
----
+  run_id: run-001
+  intent_id: user-auth
+  ```
+</input_context>
 
-## Workflow
+<references_index>
+  <reference name="review-categories" path="references/review-categories.md" load_when="analyzing code"/>
+  <reference name="auto-fix-rules" path="references/auto-fix-rules.md" load_when="classifying findings"/>
+</references_index>
 
-```xml
-<skill name="code-review">
-
-  <mandate>
-    REVIEW all files created/modified in current run.
-    AUTO-FIX only mechanical, non-semantic issues.
-    ALWAYS CONFIRM security, architecture, and behavioral changes.
-    RESPECT project coding standards from .specs-fire/standards/.
-    NEVER break working code — if tests passed, be conservative.
-    RE-RUN tests after auto-fixes — revert if tests fail.
-  </mandate>
-
+<flow>
   <step n="1" title="Gather Context">
     <action>Receive files_created and files_modified from parent workflow</action>
     <action>Load project standards:</action>
@@ -46,9 +66,7 @@ Review code written during a run, auto-fix no-brainer issues, and suggest improv
 
     <action>Read each file to be reviewed</action>
 
-    <output>
-      Reviewing {file_count} files...
-    </output>
+    <output>Reviewing {file_count} files...</output>
   </step>
 
   <step n="2" title="Run Project Linters (if available)">
@@ -95,17 +113,13 @@ Review code written during a run, auto-fix no-brainer issues, and suggest improv
       <action>Run project test command</action>
 
       <check if="tests fail after auto-fix">
-        <output>
-          Auto-fix caused test failure. Reverting...
-        </output>
+        <output>Auto-fix caused test failure. Reverting...</output>
         <action>Revert all auto-fix changes</action>
         <action>Move failed fixes to CONFIRM category</action>
       </check>
 
       <check if="tests pass">
-        <output>
-          Auto-fixed {count} issues. Tests still passing.
-        </output>
+        <output>Auto-fixed {count} issues. Tests still passing.</output>
       </check>
     </check>
   </step>
@@ -129,7 +143,7 @@ Review code written during a run, auto-fix no-brainer issues, and suggest improv
     </check>
 
     <check if="suggestions exist">
-      <output>
+      <template_output section="suggestions">
         ## Code Review Complete
 
         **Auto-fixed ({auto_count} issues)**:
@@ -154,7 +168,7 @@ Review code written during a run, auto-fix no-brainer issues, and suggest improv
         {/for}
         [s] Skip all suggestions
         [r] Review each individually
-      </output>
+      </template_output>
 
       <checkpoint>Wait for user response</checkpoint>
     </check>
@@ -174,7 +188,7 @@ Review code written during a run, auto-fix no-brainer issues, and suggest improv
 
     <check if="response == r">
       <iterate over="suggestions" as="suggestion">
-        <output>
+        <template_output section="individual_suggestion">
           **[{suggestion.category}]** {suggestion.title}
 
           File: {suggestion.file}:{suggestion.line}
@@ -192,7 +206,7 @@ Review code written during a run, auto-fix no-brainer issues, and suggest improv
           Rationale: {suggestion.rationale}
 
           Apply this change? [y/n]
-        </output>
+        </template_output>
         <checkpoint>Wait for response</checkpoint>
         <check if="response == y">
           <action>Apply this suggestion</action>
@@ -210,7 +224,7 @@ Review code written during a run, auto-fix no-brainer issues, and suggest improv
 
   <step n="8" title="Return to Parent">
     <action>Return summary to run-execute workflow:</action>
-    <return>
+    <return_value>
       {
         "success": true,
         "auto_fixed_count": {count},
@@ -219,48 +233,22 @@ Review code written during a run, auto-fix no-brainer issues, and suggest improv
         "tests_passing": true,
         "report_path": ".specs-fire/runs/{run-id}/review-report.md"
       }
-    </return>
+    </return_value>
   </step>
+</flow>
 
-</skill>
-```
+<output_artifact>
+  Creates `.specs-fire/runs/{run-id}/review-report.md` with:
+  - Summary table (auto-fixed, suggested, skipped by category)
+  - Detailed list of auto-fixed issues with diffs
+  - Applied suggestions with approval timestamps
+  - Skipped suggestions with reasons
+</output_artifact>
 
----
-
-## Input Context
-
-The skill receives from run-execute:
-
-```yaml
-files_created:
-  - path: src/auth/login.ts
-    purpose: Login endpoint handler
-  - path: src/auth/login.test.ts
-    purpose: Unit tests for login
-
-files_modified:
-  - path: src/routes/index.ts
-    changes: Added login route
-
-run_id: run-001
-intent_id: user-auth
-```
-
----
-
-## Output Artifact
-
-Creates `.specs-fire/runs/{run-id}/review-report.md` with:
-- Summary table (auto-fixed, suggested, skipped by category)
-- Detailed list of auto-fixed issues with diffs
-- Applied suggestions with approval timestamps
-- Skipped suggestions with reasons
-
----
-
-## References
-
-| Reference | Purpose |
-|-----------|---------|
-| `references/review-categories.md` | Categories and what to check |
-| `references/auto-fix-rules.md` | Rules for auto-fix vs confirm |
+<success_criteria>
+  <criterion>All files created/modified in run reviewed</criterion>
+  <criterion>Auto-fixes applied without breaking tests</criterion>
+  <criterion>Suggestions presented for user approval</criterion>
+  <criterion>review-report.md created in run folder</criterion>
+  <criterion>Return status to parent workflow</criterion>
+</success_criteria>

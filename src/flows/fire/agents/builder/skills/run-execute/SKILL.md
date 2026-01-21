@@ -1,116 +1,71 @@
-# Skill: Run Execute
-
-Execute work items based on their assigned mode (autopilot, confirm, validate).
-Supports both single-item and multi-item (batch/wide) runs.
-
+---
+name: run-execute
+description: Execute work items based on their assigned mode (autopilot, confirm, validate). Supports single-item and multi-item (batch/wide) runs.
+version: 1.0.0
 ---
 
-## Prerequisites
+<objective>
+Execute work items based on their assigned mode (autopilot, confirm, validate).
+Supports both single-item and multi-item (batch/wide) runs.
+</objective>
 
-Before executing scripts, ensure required dependencies are installed:
+<prerequisites>
+  Before executing scripts, ensure required dependencies are installed:
 
-```xml
-<prerequisite-check>
   <step n="1" title="Check yaml Package">
     <action>Run: npm list yaml --depth=0 2>/dev/null || echo "NOT_FOUND"</action>
     <check if="output contains NOT_FOUND">
-      <output>
-        Installing required dependency: yaml
-      </output>
+      <output>Installing required dependency: yaml</output>
       <action>Run: npm install yaml</action>
     </check>
   </step>
-</prerequisite-check>
-```
 
-**Required packages:**
-| Package | Purpose | Install Command |
-|---------|---------|-----------------|
-| `yaml` | Parse/stringify state.yaml | `npm install yaml` |
+  | Package | Purpose | Install Command |
+  |---------|---------|-----------------|
+  | `yaml` | Parse/stringify state.yaml | `npm install yaml` |
+</prerequisites>
 
----
+<triggers>
+  - Pending work item ready for execution
+  - Resumed from interrupted run
+  - Batch of work items passed from run-plan
+</triggers>
 
-## Trigger
+<degrees_of_freedom>
+  Varies by mode:
+  - **Autopilot**: LOW — Execute standard patterns decisively
+  - **Confirm**: MEDIUM — Present plan, adjust based on feedback
+  - **Validate**: LOW — Follow approved design precisely
+</degrees_of_freedom>
 
-- Pending work item ready for execution
-- Resumed from interrupted run
-- Batch of work items passed from run-plan
+<llm critical="true">
+  <mandate>USE SCRIPTS — NEVER bypass init-run.js or complete-run.js</mandate>
+  <mandate>ALWAYS CREATE plan.md — Create plan BEFORE implementation starts (ALL modes)</mandate>
+  <mandate>ALWAYS CREATE test-report.md — Create test report AFTER tests complete</mandate>
+  <mandate>ALWAYS RUN code-review — Invoke code-review skill after tests pass</mandate>
+  <mandate>TRACK ALL FILE OPERATIONS — Every create, modify MUST be recorded</mandate>
+  <mandate>NEVER skip tests — Tests are mandatory, not optional</mandate>
+  <mandate>FOLLOW BROWNFIELD RULES — Read before write, match existing patterns</mandate>
+</llm>
 
----
+<artifact_timing critical="true">
+  Artifacts MUST be created at these points:
 
-## Degrees of Freedom
+  | Artifact | When Created | Created By |
+  |----------|--------------|------------|
+  | run.md | Start of run | init-run.js script |
+  | plan.md | BEFORE implementation (Step 4) | Agent using template |
+  | test-report.md | AFTER tests pass (Step 6) | Agent using template |
+  | review-report.md | AFTER test report (Step 6b) | code-review skill |
+  | walkthrough.md | After run completes (Step 8) | walkthrough-generate skill |
 
-**Varies by mode**:
-- Autopilot: LOW — Execute standard patterns decisively
-- Confirm: MEDIUM — Present plan, adjust based on feedback
-- Validate: LOW — Follow approved design precisely
+  For batch runs: Append each work item's section to plan.md and test-report.md.
+</artifact_timing>
 
----
-
-## Critical Requirements
-
-### MUST Use Scripts - Never Bypass
-
-**CRITICAL**: You MUST call the scripts. DO NOT use mkdir or manual file creation.
-
-| Action | CORRECT | WRONG |
-|--------|---------|-------|
-| Initialize run | `node scripts/init-run.js ...` | `mkdir .specs-fire/runs/run-001` |
-| Complete item | `node scripts/complete-run.js ... --complete-item` | Manual state editing |
-| Complete run | `node scripts/complete-run.js ... --complete-run` | Manual state editing |
-
-The scripts:
-- Create run folder AND run.md together
-- Update state.yaml atomically
-- Track run history in runs.completed
-- Handle batch run state transitions
-
-### Batch Run Execution Flow
-
-For runs with multiple work items:
-
-```
-1. Call init-run.js ONCE at start (creates run.md with ALL items)
-2. Execute each work item sequentially:
-   - Load item context
-   - Execute based on mode (autopilot/confirm/validate)
-   - Call complete-run.js --complete-item after each
-3. Call complete-run.js --complete-run after final item
-```
-
----
-
-## Workflow
-
-```xml
-<skill name="run-execute">
-
-  <mandate>
-    USE SCRIPTS — Never bypass init-run.js or complete-run.js.
-    ALWAYS CREATE plan.md — Create plan BEFORE implementation starts (all modes).
-    ALWAYS CREATE test-report.md — Create test report AFTER tests complete.
-    TRACK ALL FILE OPERATIONS — Every create, modify must be recorded.
-    NEVER skip tests — Tests are mandatory, not optional.
-    FOLLOW BROWNFIELD RULES — Read before write, match existing patterns.
-  </mandate>
-
-  <artifact-timing critical="true">
-    Artifacts MUST be created at these points:
-    | Artifact | When Created | Created By |
-    |----------|--------------|------------|
-    | run.md | Start of run | init-run.js script |
-    | plan.md | BEFORE implementation (Step 4) | Agent using template |
-    | test-report.md | AFTER tests pass (Step 6) | Agent using template |
-    | walkthrough.md | After run completes (Step 8) | walkthrough-generate skill |
-
-    For batch runs: Append each work item's section to plan.md and test-report.md.
-  </artifact-timing>
-
+<flow>
   <step n="1" title="Initialize Run">
-    <critical>
-      MUST call init-run.js script. DO NOT use mkdir directly.
-      The script creates BOTH the folder AND run.md file.
-    </critical>
+    <critical>MUST call init-run.js script. DO NOT use mkdir directly.</critical>
+    <note>The script creates BOTH the folder AND run.md file.</note>
 
     <action>Prepare work items JSON array:</action>
     <code>
@@ -132,8 +87,8 @@ For runs with multiple work items:
     </check>
   </step>
 
-  <step n="2" title="Execute Work Items Loop">
-    <note>For batch runs, repeat steps 2-6 for each work item</note>
+  <step n="2" title="Load Work Item Context">
+    <note>For batch runs, repeat steps 2-6b for each work item</note>
 
     <action>Get current_item from state.yaml active_run</action>
     <action>Load work item from .specs-fire/intents/{intent}/work-items/{id}.md</action>
@@ -158,11 +113,10 @@ For runs with multiple work items:
     <action>Generate implementation plan</action>
     <action>Save plan IMMEDIATELY using template: templates/plan.md.hbs</action>
     <action>Write to: .specs-fire/runs/{run-id}/plan.md</action>
-    <output>
-      Plan saved to: .specs-fire/runs/{run-id}/plan.md
-    </output>
+    <output>Plan saved to: .specs-fire/runs/{run-id}/plan.md</output>
+
     <checkpoint>
-      <output>
+      <template_output section="plan">
         ## Implementation Plan for "{title}"
 
         ### Approach
@@ -179,8 +133,9 @@ For runs with multiple work items:
 
         ---
         Approve plan? [Y/n/edit]
-      </output>
+      </template_output>
     </checkpoint>
+
     <check if="response == edit">
       <ask>What changes to the plan?</ask>
       <action>Adjust plan</action>
@@ -196,11 +151,10 @@ For runs with multiple work items:
     <action>Save plan IMMEDIATELY using template: templates/plan.md.hbs</action>
     <action>Write to: .specs-fire/runs/{run-id}/plan.md</action>
     <action>Include reference to design doc in plan</action>
-    <output>
-      Plan saved to: .specs-fire/runs/{run-id}/plan.md
-    </output>
+    <output>Plan saved to: .specs-fire/runs/{run-id}/plan.md</output>
+
     <checkpoint>
-      <output>
+      <template_output section="plan">
         ## Implementation Plan for "{title}"
 
         Based on approved design document.
@@ -217,8 +171,9 @@ For runs with multiple work items:
         ---
         This is Checkpoint 2 of Validate mode.
         Approve implementation plan? [Y/n/edit]
-      </output>
+      </template_output>
     </checkpoint>
+
     <check if="response == edit">
       <ask>What changes to the plan?</ask>
       <action>Adjust plan</action>
@@ -246,12 +201,12 @@ For runs with multiple work items:
     <substep n="5b">Track file operation (create/modify)</substep>
     <substep n="5c">Record decisions made</substep>
 
-    <brownfield-rules>
+    <brownfield_rules>
       <rule>READ existing code before modifying</rule>
       <rule>MATCH existing naming conventions</rule>
       <rule>FOLLOW existing patterns in the codebase</rule>
       <rule>PRESERVE existing tests</rule>
-    </brownfield-rules>
+    </brownfield_rules>
   </step>
 
   <step n="6" title="Run Tests">
@@ -263,9 +218,7 @@ For runs with multiple work items:
 
     <action>Run test suite</action>
     <check if="tests fail">
-      <output>
-        Tests failed. Fixing issues...
-      </output>
+      <output>Tests failed. Fixing issues...</output>
       <action>Fix failing tests</action>
       <action>Re-run tests</action>
     </check>
@@ -280,9 +233,7 @@ For runs with multiple work items:
     <substep>Code coverage percentage</substep>
     <substep>Acceptance criteria validation results</substep>
     <substep>Any test warnings or notes</substep>
-    <output>
-      Test report saved to: .specs-fire/runs/{run-id}/test-report.md
-    </output>
+    <output>Test report saved to: .specs-fire/runs/{run-id}/test-report.md</output>
   </step>
 
   <step n="6b" title="Code Review">
@@ -299,7 +250,7 @@ For runs with multiple work items:
         intent_id: {intent_id}
     </code>
 
-    <invoke-skill>code-review</invoke-skill>
+    <invoke_skill>code-review</invoke_skill>
 
     <note>
       Code review skill will:
@@ -317,9 +268,7 @@ For runs with multiple work items:
     <check if="code-review applied fixes">
       <action>Re-run tests to verify fixes didn't break anything</action>
       <check if="tests fail">
-        <output>
-          Code review fixes caused test failure. Reverting...
-        </output>
+        <output>Code review fixes caused test failure. Reverting...</output>
         <action>Revert code review changes</action>
         <action>Re-run tests to confirm passing</action>
       </check>
@@ -332,9 +281,7 @@ For runs with multiple work items:
   </step>
 
   <step n="7" title="Complete Current Work Item">
-    <critical>
-      MUST call complete-run.js script. Check if more items remain.
-    </critical>
+    <critical>MUST call complete-run.js script. Check if more items remain.</critical>
 
     <check if="batch run with more items pending">
       <action>Call complete-run.js with --complete-item flag:</action>
@@ -362,7 +309,7 @@ For runs with multiple work items:
   </step>
 
   <step n="8" title="Generate Walkthrough">
-    <invoke-skill>walkthrough-generate</invoke-skill>
+    <invoke_skill>walkthrough-generate</invoke_skill>
   </step>
 
   <step n="9" title="Report Completion">
@@ -382,123 +329,131 @@ For runs with multiple work items:
       - Walkthrough: .specs-fire/runs/{run-id}/walkthrough.md
     </output>
   </step>
+</flow>
 
-</skill>
-```
+<scripts>
+  | Script | Purpose | Usage |
+  |--------|---------|-------|
+  | `scripts/init-run.js` | Initialize run record and folder | Creates run.md with all work items |
+  | `scripts/complete-run.js` | Finalize run and update state | `--complete-item` or `--complete-run` |
 
----
+  <script name="init-run.js">
+    ```bash
+    # Single work item
+    node scripts/init-run.js /project work-item-id intent-id autopilot
 
-## Scripts
+    # Batch/wide (multiple items)
+    node scripts/init-run.js /project --batch '[
+      {"id": "wi-1", "intent": "int-1", "mode": "autopilot"},
+      {"id": "wi-2", "intent": "int-1", "mode": "confirm"}
+    ]' --scope=batch
+    ```
 
-| Script | Purpose | Usage |
-|--------|---------|-------|
-| `scripts/init-run.js` | Initialize run record and folder | Creates run.md with all work items |
-| `scripts/complete-run.js` | Finalize run and update state | `--complete-item` or `--complete-run` |
+    <output_format>
+      ```json
+      {
+        "success": true,
+        "runId": "run-001",
+        "runPath": "/project/.specs-fire/runs/run-001",
+        "scope": "batch",
+        "workItems": [...],
+        "currentItem": "wi-1"
+      }
+      ```
+    </output_format>
+  </script>
 
-### init-run.js Usage
+  <script name="complete-run.js">
+    ```bash
+    # Complete current item (batch runs - moves to next item)
+    node scripts/complete-run.js /project run-001 --complete-item
 
-```bash
-# Single work item
-node scripts/init-run.js /project work-item-id intent-id autopilot
+    # Complete entire run (single runs or final item in batch)
+    node scripts/complete-run.js /project run-001 --complete-run \
+      --files-created='[{"path":"src/new.ts","purpose":"New feature"}]' \
+      --files-modified='[{"path":"src/old.ts","changes":"Added import"}]' \
+      --tests=5 --coverage=85
+    ```
 
-# Batch/wide (multiple items)
-node scripts/init-run.js /project --batch '[
-  {"id": "wi-1", "intent": "int-1", "mode": "autopilot"},
-  {"id": "wi-2", "intent": "int-1", "mode": "confirm"}
-]' --scope=batch
-```
+    <complete_item_output>
+      ```json
+      {
+        "success": true,
+        "runId": "run-001",
+        "completedItem": "wi-1",
+        "nextItem": "wi-2",
+        "remainingItems": 1,
+        "allItemsCompleted": false
+      }
+      ```
+    </complete_item_output>
 
-**Output:**
-```json
-{
-  "success": true,
-  "runId": "run-001",
-  "runPath": "/project/.specs-fire/runs/run-001",
-  "scope": "batch",
-  "workItems": [...],
-  "currentItem": "wi-1"
-}
-```
+    <complete_run_output>
+      ```json
+      {
+        "success": true,
+        "runId": "run-001",
+        "scope": "batch",
+        "workItemsCompleted": 2,
+        "completedAt": "2026-01-20T..."
+      }
+      ```
+    </complete_run_output>
+  </script>
+</scripts>
 
-### complete-run.js Usage
+<file_tracking_format>
+  ```yaml
+  files_created:
+    - path: src/auth/login.ts
+      purpose: Login endpoint handler
 
-```bash
-# Complete current item (batch runs - moves to next item)
-node scripts/complete-run.js /project run-001 --complete-item
+  files_modified:
+    - path: src/routes/index.ts
+      changes: Added login route
 
-# Complete entire run (single runs or final item in batch)
-node scripts/complete-run.js /project run-001 --complete-run \
-  --files-created='[{"path":"src/new.ts","purpose":"New feature"}]' \
-  --files-modified='[{"path":"src/old.ts","changes":"Added import"}]' \
-  --tests=5 --coverage=85
-```
+  decisions:
+    - decision: Use JWT for tokens
+      rationale: Stateless, works with load balancer
+  ```
+</file_tracking_format>
 
-**--complete-item Output:**
-```json
-{
-  "success": true,
-  "runId": "run-001",
-  "completedItem": "wi-1",
-  "nextItem": "wi-2",
-  "remainingItems": 1,
-  "allItemsCompleted": false
-}
-```
+<run_folder_structure>
+  After init-run.js creates a run:
 
-**--complete-run Output:**
-```json
-{
-  "success": true,
-  "runId": "run-001",
-  "scope": "batch",
-  "workItemsCompleted": 2,
-  "completedAt": "2026-01-20T..."
-}
-```
+  ```
+  .specs-fire/runs/run-001/
+  ├── run.md           # Created by init-run.js, updated by complete-run.js
+  ├── plan.md          # Created BEFORE implementation (ALL modes - required)
+  ├── test-report.md   # Created AFTER tests pass (required)
+  ├── review-report.md # Created by code-review skill (Step 6b)
+  └── walkthrough.md   # Created by walkthrough-generate skill
+  ```
 
----
+  <timeline>
+    1. `run.md` — Created at run start by init-run.js
+    2. `plan.md` — Created BEFORE implementation begins (Step 4)
+    3. `test-report.md` — Created AFTER tests pass (Step 6)
+    4. `review-report.md` — Created by code-review skill (Step 6b)
+    5. `walkthrough.md` — Created after run completes (Step 8)
+  </timeline>
 
-## File Tracking Format
+  The run.md contains:
+  - All work items with their statuses
+  - Current item being executed
+  - Files created/modified (after completion)
+  - Decisions made (after completion)
+  - Summary (after completion)
+</run_folder_structure>
 
-```yaml
-files_created:
-  - path: src/auth/login.ts
-    purpose: Login endpoint handler
-
-files_modified:
-  - path: src/routes/index.ts
-    changes: Added login route
-
-decisions:
-  - decision: Use JWT for tokens
-    rationale: Stateless, works with load balancer
-```
-
----
-
-## Run Folder Structure
-
-After init-run.js creates a run:
-
-```
-.specs-fire/runs/run-001/
-├── run.md           # Created by init-run.js, updated by complete-run.js
-├── plan.md          # Created BEFORE implementation (ALL modes - required)
-├── test-report.md   # Created AFTER tests pass (required)
-├── review-report.md # Created by code-review skill (Step 6b)
-└── walkthrough.md   # Created by walkthrough-generate skill
-```
-
-**Artifact Creation Timeline:**
-1. `run.md` — Created at run start by init-run.js
-2. `plan.md` — Created BEFORE implementation begins (Step 4)
-3. `test-report.md` — Created AFTER tests pass (Step 6)
-4. `review-report.md` — Created by code-review skill (Step 6b)
-5. `walkthrough.md` — Created after run completes (Step 8)
-
-The run.md contains:
-- All work items with their statuses
-- Current item being executed
-- Files created/modified (after completion)
-- Decisions made (after completion)
-- Summary (after completion)
+<success_criteria>
+  <criterion>Run initialized via init-run.js script</criterion>
+  <criterion>plan.md created BEFORE implementation</criterion>
+  <criterion>All work items implemented</criterion>
+  <criterion>All tests pass</criterion>
+  <criterion>test-report.md created AFTER tests pass</criterion>
+  <criterion>code-review skill invoked and completed</criterion>
+  <criterion>review-report.md created</criterion>
+  <criterion>Run completed via complete-run.js script</criterion>
+  <criterion>walkthrough.md generated</criterion>
+</success_criteria>
