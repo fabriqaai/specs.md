@@ -1,6 +1,9 @@
 # FIRE Flow Configuration
 # Fast Intent-Run Engineering - Simplified AI-native development
 
+# FIRE Flow Version (used by migrate skill to detect outdated projects)
+version: "0.1.8"
+
 # Artifact folder (created at project initialization)
 artifact_root: ".specs-fire"
 
@@ -38,7 +41,7 @@ state:
       - name: "Project name"
       - description: "Project description"
       - created: "ISO 8601 timestamp"
-      - framework: "fire-v1"
+      - fire_version: "FIRE flow version at project init (e.g., 0.1.8)"
     workspace:
       - type: "greenfield | brownfield"
       - structure: "monolith | monorepo | multi-part"

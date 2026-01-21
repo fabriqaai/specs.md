@@ -30,26 +30,31 @@ Upgrade an existing FIRE project to the latest version, adding new features
     </check>
 
     <action>Read .specs-fire/state.yaml</action>
-    <action>Determine current version by checking:</action>
-    <substep>constitution.md exists? (v2.0+)</substep>
-    <substep>workspace.structure field in state.yaml? (v2.0+)</substep>
+    <action>Check project.fire_version field</action>
+    <action>Read FIRE flow version from memory-bank.yaml</action>
 
     <version_detection>
-      | Indicator | Version |
-      |-----------|---------|
-      | No constitution.md | < 2.0 |
-      | No workspace.structure in state | < 2.0 |
-      | Has constitution.md + workspace.structure | >= 2.0 |
+      | Check | Meaning |
+      |-------|---------|
+      | project.fire_version missing | Pre-0.1.8 project |
+      | project.fire_version < current | Needs migration |
+      | project.fire_version == current | Up to date |
+
+      Also check for feature indicators:
+      | Missing Feature | Added In |
+      |-----------------|----------|
+      | constitution.md | 0.1.8 |
+      | workspace.structure | 0.1.8 |
     </version_detection>
 
     <check if="already up to date">
-      <output>Project is already at the latest version. No migration needed.</output>
+      <output>Project is already at the latest version ({current_version}). No migration needed.</output>
       <exit/>
     </check>
 
     <output>
-      Current version: {detected_version}
-      Latest version: 2.0
+      Current version: {project_fire_version or "pre-0.1.8"}
+      Latest version: {fire_flow_version}
       Migration required.
     </output>
   </step>
@@ -143,6 +148,7 @@ Upgrade an existing FIRE project to the latest version, adding new features
   <step n="6" title="Update State Schema" if="needs_schema_update">
     <action>Read current state.yaml</action>
     <action>Add missing fields with defaults:</action>
+    <substep>project.fire_version: "{current_fire_flow_version}"</substep>
     <substep>workspace.structure: "monolith" (or "monorepo" if detected)</substep>
     <action>Write updated state.yaml (preserve all existing data)</action>
     <output>Updated: .specs-fire/state.yaml</output>
