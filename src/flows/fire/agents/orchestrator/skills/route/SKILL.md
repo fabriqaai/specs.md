@@ -22,8 +22,21 @@ Analyze project state and route user to the appropriate agent.
 <flow>
   <step n="1" title="Discover and Read State">
     <action>Read .specs-fire/state.yaml</action>
-    <action>Scan .specs-fire/intents/ for briefs not in state</action>
-    <action>Scan .specs-fire/intents/*/work-items/ for items not in state</action>
+
+    <file_system_scan critical="true">
+      Use these EXACT glob patterns:
+
+      <pattern purpose="Find intent briefs">
+        .specs-fire/intents/*/brief.md
+      </pattern>
+
+      <pattern purpose="Find work items">
+        .specs-fire/intents/*/work-items/*.md
+      </pattern>
+
+      Work items are {work-item-id}.md files directly in work-items/ folder.
+    </file_system_scan>
+
     <action>Reconcile: add discovered items to state as pending</action>
     <action>Parse current project state</action>
   </step>
