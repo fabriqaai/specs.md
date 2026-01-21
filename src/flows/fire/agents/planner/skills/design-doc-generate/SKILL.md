@@ -140,7 +140,7 @@ Generate design documents for Validate mode work items (Checkpoint 1).
 <output_artifacts>
   | Artifact | Location | Template |
   |----------|----------|----------|
-  | Design Doc | `.specs-fire/intents/{intent-id}/work-items/{id}-design.md` | `./templates/design-doc.md.hbs` |
+  | Design Doc | `.specs-fire/intents/{intent-id}/work-items/{id}-design.md` | `./templates/design.md.hbs` |
 </output_artifacts>
 
 <success_criteria>
