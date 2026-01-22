@@ -1014,11 +1014,17 @@ export class SpecsmdWebviewProvider implements vscode.WebviewViewProvider {
 
     /**
      * Handles flow switch request from webview.
-     * Delegates to FlowRegistry for the actual switch.
+     * If flowId is provided, switches directly. Otherwise shows quick pick.
      */
-    private async _handleFlowSwitch(flowId: string): Promise<void> {
+    private async _handleFlowSwitch(flowId?: string): Promise<void> {
         if (!this._flowRegistry) {
             vscode.window.showWarningMessage('Flow switching is not available.');
+            return;
+        }
+
+        // If no flowId provided, trigger the VS Code command to show quick pick
+        if (!flowId) {
+            await vscode.commands.executeCommand('specsmd.switchFlow');
             return;
         }
 
