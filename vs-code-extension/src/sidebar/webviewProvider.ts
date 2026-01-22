@@ -68,10 +68,22 @@ import {
     projectMetricsTracker,
 } from '../analytics';
 import { openFile } from '../utils';
+import { FlowRegistry, FlowInfo, FlowId } from '../core';
+
+/**
+ * Flow info for webview display.
+ */
+interface WebviewFlowInfo {
+    id: string;
+    displayName: string;
+    icon: string;
+    rootFolder: string;
+}
 
 /**
  * WebviewViewProvider for the SpecsMD sidebar.
  * Uses StateStore for centralized state management.
+ * Supports multi-flow switching via FlowRegistry.
  */
 export class SpecsmdWebviewProvider implements vscode.WebviewViewProvider {
     public static readonly viewType = 'specsmdExplorer';
@@ -81,6 +93,8 @@ export class SpecsmdWebviewProvider implements vscode.WebviewViewProvider {
     private _workspacePath: string | undefined;
     private _context: vscode.ExtensionContext;
     private _unsubscribe?: () => void;
+    private _flowRegistry?: FlowRegistry;
+    private _flowChangeUnsubscribe?: () => void;
 
     // Re-render loop prevention flags
     private _initialLoadComplete = false;
@@ -89,9 +103,10 @@ export class SpecsmdWebviewProvider implements vscode.WebviewViewProvider {
     // Feature flag for Lit mode (can be configured via settings later)
     private _useLitMode = true;
 
-    constructor(context: vscode.ExtensionContext, workspacePath?: string) {
+    constructor(context: vscode.ExtensionContext, workspacePath?: string, flowRegistry?: FlowRegistry) {
         this._context = context;
         this._workspacePath = workspacePath;
+        this._flowRegistry = flowRegistry;
 
         // Create the state store
         this._store = createStateStore();
@@ -103,6 +118,14 @@ export class SpecsmdWebviewProvider implements vscode.WebviewViewProvider {
         this._unsubscribe = this._store.subscribe(() => {
             this._updateWebview();
         });
+
+        // Subscribe to flow changes
+        if (this._flowRegistry) {
+            this._flowChangeUnsubscribe = this._flowRegistry.onFlowChange(() => {
+                // Refresh data when flow changes
+                this.refresh();
+            });
+        }
     }
 
     /**
@@ -178,9 +201,29 @@ export class SpecsmdWebviewProvider implements vscode.WebviewViewProvider {
 
     /**
      * Refreshes the view by rescanning the memory-bank.
+     * Uses the active flow adapter if available.
      */
     public async refresh(): Promise<void> {
         const workspacePath = this._getWorkspacePath();
+
+        // If we have an active flow adapter, use it
+        if (this._flowRegistry) {
+            const activeAdapter = this._flowRegistry.getActiveAdapter();
+            if (activeAdapter) {
+                await activeAdapter.refresh();
+                // For now, only AI-DLC uses the StateStore directly
+                // FIRE flow has its own state manager
+                if (activeAdapter.flowId === 'aidlc' && workspacePath) {
+                    const model = await scanMemoryBank(workspacePath);
+                    this._store.loadFromModel(model, workspacePath);
+                    projectMetricsTracker.onScanComplete(model);
+                }
+                this._updateWebview();
+                return;
+            }
+        }
+
+        // Fallback: use old scanMemoryBank approach
         if (workspacePath) {
             const model = await scanMemoryBank(workspacePath);
             this._store.loadFromModel(model, workspacePath);
@@ -264,23 +307,95 @@ export class SpecsmdWebviewProvider implements vscode.WebviewViewProvider {
 
         this._isUpdating = true;
         try {
-            const data = this._buildWebviewData();
+            // Check active flow
+            const activeFlow = this._flowRegistry?.getActiveFlow();
             const activeTab = this._store.getState().ui.activeTab;
 
-            if (this._useLitMode) {
-                // Lit mode: Send data via postMessage
-                this._sendDataToWebview(data, activeTab);
+            if (activeFlow?.id === 'fire') {
+                // FIRE flow: Send FIRE-specific data
+                this._sendFireDataToWebview(activeTab);
             } else {
-                // Legacy mode: Replace entire HTML
-                this._view.webview.html = getWebviewContent(
-                    this._view.webview,
-                    data,
-                    activeTab
-                );
+                // AI-DLC flow (default): Use existing data flow
+                const data = this._buildWebviewData();
+
+                if (this._useLitMode) {
+                    // Lit mode: Send data via postMessage
+                    this._sendDataToWebview(data, activeTab);
+                } else {
+                    // Legacy mode: Replace entire HTML
+                    this._view.webview.html = getWebviewContent(
+                        this._view.webview,
+                        data,
+                        activeTab
+                    );
+                }
             }
         } finally {
             this._isUpdating = false;
         }
+    }
+
+    /**
+     * Send FIRE flow specific data to webview.
+     */
+    private _sendFireDataToWebview(activeTab: TabId): void {
+        if (!this._view || !this._flowRegistry) {
+            return;
+        }
+
+        const adapter = this._flowRegistry.getActiveAdapter();
+        if (!adapter || adapter.flowId !== 'fire') {
+            return;
+        }
+
+        // Get FIRE state
+        const fireState = adapter.stateManager.getState();
+
+        // Build flow information for the switcher
+        const flowData = this._buildFlowData();
+
+        // For now, send a placeholder with FIRE-specific structure
+        // TODO: Build proper FIRE-specific view data
+        this._view.webview.postMessage({
+            type: 'setData',
+            activeTab,
+            flowType: 'fire',
+            fireData: fireState,
+            boltsData: null, // FIRE doesn't use bolts
+            specsHtml: this._buildFireSpecsHtml(fireState),
+            overviewHtml: this._buildFireOverviewHtml(fireState),
+            ...flowData
+        });
+    }
+
+    /**
+     * Build HTML for FIRE specs view.
+     */
+    private _buildFireSpecsHtml(fireState: unknown): string {
+        // TODO: Implement proper FIRE specs view
+        return `
+            <div style="padding: 16px; color: var(--vscode-foreground);">
+                <h3 style="margin: 0 0 12px 0; color: var(--vscode-foreground);">🔥 FIRE Flow - Specs</h3>
+                <p style="color: var(--vscode-descriptionForeground); margin: 0;">
+                    FIRE (Fast Intent-Run Engineering) flow view is coming soon.
+                </p>
+            </div>
+        `;
+    }
+
+    /**
+     * Build HTML for FIRE overview view.
+     */
+    private _buildFireOverviewHtml(fireState: unknown): string {
+        // TODO: Implement proper FIRE overview view
+        return `
+            <div style="padding: 16px; color: var(--vscode-foreground);">
+                <h3 style="margin: 0 0 12px 0; color: var(--vscode-foreground);">🔥 FIRE Flow - Overview</h3>
+                <p style="color: var(--vscode-descriptionForeground); margin: 0;">
+                    FIRE flow provides a simplified AI-DLC approach with Plan → Execute phases.
+                </p>
+            </div>
+        `;
     }
 
     /**
@@ -312,14 +427,43 @@ export class SpecsmdWebviewProvider implements vscode.WebviewViewProvider {
         const specsHtml = getSpecsViewHtml(data);
         const overviewHtml = getOverviewViewHtml(data);
 
+        // Build flow information for the switcher
+        const flowData = this._buildFlowData();
+
         // Send to webview
         this._view.webview.postMessage({
             type: 'setData',
             activeTab,
             boltsData,
             specsHtml,
-            overviewHtml
+            overviewHtml,
+            ...flowData
         });
+    }
+
+    /**
+     * Builds flow data for the webview.
+     * Returns available flows and active flow ID for the flow switcher.
+     */
+    private _buildFlowData(): { availableFlows: WebviewFlowInfo[]; activeFlowId: string | null } {
+        if (!this._flowRegistry) {
+            return { availableFlows: [], activeFlowId: null };
+        }
+
+        const detectedFlows = this._flowRegistry.getDetectedFlows();
+        const activeFlow = this._flowRegistry.getActiveFlow();
+
+        const availableFlows: WebviewFlowInfo[] = detectedFlows.map(flow => ({
+            id: flow.id,
+            displayName: flow.displayName,
+            icon: flow.icon,
+            rootFolder: flow.rootFolder
+        }));
+
+        return {
+            availableFlows,
+            activeFlowId: activeFlow?.id || null
+        };
     }
 
     /**
@@ -861,6 +1005,54 @@ export class SpecsmdWebviewProvider implements vscode.WebviewViewProvider {
                     vscode.env.openExternal(vscode.Uri.parse(message.url));
                 }
                 break;
+
+            case 'switchFlow':
+                await this._handleFlowSwitch(message.flowId);
+                break;
+        }
+    }
+
+    /**
+     * Handles flow switch request from webview.
+     * Delegates to FlowRegistry for the actual switch.
+     */
+    private async _handleFlowSwitch(flowId: string): Promise<void> {
+        if (!this._flowRegistry) {
+            vscode.window.showWarningMessage('Flow switching is not available.');
+            return;
+        }
+
+        try {
+            await this._flowRegistry.switchFlow(flowId as FlowId);
+
+            // Refresh to load new flow's data
+            await this.refresh();
+
+            // Send updated flow info to webview
+            if (this._view) {
+                const flowData = this._buildFlowData();
+                this._view.webview.postMessage({
+                    type: 'switchFlow',
+                    ...flowData,
+                    boltsData: this._buildWebviewData().activeBolts.length > 0 ? {
+                        currentIntent: this._buildWebviewData().currentIntent,
+                        currentIntentContext: this._buildWebviewData().currentIntentContext,
+                        stats: this._buildWebviewData().stats,
+                        activeBolts: this._buildWebviewData().activeBolts,
+                        upNextQueue: this._buildWebviewData().upNextQueue,
+                        completedBolts: this._buildWebviewData().completedBolts,
+                        activityEvents: this._buildWebviewData().activityEvents,
+                        focusCardExpanded: this._buildWebviewData().focusCardExpanded,
+                        activityFilter: this._buildWebviewData().activityFilter,
+                        activityHeight: this._buildWebviewData().activityHeight,
+                        specsFilter: this._buildWebviewData().specsFilter
+                    } : null,
+                    specsHtml: getSpecsViewHtml(this._buildWebviewData()),
+                    overviewHtml: getOverviewViewHtml(this._buildWebviewData())
+                });
+            }
+        } catch (error) {
+            vscode.window.showErrorMessage(`Failed to switch flow: ${error}`);
         }
     }
 
@@ -939,6 +1131,9 @@ export class SpecsmdWebviewProvider implements vscode.WebviewViewProvider {
         if (this._unsubscribe) {
             this._unsubscribe();
         }
+        if (this._flowChangeUnsubscribe) {
+            this._flowChangeUnsubscribe();
+        }
         this._store.dispose();
     }
 }
@@ -948,9 +1143,10 @@ export class SpecsmdWebviewProvider implements vscode.WebviewViewProvider {
  */
 export function createWebviewProvider(
     context: vscode.ExtensionContext,
-    workspacePath?: string
+    workspacePath?: string,
+    flowRegistry?: FlowRegistry
 ): SpecsmdWebviewProvider {
-    const provider = new SpecsmdWebviewProvider(context, workspacePath);
+    const provider = new SpecsmdWebviewProvider(context, workspacePath, flowRegistry);
 
     // Register the webview view provider
     const registration = vscode.window.registerWebviewViewProvider(

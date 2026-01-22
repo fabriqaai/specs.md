@@ -23,7 +23,8 @@ export type WebviewToExtensionMessage =
     | { type: 'continueBolt'; boltId: string; boltName?: string }
     | { type: 'viewBoltFiles'; boltId: string }
     | { type: 'openBoltMd'; boltId: string }
-    | { type: 'openExternal'; url: string };
+    | { type: 'openExternal'; url: string }
+    | { type: 'switchFlow'; flowId: string };
 
 /**
  * Activity filter options.

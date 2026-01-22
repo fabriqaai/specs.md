@@ -69,6 +69,18 @@
             {
                 "command": "specsmd.selectMarkdownEditor",
                 "title": "specsmd: Select Markdown Editor"
+            },
+            {
+                "command": "specsmd.switchFlow",
+                "title": "specsmd: Switch Flow"
+            }
+        ],
+        "keybindings": [
+            {
+                "command": "specsmd.switchFlow",
+                "key": "ctrl+alt+f",
+                "mac": "ctrl+cmd+f",
+                "when": "specsmd.hasMultipleFlows"
             }
         ],
         "menus": {

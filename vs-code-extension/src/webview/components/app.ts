@@ -16,16 +16,18 @@ import { unsafeHTML } from 'lit/directives/unsafe-html.js';
 import { BaseElement } from './shared/base-element.js';
 import './tabs/view-tabs.js';
 import './bolts/bolts-view.js';
+import './shared/flow-switcher.js';
 import type { TabId, TabChangeDetail } from './tabs/view-tabs.js';
 import type { BoltsViewData } from './bolts/bolts-view.js';
 import type { ActivityFilter } from './bolts/activity-feed.js';
+import type { FlowInfo, FlowSwitchDetail } from './shared/flow-switcher.js';
 import { vscode } from '../vscode-api.js';
 
 /**
  * Message types from the extension.
  */
 interface ExtensionMessage {
-    type: 'setData' | 'setTab' | 'setBoltsData';
+    type: 'setData' | 'setTab' | 'setBoltsData' | 'switchFlow' | 'updateFlows';
     activeTab?: TabId;
     // Hybrid approach (specs/overview)
     specsHtml?: string;
@@ -34,6 +36,11 @@ interface ExtensionMessage {
     boltsData?: BoltsViewData;
     // Legacy support
     boltsHtml?: string;
+    // Multi-flow support
+    flowId?: string;
+    flowDisplayName?: string;
+    availableFlows?: FlowInfo[];
+    activeFlowId?: string;
 }
 
 /**
@@ -67,6 +74,18 @@ export class SpecsmdApp extends BaseElement {
      */
     @state()
     private _loaded = false;
+
+    /**
+     * Currently active flow.
+     */
+    @state()
+    private _activeFlow: FlowInfo | null = null;
+
+    /**
+     * Available flows in the workspace.
+     */
+    @state()
+    private _availableFlows: FlowInfo[] = [];
 
     /**
      * Version counter for specs HTML to track when handlers need reattachment.
@@ -104,6 +123,12 @@ export class SpecsmdApp extends BaseElement {
             bolts-view {
                 flex: 1;
                 min-height: 0;
+            }
+
+            flow-switcher {
+                flex-shrink: 0;
+                position: relative;
+                z-index: 100;
             }
 
             .loading {
@@ -716,6 +741,24 @@ export class SpecsmdApp extends BaseElement {
             return html`<div class="loading">Loading...</div>`;
         }
 
+        // Render completely different apps based on active flow
+        const isFireFlow = this._activeFlow?.id === 'fire';
+
+        return html`
+            ${isFireFlow ? this._renderFireApp() : this._renderAidlcApp()}
+
+            <flow-switcher
+                .activeFlow=${this._activeFlow}
+                .availableFlows=${this._availableFlows}
+                @flow-switch=${this._handleFlowSwitch}
+            ></flow-switcher>
+        `;
+    }
+
+    /**
+     * Render the AI-DLC flow app (existing implementation).
+     */
+    private _renderAidlcApp() {
         return html`
             <view-tabs
                 .activeTab=${this._activeTab}
@@ -723,19 +766,22 @@ export class SpecsmdApp extends BaseElement {
             ></view-tabs>
 
             <div class="view-container ${this._activeTab === 'bolts' ? 'active' : ''}" id="bolts-view">
-                ${this._boltsData ? html`
-                    <bolts-view
-                        .data=${this._boltsData}
-                        @toggle-focus=${this._handleToggleFocus}
-                        @filter-change=${this._handleFilterChange}
-                        @resize=${this._handleResize}
-                        @start-bolt=${this._handleStartBolt}
-                        @continue-bolt=${this._handleContinueBolt}
-                        @view-files=${this._handleViewFiles}
-                        @open-file=${this._handleOpenFile}
-                        @open-bolt=${this._handleOpenBolt}>
-                    </bolts-view>
-                ` : html`<div class="loading">Loading...</div>`}
+                ${this._boltsData
+                    ? html`
+                        <bolts-view
+                            .data=${this._boltsData}
+                            @toggle-focus=${this._handleToggleFocus}
+                            @filter-change=${this._handleFilterChange}
+                            @resize=${this._handleResize}
+                            @start-bolt=${this._handleStartBolt}
+                            @continue-bolt=${this._handleContinueBolt}
+                            @view-files=${this._handleViewFiles}
+                            @open-file=${this._handleOpenFile}
+                            @open-bolt=${this._handleOpenBolt}>
+                        </bolts-view>
+                    `
+                    : html`<div class="loading">Loading...</div>`
+                }
             </div>
 
             <div class="view-container ${this._activeTab === 'specs' ? 'active' : ''}" id="specs-view">
@@ -744,6 +790,29 @@ export class SpecsmdApp extends BaseElement {
 
             <div class="view-container ${this._activeTab === 'overview' ? 'active' : ''}" id="overview-view">
                 ${unsafeHTML(this._overviewHtml)}
+            </div>
+        `;
+    }
+
+    /**
+     * Render the FIRE flow app (placeholder for now).
+     * TODO: Replace with actual FIRE flow components.
+     */
+    private _renderFireApp() {
+        return html`
+            <div class="fire-app" style="flex: 1; display: flex; flex-direction: column; overflow: hidden;">
+                <div class="fire-placeholder" style="flex: 1; display: flex; align-items: center; justify-content: center;">
+                    <div style="text-align: center; padding: 24px;">
+                        <div style="font-size: 64px; margin-bottom: 16px;">🔥</div>
+                        <h2 style="margin: 0 0 8px 0; color: var(--vscode-foreground); font-size: 18px;">FIRE Flow</h2>
+                        <p style="color: var(--vscode-descriptionForeground); margin: 0 0 8px 0; font-size: 13px;">
+                            Fast Intent-Run Engineering
+                        </p>
+                        <p style="color: var(--vscode-descriptionForeground); font-size: 11px; margin: 0; opacity: 0.7;">
+                            Full visualization coming soon
+                        </p>
+                    </div>
+                </div>
             </div>
         `;
     }
@@ -769,6 +838,13 @@ export class SpecsmdApp extends BaseElement {
                 if (message.overviewHtml !== undefined) {
                     this._overviewHtml = message.overviewHtml;
                 }
+                // Handle flow data
+                if (message.availableFlows !== undefined) {
+                    this._availableFlows = message.availableFlows;
+                }
+                if (message.activeFlowId !== undefined && this._availableFlows.length > 0) {
+                    this._activeFlow = this._availableFlows.find(f => f.id === message.activeFlowId) || null;
+                }
                 this._loaded = true;
                 break;
 
@@ -781,6 +857,37 @@ export class SpecsmdApp extends BaseElement {
             case 'setTab':
                 if (message.activeTab) {
                     this._activeTab = message.activeTab;
+                }
+                break;
+
+            case 'switchFlow':
+                // Handle flow switch from extension
+                if (message.availableFlows !== undefined) {
+                    this._availableFlows = message.availableFlows;
+                }
+                if (message.activeFlowId !== undefined) {
+                    this._activeFlow = this._availableFlows.find(f => f.id === message.activeFlowId) || null;
+                }
+                // Reset view data when switching flows
+                if (message.boltsData !== undefined) {
+                    this._boltsData = message.boltsData;
+                }
+                if (message.specsHtml !== undefined) {
+                    this._specsHtml = message.specsHtml;
+                    this._specsVersion++;
+                }
+                if (message.overviewHtml !== undefined) {
+                    this._overviewHtml = message.overviewHtml;
+                }
+                break;
+
+            case 'updateFlows':
+                // Update available flows list
+                if (message.availableFlows !== undefined) {
+                    this._availableFlows = message.availableFlows;
+                }
+                if (message.activeFlowId !== undefined) {
+                    this._activeFlow = this._availableFlows.find(f => f.id === message.activeFlowId) || null;
                 }
                 break;
         }
@@ -860,6 +967,13 @@ export class SpecsmdApp extends BaseElement {
      */
     private _handleOpenBolt(e: CustomEvent<{ boltId: string }>): void {
         vscode.postMessage({ type: 'openBoltMd', boltId: e.detail.boltId });
+    }
+
+    /**
+     * Handle flow switch from the flow switcher component.
+     */
+    private _handleFlowSwitch(e: CustomEvent<FlowSwitchDetail>): void {
+        vscode.postMessage({ type: 'switchFlow', flowId: e.detail.flowId });
     }
 }
 
