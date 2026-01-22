@@ -1,0 +1,113 @@
+/**
+ * FireCurrentRun - Section displaying the active run.
+ */
+
+import { html, css, nothing } from 'lit';
+import { customElement, property } from 'lit/decorators.js';
+import { BaseElement } from '../../shared/base-element.js';
+import './fire-run-card.js';
+import type { FireRunData } from './fire-run-card.js';
+
+/**
+ * Current run section component.
+ *
+ * @fires continue-run - When continue button is clicked
+ * @fires view-artifact - When artifact button is clicked
+ * @fires open-file - When work item is clicked
+ *
+ * @example
+ * ```html
+ * <fire-current-run .run=${activeRun}></fire-current-run>
+ * ```
+ */
+@customElement('fire-current-run')
+export class FireCurrentRun extends BaseElement {
+    /**
+     * The active run data.
+     */
+    @property({ type: Object })
+    run: FireRunData | null = null;
+
+    static styles = [
+        ...BaseElement.baseStyles,
+        css`
+            :host {
+                display: block;
+            }
+
+            .section {
+                padding: 12px;
+            }
+
+            .section-header {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                margin-bottom: 12px;
+            }
+
+            .fire-icon {
+                font-size: 16px;
+            }
+
+            .section-title {
+                font-size: 11px;
+                font-weight: 600;
+                text-transform: uppercase;
+                color: var(--status-active);
+                letter-spacing: 0.5px;
+            }
+
+            .empty-state {
+                text-align: center;
+                padding: 24px;
+                color: var(--description-foreground);
+            }
+
+            .empty-icon {
+                font-size: 24px;
+                margin-bottom: 8px;
+            }
+
+            .empty-text {
+                font-size: 12px;
+            }
+
+            .empty-hint {
+                font-size: 11px;
+                margin-top: 4px;
+                opacity: 0.7;
+            }
+        `
+    ];
+
+    render() {
+        return html`
+            <div class="section">
+                <div class="section-header">
+                    <span class="fire-icon">🔥</span>
+                    <span class="section-title">Current Run</span>
+                </div>
+
+                ${this.run ? html`
+                    <fire-run-card
+                        .run=${this.run}
+                        ?isActive=${true}
+                    ></fire-run-card>
+                ` : html`
+                    <div class="empty-state">
+                        <div class="empty-icon">💤</div>
+                        <div class="empty-text">No active run</div>
+                        <div class="empty-hint">Start a run from pending work items below</div>
+                    </div>
+                `}
+            </div>
+        `;
+    }
+}
+
+declare global {
+    interface HTMLElementTagNameMap {
+        'fire-current-run': FireCurrentRun;
+    }
+}

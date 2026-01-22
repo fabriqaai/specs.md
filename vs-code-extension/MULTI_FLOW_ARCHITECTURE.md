@@ -3,7 +3,7 @@
 > **Purpose**: This document captures the complete architecture plan for adding FIRE flow support to the VS Code extension with multi-flow switching capability.
 
 **Created**: 2026-01-21
-**Status**: Phase 3 Complete - FIRE Flow Adapter Implemented
+**Status**: Phase 3 Complete - FIRE Flow UI Components Implemented
 **Last Updated**: 2026-01-22
 
 ---
@@ -884,38 +884,28 @@ export class FlowSwitcher extends LitElement {
 - `src/webview/components/bolts/*` → `src/flows/aidlc/ui/components/bolts/`
 - Create: `src/flows/aidlc/index.ts`, `detector.ts`
 
-### Phase 3: Implement FIRE Flow Adapter
+### Phase 3: Implement FIRE Flow Adapter ✅ COMPLETE
 
 **Goal**: Create complete FIRE flow support
 
-**Files to Create**:
-- [ ] `src/flows/fire/index.ts` - FireFlowAdapter
-- [ ] `src/flows/fire/detector.ts` - FIRE detection
-- [ ] `src/flows/fire/parser/index.ts`
-- [ ] `src/flows/fire/parser/types.ts`
-- [ ] `src/flows/fire/parser/stateYamlParser.ts`
-- [ ] `src/flows/fire/parser/intentParser.ts`
-- [ ] `src/flows/fire/parser/workItemParser.ts`
-- [ ] `src/flows/fire/parser/runParser.ts`
-- [ ] `src/flows/fire/state/store.ts`
-- [ ] `src/flows/fire/state/selectors.ts`
-- [ ] `src/flows/fire/state/types.ts`
-- [ ] `src/flows/fire/ui/provider.ts`
-- [ ] `src/flows/fire/ui/components/runs/*.ts` (6-8 components)
-- [ ] `src/flows/fire/ui/components/intents/*.ts` (3-4 components)
-- [ ] `src/flows/fire/ui/components/overview/*.ts` (3-4 components)
-- [ ] `src/flows/fire/ui/tabs/fire-view-tabs.ts`
+**Completed**:
+- [x] `src/flows/fire/index.ts` - FireFlowAdapter
+- [x] `src/flows/fire/detector.ts` - FIRE detection
+- [x] `src/flows/fire/types.ts` - Type definitions
+- [x] `src/flows/fire/parser/index.ts` - FireParser
+- [x] `src/flows/fire/state/index.ts` - FireStateManager
+- [x] `src/flows/fire/ui/provider.ts` - FireUIProvider
+- [x] FIRE UI components in `src/webview/components/fire/` (15+ components)
 
-### Phase 4: Flow Switcher UI
+### Phase 4: Flow Switcher UI ✅ COMPLETE
 
 **Goal**: Add flow switching capability
 
-**Files to Create**:
-- [ ] `src/ui/flowSwitcher/FlowSwitcher.ts`
-- [ ] `src/ui/flowSwitcher/styles.css`
-- [ ] Update webview shell to include switcher
-- [ ] Add flow preference persistence
-- [ ] Handle flow switch messages
+**Completed**:
+- [x] `src/webview/components/shared/flow-switcher.ts` - Flow switcher component
+- [x] Integrated in app.ts
+- [x] VS Code quick pick integration
+- [x] Flow switch messages handled
 
 ### Phase 5: Polish & Testing
 
@@ -954,45 +944,44 @@ export class FlowSwitcher extends LitElement {
 [ ] src/flows/aidlc/ui/provider.ts
 ```
 
-### FIRE Flow (Phase 3)
+### FIRE Flow (Phase 3) ✅ COMPLETE
 ```
-[ ] src/flows/fire/index.ts
-[ ] src/flows/fire/detector.ts
-[ ] src/flows/fire/parser/index.ts
-[ ] src/flows/fire/parser/types.ts
-[ ] src/flows/fire/parser/stateYamlParser.ts
-[ ] src/flows/fire/parser/intentParser.ts
-[ ] src/flows/fire/parser/workItemParser.ts
-[ ] src/flows/fire/parser/runParser.ts
-[ ] src/flows/fire/parser/standardParser.ts
-[ ] src/flows/fire/state/store.ts
-[ ] src/flows/fire/state/selectors.ts
-[ ] src/flows/fire/state/types.ts
-[ ] src/flows/fire/ui/provider.ts
-[ ] src/flows/fire/ui/tabs/fire-view-tabs.ts
-[ ] src/flows/fire/ui/components/runs/fire-runs-view.ts
-[ ] src/flows/fire/ui/components/runs/fire-current-run.ts
-[ ] src/flows/fire/ui/components/runs/fire-run-card.ts
-[ ] src/flows/fire/ui/components/runs/fire-phase-pipeline.ts
-[ ] src/flows/fire/ui/components/runs/fire-work-item-list.ts
-[ ] src/flows/fire/ui/components/runs/fire-work-item.ts
-[ ] src/flows/fire/ui/components/runs/fire-pending-items.ts
-[ ] src/flows/fire/ui/components/runs/fire-completed-runs.ts
-[ ] src/flows/fire/ui/components/intents/fire-intents-view.ts
-[ ] src/flows/fire/ui/components/intents/fire-intent-tree.ts
-[ ] src/flows/fire/ui/components/intents/fire-work-item-row.ts
-[ ] src/flows/fire/ui/components/overview/fire-overview-view.ts
-[ ] src/flows/fire/ui/components/overview/fire-project-info.ts
-[ ] src/flows/fire/ui/components/overview/fire-standards-list.ts
-[ ] src/flows/fire/ui/components/shared/fire-mode-badge.ts
-[ ] src/flows/fire/ui/components/shared/fire-autonomy-indicator.ts
-[ ] src/flows/fire/ui/components/shared/fire-scope-badge.ts
+[x] src/flows/fire/index.ts
+[x] src/flows/fire/detector.ts
+[x] src/flows/fire/types.ts
+[x] src/flows/fire/parser/index.ts
+[x] src/flows/fire/state/index.ts
+[x] src/flows/fire/ui/provider.ts
+
+# UI Components (in src/webview/components/fire/)
+[x] fire-view.ts                      # Main container
+[x] fire-view-tabs.ts                 # Tab navigation
+
+# Runs View
+[x] runs/fire-runs-view.ts
+[x] runs/fire-current-run.ts
+[x] runs/fire-run-card.ts
+[x] runs/fire-phase-pipeline.ts
+[x] runs/fire-work-item.ts
+[x] runs/fire-pending-items.ts
+[x] runs/fire-completed-runs.ts
+
+# Intents View
+[x] intents/fire-intents-view.ts
+[x] intents/fire-intent-card.ts
+
+# Overview View
+[x] overview/fire-overview-view.ts
+
+# Shared Components
+[x] shared/fire-mode-badge.ts
+[x] shared/fire-status-badge.ts
+[x] shared/fire-scope-badge.ts
 ```
 
-### Flow Switcher (Phase 4)
+### Flow Switcher (Phase 4) ✅ COMPLETE
 ```
-[ ] src/ui/flowSwitcher/FlowSwitcher.ts
-[ ] src/ui/flowSwitcher/styles.css
+[x] src/webview/components/shared/flow-switcher.ts  # Implemented in shared components
 ```
 
 ### Shared UI Components

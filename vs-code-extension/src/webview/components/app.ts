@@ -16,11 +16,14 @@ import { unsafeHTML } from 'lit/directives/unsafe-html.js';
 import { BaseElement } from './shared/base-element.js';
 import './tabs/view-tabs.js';
 import './bolts/bolts-view.js';
-import './shared/flow-switcher.js';
+// FIRE flow components
+import './fire/fire-view.js';
 import type { TabId, TabChangeDetail } from './tabs/view-tabs.js';
 import type { BoltsViewData } from './bolts/bolts-view.js';
 import type { ActivityFilter } from './bolts/activity-feed.js';
-import type { FlowInfo, FlowSwitchDetail } from './shared/flow-switcher.js';
+import type { FlowInfo } from './shared/flow-switcher.js';
+import type { FireViewData } from './fire/fire-view.js';
+import type { FireTabId } from './fire/fire-view-tabs.js';
 import { vscode } from '../vscode-api.js';
 
 /**
@@ -38,9 +41,12 @@ interface ExtensionMessage {
     boltsHtml?: string;
     // Multi-flow support
     flowId?: string;
+    flowType?: 'aidlc' | 'fire';
     flowDisplayName?: string;
     availableFlows?: FlowInfo[];
     activeFlowId?: string;
+    // FIRE flow data
+    fireData?: FireViewData;
 }
 
 /**
@@ -88,6 +94,18 @@ export class SpecsmdApp extends BaseElement {
     private _availableFlows: FlowInfo[] = [];
 
     /**
+     * FIRE flow view data.
+     */
+    @state()
+    private _fireData: FireViewData | null = null;
+
+    /**
+     * Active FIRE tab (separate from AI-DLC tabs).
+     */
+    @state()
+    private _fireActiveTab: FireTabId = 'runs';
+
+    /**
      * Version counter for specs HTML to track when handlers need reattachment.
      * Incremented each time _specsHtml changes.
      */
@@ -123,12 +141,6 @@ export class SpecsmdApp extends BaseElement {
             bolts-view {
                 flex: 1;
                 min-height: 0;
-            }
-
-            flow-switcher {
-                flex-shrink: 0;
-                position: relative;
-                z-index: 100;
             }
 
             .loading {
@@ -746,12 +758,6 @@ export class SpecsmdApp extends BaseElement {
 
         return html`
             ${isFireFlow ? this._renderFireApp() : this._renderAidlcApp()}
-
-            <flow-switcher
-                .activeFlow=${this._activeFlow}
-                .availableFlows=${this._availableFlows}
-                @flow-switch=${this._handleFlowSwitch}
-            ></flow-switcher>
         `;
     }
 
@@ -795,26 +801,80 @@ export class SpecsmdApp extends BaseElement {
     }
 
     /**
-     * Render the FIRE flow app (placeholder for now).
-     * TODO: Replace with actual FIRE flow components.
+     * Render the FIRE flow app with proper visualization.
      */
     private _renderFireApp() {
-        return html`
-            <div class="fire-app" style="flex: 1; display: flex; flex-direction: column; overflow: hidden;">
-                <div class="fire-placeholder" style="flex: 1; display: flex; align-items: center; justify-content: center;">
-                    <div style="text-align: center; padding: 24px;">
-                        <div style="font-size: 64px; margin-bottom: 16px;">🔥</div>
-                        <h2 style="margin: 0 0 8px 0; color: var(--vscode-foreground); font-size: 18px;">FIRE Flow</h2>
-                        <p style="color: var(--vscode-descriptionForeground); margin: 0 0 8px 0; font-size: 13px;">
-                            Fast Intent-Run Engineering
-                        </p>
-                        <p style="color: var(--vscode-descriptionForeground); font-size: 11px; margin: 0; opacity: 0.7;">
-                            Full visualization coming soon
-                        </p>
+        if (!this._fireData) {
+            return html`
+                <div class="fire-app" style="flex: 1; display: flex; flex-direction: column; overflow: hidden;">
+                    <div class="fire-placeholder" style="flex: 1; display: flex; align-items: center; justify-content: center;">
+                        <div style="text-align: center; padding: 24px;">
+                            <div style="font-size: 64px; margin-bottom: 16px;">🔥</div>
+                            <h2 style="margin: 0 0 8px 0; color: var(--vscode-foreground); font-size: 18px;">FIRE Flow</h2>
+                            <p style="color: var(--vscode-descriptionForeground); margin: 0; font-size: 13px;">
+                                Loading...
+                            </p>
+                        </div>
                     </div>
                 </div>
-            </div>
+            `;
+        }
+
+        return html`
+            <fire-view
+                .data=${this._fireData}
+                @tab-change=${this._handleFireTabChange}
+                @continue-run=${this._handleContinueRun}
+                @start-run=${this._handleStartRun}
+                @view-artifact=${this._handleViewArtifact}
+                @view-run=${this._handleViewRun}
+                @open-file=${this._handleFireOpenFile}
+                @filter-change=${this._handleFireFilterChange}
+                @toggle-expand=${this._handleFireToggleExpand}
+            ></fire-view>
         `;
+    }
+
+    // ==================== FIRE Event Handlers ====================
+
+    private _handleFireTabChange(e: CustomEvent<{ tab: FireTabId }>): void {
+        this._fireActiveTab = e.detail.tab;
+        if (this._fireData) {
+            this._fireData = { ...this._fireData, activeTab: e.detail.tab };
+        }
+        vscode.postMessage({ type: 'fireTabChange', tab: e.detail.tab });
+    }
+
+    private _handleContinueRun(e: CustomEvent<{ runId: string }>): void {
+        vscode.postMessage({ type: 'continueRun', runId: e.detail.runId });
+    }
+
+    private _handleStartRun(e: CustomEvent<{ workItemIds: string[] }>): void {
+        vscode.postMessage({ type: 'startRun', workItemIds: e.detail.workItemIds });
+    }
+
+    private _handleViewArtifact(e: CustomEvent<{ runId: string; artifact: string }>): void {
+        vscode.postMessage({ type: 'viewArtifact', runId: e.detail.runId, artifact: e.detail.artifact });
+    }
+
+    private _handleViewRun(e: CustomEvent<{ runId: string; folderPath: string }>): void {
+        vscode.postMessage({ type: 'viewRun', runId: e.detail.runId, folderPath: e.detail.folderPath });
+    }
+
+    private _handleFireOpenFile(e: CustomEvent<{ path?: string; id?: string; intentId?: string }>): void {
+        if (e.detail.path) {
+            vscode.postMessage({ type: 'openArtifact', kind: 'file', path: e.detail.path });
+        } else if (e.detail.id && e.detail.intentId) {
+            vscode.postMessage({ type: 'openWorkItem', id: e.detail.id, intentId: e.detail.intentId });
+        }
+    }
+
+    private _handleFireFilterChange(e: CustomEvent<{ filter: string }>): void {
+        vscode.postMessage({ type: 'fireIntentsFilter', filter: e.detail.filter });
+    }
+
+    private _handleFireToggleExpand(e: CustomEvent<{ intentId: string; expanded: boolean }>): void {
+        vscode.postMessage({ type: 'fireToggleExpand', intentId: e.detail.intentId, expanded: e.detail.expanded });
     }
 
     /**
@@ -837,6 +897,11 @@ export class SpecsmdApp extends BaseElement {
                 }
                 if (message.overviewHtml !== undefined) {
                     this._overviewHtml = message.overviewHtml;
+                }
+                // Handle FIRE flow data
+                if (message.fireData !== undefined) {
+                    this._fireData = message.fireData;
+                    this._fireActiveTab = message.fireData.activeTab;
                 }
                 // Handle flow data
                 if (message.availableFlows !== undefined) {
@@ -878,6 +943,11 @@ export class SpecsmdApp extends BaseElement {
                 }
                 if (message.overviewHtml !== undefined) {
                     this._overviewHtml = message.overviewHtml;
+                }
+                // Handle FIRE flow data
+                if (message.fireData !== undefined) {
+                    this._fireData = message.fireData;
+                    this._fireActiveTab = message.fireData.activeTab;
                 }
                 break;
 
@@ -967,13 +1037,6 @@ export class SpecsmdApp extends BaseElement {
      */
     private _handleOpenBolt(e: CustomEvent<{ boltId: string }>): void {
         vscode.postMessage({ type: 'openBoltMd', boltId: e.detail.boltId });
-    }
-
-    /**
-     * Handle flow switch from the flow switcher component.
-     */
-    private _handleFlowSwitch(e: CustomEvent<FlowSwitchDetail>): void {
-        vscode.postMessage({ type: 'switchFlow', flowId: e.detail.flowId });
     }
 }
 

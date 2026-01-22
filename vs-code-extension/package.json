@@ -72,7 +72,8 @@
             },
             {
                 "command": "specsmd.switchFlow",
-                "title": "specsmd: Switch Flow"
+                "title": "specsmd: Switch Flow",
+                "icon": "$(layers)"
             }
         ],
         "keybindings": [
@@ -86,9 +87,14 @@
         "menus": {
             "view/title": [
                 {
+                    "command": "specsmd.switchFlow",
+                    "when": "view == specsmdExplorer && specsmd.hasMultipleFlows",
+                    "group": "navigation@1"
+                },
+                {
                     "command": "specsmd.refresh",
                     "when": "view == specsmdExplorer",
-                    "group": "navigation"
+                    "group": "navigation@2"
                 }
             ]
         },

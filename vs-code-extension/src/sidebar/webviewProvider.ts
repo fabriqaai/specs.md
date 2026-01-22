@@ -348,24 +348,292 @@ export class SpecsmdWebviewProvider implements vscode.WebviewViewProvider {
             return;
         }
 
-        // Get FIRE state
-        const fireState = adapter.stateManager.getState();
+        // Get FIRE state snapshot
+        const fireState = adapter.stateManager.getState() as {
+            project: { name: string; description?: string; created: string; fireVersion: string } | null;
+            workspace: { type: string; structure: string; autonomyBias: string; runScopePreference: string } | null;
+            intents: Array<{
+                id: string;
+                title: string;
+                status: string;
+                filePath: string;
+                description?: string;
+                workItems: Array<{
+                    id: string;
+                    title: string;
+                    status: string;
+                    mode: string;
+                    complexity: string;
+                    filePath: string;
+                }>;
+            }>;
+            activeRun: {
+                id: string;
+                scope: string;
+                workItems: Array<{ id: string; intentId: string; mode: string; status: string }>;
+                currentItem: string | null;
+                folderPath: string;
+                startedAt: string;
+                completedAt?: string;
+                hasPlan: boolean;
+                hasWalkthrough: boolean;
+                hasTestReport: boolean;
+            } | null;
+            completedRuns: Array<{
+                id: string;
+                scope: string;
+                workItems: Array<{ id: string; intentId: string; mode: string; status: string }>;
+                completedAt: string;
+                folderPath: string;
+            }>;
+            standards: Array<{ type: string; filePath: string }>;
+            stats: {
+                totalIntents: number;
+                completedIntents: number;
+                inProgressIntents: number;
+                pendingIntents: number;
+                totalWorkItems: number;
+                completedWorkItems: number;
+                inProgressWorkItems: number;
+                pendingWorkItems: number;
+                totalRuns: number;
+                completedRuns: number;
+                hasActiveRun: boolean;
+            };
+            ui: { activeTab: string; runsFilter: string; intentsFilter: string; expandedIntents: string[] };
+        };
 
         // Build flow information for the switcher
         const flowData = this._buildFlowData();
 
-        // For now, send a placeholder with FIRE-specific structure
-        // TODO: Build proper FIRE-specific view data
+        // Transform FIRE state to FireViewData format expected by webview
+        const fireViewData = this._buildFireViewData(fireState);
+
         this._view.webview.postMessage({
             type: 'setData',
             activeTab,
             flowType: 'fire',
-            fireData: fireState,
+            fireData: fireViewData,
             boltsData: null, // FIRE doesn't use bolts
-            specsHtml: this._buildFireSpecsHtml(fireState),
-            overviewHtml: this._buildFireOverviewHtml(fireState),
+            specsHtml: '', // Not used for FIRE
+            overviewHtml: '', // Not used for FIRE
             ...flowData
         });
+    }
+
+    /**
+     * Build FireViewData from FIRE state snapshot.
+     */
+    private _buildFireViewData(state: {
+        project: { name: string; description?: string; created: string; fireVersion: string } | null;
+        workspace: { type: string; structure: string; autonomyBias: string; runScopePreference: string } | null;
+        intents: Array<{
+            id: string;
+            title: string;
+            status: string;
+            filePath: string;
+            description?: string;
+            workItems: Array<{
+                id: string;
+                title: string;
+                status: string;
+                mode: string;
+                complexity: string;
+                filePath: string;
+                dependencies?: string[];
+            }>;
+        }>;
+        activeRun: {
+            id: string;
+            scope: string;
+            workItems: Array<{ id: string; intentId: string; mode: string; status: string }>;
+            currentItem: string | null;
+            folderPath: string;
+            startedAt: string;
+            completedAt?: string;
+            hasPlan: boolean;
+            hasWalkthrough: boolean;
+            hasTestReport: boolean;
+        } | null;
+        completedRuns: Array<{
+            id: string;
+            scope: string;
+            workItems: Array<{ id: string; intentId: string; mode: string; status: string }>;
+            completedAt: string;
+            folderPath: string;
+        }>;
+        standards: Array<{ type: string; filePath: string }>;
+        stats: {
+            totalIntents: number;
+            completedIntents: number;
+            inProgressIntents: number;
+            pendingIntents: number;
+            totalWorkItems: number;
+            completedWorkItems: number;
+            inProgressWorkItems: number;
+            pendingWorkItems: number;
+            totalRuns: number;
+            completedRuns: number;
+            hasActiveRun: boolean;
+        };
+        ui: { activeTab: string; runsFilter: string; intentsFilter: string; expandedIntents: string[] };
+    }) {
+        // Build pending work items from all intents
+        const pendingItems = state.intents.flatMap(intent =>
+            intent.workItems
+                .filter(w => w.status === 'pending')
+                .map(w => ({
+                    id: w.id,
+                    intentId: intent.id,
+                    intentTitle: intent.title,
+                    intentFilePath: intent.filePath,
+                    title: w.title,
+                    status: w.status as 'pending' | 'in_progress' | 'completed' | 'blocked',
+                    mode: w.mode as 'autopilot' | 'confirm' | 'validate',
+                    complexity: w.complexity as 'low' | 'medium' | 'high',
+                    filePath: w.filePath,
+                    dependencies: w.dependencies
+                }))
+        );
+
+        // Build completed runs data with files
+        const completedRunsData = state.completedRuns.map(run => ({
+            id: run.id,
+            scope: run.scope as 'single' | 'batch' | 'wide',
+            itemCount: run.workItems.length,
+            completedAt: run.completedAt,
+            folderPath: run.folderPath,
+            files: this._scanRunFiles(run.folderPath)
+        }));
+
+        // Build active run data if exists
+        const activeRunData = state.activeRun ? {
+            id: state.activeRun.id,
+            scope: state.activeRun.scope as 'single' | 'batch' | 'wide',
+            workItems: state.activeRun.workItems.map(w => ({
+                id: w.id,
+                intentId: w.intentId,
+                mode: w.mode as 'autopilot' | 'confirm' | 'validate',
+                status: w.status as 'pending' | 'in_progress' | 'completed' | 'failed',
+                title: this._findWorkItemTitle(state.intents, w.id, w.intentId)
+            })),
+            currentItem: state.activeRun.currentItem,
+            folderPath: state.activeRun.folderPath,
+            startedAt: state.activeRun.startedAt,
+            completedAt: state.activeRun.completedAt,
+            hasPlan: state.activeRun.hasPlan,
+            hasWalkthrough: state.activeRun.hasWalkthrough,
+            hasTestReport: state.activeRun.hasTestReport
+        } : null;
+
+        // Build intents data
+        const intentsData = state.intents.map(intent => ({
+            id: intent.id,
+            title: intent.title,
+            status: intent.status as 'pending' | 'in_progress' | 'completed' | 'blocked',
+            filePath: intent.filePath,
+            description: intent.description,
+            workItems: intent.workItems.map(w => ({
+                id: w.id,
+                title: w.title,
+                status: w.status as 'pending' | 'in_progress' | 'completed' | 'blocked',
+                mode: w.mode as 'autopilot' | 'confirm' | 'validate',
+                complexity: w.complexity as 'low' | 'medium' | 'high',
+                filePath: w.filePath
+            }))
+        }));
+
+        return {
+            activeTab: (state.ui.activeTab || 'runs') as 'runs' | 'intents' | 'overview',
+            runsData: {
+                activeRun: activeRunData,
+                pendingItems,
+                completedRuns: completedRunsData,
+                stats: {
+                    totalWorkItems: state.stats.totalWorkItems,
+                    completedWorkItems: state.stats.completedWorkItems,
+                    inProgressWorkItems: state.stats.inProgressWorkItems,
+                    pendingWorkItems: state.stats.pendingWorkItems,
+                    totalRuns: state.stats.totalRuns,
+                    completedRuns: state.stats.completedRuns,
+                    hasActiveRun: state.stats.hasActiveRun
+                }
+            },
+            intentsData: {
+                intents: intentsData,
+                // Default to all intents expanded if none specified
+                expandedIntents: state.ui.expandedIntents && state.ui.expandedIntents.length > 0
+                    ? state.ui.expandedIntents
+                    : intentsData.map(i => i.id),
+                filter: (state.ui.intentsFilter || 'all') as 'all' | 'pending' | 'in_progress' | 'completed' | 'blocked'
+            },
+            overviewData: {
+                project: state.project,
+                workspace: state.workspace ? {
+                    type: state.workspace.type as 'greenfield' | 'brownfield',
+                    structure: state.workspace.structure as 'monolith' | 'monorepo' | 'multi-part',
+                    autonomyBias: state.workspace.autonomyBias as 'autonomous' | 'balanced' | 'controlled',
+                    runScopePreference: state.workspace.runScopePreference as 'single' | 'batch' | 'wide'
+                } : null,
+                standards: state.standards.map(s => ({ type: s.type, filePath: s.filePath })),
+                stats: {
+                    totalIntents: state.stats.totalIntents,
+                    completedIntents: state.stats.completedIntents,
+                    totalWorkItems: state.stats.totalWorkItems,
+                    completedWorkItems: state.stats.completedWorkItems,
+                    totalRuns: state.stats.totalRuns,
+                    completedRuns: state.stats.completedRuns
+                }
+            }
+        };
+    }
+
+    /**
+     * Scans a run folder for markdown files.
+     */
+    private _scanRunFiles(folderPath: string): Array<{ name: string; path: string }> {
+        const files: Array<{ name: string; path: string }> = [];
+
+        try {
+            if (!folderPath || !fs.existsSync(folderPath)) {
+                return files;
+            }
+
+            const entries = fs.readdirSync(folderPath);
+
+            for (const entry of entries) {
+                if (!entry.endsWith('.md')) {
+                    continue;
+                }
+
+                const filePath = path.join(folderPath, entry);
+                const stat = fs.statSync(filePath);
+
+                if (stat.isFile()) {
+                    files.push({
+                        name: entry,
+                        path: filePath
+                    });
+                }
+            }
+        } catch {
+            // Ignore errors reading directory
+        }
+
+        return files;
+    }
+
+    /**
+     * Find work item title by id and intentId.
+     */
+    private _findWorkItemTitle(
+        intents: Array<{ id: string; workItems: Array<{ id: string; title: string }> }>,
+        workItemId: string,
+        intentId: string
+    ): string {
+        const intent = intents.find(i => i.id === intentId);
+        const workItem = intent?.workItems.find(w => w.id === workItemId);
+        return workItem?.title || workItemId;
     }
 
     /**

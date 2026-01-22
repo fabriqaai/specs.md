@@ -293,6 +293,9 @@ export class FireParser implements FlowParser<FireArtifacts> {
                 const content = fs.readFileSync(filePath, 'utf8');
                 const parsed = this._parseFrontmatter(content);
 
+                // Support both 'depends_on' and 'dependencies' field names
+                const deps = (parsed.depends_on || parsed.dependencies) as string[] | undefined;
+
                 workItems.push({
                     id: workItemId,
                     intentId,
@@ -302,7 +305,7 @@ export class FireParser implements FlowParser<FireArtifacts> {
                     complexity: this._normalizeComplexity(parsed.complexity) || 'medium',
                     filePath,
                     description: parsed.description as string | undefined,
-                    dependencies: parsed.dependencies as string[] | undefined,
+                    dependencies: deps,
                     createdAt: parsed.created as string | undefined
                 });
             }
