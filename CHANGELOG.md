@@ -5,6 +5,27 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.9] - 2026-01-23
+
+### Added
+
+- FIRE Flow: New flow type with 17 Lit web components for VS Code extension
+- VS Code: Flow switcher in toolbar for switching between AI-DLC and FIRE flows
+- VS Code: FIRE Runs tab with active run display and completed runs history
+- VS Code: FIRE Intents tab with expandable intent cards and progress tracking
+- VS Code: Pending work items grouped by intent with dependency visualization
+- VS Code: File watcher for `.specs-fire` directory to auto-refresh on state changes
+- VS Code: Expandable completed runs showing all markdown files with click-to-open
+
+### Changed
+
+- File watcher now monitors both `memory-bank` and `.specs-fire` directories
+
+### Fixed
+
+- YAML parsing now supports both snake_case and camelCase field names
+- Intent expansion state persisted correctly across view refreshes
+
 ## [0.1.8] - 2026-01-13
 
 ### Added
@@ -116,6 +137,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+[0.1.9]: https://github.com/fabriqaai/specs.md/compare/v0.1.8...v0.1.9
 [0.1.8]: https://github.com/fabriqaai/specs.md/compare/v0.1.7...v0.1.8
 [0.1.7]: https://github.com/fabriqaai/specs.md/compare/v0.1.6...v0.1.7
 [0.1.6]: https://github.com/fabriqaai/specs.md/compare/v0.1.5...v0.1.6
