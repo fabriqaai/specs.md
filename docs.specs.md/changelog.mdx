@@ -9,6 +9,29 @@ This page tracks all notable changes to specs.md. For the raw changelog file, se
 
 ---
 
+## [0.1.9] - 2026-01-23
+
+### Added
+
+- FIRE Flow: New flow type with 17 Lit web components for VS Code extension
+- VS Code: Flow switcher in toolbar for switching between AI-DLC and FIRE flows
+- VS Code: FIRE Runs tab with active run display and completed runs history
+- VS Code: FIRE Intents tab with expandable intent cards and progress tracking
+- VS Code: Pending work items grouped by intent with dependency visualization
+- VS Code: File watcher for `.specs-fire` directory to auto-refresh on state changes
+- VS Code: Expandable completed runs showing all markdown files with click-to-open
+
+### Changed
+
+- File watcher now monitors both `memory-bank` and `.specs-fire` directories
+
+### Fixed
+
+- YAML parsing now supports both snake_case and camelCase field names
+- Intent expansion state persisted correctly across view refreshes
+
+---
+
 ## [0.1.8] - 2026-01-13
 
 ### Added

@@ -5,7 +5,16 @@ description: Adaptive checkpoints - Autopilot, Confirm, and Validate modes
 
 ## Adaptive Checkpoints
 
-FIRE's breakthrough is **adaptive checkpoints** that scale with complexity. Instead of a fixed number of gates, FIRE adjusts oversight based on risk.
+FIRE's breakthrough is **adaptive checkpoints** that scale with complexity. Instead of a fixed number of gates, FIRE adjusts oversight based on two inputs:
+
+1. **Work Complexity**: Low, Medium, or High
+2. **Your Autonomy Config**: Set during project initialization
+
+<Frame>
+  <img src="/images/fire_adaptive.png" alt="FIRE Autonomy Configuration" style={{ borderRadius: '8px' }} />
+</Frame>
+
+These combine to determine the execution mode:
 
 ```mermaid
 graph LR

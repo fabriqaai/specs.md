@@ -170,8 +170,8 @@ specs.md is an open-source implementation of AI-DLC with:
 
 ### 4.2 Non-Goals
 
-1. **Replace full AI-DLC:** This is a "lite" alternative, not a replacement
-2. **Support large teams:** Optimized for solo/small teams (2-5 people)
+1. **Replace full AI-DLC:** This is an alternative flow, not a replacement
+2. **Enforce rigid ceremony:** FIRE adapts to complexity, not fixed workflows
 3. **Satisfy regulatory requirements:** Not designed for audit-heavy environments
 4. **Maintain backward compatibility:** New structure alongside existing
 

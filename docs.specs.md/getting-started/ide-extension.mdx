@@ -5,7 +5,7 @@ description: Track your AI-DLC progress with the specsmd sidebar extension for V
 
 ## Overview
 
-The specsmd IDE extension provides a visual dashboard for tracking your AI-DLC development progress. Monitor bolts, browse specs, and see project metrics—all from your IDE sidebar.
+The specsmd IDE extension provides a visual dashboard for tracking your development progress across both **FIRE Flow** and **AI-DLC Flow**. Monitor runs/bolts, browse specs, and see project metrics—all from your IDE sidebar.
 
 <img
   src="/images/extension-preview.png"
@@ -82,7 +82,31 @@ The specsmd IDE extension provides a visual dashboard for tracking your AI-DLC d
 
 ## Features
 
-The extension provides three main views:
+The extension adapts to your selected flow:
+
+### FIRE Flow Views
+
+If you're using FIRE Flow, the extension shows:
+
+<Frame>
+  <img src="/images/extension-gallery/fireflow-extension/1.png" alt="FIRE Flow - Runs Tab" style={{ borderRadius: '8px' }} />
+</Frame>
+
+- **Runs Tab** - Track active runs and completed runs with file listings
+- **Intents Tab** - Browse intents and work items with progress indicators
+- **Overview Tab** - Project-wide metrics and quick actions
+
+<Frame>
+  <img src="/images/extension-gallery/fireflow-extension/2.png" alt="FIRE Flow - Intents Tab" style={{ borderRadius: '8px' }} />
+</Frame>
+
+<Frame>
+  <img src="/images/extension-gallery/fireflow-extension/3.png" alt="FIRE Flow - Overview" style={{ borderRadius: '8px' }} />
+</Frame>
+
+### AI-DLC Flow Views
+
+If you're using AI-DLC Flow, the extension provides three main views:
 
 ### Bolts Tab
 
@@ -144,7 +168,8 @@ High-level project metrics and quick actions.
 ## Activation
 
 The extension automatically activates when it detects:
-- A `memory-bank/` folder in your workspace
+- A `memory-bank/` folder in your workspace (AI-DLC Flow)
+- A `.specs-fire/` folder in your workspace (FIRE Flow)
 - A `.specsmd/` folder in your workspace
 
 <Note>
@@ -161,7 +186,12 @@ The extension watches your memory-bank files for changes. To manually refresh:
 
 <AccordionGroup>
   <Accordion title="Extension not showing in sidebar">
-    Ensure your workspace has a `memory-bank/` or `.specsmd/` folder. The extension only activates when these are present.
+    Ensure your workspace has one of these folders:
+    - `memory-bank/` (AI-DLC Flow)
+    - `.specs-fire/` (FIRE Flow)
+    - `.specsmd/` (Either flow)
+
+    The extension only activates when these are present.
 
     ```bash
     # Initialize specs.md first

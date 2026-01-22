@@ -83,6 +83,17 @@
             ]
           },
           {
+            "group": "FIRE Flow",
+            "pages": [
+              "fire-flow/overview",
+              "fire-flow/quick-start",
+              "fire-flow/execution-modes",
+              "fire-flow/work-items",
+              "fire-flow/monorepo-support",
+              "fire-flow/agents"
+            ]
+          },
+          {
             "group": "AI-DLC Flow",
             "pages": [
               {
@@ -111,17 +122,6 @@
                   "guides/bolt-types"
                 ]
               }
-            ]
-          },
-          {
-            "group": "FIRE Flow",
-            "pages": [
-              "fire-flow/overview",
-              "fire-flow/quick-start",
-              "fire-flow/execution-modes",
-              "fire-flow/work-items",
-              "fire-flow/monorepo-support",
-              "fire-flow/agents"
             ]
           },
           {

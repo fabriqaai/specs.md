@@ -5,10 +5,10 @@ description: Fast Intent-Run Engineering - Ship in hours with adaptive checkpoin
 
 ## What is FIRE?
 
-**FIRE (Fast Intent-Run Engineering)** is an AI-native development flow inspired by AI-DLC but simplified for rapid feature delivery. It takes the core concepts of AI-DLC—intents, structured execution, human checkpoints—and streamlines them for solo developers and small teams.
+**FIRE (Fast Intent-Run Engineering)** is an **Adaptive Spec-Driven Development** flow with first-class Monorepo and Brownfield support. It kills the ceremony and right-sizes the rigor—because fixing a UI bug isn't the same as refactoring your payment gateway.
 
 <Info>
-  **AI-DLC principles, simplified execution.** FIRE keeps intent-driven development and traceability while reducing ceremony from 10-26 checkpoints to just 0-2.
+  **Check when necessary, not check everything.** FIRE dynamically decides when to ask for human input and when to burn through the task, saving your attention for moments that actually matter.
 </Info>
 
 ```mermaid
@@ -40,54 +40,55 @@ graph LR
   </Card>
 </CardGroup>
 
-## FIRE vs AI-DLC
+## FIRE vs specs.md AI-DLC
 
-FIRE is **AI-DLC simplified**—same philosophy, less ceremony.
+FIRE and specs.md's AI-DLC flow share intent-driven philosophy but are distinct flows. FIRE prioritizes adaptive execution; our AI-DLC implementation prioritizes comprehensive traceability.
 
-| Aspect | FIRE | AI-DLC |
-|--------|------|--------|
+| Aspect | FIRE | specs.md AI-DLC |
+|--------|------|-----------------|
 | **Philosophy** | Intent-driven, AI proposes, human validates | Same |
 | **Hierarchy** | Intent → Work Item → Run | Intent → Unit → Story → Bolt → Stages |
-| **Checkpoints** | 0-2 per work item (adaptive) | 10-26 per feature (comprehensive) |
+| **Checkpoints** | Adaptive (based on complexity + config) | Comprehensive (fixed per bolt type) |
 | **Agents** | 3 (Orchestrator, Planner, Builder) | 4 (Master, Inception, Construction, Operations) |
-| **Artifacts** | 3-5 per feature | 15-20 per feature |
+| **Artifacts** | Adaptive (design docs when needed) | Comprehensive (per bolt type) |
 | **Phases** | Plan → Execute (continuous) | Inception → Construction → Operations (sequential) |
-| **DDD** | Not required | Integral |
-| **Best For** | Solo/small teams, rapid features | Teams, complex domains |
+| **Design Approach** | Adaptive based on complexity | DDD or Simple bolt types |
+| **Optimized For** | Teams who hate friction | Teams needing full traceability |
 
 <Info>
-  **Same DNA**: Both flows use intents, structured artifacts, and human validation. FIRE just flattens the hierarchy and makes checkpoints adaptive.
+  **Shared philosophy**: Both flows use intents, structured artifacts, and human validation. FIRE adapts the ceremony to the task; AI-DLC provides comprehensive ceremony always.
 </Info>
 
 ## When to Use FIRE
 
 <AccordionGroup>
-  <Accordion title="You're a solo developer or small team">
-    FIRE is optimized for 1-3 person teams where extensive ceremony adds overhead without benefit.
+  <Accordion title="You hate unnecessary friction">
+    FIRE is built for collectives—tight-knit teams and solo devs who want to ship without bureaucracy getting in the way.
   </Accordion>
   <Accordion title="You're working in a brownfield codebase">
-    FIRE auto-detects existing patterns, tech stack, and conventions. It extends your code rather than fighting it.
+    FIRE analyzes your existing structure. It respects the patterns you already have and extends rather than rewrites.
   </Accordion>
   <Accordion title="You have a monorepo">
     Hierarchical standards support different tech stacks per module while sharing common policies.
   </Accordion>
-  <Accordion title="You want to ship fast">
-    Adaptive checkpoints let you skip ceremony for simple tasks while maintaining rigor for critical changes.
+  <Accordion title="You want adaptive rigor">
+    Simple tasks burn through fast. Complex changes get the attention they deserve. FIRE right-sizes the ceremony.
   </Accordion>
-  <Accordion title="You don't need full DDD">
-    Standard CRUD, integrations, and utilities don't require domain modeling. FIRE skips what you don't need.
+  <Accordion title="Your project doesn't always need DDD">
+    If your project doesn't need complex domain modeling, FIRE won't force it. Design docs appear when complexity warrants them.
   </Accordion>
 </AccordionGroup>
 
-## When NOT to Use FIRE
+## When to Consider specs.md AI-DLC Instead
 
-<Warning>
-  **Consider AI-DLC instead if:**
-  - You have a large team requiring coordination
-  - Your domain logic is complex and needs DDD
-  - You're in a regulated environment requiring extensive documentation
-  - Multiple stakeholders need to review and approve changes
-</Warning>
+<Info>
+  **specs.md's AI-DLC flow may be a better fit if:**
+  - You need comprehensive documentation for every change (regulatory/audit requirements)
+  - Your organization mandates fixed approval workflows
+  - You prefer predictable ceremony over adaptive execution
+
+  Note: FIRE can handle complex domains—it will adapt with design documentation when needed. The choice is about workflow preference, not capability limits.
+</Info>
 
 ## Core Concepts
 
@@ -123,9 +124,14 @@ A single execution cycle for a work item. Loads context, executes per mode, trac
 
 Generated after each run. Documents what changed, why, and how to verify it.
 
-## Three Execution Modes
+## Adaptive Execution
 
-FIRE adapts to complexity with three execution modes:
+FIRE doesn't guess—it analyzes two inputs to decide the execution path:
+
+1. **Work Complexity**: Is this a simple tweak or a systemic change?
+2. **Your Autonomy Config**: How much oversight do you want?
+
+These combine to dynamically choose when to ask and when to burn through:
 
 ```mermaid
 graph TD
@@ -160,6 +166,12 @@ graph TD
 | **Autopilot** | 0 | Bug fixes, minor updates, well-defined changes |
 | **Confirm** | 1 | Standard features, moderate complexity |
 | **Validate** | 2 | Security, payments, core architecture |
+
+You configure your autonomy preference during project initialization:
+
+<Frame>
+  <img src="/images/fire_adaptive.png" alt="FIRE Autonomy Configuration" style={{ borderRadius: '8px' }} />
+</Frame>
 
 <Info>
   Learn more about execution modes in the [Execution Modes](/fire-flow/execution-modes) guide.

@@ -14,12 +14,12 @@ const THEME_COLORS = {
 const FLOWS = {
     fire: {
         name: 'FIRE',
-        description: 'Rapid execution - Solo devs or small teams, brownfield/monorepo, 0-2 adaptive checkpoints',
+        description: 'Adaptive execution - Brownfield/monorepo ready, right-sizes rigor to complexity',
         path: 'fire'
     },
     aidlc: {
         name: 'AI-DLC',
-        description: 'Full methodology with DDD - Teams, complex domains, 10-26 checkpoints',
+        description: 'Full methodology - Comprehensive traceability, DDD or Simple bolt types',
         path: 'aidlc'
     },
     simple: {

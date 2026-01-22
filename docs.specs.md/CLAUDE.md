@@ -111,6 +111,8 @@ Use consistent styling for all Mermaid diagrams. Copy these styles into your dia
 | Human/Validation   | Pink   | `#F472B6` | Human review, checkpoints     |
 | AI/System          | Cyan   | `#22D3EE` | AI actions, automation        |
 | Core/Infrastructure| Blue   | `#60A5FA` | Core components               |
+| High Risk          | Red    | `#EF4444` | Critical systems, validate mode |
+| FIRE Flow          | Orange | `#F59E0B` | FIRE flow identity in diagrams |
 | Future/Placeholder | Gray   | `#64748B` | Planned features              |
 
 ### Standard Style Definitions
@@ -150,6 +152,22 @@ style Future fill:#475569,stroke:#64748B,color:#fff,stroke-dasharray: 5 5
 style DDD fill:#8B5CF6,stroke:#7C3AED,color:#fff
 style Simple fill:#34D399,stroke:#10B981,color:#fff
 style Spike fill:#FBBF24,stroke:#F59E0B,color:#fff
+```
+
+**FIRE Flow Execution Modes:**
+```
+style Autopilot fill:#34D399,stroke:#10B981,color:#fff
+style Confirm fill:#818CF8,stroke:#6366F1,color:#fff
+style Validate fill:#8B5CF6,stroke:#7C3AED,color:#fff
+style HighRisk fill:#EF4444,stroke:#DC2626,color:#fff
+```
+
+**FIRE Flow Work Items:**
+```
+style Intent fill:#8B5CF6,stroke:#7C3AED,color:#fff
+style WorkItem fill:#818CF8,stroke:#6366F1,color:#fff
+style Run fill:#34D399,stroke:#10B981,color:#fff
+style Done fill:#FBBF24,stroke:#F59E0B,color:#fff
 ```
 
 ## Brand Colors
