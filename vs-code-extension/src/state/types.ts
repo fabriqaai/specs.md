@@ -30,6 +30,15 @@ export type TabId = 'bolts' | 'specs' | 'overview';
 export type ActivityFilter = 'all' | 'stages' | 'bolts';
 
 /**
+ * Context for how the current intent was selected.
+ * Used to display appropriate labels in the UI.
+ * - 'active': Intent has an active (in-progress) bolt
+ * - 'queued': Intent has the next queued bolt ready to start
+ * - 'none': No active or queued work
+ */
+export type IntentContext = 'active' | 'queued' | 'none';
+
+/**
  * Specs tree filter options.
  * Can be 'all' or any raw status string discovered from unit frontmatter.
  */
@@ -117,6 +126,8 @@ export interface NextAction {
 export interface ComputedState {
     /** Currently selected intent (first intent with active bolts, or first intent) */
     currentIntent: Intent | null;
+    /** Context for how the current intent was selected */
+    currentIntentContext: IntentContext;
     /** All currently active bolts (in-progress), sorted by most recent */
     activeBolts: Bolt[];
     /** Pending bolts ordered by dependency priority */
@@ -270,6 +281,7 @@ export const DEFAULT_UI_STATE: UIState = {
 
 export const EMPTY_COMPUTED_STATE: ComputedState = {
     currentIntent: null,
+    currentIntentContext: 'none',
     activeBolts: [],
     pendingBolts: [],
     completedBolts: [],

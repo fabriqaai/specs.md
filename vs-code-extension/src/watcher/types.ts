@@ -39,5 +39,5 @@ export interface FileWatcherOptions {
  */
 export const DEFAULT_FILE_WATCHER_OPTIONS: Required<FileWatcherOptions> = {
     debounceDelay: 100,
-    globPattern: '**/*.md'
+    globPattern: '**/*.{md,yaml,yml}'
 };

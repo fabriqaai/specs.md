@@ -1,6 +1,6 @@
 ---
 title: Introduction
-description: A framework for spec-driven AI development with pluggable flows
+description: AI-native development framework with three flows for every use case
 ---
 
 
@@ -23,36 +23,52 @@ description: A framework for spec-driven AI development with pluggable flows
 
 ## What is specs.md?
 
-**specs.md** is a framework for spec-driven AI development that uses markdown-based agents to orchestrate your software development workflow. It supports pluggable development flows, with **AI-DLC (AI-Driven Development Lifecycle)** as the first implemented flow.
+**specs.md** is an AI-native development framework with pluggable flows for every use case. Choose the flow that matches your project needs:
+
+<CardGroup cols={3}>
+  <Card
+    title="Simple Flow"
+    icon="feather"
+    href="/simple-flow/overview"
+  >
+    **Spec generation only**. Quick requirements, design, and task documents.
+  </Card>
+  <Card
+    title="FIRE Flow"
+    icon="bolt"
+    href="/fire-flow/overview"
+  >
+    **AI-DLC simplified**. Same philosophy, 0-2 adaptive checkpoints.
+  </Card>
+  <Card
+    title="AI-DLC Flow"
+    icon="building"
+    href="/core-concepts/intents"
+  >
+    **Full methodology**. Complete lifecycle with DDD and 4 agents.
+  </Card>
+</CardGroup>
+
+<Info>
+  **Not sure which flow?** Check out our [Choose Your Flow](/architecture/choose-flow) guide for a detailed comparison.
+</Info>
+
+## Quick Start
 
 <CardGroup cols={2}>
   <Card
-    title="Quick Start"
-    icon="rocket"
-    href="/getting-started/quick-start"
+    title="Installation"
+    icon="download"
+    href="/getting-started/installation"
   >
-    Get up and running in minutes with your AI coding tool
+    Install specs.md and select your flow
   </Card>
   <Card
-    title="Architecture"
-    icon="sitemap"
-    href="/architecture/flows"
+    title="IDE Extension"
+    icon="puzzle-piece"
+    href="/getting-started/ide-extension"
   >
-    Understand the pluggable flow architecture
-  </Card>
-  <Card
-    title="Core Concepts"
-    icon="cube"
-    href="/core-concepts/intents"
-  >
-    Learn about Intents, Units, Bolts, and the Memory Bank
-  </Card>
-  <Card
-    title="Agents"
-    icon="robot"
-    href="/agents/overview"
-  >
-    Explore the four specialized agents that guide development
+    Track progress with the VS Code extension
   </Card>
 </CardGroup>
 
@@ -62,48 +78,49 @@ specs.md is built as a **pluggable framework** where development methodologies a
 
 ```
 specs.md (Framework)
-├── Core (Memory Bank, Standards, Agents)
+├── Core (Standards, Agents, State)
 └── Flows/
-    └── aidlc/          ← AI-DLC (first flow)
-    └── (future flows...)
+    ├── simple/     ← Spec generation only
+    ├── fire/       ← Rapid execution (0-2 checkpoints)
+    └── aidlc/      ← Full methodology with DDD
 ```
-
-<Info>
-  **AI-DLC** is the first implemented flow, based on the [AWS AI-Driven Development Lifecycle](https://aws.amazon.com/blogs/devops/ai-driven-development-life-cycle/) methodology. More flows can be added to support different development approaches.
-</Info>
 
 ## Key Features
 
 <AccordionGroup>
-  <Accordion title="Pluggable Flows">
-    Development methodologies are implemented as flows. AI-DLC is the first flow, but the framework supports multiple approaches.
+  <Accordion title="Three Flows for Every Use Case">
+    **Simple** for quick specs, **FIRE** for rapid execution, **AI-DLC** for full methodology. Choose based on your project needs.
   </Accordion>
-  <Accordion title="AI-Native Design">
-    Built from the ground up for AI-driven development. AI proposes plans, humans validate, AI executes.
+  <Accordion title="Adaptive Checkpoints (FIRE)">
+    FIRE flow adapts oversight to complexity: 0 checkpoints for simple tasks, 1 for standard features, 2 for critical changes.
   </Accordion>
-  <Accordion title="Human Oversight as Loss Function">
-    Validation at each stage catches errors early before they cascade downstream. Each validation transforms artifacts into rich context for subsequent stages.
+  <Accordion title="First-Class Brownfield Support (FIRE)">
+    Auto-detects existing patterns, respects conventions, and extends rather than rewrites your codebase.
   </Accordion>
-  <Accordion title="Design Techniques Built-In">
-    Domain-Driven Design (DDD) is integral to the Construction phase, addressing the "whitespace" in Agile that has led to quality issues.
+  <Accordion title="Monorepo Support (FIRE)">
+    Hierarchical standards with module-specific overrides. One project, multiple tech stacks.
+  </Accordion>
+  <Accordion title="Full DDD Methodology (AI-DLC)">
+    Domain-Driven Design is integral to AI-DLC Construction phase for complex domains.
   </Accordion>
   <Accordion title="Tool Agnostic">
     Works with Claude Code, Cursor, GitHub Copilot, and other AI coding assistants. Markdown-based agents work anywhere.
   </Accordion>
   <Accordion title="VS Code Extension">
-    Track your progress with our [sidebar extension](/getting-started/vscode-extension) for VS Code, Cursor, and Windsurf. Monitor bolts, browse specs, and view project metrics visually.
+    Track your progress with our [sidebar extension](/getting-started/ide-extension) for VS Code, Cursor, and Windsurf. Monitor progress, browse specs, and view project metrics visually.
   </Accordion>
 </AccordionGroup>
 
-## AI-DLC Flow Overview
+## Flow Comparison
 
-The AI-DLC flow implements three sequential phases:
-
-| Phase | Purpose | Key Activities |
-|-------|---------|----------------|
-| **Inception** | What & Why | Requirements, Stories, Unit Decomposition, Bolt Planning |
-| **Construction** | How to Build | Domain Design, Logical Design, Code, Tests |
-| **Operations** | Deploy & Monitor | Build Artifacts, Deploy, Verify, Monitor |
+| Aspect | Simple | FIRE | AI-DLC |
+|--------|--------|------|--------|
+| **Best For** | Spec generation | Solo/small teams | Teams, complex domains |
+| **Checkpoints** | 3 (phase gates) | 0-2 (adaptive) | 10-26 per feature |
+| **Agents** | 1 | 3 | 4 |
+| **Execution Tracking** | No | Yes | Yes |
+| **DDD** | No | No | Yes |
+| **Monorepo** | No | First-class | Limited |
 
 ## Supported Tools
 
@@ -157,22 +174,23 @@ Unlike tools that lock you into a specific paid IDE, specs.md works with **any A
     npx specsmd@latest install
     ```
   </Step>
-  <Step title="Initialize your project">
-    Run the Master Agent and type `project-init`
+  <Step title="Select your flow">
+    Choose **Simple**, **FIRE**, or **AI-DLC** based on your project needs
   </Step>
-  <Step title="Create your first Intent">
-    Use the Inception Agent to capture what you want to build
+  <Step title="Start building">
+    Invoke your flow's agent and describe what you want to build
   </Step>
 </Steps>
 
 ## Why specs.md?
 
-Traditional development methods were built for human-driven, long-running processes. **specs.md reimagines the development lifecycle** with AI as a central collaborator, enabling:
+Traditional development methods were built for human-driven, long-running processes. **specs.md reimagines the development lifecycle** with AI as a central collaborator:
 
-- **Rapid cycles** measured in hours or days rather than weeks
-- **Complete planning upfront** through Mob Elaboration (weeks of work in hours)
-- **Persistent context** that AI can reference across sessions
-- **Structured artifacts** that build on each other progressively
+- **Choose your overhead**: From no execution tracking (Simple) to full methodology (AI-DLC)
+- **Adaptive checkpoints**: FIRE adapts oversight to complexity—skip ceremony for simple tasks
+- **Brownfield-first**: FIRE auto-detects existing patterns and conventions
+- **Persistent context**: AI can reference across sessions with structured artifacts
+- **Rapid cycles**: Ship features in hours, not weeks
 
 <Info>
   <strong>Featured on Product Hunt!</strong> Check out our launch and leave a review: <a href="https://www.producthunt.com/products/specs-md" target="_blank" rel="noopener">specs.md on Product Hunt →</a>

@@ -10,7 +10,7 @@ import './focus-section.js';
 import './queue-section.js';
 import './completions-section.js';
 import './activity-feed.js';
-import type { IntentInfo, BoltStats } from './current-bolts.js';
+import type { IntentInfo, BoltStats, IntentContext } from './current-bolts.js';
 import type { ActiveBoltData } from './focus-card.js';
 import type { QueuedBoltData } from './queue-item.js';
 import type { CompletedBoltData } from './completion-item.js';
@@ -22,6 +22,7 @@ import type { ActivityFilter } from './activity-feed.js';
  */
 export interface BoltsViewData {
     currentIntent: IntentInfo | null;
+    currentIntentContext: IntentContext;
     stats: BoltStats;
     activeBolts: ActiveBoltData[];
     upNextQueue: QueuedBoltData[];
@@ -86,6 +87,7 @@ export class BoltsView extends BaseElement {
         return html`
             <current-intent
                 .intent=${this.data.currentIntent}
+                .context=${this.data.currentIntentContext}
                 .stats=${this.data.stats}>
             </current-intent>
 

@@ -1,6 +1,7 @@
 /**
- * FileWatcher class for monitoring memory-bank directory changes.
+ * FileWatcher class for monitoring specsmd directory changes.
  * Uses VS Code's FileSystemWatcher for cross-platform compatibility.
+ * Watches both memory-bank (AIDLC) and .specs-fire (FIRE) directories.
  */
 
 import * as vscode from 'vscode';
@@ -13,7 +14,7 @@ import {
 } from './types';
 
 /**
- * Watches the memory-bank directory for file changes.
+ * Watches specsmd directories (memory-bank and .specs-fire) for file changes.
  * Debounces rapid changes to prevent UI flicker.
  */
 export class FileWatcher implements vscode.Disposable {
@@ -21,7 +22,7 @@ export class FileWatcher implements vscode.Disposable {
     private readonly onChangeCallback: OnChangeCallback;
     private readonly options: Required<FileWatcherOptions>;
 
-    private watcher: vscode.FileSystemWatcher | null = null;
+    private watchers: vscode.FileSystemWatcher[] = [];
     private debouncedRefresh: DebouncedFunction<OnChangeCallback> | null = null;
     private disposables: vscode.Disposable[] = [];
 
@@ -43,11 +44,11 @@ export class FileWatcher implements vscode.Disposable {
     }
 
     /**
-     * Starts watching the memory-bank directory.
-     * Creates a FileSystemWatcher and attaches event handlers.
+     * Starts watching specsmd directories (memory-bank and .specs-fire).
+     * Creates FileSystemWatchers and attaches event handlers.
      */
     start(): void {
-        if (this.watcher) {
+        if (this.watchers.length > 0) {
             // Already started
             return;
         }
@@ -58,25 +59,33 @@ export class FileWatcher implements vscode.Disposable {
             this.options.debounceDelay
         );
 
-        // Build glob pattern for memory-bank
-        const memoryBankPath = path.join(this.workspacePath, 'memory-bank');
-        const pattern = new vscode.RelativePattern(
-            memoryBankPath,
-            this.options.globPattern
-        );
+        // Directories to watch
+        const watchDirs = [
+            { name: 'memory-bank', path: path.join(this.workspacePath, 'memory-bank') },
+            { name: '.specs-fire', path: path.join(this.workspacePath, '.specs-fire') }
+        ];
 
-        // Create file system watcher
-        this.watcher = vscode.workspace.createFileSystemWatcher(pattern);
+        for (const dir of watchDirs) {
+            // Build glob pattern for this directory
+            const pattern = new vscode.RelativePattern(
+                dir.path,
+                this.options.globPattern
+            );
 
-        // Attach event handlers
-        this.disposables.push(
-            this.watcher.onDidCreate(() => this.handleChange('create')),
-            this.watcher.onDidChange(() => this.handleChange('change')),
-            this.watcher.onDidDelete(() => this.handleChange('delete'))
-        );
+            // Create file system watcher
+            const watcher = vscode.workspace.createFileSystemWatcher(pattern);
 
-        // Add watcher to disposables
-        this.disposables.push(this.watcher);
+            // Attach event handlers
+            this.disposables.push(
+                watcher.onDidCreate(() => this.handleChange('create')),
+                watcher.onDidChange(() => this.handleChange('change')),
+                watcher.onDidDelete(() => this.handleChange('delete'))
+            );
+
+            // Add watcher to disposables and track
+            this.disposables.push(watcher);
+            this.watchers.push(watcher);
+        }
     }
 
     /**
@@ -95,7 +104,7 @@ export class FileWatcher implements vscode.Disposable {
      * Checks if the watcher is currently active.
      */
     isActive(): boolean {
-        return this.watcher !== null;
+        return this.watchers.length > 0;
     }
 
     /**
@@ -106,7 +115,7 @@ export class FileWatcher implements vscode.Disposable {
     }
 
     /**
-     * Disposes the watcher and cleans up resources.
+     * Disposes the watchers and cleans up resources.
      * Cancels any pending debounced callbacks.
      */
     dispose(): void {
@@ -122,8 +131,8 @@ export class FileWatcher implements vscode.Disposable {
         }
         this.disposables = [];
 
-        // Clear watcher reference
-        this.watcher = null;
+        // Clear watchers
+        this.watchers = [];
     }
 }
 

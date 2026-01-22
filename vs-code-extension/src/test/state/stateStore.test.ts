@@ -325,15 +325,27 @@ suite('StateStore Test Suite', () => {
             assert.strictEqual(store.getCurrentIntent(), null);
         });
 
-        test('should return current intent after setting entities', () => {
+        test('should return current intent when there is an active bolt', () => {
             const store = createStateStore();
             store.setEntities({
-                intents: [createIntent({ name: 'my-intent' })]
+                intents: [createIntent({ name: 'my-intent' })],
+                bolts: [createBolt({ status: ArtifactStatus.InProgress })]
             });
 
             const intent = store.getCurrentIntent();
             assert.ok(intent);
             assert.strictEqual(intent.name, 'my-intent');
+        });
+
+        test('should return null when no active or queued bolts', () => {
+            const store = createStateStore();
+            store.setEntities({
+                intents: [createIntent({ name: 'my-intent' })]
+            });
+
+            // New behavior: return null when no active/queued work
+            const intent = store.getCurrentIntent();
+            assert.strictEqual(intent, null);
         });
     });
 

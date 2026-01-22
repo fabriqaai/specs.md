@@ -7,13 +7,41 @@ description: Frequently asked questions about specs.md
 
 <AccordionGroup>
   <Accordion title="What is specs.md?">
-    specs.md is an implementation of the AI-Driven Development Lifecycle (AI-DLC) methodology. It provides markdown-based agents that work with your favorite AI coding tools (Claude Code, Cursor, GitHub Copilot) to guide software development from requirements through deployment.
+    specs.md is an AI-native development framework with pluggable flows for every use case. It provides markdown-based agents that work with your favorite AI coding tools (Claude Code, Cursor, GitHub Copilot) to guide software development.
 
-    We offer two modes:
-    - **specs.md (AI-DLC)** - Full methodology for complex systems
-    - **specs.md (Simple Flow)** - Lightweight mode for simpler projects
+    We offer three flows:
+    - **Simple Flow** - Spec generation only (requirements, design, tasks)
+    - **FIRE Flow** - Rapid execution for solo/small teams (0-2 adaptive checkpoints)
+    - **AI-DLC Flow** - Full methodology with DDD for teams and complex domains
 
-    Both are available now.
+    [Choose your flow →](/architecture/choose-flow)
+  </Accordion>
+
+  <Accordion title="Which flow should I choose?">
+    | Flow | Best For | Checkpoints |
+    |------|----------|-------------|
+    | **Simple** | Quick specs, prototypes, handoff to other teams | 3 (phase gates) |
+    | **FIRE** | Solo/small teams, brownfield, monorepos | 0-2 (adaptive) |
+    | **AI-DLC** | Teams, complex domains, regulated environments | 10-26 |
+
+    **Quick decision:**
+    - Just need specs without execution tracking? → **Simple**
+    - Solo or small team, want to ship fast? → **FIRE**
+    - Team with complex domain, need full traceability? → **AI-DLC**
+
+    [Detailed comparison →](/architecture/choose-flow)
+  </Accordion>
+
+  <Accordion title="What is FIRE flow?">
+    FIRE (Fast Intent-Run Engineering) is **AI-DLC simplified**—same intent-driven philosophy with adaptive checkpoints instead of comprehensive gates.
+
+    - **Inspired by AI-DLC**: Keeps intents, structured execution, human validation
+    - **Adaptive checkpoints**: 0-2 based on complexity (vs AI-DLC's 10-26)
+    - **Brownfield-first**: Auto-detects existing patterns and conventions
+    - **Monorepo support**: Hierarchical standards with module-specific overrides
+    - **Walkthrough generation**: Every change documented automatically
+
+    [Learn more about FIRE →](/fire-flow/overview)
   </Accordion>
 
   <Accordion title="What is AI-DLC?">
@@ -39,17 +67,62 @@ description: Frequently asked questions about specs.md
   <Accordion title="Is specs.md free?">
     Yes, specs.md is open source under the MIT license. You can use it freely in personal and commercial projects. You only pay for your AI API tokens.
   </Accordion>
+</AccordionGroup>
 
-  <Accordion title="Who is specs.md for?">
-    AI-DLC is designed for teams building complex systems that demand:
-    - Continuous functional adaptability
-    - High architectural complexity
-    - Numerous trade-offs management
-    - Scalability and integration requirements
-    - Multiple teams working cohesively
-    - Regulated environments
+## FIRE Flow
 
-    For simpler projects without complex trade-off management, try [specs.md (Simple Flow)](/simple-flow/overview).
+<AccordionGroup>
+  <Accordion title="What are FIRE's execution modes?">
+    FIRE adapts oversight to complexity with three modes:
+
+    | Mode | Checkpoints | Use For |
+    |------|-------------|---------|
+    | **Autopilot** | 0 | Bug fixes, minor updates, well-defined changes |
+    | **Confirm** | 1 | Standard features, moderate complexity |
+    | **Validate** | 2 | Security, payments, core architecture |
+
+    [Learn more about execution modes →](/fire-flow/execution-modes)
+  </Accordion>
+
+  <Accordion title="How does FIRE handle brownfield projects?">
+    FIRE treats existing codebases as first-class citizens:
+    - **Auto-detection**: Scans your codebase to infer tech stack and conventions
+    - **Search before create**: Extends existing modules rather than duplicating
+    - **Respect patterns**: Follows existing naming and folder structures
+    - **Minimal changes**: Targeted edits, no unnecessary rewrites
+
+    [Learn more about brownfield support →](/fire-flow/monorepo-support)
+  </Accordion>
+
+  <Accordion title="How does FIRE support monorepos?">
+    FIRE has first-class monorepo support with hierarchical standards:
+    - **Root standards**: Project-wide defaults
+    - **Module overrides**: Per-module tech stack and conventions
+    - **Constitution**: Universal policies (always inherited, never overridden)
+    - **AI detection**: Automatically detects language/framework per module
+
+    [Learn more about monorepo support →](/fire-flow/monorepo-support)
+  </Accordion>
+
+  <Accordion title="What are walkthroughs in FIRE?">
+    Walkthroughs are generated documentation after each work item completes:
+    - Summary of what changed
+    - Files created/modified/deleted
+    - Key decisions made
+    - Verification steps
+    - Test coverage
+
+    They enable async review—you don't need to watch AI code in real-time.
+  </Accordion>
+
+  <Accordion title="When should I NOT use FIRE?">
+    Consider AI-DLC instead if:
+    - You have a large team requiring coordination
+    - Your domain logic is complex and needs DDD
+    - You're in a regulated environment requiring extensive documentation
+    - Multiple stakeholders need to review and approve changes
+
+    [Flow comparison →](/architecture/choose-flow)
   </Accordion>
 </AccordionGroup>
 

@@ -1,0 +1,223 @@
+# FIRE Flow Configuration
+# Fast Intent-Run Engineering - Simplified AI-native development
+
+# FIRE Flow Version (used by migrate skill to detect outdated projects)
+version: "0.1.8"
+
+# Artifact folder (created at project initialization)
+artifact_root: ".specs-fire"
+
+# Structure created at project initialization
+structure:
+  - path: intents/
+    description: "High-level objectives that deliver user value"
+  - path: runs/
+    description: "Execution logs and walkthroughs per run"
+  - path: standards/
+    description: "Project standards (constitution, tech-stack, coding-standards, testing-standards)"
+
+# ─────────────────────────────────────────────────────────────────────────────────
+# HIERARCHICAL STANDARDS (Monorepo Support)
+# ─────────────────────────────────────────────────────────────────────────────────
+#
+# Standards can exist at root level AND at module level for monorepos.
+# Resolution rules:
+#   - constitution.md: ALWAYS from root, NEVER overridden by modules
+#   - All other standards: Override semantics (module overrides root if exists)
+#
+# Example monorepo structure:
+#   .specs-fire/standards/              <- Root standards (defaults)
+#   packages/api/.specs-fire/standards/ <- API module overrides
+#   apps/mobile/.specs-fire/standards/  <- Mobile module overrides
+#
+# The file system IS the registry - presence of .specs-fire/standards/ defines a scope.
+
+# Central state file (FIRE's source of truth)
+state:
+  path: ".specs-fire/state.yaml"
+  description: "Central state tracking for all FIRE operations"
+  sections:
+    project:
+      - name: "Project name"
+      - description: "Project description"
+      - created: "ISO 8601 timestamp"
+      - fire_version: "FIRE flow version at project init (e.g., 0.1.8)"
+    workspace:
+      - type: "greenfield | brownfield"
+      - structure: "monolith | monorepo | multi-part"
+      - autonomy_bias: "autonomous | balanced | controlled"
+      - run_scope_preference: "single | batch | wide (learned from history)"
+      - run_scope_history: "List of recent scope choices for learning"
+      - scanned_at: "ISO 8601 timestamp (brownfield)"
+      - parts: "List of project parts (monorepo)"
+    intents:
+      - id: "Intent identifier"
+      - title: "Intent title"
+      - status: "pending | in_progress | completed"
+      - work_items: "List of work items"
+    active_run:
+      - id: "Current run ID"
+      - scope: "single | batch | wide"
+      - work_items: "List of work items in this run"
+      - current_item: "Work item currently being executed"
+      - started: "ISO 8601 timestamp"
+    runs:
+      - completed: "List of completed runs with id, work_item, intent, completed timestamp"
+
+# Data Conventions
+conventions:
+  timestamps:
+    format: "ISO 8601 with time and timezone"
+    pattern: "YYYY-MM-DDTHH:MM:SSZ"
+    example: "2026-01-19T10:30:00Z"
+
+# Naming Conventions
+naming:
+  intents:
+    format: "{id}"
+    example: "user-authentication"
+    note: "Kebab-case, descriptive name"
+
+  work_items:
+    format: "{id}"
+    example: "login-endpoint"
+    note: "Kebab-case, action-oriented name"
+
+  runs:
+    format: "run-{NNN}/"
+    example: "run-001/"
+    note: "Sequential 3-digit number, folder per run"
+    contents:
+      - "plan.md"         # Approved implementation plan (confirm/validate modes)
+      - "run.md"          # Run log
+      - "test-report.md"  # Test results and coverage
+      - "walkthrough.md"  # Implementation walkthrough
+
+# Schema Definition (Source of Truth for Agents)
+schema:
+  state: ".specs-fire/state.yaml"
+  intents: ".specs-fire/intents/{intent-id}/"
+  intent-brief: ".specs-fire/intents/{intent-id}/brief.md"
+  work-items: ".specs-fire/intents/{intent-id}/work-items/"
+  work-item: ".specs-fire/intents/{intent-id}/work-items/{work-item-id}.md"
+  runs: ".specs-fire/runs/"
+  run-folder: ".specs-fire/runs/{run-id}/"
+  plan: ".specs-fire/runs/{run-id}/plan.md"
+  run-log: ".specs-fire/runs/{run-id}/run.md"
+  test-report: ".specs-fire/runs/{run-id}/test-report.md"
+  walkthrough: ".specs-fire/runs/{run-id}/walkthrough.md"
+
+  # Root Standards
+  standards: ".specs-fire/standards/"
+  constitution: ".specs-fire/standards/constitution.md"
+  tech-stack: ".specs-fire/standards/tech-stack.md"
+  coding-standards: ".specs-fire/standards/coding-standards.md"
+  testing-standards: ".specs-fire/standards/testing-standards.md"
+  system-architecture: ".specs-fire/standards/system-architecture.md"
+
+  # Module Standards (Monorepo) - paths relative to module root
+  module-standards: "{module-path}/.specs-fire/standards/"
+  module-tech-stack: "{module-path}/.specs-fire/standards/tech-stack.md"
+  module-coding-standards: "{module-path}/.specs-fire/standards/coding-standards.md"
+  module-testing-standards: "{module-path}/.specs-fire/standards/testing-standards.md"
+
+  # Agent Ownership
+  ownership:
+    orchestrator: [state]
+    planner: [intents, work-items, state]
+    builder: [runs, state]
+
+# ─────────────────────────────────────────────────────────────────────────────────
+# STANDARDS BEHAVIOR
+# ─────────────────────────────────────────────────────────────────────────────────
+
+standards_behavior:
+  constitution:
+    inheritance: always
+    override: never
+    description: |
+      Universal policies (git workflow, PR process, security).
+      ALWAYS loaded from root. Modules cannot override.
+
+  tech-stack:
+    inheritance: fallback
+    override: allowed
+    description: |
+      If module has tech-stack.md, use it.
+      Otherwise inherit from nearest ancestor (ultimately root).
+
+  coding-standards:
+    inheritance: fallback
+    override: allowed
+
+  testing-standards:
+    inheritance: fallback
+    override: allowed
+
+  system-architecture:
+    inheritance: fallback
+    override: allowed
+
+# Execution Modes
+execution_modes:
+  autopilot:
+    checkpoints: 0
+    complexity: low
+    description: "Direct execution, walkthrough generated after"
+
+  confirm:
+    checkpoints: 1
+    complexity: medium
+    description: "Plan shown, user confirms, then execution"
+
+  validate:
+    checkpoints: 2
+    complexity: high
+    description: "Design doc review, then plan confirmation, then execution"
+
+# Work Item Complexity Mapping (default, when autonomy_bias = balanced)
+complexity_modes:
+  low: autopilot
+  medium: confirm
+  high: validate
+
+# Autonomy Bias - Shifts complexity→mode thresholds
+# User preference captured at project init, stored in workspace.autonomy_bias
+autonomy_bias:
+  autonomous:
+    description: "AI executes more freely, fewer checkpoints"
+    mapping:
+      low: autopilot
+      medium: autopilot   # shifted down
+      high: confirm       # shifted down
+  balanced:
+    description: "Standard checkpoints based on complexity"
+    mapping:
+      low: autopilot
+      medium: confirm
+      high: validate
+  controlled:
+    description: "More human oversight, more checkpoints"
+    mapping:
+      low: confirm        # shifted up
+      medium: validate    # shifted up
+      high: validate
+
+# Run Scope - How many work items to execute in a single run
+# Learned from user choices, stored in workspace.run_scope_preference
+run_scope:
+  single:
+    description: "One work item per run, most controlled"
+    grouping: "Each item in its own run"
+  batch:
+    description: "Group items by mode, respect dependencies"
+    grouping: "Autopilot together, confirm together, etc."
+  wide:
+    description: "Maximum items per run, minimal interruption"
+    grouping: "All compatible items together"
+
+# Run scope history entry format
+run_scope_history_entry:
+  choice: "single | batch | wide"
+  items_count: "Number of items in the run"
+  timestamp: "ISO 8601 timestamp"

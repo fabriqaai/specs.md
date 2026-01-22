@@ -11,6 +11,6 @@
     "outDir": "./dist",
     "rootDir": "."
   },
-  "include": ["__tests__/**/*", "schemas/**/*"],
+  "include": ["__tests__/**/*", "schemas/**/*", "flows/**/*"],
   "exclude": ["node_modules"]
 }

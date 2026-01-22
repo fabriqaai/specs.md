@@ -23,7 +23,8 @@ export type WebviewToExtensionMessage =
     | { type: 'continueBolt'; boltId: string; boltName?: string }
     | { type: 'viewBoltFiles'; boltId: string }
     | { type: 'openBoltMd'; boltId: string }
-    | { type: 'openExternal'; url: string };
+    | { type: 'openExternal'; url: string }
+    | { type: 'switchFlow'; flowId: string };
 
 /**
  * Activity filter options.
@@ -43,6 +44,11 @@ export type ExtensionToWebviewMessage =
 export type TabId = 'bolts' | 'specs' | 'overview';
 
 /**
+ * Context for how the current intent was selected.
+ */
+export type IntentContext = 'active' | 'queued' | 'none';
+
+/**
  * Data structure sent to webview for rendering.
  */
 export interface WebviewData {
@@ -51,6 +57,9 @@ export interface WebviewData {
         name: string;
         number: string;
     } | null;
+
+    /** Context for how the current intent was selected */
+    currentIntentContext: IntentContext;
 
     /** Bolt statistics */
     stats: {

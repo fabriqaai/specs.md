@@ -68,10 +68,22 @@ import {
     projectMetricsTracker,
 } from '../analytics';
 import { openFile } from '../utils';
+import { FlowRegistry, FlowInfo, FlowId } from '../core';
+
+/**
+ * Flow info for webview display.
+ */
+interface WebviewFlowInfo {
+    id: string;
+    displayName: string;
+    icon: string;
+    rootFolder: string;
+}
 
 /**
  * WebviewViewProvider for the SpecsMD sidebar.
  * Uses StateStore for centralized state management.
+ * Supports multi-flow switching via FlowRegistry.
  */
 export class SpecsmdWebviewProvider implements vscode.WebviewViewProvider {
     public static readonly viewType = 'specsmdExplorer';
@@ -81,6 +93,8 @@ export class SpecsmdWebviewProvider implements vscode.WebviewViewProvider {
     private _workspacePath: string | undefined;
     private _context: vscode.ExtensionContext;
     private _unsubscribe?: () => void;
+    private _flowRegistry?: FlowRegistry;
+    private _flowChangeUnsubscribe?: () => void;
 
     // Re-render loop prevention flags
     private _initialLoadComplete = false;
@@ -89,9 +103,10 @@ export class SpecsmdWebviewProvider implements vscode.WebviewViewProvider {
     // Feature flag for Lit mode (can be configured via settings later)
     private _useLitMode = true;
 
-    constructor(context: vscode.ExtensionContext, workspacePath?: string) {
+    constructor(context: vscode.ExtensionContext, workspacePath?: string, flowRegistry?: FlowRegistry) {
         this._context = context;
         this._workspacePath = workspacePath;
+        this._flowRegistry = flowRegistry;
 
         // Create the state store
         this._store = createStateStore();
@@ -103,6 +118,14 @@ export class SpecsmdWebviewProvider implements vscode.WebviewViewProvider {
         this._unsubscribe = this._store.subscribe(() => {
             this._updateWebview();
         });
+
+        // Subscribe to flow changes
+        if (this._flowRegistry) {
+            this._flowChangeUnsubscribe = this._flowRegistry.onFlowChange(() => {
+                // Refresh data when flow changes
+                this.refresh();
+            });
+        }
     }
 
     /**
@@ -178,9 +201,29 @@ export class SpecsmdWebviewProvider implements vscode.WebviewViewProvider {
 
     /**
      * Refreshes the view by rescanning the memory-bank.
+     * Uses the active flow adapter if available.
      */
     public async refresh(): Promise<void> {
         const workspacePath = this._getWorkspacePath();
+
+        // If we have an active flow adapter, use it
+        if (this._flowRegistry) {
+            const activeAdapter = this._flowRegistry.getActiveAdapter();
+            if (activeAdapter) {
+                await activeAdapter.refresh();
+                // For now, only AI-DLC uses the StateStore directly
+                // FIRE flow has its own state manager
+                if (activeAdapter.flowId === 'aidlc' && workspacePath) {
+                    const model = await scanMemoryBank(workspacePath);
+                    this._store.loadFromModel(model, workspacePath);
+                    projectMetricsTracker.onScanComplete(model);
+                }
+                this._updateWebview();
+                return;
+            }
+        }
+
+        // Fallback: use old scanMemoryBank approach
         if (workspacePath) {
             const model = await scanMemoryBank(workspacePath);
             this._store.loadFromModel(model, workspacePath);
@@ -264,23 +307,364 @@ export class SpecsmdWebviewProvider implements vscode.WebviewViewProvider {
 
         this._isUpdating = true;
         try {
-            const data = this._buildWebviewData();
+            // Check active flow
+            const activeFlow = this._flowRegistry?.getActiveFlow();
             const activeTab = this._store.getState().ui.activeTab;
 
-            if (this._useLitMode) {
-                // Lit mode: Send data via postMessage
-                this._sendDataToWebview(data, activeTab);
+            if (activeFlow?.id === 'fire') {
+                // FIRE flow: Send FIRE-specific data
+                this._sendFireDataToWebview(activeTab);
             } else {
-                // Legacy mode: Replace entire HTML
-                this._view.webview.html = getWebviewContent(
-                    this._view.webview,
-                    data,
-                    activeTab
-                );
+                // AI-DLC flow (default): Use existing data flow
+                const data = this._buildWebviewData();
+
+                if (this._useLitMode) {
+                    // Lit mode: Send data via postMessage
+                    this._sendDataToWebview(data, activeTab);
+                } else {
+                    // Legacy mode: Replace entire HTML
+                    this._view.webview.html = getWebviewContent(
+                        this._view.webview,
+                        data,
+                        activeTab
+                    );
+                }
             }
         } finally {
             this._isUpdating = false;
         }
+    }
+
+    /**
+     * Send FIRE flow specific data to webview.
+     */
+    private _sendFireDataToWebview(activeTab: TabId): void {
+        if (!this._view || !this._flowRegistry) {
+            return;
+        }
+
+        const adapter = this._flowRegistry.getActiveAdapter();
+        if (!adapter || adapter.flowId !== 'fire') {
+            return;
+        }
+
+        // Get FIRE state snapshot
+        const fireState = adapter.stateManager.getState() as {
+            project: { name: string; description?: string; created: string; fireVersion: string } | null;
+            workspace: { type: string; structure: string; autonomyBias: string; runScopePreference: string } | null;
+            intents: Array<{
+                id: string;
+                title: string;
+                status: string;
+                filePath: string;
+                description?: string;
+                workItems: Array<{
+                    id: string;
+                    title: string;
+                    status: string;
+                    mode: string;
+                    complexity: string;
+                    filePath: string;
+                }>;
+            }>;
+            activeRun: {
+                id: string;
+                scope: string;
+                workItems: Array<{ id: string; intentId: string; mode: string; status: string }>;
+                currentItem: string | null;
+                folderPath: string;
+                startedAt: string;
+                completedAt?: string;
+                hasPlan: boolean;
+                hasWalkthrough: boolean;
+                hasTestReport: boolean;
+            } | null;
+            completedRuns: Array<{
+                id: string;
+                scope: string;
+                workItems: Array<{ id: string; intentId: string; mode: string; status: string }>;
+                completedAt: string;
+                folderPath: string;
+            }>;
+            standards: Array<{ type: string; filePath: string }>;
+            stats: {
+                totalIntents: number;
+                completedIntents: number;
+                inProgressIntents: number;
+                pendingIntents: number;
+                totalWorkItems: number;
+                completedWorkItems: number;
+                inProgressWorkItems: number;
+                pendingWorkItems: number;
+                totalRuns: number;
+                completedRuns: number;
+                hasActiveRun: boolean;
+            };
+            ui: { activeTab: string; runsFilter: string; intentsFilter: string; expandedIntents: string[] };
+        };
+
+        // Build flow information for the switcher
+        const flowData = this._buildFlowData();
+
+        // Transform FIRE state to FireViewData format expected by webview
+        const fireViewData = this._buildFireViewData(fireState);
+
+        this._view.webview.postMessage({
+            type: 'setData',
+            activeTab,
+            flowType: 'fire',
+            fireData: fireViewData,
+            boltsData: null, // FIRE doesn't use bolts
+            specsHtml: '', // Not used for FIRE
+            overviewHtml: '', // Not used for FIRE
+            ...flowData
+        });
+    }
+
+    /**
+     * Build FireViewData from FIRE state snapshot.
+     */
+    private _buildFireViewData(state: {
+        project: { name: string; description?: string; created: string; fireVersion: string } | null;
+        workspace: { type: string; structure: string; autonomyBias: string; runScopePreference: string } | null;
+        intents: Array<{
+            id: string;
+            title: string;
+            status: string;
+            filePath: string;
+            description?: string;
+            workItems: Array<{
+                id: string;
+                title: string;
+                status: string;
+                mode: string;
+                complexity: string;
+                filePath: string;
+                dependencies?: string[];
+            }>;
+        }>;
+        activeRun: {
+            id: string;
+            scope: string;
+            workItems: Array<{ id: string; intentId: string; mode: string; status: string }>;
+            currentItem: string | null;
+            folderPath: string;
+            startedAt: string;
+            completedAt?: string;
+            hasPlan: boolean;
+            hasWalkthrough: boolean;
+            hasTestReport: boolean;
+        } | null;
+        completedRuns: Array<{
+            id: string;
+            scope: string;
+            workItems: Array<{ id: string; intentId: string; mode: string; status: string }>;
+            completedAt: string;
+            folderPath: string;
+        }>;
+        standards: Array<{ type: string; filePath: string }>;
+        stats: {
+            totalIntents: number;
+            completedIntents: number;
+            inProgressIntents: number;
+            pendingIntents: number;
+            totalWorkItems: number;
+            completedWorkItems: number;
+            inProgressWorkItems: number;
+            pendingWorkItems: number;
+            totalRuns: number;
+            completedRuns: number;
+            hasActiveRun: boolean;
+        };
+        ui: { activeTab: string; runsFilter: string; intentsFilter: string; expandedIntents: string[] };
+    }) {
+        // Build pending work items from all intents
+        const pendingItems = state.intents.flatMap(intent =>
+            intent.workItems
+                .filter(w => w.status === 'pending')
+                .map(w => ({
+                    id: w.id,
+                    intentId: intent.id,
+                    intentTitle: intent.title,
+                    intentFilePath: intent.filePath,
+                    title: w.title,
+                    status: w.status as 'pending' | 'in_progress' | 'completed' | 'blocked',
+                    mode: w.mode as 'autopilot' | 'confirm' | 'validate',
+                    complexity: w.complexity as 'low' | 'medium' | 'high',
+                    filePath: w.filePath,
+                    dependencies: w.dependencies
+                }))
+        );
+
+        // Build completed runs data with files
+        const completedRunsData = state.completedRuns.map(run => ({
+            id: run.id,
+            scope: run.scope as 'single' | 'batch' | 'wide',
+            itemCount: run.workItems.length,
+            completedAt: run.completedAt,
+            folderPath: run.folderPath,
+            files: this._scanRunFiles(run.folderPath)
+        }));
+
+        // Build active run data if exists
+        const activeRunData = state.activeRun ? {
+            id: state.activeRun.id,
+            scope: state.activeRun.scope as 'single' | 'batch' | 'wide',
+            workItems: state.activeRun.workItems.map(w => ({
+                id: w.id,
+                intentId: w.intentId,
+                mode: w.mode as 'autopilot' | 'confirm' | 'validate',
+                status: w.status as 'pending' | 'in_progress' | 'completed' | 'failed',
+                title: this._findWorkItemTitle(state.intents, w.id, w.intentId)
+            })),
+            currentItem: state.activeRun.currentItem,
+            folderPath: state.activeRun.folderPath,
+            startedAt: state.activeRun.startedAt,
+            completedAt: state.activeRun.completedAt,
+            hasPlan: state.activeRun.hasPlan,
+            hasWalkthrough: state.activeRun.hasWalkthrough,
+            hasTestReport: state.activeRun.hasTestReport,
+            files: this._scanRunFiles(state.activeRun.folderPath)
+        } : null;
+
+        // Build intents data
+        const intentsData = state.intents.map(intent => ({
+            id: intent.id,
+            title: intent.title,
+            status: intent.status as 'pending' | 'in_progress' | 'completed' | 'blocked',
+            filePath: intent.filePath,
+            description: intent.description,
+            workItems: intent.workItems.map(w => ({
+                id: w.id,
+                title: w.title,
+                status: w.status as 'pending' | 'in_progress' | 'completed' | 'blocked',
+                mode: w.mode as 'autopilot' | 'confirm' | 'validate',
+                complexity: w.complexity as 'low' | 'medium' | 'high',
+                filePath: w.filePath
+            }))
+        }));
+
+        return {
+            activeTab: (state.ui.activeTab || 'runs') as 'runs' | 'intents' | 'overview',
+            runsData: {
+                activeRun: activeRunData,
+                pendingItems,
+                completedRuns: completedRunsData,
+                stats: {
+                    totalWorkItems: state.stats.totalWorkItems,
+                    completedWorkItems: state.stats.completedWorkItems,
+                    inProgressWorkItems: state.stats.inProgressWorkItems,
+                    pendingWorkItems: state.stats.pendingWorkItems,
+                    totalRuns: state.stats.totalRuns,
+                    completedRuns: state.stats.completedRuns,
+                    hasActiveRun: state.stats.hasActiveRun
+                }
+            },
+            intentsData: {
+                intents: intentsData,
+                // Default to all intents expanded if none specified
+                expandedIntents: state.ui.expandedIntents && state.ui.expandedIntents.length > 0
+                    ? state.ui.expandedIntents
+                    : intentsData.map(i => i.id),
+                filter: (state.ui.intentsFilter || 'all') as 'all' | 'pending' | 'in_progress' | 'completed' | 'blocked'
+            },
+            overviewData: {
+                project: state.project,
+                workspace: state.workspace ? {
+                    type: state.workspace.type as 'greenfield' | 'brownfield',
+                    structure: state.workspace.structure as 'monolith' | 'monorepo' | 'multi-part',
+                    autonomyBias: state.workspace.autonomyBias as 'autonomous' | 'balanced' | 'controlled',
+                    runScopePreference: state.workspace.runScopePreference as 'single' | 'batch' | 'wide'
+                } : null,
+                standards: state.standards.map(s => ({ type: s.type, filePath: s.filePath })),
+                stats: {
+                    totalIntents: state.stats.totalIntents,
+                    completedIntents: state.stats.completedIntents,
+                    totalWorkItems: state.stats.totalWorkItems,
+                    completedWorkItems: state.stats.completedWorkItems,
+                    totalRuns: state.stats.totalRuns,
+                    completedRuns: state.stats.completedRuns
+                }
+            }
+        };
+    }
+
+    /**
+     * Scans a run folder for markdown files.
+     */
+    private _scanRunFiles(folderPath: string): Array<{ name: string; path: string }> {
+        const files: Array<{ name: string; path: string }> = [];
+
+        try {
+            if (!folderPath || !fs.existsSync(folderPath)) {
+                return files;
+            }
+
+            const entries = fs.readdirSync(folderPath);
+
+            for (const entry of entries) {
+                if (!entry.endsWith('.md')) {
+                    continue;
+                }
+
+                const filePath = path.join(folderPath, entry);
+                const stat = fs.statSync(filePath);
+
+                if (stat.isFile()) {
+                    files.push({
+                        name: entry,
+                        path: filePath
+                    });
+                }
+            }
+        } catch {
+            // Ignore errors reading directory
+        }
+
+        return files;
+    }
+
+    /**
+     * Find work item title by id and intentId.
+     */
+    private _findWorkItemTitle(
+        intents: Array<{ id: string; workItems: Array<{ id: string; title: string }> }>,
+        workItemId: string,
+        intentId: string
+    ): string {
+        const intent = intents.find(i => i.id === intentId);
+        const workItem = intent?.workItems.find(w => w.id === workItemId);
+        return workItem?.title || workItemId;
+    }
+
+    /**
+     * Build HTML for FIRE specs view.
+     */
+    private _buildFireSpecsHtml(fireState: unknown): string {
+        // TODO: Implement proper FIRE specs view
+        return `
+            <div style="padding: 16px; color: var(--vscode-foreground);">
+                <h3 style="margin: 0 0 12px 0; color: var(--vscode-foreground);">🔥 FIRE Flow - Specs</h3>
+                <p style="color: var(--vscode-descriptionForeground); margin: 0;">
+                    FIRE (Fast Intent-Run Engineering) flow view is coming soon.
+                </p>
+            </div>
+        `;
+    }
+
+    /**
+     * Build HTML for FIRE overview view.
+     */
+    private _buildFireOverviewHtml(fireState: unknown): string {
+        // TODO: Implement proper FIRE overview view
+        return `
+            <div style="padding: 16px; color: var(--vscode-foreground);">
+                <h3 style="margin: 0 0 12px 0; color: var(--vscode-foreground);">🔥 FIRE Flow - Overview</h3>
+                <p style="color: var(--vscode-descriptionForeground); margin: 0;">
+                    FIRE flow provides a simplified AI-DLC approach with Plan → Execute phases.
+                </p>
+            </div>
+        `;
     }
 
     /**
@@ -296,6 +680,7 @@ export class SpecsmdWebviewProvider implements vscode.WebviewViewProvider {
         // Build structured data for Bolts view (Lit components)
         const boltsData = {
             currentIntent: data.currentIntent,
+            currentIntentContext: data.currentIntentContext,
             stats: data.stats,
             activeBolts: data.activeBolts,
             upNextQueue: data.upNextQueue,
@@ -311,14 +696,43 @@ export class SpecsmdWebviewProvider implements vscode.WebviewViewProvider {
         const specsHtml = getSpecsViewHtml(data);
         const overviewHtml = getOverviewViewHtml(data);
 
+        // Build flow information for the switcher
+        const flowData = this._buildFlowData();
+
         // Send to webview
         this._view.webview.postMessage({
             type: 'setData',
             activeTab,
             boltsData,
             specsHtml,
-            overviewHtml
+            overviewHtml,
+            ...flowData
         });
+    }
+
+    /**
+     * Builds flow data for the webview.
+     * Returns available flows and active flow ID for the flow switcher.
+     */
+    private _buildFlowData(): { availableFlows: WebviewFlowInfo[]; activeFlowId: string | null } {
+        if (!this._flowRegistry) {
+            return { availableFlows: [], activeFlowId: null };
+        }
+
+        const detectedFlows = this._flowRegistry.getDetectedFlows();
+        const activeFlow = this._flowRegistry.getActiveFlow();
+
+        const availableFlows: WebviewFlowInfo[] = detectedFlows.map(flow => ({
+            id: flow.id,
+            displayName: flow.displayName,
+            icon: flow.icon,
+            rootFolder: flow.rootFolder
+        }));
+
+        return {
+            availableFlows,
+            activeFlowId: activeFlow?.id || null
+        };
     }
 
     /**
@@ -330,6 +744,7 @@ export class SpecsmdWebviewProvider implements vscode.WebviewViewProvider {
         if (!state.workspace.isProject) {
             return {
                 currentIntent: null,
+                currentIntentContext: 'none',
                 stats: { active: 0, queued: 0, done: 0, blocked: 0 },
                 activeBolts: [],
                 upNextQueue: [],
@@ -347,7 +762,7 @@ export class SpecsmdWebviewProvider implements vscode.WebviewViewProvider {
         }
 
         // Get computed values from state
-        const { currentIntent, activeBolts, pendingBolts, completedBolts, activityFeed, boltStats, nextActions } = state.computed;
+        const { currentIntent, currentIntentContext, activeBolts, pendingBolts, completedBolts, activityFeed, boltStats, nextActions } = state.computed;
 
         // Transform current intent
         const currentIntentData = currentIntent
@@ -405,6 +820,7 @@ export class SpecsmdWebviewProvider implements vscode.WebviewViewProvider {
 
         return {
             currentIntent: currentIntentData,
+            currentIntentContext,
             stats: boltStats,
             activeBolts: activeBoltsData,
             upNextQueue,
@@ -858,6 +1274,60 @@ export class SpecsmdWebviewProvider implements vscode.WebviewViewProvider {
                     vscode.env.openExternal(vscode.Uri.parse(message.url));
                 }
                 break;
+
+            case 'switchFlow':
+                await this._handleFlowSwitch(message.flowId);
+                break;
+        }
+    }
+
+    /**
+     * Handles flow switch request from webview.
+     * If flowId is provided, switches directly. Otherwise shows quick pick.
+     */
+    private async _handleFlowSwitch(flowId?: string): Promise<void> {
+        if (!this._flowRegistry) {
+            vscode.window.showWarningMessage('Flow switching is not available.');
+            return;
+        }
+
+        // If no flowId provided, trigger the VS Code command to show quick pick
+        if (!flowId) {
+            await vscode.commands.executeCommand('specsmd.switchFlow');
+            return;
+        }
+
+        try {
+            await this._flowRegistry.switchFlow(flowId as FlowId);
+
+            // Refresh to load new flow's data
+            await this.refresh();
+
+            // Send updated flow info to webview
+            if (this._view) {
+                const flowData = this._buildFlowData();
+                this._view.webview.postMessage({
+                    type: 'switchFlow',
+                    ...flowData,
+                    boltsData: this._buildWebviewData().activeBolts.length > 0 ? {
+                        currentIntent: this._buildWebviewData().currentIntent,
+                        currentIntentContext: this._buildWebviewData().currentIntentContext,
+                        stats: this._buildWebviewData().stats,
+                        activeBolts: this._buildWebviewData().activeBolts,
+                        upNextQueue: this._buildWebviewData().upNextQueue,
+                        completedBolts: this._buildWebviewData().completedBolts,
+                        activityEvents: this._buildWebviewData().activityEvents,
+                        focusCardExpanded: this._buildWebviewData().focusCardExpanded,
+                        activityFilter: this._buildWebviewData().activityFilter,
+                        activityHeight: this._buildWebviewData().activityHeight,
+                        specsFilter: this._buildWebviewData().specsFilter
+                    } : null,
+                    specsHtml: getSpecsViewHtml(this._buildWebviewData()),
+                    overviewHtml: getOverviewViewHtml(this._buildWebviewData())
+                });
+            }
+        } catch (error) {
+            vscode.window.showErrorMessage(`Failed to switch flow: ${error}`);
         }
     }
 
@@ -936,6 +1406,9 @@ export class SpecsmdWebviewProvider implements vscode.WebviewViewProvider {
         if (this._unsubscribe) {
             this._unsubscribe();
         }
+        if (this._flowChangeUnsubscribe) {
+            this._flowChangeUnsubscribe();
+        }
         this._store.dispose();
     }
 }
@@ -945,9 +1418,10 @@ export class SpecsmdWebviewProvider implements vscode.WebviewViewProvider {
  */
 export function createWebviewProvider(
     context: vscode.ExtensionContext,
-    workspacePath?: string
+    workspacePath?: string,
+    flowRegistry?: FlowRegistry
 ): SpecsmdWebviewProvider {
-    const provider = new SpecsmdWebviewProvider(context, workspacePath);
+    const provider = new SpecsmdWebviewProvider(context, workspacePath, flowRegistry);
 
     // Register the webview view provider
     const registration = vscode.window.registerWebviewViewProvider(

@@ -1,0 +1,141 @@
+# fabriqa FIRE - Project State
+# Central state for AI context loading
+
+project:
+  name: "fabriqa-fire"
+  description: "Fast Intent-Run Engineering flow for specs.md"
+  created: 2026-01-19
+  framework: fire-v1
+
+workspace:
+  type: brownfield
+  structure: monolith
+  scan_depth: quick
+  scanned_at: 2026-01-19T00:00:00Z
+  default_mode: confirm
+
+  parts:
+    - id: specsmd-cli
+      path: src/
+      type: library
+      tech: [TypeScript, Node.js, Vitest]
+      entry: src/index.ts
+
+  key_files:
+    - path: src/flows/aidlc/
+      purpose: Existing AI-DLC flow implementation (reference)
+      category: reference
+
+    - path: src/flows/simple/
+      purpose: Existing Simple flow implementation (reference)
+      category: reference
+
+intents:
+  - id: fire-flow
+    title: "Implement fabriqa FIRE Flow"
+    status: pending
+    priority: high
+    work_items:
+      # Phase 1: Core Foundation
+      - id: state-management
+        title: "State Management System"
+        status: pending
+        complexity: medium
+
+      - id: orchestrator-agent
+        title: "Fire Orchestrator Agent"
+        status: pending
+        complexity: medium
+        depends_on: [state-management]
+
+      - id: planner-agent
+        title: "Fire Planner Agent"
+        status: pending
+        complexity: high
+        depends_on: [orchestrator-agent]
+
+      - id: builder-agent
+        title: "Fire Builder Agent"
+        status: pending
+        complexity: high
+        depends_on: [orchestrator-agent]
+
+      # Phase 2: Skills
+      - id: intent-capture-skill
+        title: "Intent Capture Skill"
+        status: pending
+        complexity: medium
+        depends_on: [planner-agent]
+
+      - id: work-item-decompose-skill
+        title: "Work Item Decomposition Skill"
+        status: pending
+        complexity: medium
+        depends_on: [planner-agent]
+
+      - id: run-execute-skill
+        title: "Run Execution Skill"
+        status: pending
+        complexity: high
+        depends_on: [builder-agent]
+
+      - id: walkthrough-generate-skill
+        title: "Walkthrough Generation Skill"
+        status: pending
+        complexity: medium
+        depends_on: [builder-agent]
+
+      # Phase 3: Execution Modes
+      - id: autopilot-mode
+        title: "Autopilot Execution Mode"
+        status: pending
+        complexity: medium
+        depends_on: [run-execute-skill]
+
+      - id: confirm-mode
+        title: "Confirm Execution Mode"
+        status: pending
+        complexity: medium
+        depends_on: [run-execute-skill]
+
+      - id: validate-mode
+        title: "Validate Execution Mode"
+        status: pending
+        complexity: high
+        depends_on: [run-execute-skill]
+
+      # Phase 4: Workspace Detection
+      - id: workspace-detect-skill
+        title: "Workspace Detection Skill"
+        status: pending
+        complexity: high
+        depends_on: [planner-agent]
+
+      - id: standards-init-skill
+        title: "Standards Initialization Skill"
+        status: pending
+        complexity: medium
+        depends_on: [workspace-detect-skill]
+
+      # Phase 5: Utilities
+      - id: report-bug-skill
+        title: "Bug Report Skill"
+        status: pending
+        complexity: low
+        depends_on: [orchestrator-agent]
+
+summary:
+  total_intents: 1
+  intents_done: 0
+  intents_in_progress: 0
+  intents_pending: 1
+
+  total_work_items: 15
+  work_items_done: 0
+  work_items_in_progress: 0
+  work_items_pending: 15
+  work_items_blocked: 0
+
+runs:
+  last_completed: null
+  active: null

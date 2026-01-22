@@ -134,7 +134,7 @@ export type ArtifactType = 'bolt' | 'unit' | 'story' | 'intent' | 'standard';
 /**
  * Filter types in the explorer view
  */
-export type FilterType = 'activity' | 'specs';
+export type FilterType = 'activity' | 'specs' | 'runs' | 'intents';
 
 /**
  * Properties for tab changed event

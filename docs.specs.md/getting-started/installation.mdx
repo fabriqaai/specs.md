@@ -1,6 +1,6 @@
 ---
 title: Installation
-description: Install specs.md and set up your development environment
+description: Install specs.md and select your development flow
 ---
 
 ## Prerequisites
@@ -18,14 +18,35 @@ description: Install specs.md and set up your development environment
 npx specsmd@latest install
 ```
 
+## Select Your Flow
+
+During installation, you'll be prompted to select a development flow:
+
+```
+? Select a development flow:
+  Simple - Spec generation only (requirements, design, tasks)
+❯ FIRE - Rapid execution for solo/small teams (0-2 checkpoints)
+  AI-DLC - Full methodology with DDD (10-26 checkpoints)
+```
+
+| Flow | Best For | Agents |
+|------|----------|--------|
+| **Simple** | Quick specs, prototypes, handoff | 1 |
+| **FIRE** | Solo/small teams, brownfield, monorepos | 3 |
+| **AI-DLC** | Teams, complex domains, full lifecycle | 4 |
+
+<Info>
+  **Not sure which flow?** Check out our [Choose Your Flow](/architecture/choose-flow) guide.
+</Info>
+
 The installer automatically detects your AI coding tools and sets up:
 
 <CardGroup cols={3}>
   <Card title="Agent Definitions" icon="robot">
-    Specialized agents for each phase of development
+    Specialized agents for your selected flow
   </Card>
-  <Card title="Memory Bank" icon="database">
-    Persistent context storage structure
+  <Card title="Standards" icon="ruler">
+    Project guidelines and conventions
   </Card>
   <Card title="Slash Commands" icon="terminal">
     Easy agent invocation commands
@@ -34,24 +55,69 @@ The installer automatically detects your AI coding tools and sets up:
 
 ## What Gets Installed
 
-After installation, you'll see the following structure:
+After installation, you'll see the following structure based on your selected flow:
 
-```
-.specsmd/
-├── manifest.yaml              # Installation manifest
-└── aidlc/                     # AI-DLC flow
-    ├── agents/                # Agent definitions
-    ├── skills/                # Agent capabilities
-    ├── templates/             # Artifact templates
-    │   └── standards/         # Standards facilitation guides
-    └── memory-bank.yaml       # Memory bank schema
-```
+<Tabs>
+  <Tab title="Simple Flow">
+    ```
+    .specsmd/
+    ├── manifest.yaml              # Installation manifest
+    └── simple/                    # Simple flow
+        └── agents/                # Single agent
+
+    specs/                         # Your specs will go here
+    └── (feature folders)
+    ```
+  </Tab>
+  <Tab title="FIRE Flow">
+    ```
+    .specsmd/
+    ├── manifest.yaml              # Installation manifest
+    └── fire/                      # FIRE flow
+        ├── agents/                # Orchestrator, Planner, Builder
+        └── skills/                # Agent capabilities
+
+    .specs-fire/                   # Project artifacts
+    ├── state.yaml                 # Central state tracking
+    ├── standards/                 # Project standards
+    ├── intents/                   # Intent documentation
+    ├── runs/                      # Run logs
+    └── walkthroughs/              # Generated documentation
+    ```
+  </Tab>
+  <Tab title="AI-DLC Flow">
+    ```
+    .specsmd/
+    ├── manifest.yaml              # Installation manifest
+    └── aidlc/                     # AI-DLC flow
+        ├── agents/                # Master, Inception, Construction, Operations
+        ├── skills/                # Agent capabilities
+        ├── templates/             # Artifact templates
+        └── memory-bank.yaml       # Memory bank schema
+
+    memory-bank/                   # Project artifacts
+    ├── standards/                 # Project standards
+    ├── intents/                   # Intent documentation
+    └── bolts/                     # Bolt tracking
+    ```
+  </Tab>
+</Tabs>
 
 ## Tool-Specific Setup
 
 <Tabs>
   <Tab title="Claude Code">
     Slash commands are installed in `.claude/commands/`:
+
+    **Simple Flow:**
+    - `/specsmd-agent`
+
+    **FIRE Flow:**
+    - `/fire-orchestrator`
+    - `/fire-planner`
+    - `/fire-builder`
+
+    **AI-DLC Flow:**
     - `/specsmd-master-agent`
     - `/specsmd-inception-agent`
     - `/specsmd-construction-agent`
@@ -76,16 +142,34 @@ After installation, verify everything is set up correctly:
 # Check the manifest
 cat .specsmd/manifest.yaml
 
-# List installed agents
-ls .specsmd/aidlc/agents/
+# List installed agents (adjust path for your flow)
+ls .specsmd/fire/agents/     # FIRE flow
+ls .specsmd/simple/agents/   # Simple flow
+ls .specsmd/aidlc/agents/    # AI-DLC flow
 ```
 
 ## Next Steps
 
-<Card
-  title="Quick Start"
-  icon="arrow-right"
-  href="/getting-started/quick-start"
->
-  Initialize your project and create your first Intent
-</Card>
+<CardGroup cols={3}>
+  <Card
+    title="Simple Quick Start"
+    icon="feather"
+    href="/simple-flow/quick-start"
+  >
+    Generate specs in minutes
+  </Card>
+  <Card
+    title="FIRE Quick Start"
+    icon="bolt"
+    href="/fire-flow/quick-start"
+  >
+    Ship your first feature fast
+  </Card>
+  <Card
+    title="AI-DLC Quick Start"
+    icon="building"
+    href="/getting-started/quick-start"
+  >
+    Full methodology walkthrough
+  </Card>
+</CardGroup>

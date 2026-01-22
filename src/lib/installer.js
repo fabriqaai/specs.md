@@ -4,7 +4,7 @@ const prompts = require('prompts');
 const yaml = require('js-yaml');
 const CLIUtils = require('./cli-utils');
 const InstallerFactory = require('./InstallerFactory');
-const { FLOWS } = require('./constants');
+const { FLOWS, LINKS } = require('./constants');
 const analytics = require('./analytics');
 
 // Use theme from CLIUtils for consistent styling
@@ -125,6 +125,7 @@ async function install() {
   // Step 3: Select Flow
   console.log('');
   CLIUtils.displayStep(3, 4, 'Select SDLC flow');
+  console.log(theme.dim(`  Learn more about flows: ${LINKS.flows}\n`));
   const flowChoices = Object.entries(FLOWS).map(([key, flow]) => ({
     title: `${flow.name} - ${flow.description}${flow.message || ''}`,
     value: key,

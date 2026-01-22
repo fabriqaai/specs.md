@@ -99,6 +99,7 @@ suite('Webview Messaging Test Suite', () => {
         test('should accept empty data structure', () => {
             const data: WebviewData = {
                 currentIntent: null,
+                currentIntentContext: 'none',
                 stats: { active: 0, queued: 0, done: 0, blocked: 0 },
                 activeBolts: [],
                 upNextQueue: [],
@@ -126,6 +127,7 @@ suite('Webview Messaging Test Suite', () => {
         test('should track UI state properties', () => {
             const data: WebviewData = {
                 currentIntent: null,
+                currentIntentContext: 'none',
                 stats: { active: 0, queued: 0, done: 0, blocked: 0 },
                 activeBolts: [],
                 upNextQueue: [],
@@ -149,6 +151,7 @@ suite('Webview Messaging Test Suite', () => {
         test('should accept complete data structure', () => {
             const data: WebviewData = {
                 currentIntent: { name: 'Test Intent', number: '001' },
+                currentIntentContext: 'active',
                 stats: { active: 1, queued: 3, done: 5, blocked: 2 },
                 activeBolts: [{
                     id: 'bolt-1',

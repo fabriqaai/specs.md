@@ -16,7 +16,8 @@ import {
     ComputedState,
     ProgressMetrics,
     BoltStats,
-    ActivityFilter
+    ActivityFilter,
+    IntentContext
 } from './types';
 
 // ============================================================================
@@ -28,6 +29,14 @@ import {
  * Can be extended with different strategies (Open/Closed Principle).
  */
 export type IntentSelectionStrategy = (intents: Intent[], bolts: Bolt[]) => Intent | null;
+
+/**
+ * Result of intent selection with context.
+ */
+export interface IntentSelectionResult {
+    intent: Intent | null;
+    context: IntentContext;
+}
 
 /**
  * Helper: Match intent by number, name, or combined format (e.g., "007-installer-analytics").
@@ -134,46 +143,46 @@ export const selectIntentByInProgressStories: IntentSelectionStrategy = (intents
 };
 
 /**
- * Default strategy: Composite of all strategies with priority.
- * 1. Intent with active bolt (highest priority - where work is happening)
- * 2. Intent with most recent activity (where attention was last)
- * 3. Intent with most in-progress stories (where attention is needed)
- * 4. First intent with incomplete work
- * 5. First intent (fallback)
+ * Selects current intent with context information.
+ * Returns both the intent and how it was selected (active, queued, or none).
+ *
+ * Priority:
+ * 1. Intent with active bolt → context: 'active'
+ * 2. Intent with next queued bolt → context: 'queued'
+ * 3. No active/queued work → context: 'none', intent: null
  */
-export const selectCurrentIntentDefault: IntentSelectionStrategy = (intents, bolts) => {
+export function selectCurrentIntentWithContext(intents: Intent[], bolts: Bolt[]): IntentSelectionResult {
     if (intents.length === 0) {
-        return null;
+        return { intent: null, context: 'none' };
     }
 
     // Priority 1: Intent with active bolt
     const byActiveBolt = selectIntentByActiveBolt(intents, bolts);
     if (byActiveBolt) {
-        return byActiveBolt;
+        return { intent: byActiveBolt, context: 'active' };
     }
 
-    // Priority 2: Intent with most recent activity
-    const byRecentActivity = selectIntentByRecentActivity(intents, bolts);
-    if (byRecentActivity) {
-        return byRecentActivity;
+    // Priority 2: Intent with next queued bolt (unblocked draft)
+    const upNextBolts = getUpNextBolts(bolts);
+    const nextQueuedBolt = upNextBolts.find(b => !b.isBlocked);
+    if (nextQueuedBolt) {
+        const intent = intents.find(i => matchIntent(i, nextQueuedBolt.intent));
+        if (intent) {
+            return { intent, context: 'queued' };
+        }
     }
 
-    // Priority 3: Intent with most in-progress stories
-    const byInProgressStories = selectIntentByInProgressStories(intents, bolts);
-    if (byInProgressStories) {
-        return byInProgressStories;
-    }
+    // No active or queued work
+    return { intent: null, context: 'none' };
+}
 
-    // Priority 4: First intent with incomplete work
-    const intentWithWork = intents.find(i =>
-        i.status === ArtifactStatus.InProgress || i.status === ArtifactStatus.Draft
-    );
-    if (intentWithWork) {
-        return intentWithWork;
-    }
-
-    // Priority 5: First intent
-    return intents[0];
+/**
+ * Default strategy: Composite of all strategies with priority.
+ * Now simplified to only show meaningful current work.
+ * @deprecated Use selectCurrentIntentWithContext for new code
+ */
+export const selectCurrentIntentDefault: IntentSelectionStrategy = (intents, bolts) => {
+    return selectCurrentIntentWithContext(intents, bolts).intent;
 };
 
 /**
@@ -573,8 +582,10 @@ export function computeState(
     // First, ensure bolt dependencies are computed
     const boltsWithDeps = computeBoltDependencies(bolts);
 
-    // Compute each derived value
-    const currentIntent = config.intentSelector(intents, boltsWithDeps);
+    // Compute current intent with context
+    const { intent: currentIntent, context: currentIntentContext } = selectCurrentIntentWithContext(intents, boltsWithDeps);
+
+    // Compute other derived values
     const activeBolts = config.boltSelector(boltsWithDeps);
     const pendingBolts = selectPendingBolts(boltsWithDeps);
     const completedBolts = selectCompletedBolts(boltsWithDeps);
@@ -585,6 +596,7 @@ export function computeState(
 
     return {
         currentIntent,
+        currentIntentContext,
         activeBolts,
         pendingBolts,
         completedBolts,

@@ -25,6 +25,11 @@ export interface BoltStats {
 }
 
 /**
+ * Context for how the current intent was selected.
+ */
+export type IntentContext = 'active' | 'queued' | 'none';
+
+/**
  * Current intent component with progress bar.
  *
  * @example
@@ -39,6 +44,12 @@ export class CurrentIntent extends BaseElement {
      */
     @property({ type: Object })
     intent: IntentInfo | null = null;
+
+    /**
+     * Context for how the intent was selected.
+     */
+    @property({ type: String })
+    context: IntentContext = 'none';
 
     /**
      * Bolt statistics.
@@ -140,10 +151,13 @@ export class CurrentIntent extends BaseElement {
     ];
 
     render() {
+        // Determine label based on context
+        const label = this.context === 'queued' ? 'Next Intent' : 'Current Intent';
+
         if (!this.intent) {
             return html`
-                <div class="label">Current Intent</div>
-                <div class="title">No intents found</div>
+                <div class="label">${label}</div>
+                <div class="title" style="opacity: 0.6;">No active work</div>
             `;
         }
 
@@ -151,7 +165,7 @@ export class CurrentIntent extends BaseElement {
         const percent = total > 0 ? Math.round((this.stats.done / total) * 100) : 0;
 
         return html`
-            <div class="label">Current Intent</div>
+            <div class="label">${label}</div>
             <div class="title">${this.intent.number}-${this.intent.name}</div>
             <div class="progress-container">
                 <div class="progress-bar">

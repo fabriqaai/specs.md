@@ -19,7 +19,7 @@ suite('FileWatcher Test Suite', () => {
         });
 
         test('should have correct default glob pattern', () => {
-            assert.strictEqual(DEFAULT_FILE_WATCHER_OPTIONS.globPattern, '**/*.md');
+            assert.strictEqual(DEFAULT_FILE_WATCHER_OPTIONS.globPattern, '**/*.{md,yaml,yml}');
         });
 
         test('should allow partial options', () => {
@@ -30,7 +30,7 @@ suite('FileWatcher Test Suite', () => {
             const merged = { ...DEFAULT_FILE_WATCHER_OPTIONS, ...options };
 
             assert.strictEqual(merged.debounceDelay, 200);
-            assert.strictEqual(merged.globPattern, '**/*.md');
+            assert.strictEqual(merged.globPattern, '**/*.{md,yaml,yml}');
         });
 
         test('should allow custom glob pattern', () => {
@@ -69,9 +69,10 @@ suite('FileWatcher Test Suite', () => {
             assert.strictEqual(DEFAULT_FILE_WATCHER_OPTIONS.debounceDelay, 100);
         });
 
-        test('should watch only markdown files by default', () => {
-            // The default glob pattern is for .md files
-            assert.ok(DEFAULT_FILE_WATCHER_OPTIONS.globPattern.includes('.md'));
+        test('should watch markdown and yaml files by default', () => {
+            // The default glob pattern includes both .md and .yaml files
+            assert.ok(DEFAULT_FILE_WATCHER_OPTIONS.globPattern.includes('md'));
+            assert.ok(DEFAULT_FILE_WATCHER_OPTIONS.globPattern.includes('yaml'));
         });
     });
 });

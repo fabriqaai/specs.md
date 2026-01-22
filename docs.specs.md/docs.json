@@ -2,7 +2,7 @@
   "$schema": "https://mintlify.com/docs.json",
   "theme": "mint",
   "name": "specs.md",
-  "description": "AI-native software development with multi-agent orchestration. Implement AI-DLC methodology with markdown-based agents for Claude Code, Cursor, and GitHub Copilot.",
+  "description": "AI-native software development framework with pluggable flows. Choose Simple for specs, FIRE for rapid execution, or AI-DLC for full methodology. Works with Claude Code, Cursor, and GitHub Copilot.",
   "metadata": {
     "og:site_name": "specs.md",
     "og:type": "website",
@@ -11,7 +11,7 @@
     "twitter:card": "summary_large_image",
     "twitter:site": "@specsmd",
     "twitter:image": "/images/logo.png",
-    "keywords": "AI-DLC, AI-native development, software development lifecycle, multi-agent orchestration, Claude Code, Cursor, GitHub Copilot, Domain-Driven Design, spec-driven development"
+    "keywords": "AI-native development, FIRE flow, AI-DLC, Simple flow, spec-driven development, multi-agent orchestration, Claude Code, Cursor, GitHub Copilot, brownfield development, monorepo"
   },
   "seo": {
     "indexHiddenPages": true
@@ -78,7 +78,8 @@
           {
             "group": "Framework",
             "pages": [
-              "architecture/flows"
+              "architecture/flows",
+              "architecture/choose-flow"
             ]
           },
           {
@@ -110,6 +111,17 @@
                   "guides/bolt-types"
                 ]
               }
+            ]
+          },
+          {
+            "group": "FIRE Flow",
+            "pages": [
+              "fire-flow/overview",
+              "fire-flow/quick-start",
+              "fire-flow/execution-modes",
+              "fire-flow/work-items",
+              "fire-flow/monorepo-support",
+              "fire-flow/agents"
             ]
           },
           {

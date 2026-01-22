@@ -54,65 +54,16 @@
     "node": ">=14.0.0"
   },
   "devDependencies": {
-    "@semantic-release/git": "^10.0.1",
     "@types/js-yaml": "^4.0.9",
     "@types/node": "^24.10.2",
     "glob": "^13.0.0",
     "markdownlint": "^0.40.0",
     "markdownlint-cli": "^0.46.0",
     "remark-parse": "^11.0.0",
-    "semantic-release": "^25.0.2",
     "typescript": "^5.9.3",
     "unified": "^11.0.5",
     "unist-util-visit": "^5.0.0",
-    "vitest": "^4.0.15"
-  },
-  "release": {
-    "branches": [
-      "main"
-    ],
-    "plugins": [
-      [
-        "@semantic-release/commit-analyzer",
-        {
-          "releaseRules": [
-            {
-              "breaking": true,
-              "release": "minor"
-            },
-            {
-              "type": "feat",
-              "release": "minor"
-            },
-            {
-              "type": "fix",
-              "release": "patch"
-            },
-            {
-              "type": "perf",
-              "release": "patch"
-            }
-          ]
-        }
-      ],
-      "@semantic-release/release-notes-generator",
-      "@semantic-release/npm",
-      [
-        "@semantic-release/github",
-        {
-          "successComment": false,
-          "failComment": false
-        }
-      ],
-      [
-        "@semantic-release/git",
-        {
-          "assets": [
-            "package.json"
-          ],
-          "message": "chore(release): ${nextRelease.version} [skip ci]"
-        }
-      ]
-    ]
+    "vitest": "^4.0.15",
+    "yaml": "^2.8.2"
   }
 }

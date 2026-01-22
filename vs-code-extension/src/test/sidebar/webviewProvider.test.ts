@@ -154,6 +154,7 @@ suite('Webview Provider Test Suite', () => {
         test('should handle empty model gracefully', () => {
             const emptyData: WebviewData = {
                 currentIntent: null,
+                currentIntentContext: 'none',
                 stats: { active: 0, queued: 0, done: 0, blocked: 0 },
                 activeBolts: [],
                 upNextQueue: [],

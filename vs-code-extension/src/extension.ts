@@ -2,7 +2,13 @@
  * specsmd VS Code Extension
  *
  * Entry point for the specsmd extension that provides a dashboard sidebar
- * for browsing AI-DLC memory-bank artifacts.
+ * for browsing AI-DLC memory-bank artifacts and FIRE flow visualization.
+ *
+ * Multi-Flow Architecture:
+ * - FlowRegistry manages flow detection and activation
+ * - Each flow (AIDLC, FIRE, Simple) has its own adapter
+ * - Currently uses existing webview provider for backward compatibility
+ * - Flow switching will be added in Phase 4
  */
 
 import * as vscode from 'vscode';
@@ -13,6 +19,12 @@ import { WelcomeViewProvider, createInstallationWatcher } from './welcome';
 import { tracker, trackActivation, trackError, projectMetricsTracker } from './analytics';
 import { openFile, showMarkdownEditorPicker } from './utils';
 
+// Multi-flow support
+import { FlowRegistry, createFlowRegistry, hasAnyFlow, detectAllFlows } from './core';
+import { registerAllFlows } from './flows';
+
+// Global instances
+let flowRegistry: FlowRegistry | undefined;
 let webviewProvider: SpecsmdWebviewProvider | undefined;
 let fileWatcher: FileWatcher | undefined;
 let installationWatcher: vscode.Disposable | undefined;
@@ -27,16 +39,61 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
 
     const workspacePath = getWorkspacePath();
 
-    // Scan memory bank and set project context
+    // Initialize multi-flow registry
+    flowRegistry = createFlowRegistry();
+    registerAllFlows(flowRegistry);
+    await flowRegistry.initialize(context);
+
+    // Detect flows and set context
     let isSpecsmdProject = false;
+    let detectedFlows: import('./core').FlowInfo[] = [];
+
     if (workspacePath) {
         try {
-            const model = await scanMemoryBank(workspacePath);
-            isSpecsmdProject = model.isProject;
+            // Use new multi-flow detection
+            detectedFlows = await flowRegistry.detectFlows(workspacePath);
+            isSpecsmdProject = detectedFlows.length > 0;
+
+            // Set VS Code context for view visibility
             await vscode.commands.executeCommand('setContext', 'specsmd.isProject', isSpecsmdProject);
-        } catch {
-            trackError('activation', 'SCAN_FAILED', 'artifactParser', true);
-            await vscode.commands.executeCommand('setContext', 'specsmd.isProject', false);
+
+            // Set flow-specific contexts
+            await vscode.commands.executeCommand(
+                'setContext',
+                'specsmd.hasAidlc',
+                detectedFlows.some(f => f.id === 'aidlc')
+            );
+            await vscode.commands.executeCommand(
+                'setContext',
+                'specsmd.hasFire',
+                detectedFlows.some(f => f.id === 'fire')
+            );
+            await vscode.commands.executeCommand(
+                'setContext',
+                'specsmd.hasMultipleFlows',
+                detectedFlows.length > 1
+            );
+
+            // Activate default flow if any detected
+            if (isSpecsmdProject) {
+                const defaultFlow = flowRegistry.getDefaultFlow();
+                if (defaultFlow && defaultFlow.flowPath) {
+                    await flowRegistry.activateFlow(defaultFlow.id, defaultFlow.flowPath);
+                }
+            }
+        } catch (error) {
+            trackError('activation', 'FLOW_DETECTION_FAILED', 'flowRegistry', true);
+            console.error('Flow detection error:', error);
+
+            // Fallback to legacy detection
+            try {
+                const model = await scanMemoryBank(workspacePath);
+                isSpecsmdProject = model.isProject;
+            } catch {
+                trackError('activation', 'SCAN_FAILED', 'artifactParser', true);
+            }
+
+            await vscode.commands.executeCommand('setContext', 'specsmd.isProject', isSpecsmdProject);
         }
     } else {
         await vscode.commands.executeCommand('setContext', 'specsmd.isProject', false);
@@ -55,8 +112,8 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
         }
     }
 
-    // Create and register webview provider
-    webviewProvider = createWebviewProvider(context, workspacePath);
+    // Create and register webview provider with flow registry for multi-flow support
+    webviewProvider = createWebviewProvider(context, workspacePath, flowRegistry);
 
     // Register welcome view provider
     const welcomeProvider = new WelcomeViewProvider(context.extensionUri, context);
@@ -92,7 +149,12 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     // Register commands
     registerCommands(context);
 
-    console.log('specsmd extension activated');
+    // Log detected flows
+    if (detectedFlows.length > 0) {
+        console.log(`specsmd extension activated with flows: ${detectedFlows.map(f => f.displayName).join(', ')}`);
+    } else {
+        console.log('specsmd extension activated (no flows detected)');
+    }
 }
 
 /**
@@ -103,11 +165,16 @@ export function deactivate(): void {
     // Clean up project metrics tracker timers
     projectMetricsTracker.dispose();
 
+    // Dispose flow registry
+    flowRegistry?.dispose();
+    flowRegistry = undefined;
+
     // Resources are cleaned up via context.subscriptions
     webviewProvider?.dispose();
     webviewProvider = undefined;
     fileWatcher = undefined;
     installationWatcher = undefined;
+
     console.log('specsmd extension deactivated');
 }
 
@@ -128,8 +195,32 @@ async function updateProjectContext(workspacePath: string | undefined): Promise<
         return;
     }
 
-    const model = await scanMemoryBank(workspacePath);
-    await vscode.commands.executeCommand('setContext', 'specsmd.isProject', model.isProject);
+    // Use multi-flow detection
+    if (flowRegistry) {
+        const detectedFlows = await flowRegistry.detectFlows(workspacePath);
+        const isProject = detectedFlows.length > 0;
+
+        await vscode.commands.executeCommand('setContext', 'specsmd.isProject', isProject);
+        await vscode.commands.executeCommand(
+            'setContext',
+            'specsmd.hasAidlc',
+            detectedFlows.some(f => f.id === 'aidlc')
+        );
+        await vscode.commands.executeCommand(
+            'setContext',
+            'specsmd.hasFire',
+            detectedFlows.some(f => f.id === 'fire')
+        );
+        await vscode.commands.executeCommand(
+            'setContext',
+            'specsmd.hasMultipleFlows',
+            detectedFlows.length > 1
+        );
+    } else {
+        // Fallback to legacy detection
+        const model = await scanMemoryBank(workspacePath);
+        await vscode.commands.executeCommand('setContext', 'specsmd.isProject', model.isProject);
+    }
 }
 
 /**
@@ -181,4 +272,50 @@ function registerCommands(context: vscode.ExtensionContext): void {
             }
         })
     );
+
+    // Switch flow command (for Phase 4)
+    context.subscriptions.push(
+        vscode.commands.registerCommand('specsmd.switchFlow', async (flowId?: string) => {
+            if (!flowRegistry) return;
+
+            const detectedFlows = flowRegistry.getDetectedFlows();
+            if (detectedFlows.length <= 1) {
+                vscode.window.showInformationMessage('Only one flow detected in this workspace.');
+                return;
+            }
+
+            if (flowId) {
+                // Direct switch
+                try {
+                    await flowRegistry.switchFlow(flowId as import('./core').FlowId);
+                    await webviewProvider?.refresh();
+                } catch (error) {
+                    vscode.window.showErrorMessage(`Failed to switch to flow: ${flowId}`);
+                }
+            } else {
+                // Show picker
+                const items = detectedFlows.map(f => ({
+                    label: `${f.icon} ${f.displayName}`,
+                    description: f.rootFolder,
+                    flowId: f.id
+                }));
+
+                const selected = await vscode.window.showQuickPick(items, {
+                    placeHolder: 'Select flow to switch to'
+                });
+
+                if (selected) {
+                    try {
+                        await flowRegistry.switchFlow(selected.flowId as import('./core').FlowId);
+                        await webviewProvider?.refresh();
+                    } catch (error) {
+                        vscode.window.showErrorMessage(`Failed to switch to flow: ${selected.label}`);
+                    }
+                }
+            }
+        })
+    );
 }
+
+// Export for testing
+export { flowRegistry, webviewProvider };

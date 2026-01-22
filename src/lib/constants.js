@@ -12,19 +12,30 @@ const THEME_COLORS = {
 };
 
 const FLOWS = {
+    fire: {
+        name: 'FIRE',
+        description: 'Rapid execution - Solo devs or small teams, brownfield/monorepo, 0-2 adaptive checkpoints',
+        path: 'fire'
+    },
     aidlc: {
         name: 'AI-DLC',
-        description: 'AI-Driven Development Life Cycle - Best for greenfield projects with AI-native development',
+        description: 'Full methodology with DDD - Teams, complex domains, 10-26 checkpoints',
         path: 'aidlc'
     },
     simple: {
         name: 'Simple',
-        description: 'Spec-driven development - Best for quick feature specs without full methodology overhead',
+        description: 'Spec generation only (Kiro style) - Creates requirement/design/task docs, no execution tracking',
         path: 'simple'
     }
 };
 
+const LINKS = {
+    website: 'https://specs.md',
+    flows: 'https://specs.md/flows'
+};
+
 module.exports = {
     THEME_COLORS,
-    FLOWS
+    FLOWS,
+    LINKS
 };

@@ -16,16 +16,21 @@ import { unsafeHTML } from 'lit/directives/unsafe-html.js';
 import { BaseElement } from './shared/base-element.js';
 import './tabs/view-tabs.js';
 import './bolts/bolts-view.js';
+// FIRE flow components
+import './fire/fire-view.js';
 import type { TabId, TabChangeDetail } from './tabs/view-tabs.js';
 import type { BoltsViewData } from './bolts/bolts-view.js';
 import type { ActivityFilter } from './bolts/activity-feed.js';
+import type { FlowInfo } from './shared/flow-switcher.js';
+import type { FireViewData } from './fire/fire-view.js';
+import type { FireTabId } from './fire/fire-view-tabs.js';
 import { vscode } from '../vscode-api.js';
 
 /**
  * Message types from the extension.
  */
 interface ExtensionMessage {
-    type: 'setData' | 'setTab' | 'setBoltsData';
+    type: 'setData' | 'setTab' | 'setBoltsData' | 'switchFlow' | 'updateFlows';
     activeTab?: TabId;
     // Hybrid approach (specs/overview)
     specsHtml?: string;
@@ -34,6 +39,14 @@ interface ExtensionMessage {
     boltsData?: BoltsViewData;
     // Legacy support
     boltsHtml?: string;
+    // Multi-flow support
+    flowId?: string;
+    flowType?: 'aidlc' | 'fire';
+    flowDisplayName?: string;
+    availableFlows?: FlowInfo[];
+    activeFlowId?: string;
+    // FIRE flow data
+    fireData?: FireViewData;
 }
 
 /**
@@ -67,6 +80,30 @@ export class SpecsmdApp extends BaseElement {
      */
     @state()
     private _loaded = false;
+
+    /**
+     * Currently active flow.
+     */
+    @state()
+    private _activeFlow: FlowInfo | null = null;
+
+    /**
+     * Available flows in the workspace.
+     */
+    @state()
+    private _availableFlows: FlowInfo[] = [];
+
+    /**
+     * FIRE flow view data.
+     */
+    @state()
+    private _fireData: FireViewData | null = null;
+
+    /**
+     * Active FIRE tab (separate from AI-DLC tabs).
+     */
+    @state()
+    private _fireActiveTab: FireTabId = 'runs';
 
     /**
      * Version counter for specs HTML to track when handlers need reattachment.
@@ -716,6 +753,18 @@ export class SpecsmdApp extends BaseElement {
             return html`<div class="loading">Loading...</div>`;
         }
 
+        // Render completely different apps based on active flow
+        const isFireFlow = this._activeFlow?.id === 'fire';
+
+        return html`
+            ${isFireFlow ? this._renderFireApp() : this._renderAidlcApp()}
+        `;
+    }
+
+    /**
+     * Render the AI-DLC flow app (existing implementation).
+     */
+    private _renderAidlcApp() {
         return html`
             <view-tabs
                 .activeTab=${this._activeTab}
@@ -723,19 +772,22 @@ export class SpecsmdApp extends BaseElement {
             ></view-tabs>
 
             <div class="view-container ${this._activeTab === 'bolts' ? 'active' : ''}" id="bolts-view">
-                ${this._boltsData ? html`
-                    <bolts-view
-                        .data=${this._boltsData}
-                        @toggle-focus=${this._handleToggleFocus}
-                        @filter-change=${this._handleFilterChange}
-                        @resize=${this._handleResize}
-                        @start-bolt=${this._handleStartBolt}
-                        @continue-bolt=${this._handleContinueBolt}
-                        @view-files=${this._handleViewFiles}
-                        @open-file=${this._handleOpenFile}
-                        @open-bolt=${this._handleOpenBolt}>
-                    </bolts-view>
-                ` : html`<div class="loading">Loading...</div>`}
+                ${this._boltsData
+                    ? html`
+                        <bolts-view
+                            .data=${this._boltsData}
+                            @toggle-focus=${this._handleToggleFocus}
+                            @filter-change=${this._handleFilterChange}
+                            @resize=${this._handleResize}
+                            @start-bolt=${this._handleStartBolt}
+                            @continue-bolt=${this._handleContinueBolt}
+                            @view-files=${this._handleViewFiles}
+                            @open-file=${this._handleOpenFile}
+                            @open-bolt=${this._handleOpenBolt}>
+                        </bolts-view>
+                    `
+                    : html`<div class="loading">Loading...</div>`
+                }
             </div>
 
             <div class="view-container ${this._activeTab === 'specs' ? 'active' : ''}" id="specs-view">
@@ -746,6 +798,83 @@ export class SpecsmdApp extends BaseElement {
                 ${unsafeHTML(this._overviewHtml)}
             </div>
         `;
+    }
+
+    /**
+     * Render the FIRE flow app with proper visualization.
+     */
+    private _renderFireApp() {
+        if (!this._fireData) {
+            return html`
+                <div class="fire-app" style="flex: 1; display: flex; flex-direction: column; overflow: hidden;">
+                    <div class="fire-placeholder" style="flex: 1; display: flex; align-items: center; justify-content: center;">
+                        <div style="text-align: center; padding: 24px;">
+                            <div style="font-size: 64px; margin-bottom: 16px;">🔥</div>
+                            <h2 style="margin: 0 0 8px 0; color: var(--vscode-foreground); font-size: 18px;">FIRE Flow</h2>
+                            <p style="color: var(--vscode-descriptionForeground); margin: 0; font-size: 13px;">
+                                Loading...
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        return html`
+            <fire-view
+                .data=${this._fireData}
+                @tab-change=${this._handleFireTabChange}
+                @continue-run=${this._handleContinueRun}
+                @start-run=${this._handleStartRun}
+                @view-artifact=${this._handleViewArtifact}
+                @view-run=${this._handleViewRun}
+                @open-file=${this._handleFireOpenFile}
+                @filter-change=${this._handleFireFilterChange}
+                @toggle-expand=${this._handleFireToggleExpand}
+            ></fire-view>
+        `;
+    }
+
+    // ==================== FIRE Event Handlers ====================
+
+    private _handleFireTabChange(e: CustomEvent<{ tab: FireTabId }>): void {
+        this._fireActiveTab = e.detail.tab;
+        if (this._fireData) {
+            this._fireData = { ...this._fireData, activeTab: e.detail.tab };
+        }
+        vscode.postMessage({ type: 'fireTabChange', tab: e.detail.tab });
+    }
+
+    private _handleContinueRun(e: CustomEvent<{ runId: string }>): void {
+        vscode.postMessage({ type: 'continueRun', runId: e.detail.runId });
+    }
+
+    private _handleStartRun(e: CustomEvent<{ workItemIds: string[] }>): void {
+        vscode.postMessage({ type: 'startRun', workItemIds: e.detail.workItemIds });
+    }
+
+    private _handleViewArtifact(e: CustomEvent<{ runId: string; artifact: string }>): void {
+        vscode.postMessage({ type: 'viewArtifact', runId: e.detail.runId, artifact: e.detail.artifact });
+    }
+
+    private _handleViewRun(e: CustomEvent<{ runId: string; folderPath: string }>): void {
+        vscode.postMessage({ type: 'viewRun', runId: e.detail.runId, folderPath: e.detail.folderPath });
+    }
+
+    private _handleFireOpenFile(e: CustomEvent<{ path?: string; id?: string; intentId?: string }>): void {
+        if (e.detail.path) {
+            vscode.postMessage({ type: 'openArtifact', kind: 'file', path: e.detail.path });
+        } else if (e.detail.id && e.detail.intentId) {
+            vscode.postMessage({ type: 'openWorkItem', id: e.detail.id, intentId: e.detail.intentId });
+        }
+    }
+
+    private _handleFireFilterChange(e: CustomEvent<{ filter: string }>): void {
+        vscode.postMessage({ type: 'fireIntentsFilter', filter: e.detail.filter });
+    }
+
+    private _handleFireToggleExpand(e: CustomEvent<{ intentId: string; expanded: boolean }>): void {
+        vscode.postMessage({ type: 'fireToggleExpand', intentId: e.detail.intentId, expanded: e.detail.expanded });
     }
 
     /**
@@ -769,6 +898,18 @@ export class SpecsmdApp extends BaseElement {
                 if (message.overviewHtml !== undefined) {
                     this._overviewHtml = message.overviewHtml;
                 }
+                // Handle FIRE flow data
+                if (message.fireData !== undefined) {
+                    this._fireData = message.fireData;
+                    this._fireActiveTab = message.fireData.activeTab;
+                }
+                // Handle flow data
+                if (message.availableFlows !== undefined) {
+                    this._availableFlows = message.availableFlows;
+                }
+                if (message.activeFlowId !== undefined && this._availableFlows.length > 0) {
+                    this._activeFlow = this._availableFlows.find(f => f.id === message.activeFlowId) || null;
+                }
                 this._loaded = true;
                 break;
 
@@ -781,6 +922,42 @@ export class SpecsmdApp extends BaseElement {
             case 'setTab':
                 if (message.activeTab) {
                     this._activeTab = message.activeTab;
+                }
+                break;
+
+            case 'switchFlow':
+                // Handle flow switch from extension
+                if (message.availableFlows !== undefined) {
+                    this._availableFlows = message.availableFlows;
+                }
+                if (message.activeFlowId !== undefined) {
+                    this._activeFlow = this._availableFlows.find(f => f.id === message.activeFlowId) || null;
+                }
+                // Reset view data when switching flows
+                if (message.boltsData !== undefined) {
+                    this._boltsData = message.boltsData;
+                }
+                if (message.specsHtml !== undefined) {
+                    this._specsHtml = message.specsHtml;
+                    this._specsVersion++;
+                }
+                if (message.overviewHtml !== undefined) {
+                    this._overviewHtml = message.overviewHtml;
+                }
+                // Handle FIRE flow data
+                if (message.fireData !== undefined) {
+                    this._fireData = message.fireData;
+                    this._fireActiveTab = message.fireData.activeTab;
+                }
+                break;
+
+            case 'updateFlows':
+                // Update available flows list
+                if (message.availableFlows !== undefined) {
+                    this._availableFlows = message.availableFlows;
+                }
+                if (message.activeFlowId !== undefined) {
+                    this._activeFlow = this._availableFlows.find(f => f.id === message.activeFlowId) || null;
                 }
                 break;
         }

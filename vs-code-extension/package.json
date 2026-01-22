@@ -69,14 +69,32 @@
             {
                 "command": "specsmd.selectMarkdownEditor",
                 "title": "specsmd: Select Markdown Editor"
+            },
+            {
+                "command": "specsmd.switchFlow",
+                "title": "specsmd: Switch Flow",
+                "icon": "$(layers)"
+            }
+        ],
+        "keybindings": [
+            {
+                "command": "specsmd.switchFlow",
+                "key": "ctrl+alt+f",
+                "mac": "ctrl+cmd+f",
+                "when": "specsmd.hasMultipleFlows"
             }
         ],
         "menus": {
             "view/title": [
                 {
+                    "command": "specsmd.switchFlow",
+                    "when": "view == specsmdExplorer && specsmd.hasMultipleFlows",
+                    "group": "navigation@1"
+                },
+                {
                     "command": "specsmd.refresh",
                     "when": "view == specsmdExplorer",
-                    "group": "navigation"
+                    "group": "navigation@2"
                 }
             ]
         },
@@ -131,6 +149,7 @@
         "@lit/context": "^1.1.6",
         "js-yaml": "^4.1.0",
         "lit": "^3.3.2",
-        "mixpanel": "^0.18.0"
+        "mixpanel": "^0.18.0",
+        "yaml": "^2.8.2"
     }
 }

@@ -1,0 +1,302 @@
+---
+title: FIRE Quick Start
+description: Ship your first feature in under an hour with FIRE flow
+---
+
+## Prerequisites
+
+- Node.js 18+ installed
+- An AI coding tool (Claude Code, Cursor, GitHub Copilot, etc.)
+- A project to work on (greenfield or brownfield)
+
+## Installation
+
+<Steps>
+  <Step title="Install specs.md">
+    ```bash
+    npx specsmd@latest install
+    ```
+  </Step>
+  <Step title="Select FIRE flow">
+    When prompted, select **FIRE** as your development flow:
+    ```
+    ? Select a development flow:
+      AI-DLC - Full methodology with DDD
+    ❯ FIRE - Rapid execution for solo/small teams
+      Simple - Spec generation only
+    ```
+  </Step>
+  <Step title="Choose your AI tool">
+    Select your preferred AI coding tool for agent configuration
+  </Step>
+</Steps>
+
+## Your First Intent
+
+### 1. Start the Planner Agent
+
+In your AI coding tool, invoke the FIRE Planner:
+
+<Tabs>
+  <Tab title="Claude Code">
+    ```
+    /fire-planner
+    ```
+  </Tab>
+  <Tab title="Cursor/Windsurf">
+    Reference the agent file or use rules integration
+  </Tab>
+  <Tab title="GitHub Copilot">
+    ```
+    @fire-planner
+    ```
+  </Tab>
+</Tabs>
+
+### 2. Describe Your Intent
+
+Tell the Planner what you want to build:
+
+```
+I want to add user authentication with email/password login,
+password reset, and session management.
+```
+
+The Planner will:
+1. Ask clarifying questions if needed
+2. Create an intent document
+3. Decompose it into work items
+
+### 3. Review Work Items
+
+The Planner generates work items with recommended execution modes:
+
+```yaml
+work_items:
+  - id: user-schema
+    title: Create user database schema
+    complexity: low
+    mode: autopilot      # AI executes directly
+
+  - id: login-endpoint
+    title: Implement login API endpoint
+    complexity: medium
+    mode: confirm        # Human confirms plan first
+
+  - id: session-management
+    title: Add session management
+    complexity: high
+    mode: validate       # Full review before execution
+```
+
+## Execute Work Items
+
+### 1. Start the Builder Agent
+
+<Tabs>
+  <Tab title="Claude Code">
+    ```
+    /fire-builder
+    ```
+  </Tab>
+  <Tab title="Cursor/Windsurf">
+    Reference the agent file
+  </Tab>
+  <Tab title="GitHub Copilot">
+    ```
+    @fire-builder
+    ```
+  </Tab>
+</Tabs>
+
+### 2. Builder Picks Next Work Item
+
+The Builder automatically selects the next work item based on dependencies:
+
+```
+Starting work item: user-schema
+Mode: Autopilot (0 checkpoints)
+
+Executing...
+```
+
+### 3. Execution by Mode
+
+<AccordionGroup>
+  <Accordion title="Autopilot Mode (0 checkpoints)">
+    AI executes directly and generates a walkthrough:
+    ```
+    ✓ Created migration file: 20240115_create_users.sql
+    ✓ Added User model: src/models/user.ts
+    ✓ Updated schema exports
+
+    Walkthrough generated: walkthroughs/run-001-user-schema.md
+    ```
+  </Accordion>
+  <Accordion title="Confirm Mode (1 checkpoint)">
+    AI presents plan, waits for confirmation:
+    ```
+    Plan for: login-endpoint
+
+    1. Create POST /auth/login endpoint
+    2. Add password hashing with bcrypt
+    3. Generate JWT tokens
+    4. Add rate limiting
+
+    [Confirm to proceed? y/n]
+    ```
+  </Accordion>
+  <Accordion title="Validate Mode (2 checkpoints)">
+    AI generates design doc, waits for review, then confirmation:
+    ```
+    Design document generated: intents/auth/work-items/session-management.md
+
+    Please review the design before proceeding.
+    [Review complete? y/n]
+
+    ---
+
+    Implementation plan:
+    1. Add Redis session store
+    2. Implement session middleware
+    3. Add logout endpoint
+
+    [Approve implementation? y/n]
+    ```
+  </Accordion>
+</AccordionGroup>
+
+### 4. Review Walkthroughs
+
+After each run, review the generated walkthrough:
+
+```markdown
+# Run 001: user-schema
+
+## Summary
+Created user database schema with email/password authentication fields.
+
+## Files Changed
+- `migrations/20240115_create_users.sql` (created)
+- `src/models/user.ts` (created)
+- `src/models/index.ts` (modified)
+
+## Key Decisions
+- Used UUID for user IDs (portable across databases)
+- Added soft delete with deleted_at column
+- Indexed email for fast lookups
+
+## Verification Steps
+1. Run `npm run migrate` to apply schema
+2. Verify table created: `SELECT * FROM users LIMIT 1`
+
+## Test Coverage
+- Unit test added: `tests/models/user.test.ts`
+```
+
+## State Tracking
+
+FIRE maintains state in `.specs-fire/state.yaml`:
+
+```yaml
+project:
+  name: my-project
+  framework: fire-v1
+
+workspace:
+  type: brownfield
+  structure: monolith
+  default_mode: confirm
+
+intents:
+  - id: auth-system
+    title: User Authentication
+    status: in_progress
+    work_items:
+      - id: user-schema
+        status: done
+        completed_in_run: 1
+      - id: login-endpoint
+        status: in_progress
+        started_in_run: 2
+      - id: session-management
+        status: pending
+
+runs:
+  last_completed: 1
+  active: 2
+```
+
+## Brownfield Projects
+
+For existing codebases, FIRE auto-detects:
+
+<Steps>
+  <Step title="Quick Scan (2-5 min)">
+    Pattern-based detection of language, framework, and structure
+  </Step>
+  <Step title="Standards Generation">
+    AI generates standards matching your existing patterns:
+    - Tech stack (detected frameworks, libraries)
+    - Coding standards (existing conventions)
+    - Folder structure (current layout)
+  </Step>
+  <Step title="Review and Confirm">
+    Review generated standards and adjust if needed
+  </Step>
+</Steps>
+
+<Info>
+  FIRE follows **brownfield rules**: search before create, respect patterns, minimal changes.
+</Info>
+
+## Monorepo Projects
+
+For monorepos, FIRE supports hierarchical standards:
+
+```
+project/
+├── .specs-fire/
+│   └── standards/
+│       ├── constitution.md      # Universal (always inherited)
+│       └── tech-stack.md        # Default stack
+│
+├── packages/api/
+│   └── .specs-fire/
+│       └── standards/
+│           └── tech-stack.md    # Override: Go, Echo
+│
+└── packages/web/
+    └── .specs-fire/
+        └── standards/
+            └── tech-stack.md    # Override: React, TypeScript
+```
+
+<Info>
+  Learn more in [Monorepo Support](/fire-flow/monorepo-support).
+</Info>
+
+## Command Reference
+
+| Command | Description |
+|---------|-------------|
+| `/fire-orchestrator` | Entry point, routes to appropriate agent |
+| `/fire-planner` | Capture intents, decompose work items |
+| `/fire-builder` | Execute work items, generate walkthroughs |
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Execution Modes" icon="sliders" href="/fire-flow/execution-modes">
+    Master Autopilot, Confirm, and Validate modes
+  </Card>
+  <Card title="Work Items" icon="list-check" href="/fire-flow/work-items">
+    Deep dive into work item structure
+  </Card>
+  <Card title="Monorepo Support" icon="folder-tree" href="/fire-flow/monorepo-support">
+    Hierarchical standards for multi-module projects
+  </Card>
+  <Card title="FIRE Agents" icon="robot" href="/fire-flow/agents">
+    Orchestrator, Planner, and Builder details
+  </Card>
+</CardGroup>

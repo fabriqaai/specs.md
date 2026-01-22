@@ -3,28 +3,33 @@ title: "Compare Spec-Driven Tools"
 description: "How specs.md compares to Spec Kit, BMAD, Kiro, and OpenSpec"
 ---
 
-## specs.md: Reimagine Your Development Flow
-
-<Warning>
-**The Main Difference**: specs.md (AI-DLC) is for teams ready to rethink and reimagine their development flows—not just use AI as a copilot for traditional Agile processes.
-
-If you want to keep your existing Agile workflow and add AI assistance, other tools may be a better fit. If you're ready to embrace a new methodology built for the agentic age, specs.md is for you.
-</Warning>
-
-specs.md implements AWS's AI-DLC—a methodology specifically designed for complex systems requiring architectural trade-offs, scalability, and multi-team coordination.
+## specs.md: One Framework, Three Flows
 
 <Info>
-**Available Now**: [specs.md (Simple Flow)](/simple-flow/overview) provides Spec Kit and Kiro-like simple flows for developers who want a lighter entry point before adopting full AI-DLC workflows.
+**Choose Your Level of Ceremony**: specs.md offers three flows from lightweight spec generation to full methodology. Pick the one that matches your project needs.
 </Info>
 
----
+## Three Flows Available
 
-## Product Offerings
+| Flow | Checkpoints | Best For |
+|------|-------------|----------|
+| **[Simple Flow](/simple-flow/overview)** | 3 (phase gates) | Spec generation only, quick prototypes |
+| **[FIRE Flow](/fire-flow/overview)** | 0-2 (adaptive) | Solo/small teams, brownfield, monorepos |
+| **[AI-DLC Flow](/methodology/what-is-ai-dlc)** | 10-26 | Teams, complex domains, regulated environments |
 
-| Offering | Status | Best For |
-|----------|--------|----------|
-| **specs.md (AI-DLC)** | Available | Complex systems with architectural complexity, trade-offs, multiple teams, regulated orgs |
-| **[specs.md (Simple Flow)](/simple-flow/overview)** | Available | Simpler projects without complex trade-off management |
+<CardGroup cols={3}>
+  <Card title="Simple" icon="feather" href="/simple-flow/overview">
+    Quick specs without execution tracking
+  </Card>
+  <Card title="FIRE" icon="bolt" href="/fire-flow/overview">
+    Rapid execution with adaptive checkpoints
+  </Card>
+  <Card title="AI-DLC" icon="building" href="/methodology/what-is-ai-dlc">
+    Full methodology with DDD
+  </Card>
+</CardGroup>
+
+[Choose your flow →](/architecture/choose-flow)
 
 ---
 
@@ -137,16 +142,17 @@ Simpler projects → [specs.md (Simple Flow)](/simple-flow/overview).
 
 ## Roadmap
 
-We're building new capabilities based on your feedback:
-
 | Feature | Status | Description |
 |---------|--------|-------------|
-| **Full AI-DLC** | Available | Complete Inception → Construction → Operations |
-| **[Simple Flow](/simple-flow/overview)** | Available | Kiro-style Requirements → Design → Tasks workflow |
-| **Brownfield Support** | Coming Soon | Full support for existing codebases with model elevation |
+| **AI-DLC Flow** | Available | Full methodology with DDD, 4 agents |
+| **Simple Flow** | Available | Spec generation (requirements, design, tasks) |
+| **FIRE Flow** | Available | Rapid execution with adaptive checkpoints |
+| **Brownfield Support** | Available | First-class in [FIRE Flow](/fire-flow/monorepo-support) |
+| **Monorepo Support** | Available | Hierarchical standards in [FIRE Flow](/fire-flow/monorepo-support) |
+| **VS Code Extension** | Available | Visual dashboard for all flows |
 
 <Info>
-Start simple, graduate to full AI-DLC when your project complexity demands it.
+**Start where you are**: Use Simple for quick specs, FIRE for rapid execution, or AI-DLC for full methodology. No upgrade path required—each flow is designed for different needs.
 </Info>
 
 <Card title="Request a Feature" icon="message" href="/feedback">

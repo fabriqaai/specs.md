@@ -27,40 +27,51 @@ One agent (`/specsmd-agent`) guides you through all phases.
 
 ## When to Use Simple Flow
 
-<CardGroup cols={2}>
-  <Card title="Use Simple Flow when:" icon="check">
+<CardGroup cols={3}>
+  <Card title="Simple Flow" icon="feather">
+    **Spec generation only**
+
     - Building prototypes or MVPs
-    - Working on small-to-medium features
-    - Solo or small team projects
-    - You want minimal overhead
-    - You need quick feature specs
+    - Quick feature specs
+    - Handoff to other teams
+    - No execution tracking needed
   </Card>
-  <Card title="Use AI-DLC Flow when:" icon="building">
-    - Building complex, multi-team systems
-    - You need DDD integration and domain modeling
-    - Managing architectural trade-offs
-    - Regulated or enterprise environments
-    - You want Mob rituals for team alignment
+  <Card title="FIRE Flow" icon="bolt" href="/fire-flow/overview">
+    **Rapid execution**
+
+    - Solo or small teams
+    - Brownfield projects
+    - Monorepos
+    - Ship in hours, not days
+  </Card>
+  <Card title="AI-DLC Flow" icon="building" href="/methodology/what-is-ai-dlc">
+    **Full methodology**
+
+    - Multi-team coordination
+    - Complex domain logic (DDD)
+    - Regulated environments
+    - Full traceability needed
   </Card>
 </CardGroup>
 
 <Info>
-**Independent Flows**: Simple Flow and AI-DLC are independent flows designed for different project types. Install one or the other based on your needs—not both. There is no "upgrade path" from Simple Flow to AI-DLC; choose the right flow for your project from the start.
+**Independent Flows**: Flows are designed for different use cases—they're not an upgrade path. Choose based on your project needs. [Compare all flows →](/architecture/choose-flow)
 </Info>
 
 ---
 
-## Key Differences from AI-DLC
+## Flow Comparison
 
-| Aspect | Simple Flow | AI-DLC Flow |
-|--------|-------------|-------------|
-| **Phases** | 3: Requirements → Design → Tasks | 3: Inception → Construction → Operations |
-| **Agents** | 1 (Agent) | 4 (Master, Inception, Construction, Operations) |
-| **Output** | `specs/` folder with 3 markdown files | Full `memory-bank/` hierarchy |
-| **DDD Stages** | Not included | Full DDD stages in Construction |
-| **Bolts** | No concept | Time-boxed execution sessions |
-| **Hierarchy** | Flat (`specs/{feature}/`) | Nested (intents/units/stories) |
-| **Overhead** | Minimal | Significant structure |
+| Aspect | Simple | FIRE | AI-DLC |
+|--------|--------|------|--------|
+| **Best For** | Spec generation | Solo/small teams | Teams, complex domains |
+| **Checkpoints** | 3 (phase gates) | 0-2 (adaptive) | 10-26 |
+| **Agents** | 1 | 3 | 4 |
+| **Execution Tracking** | No | Yes | Yes |
+| **Phases** | Req → Design → Tasks | Plan → Execute | Inception → Construction → Operations |
+| **Output** | `specs/` folder | `.specs-fire/` | `memory-bank/` |
+| **DDD** | No | No | Yes |
+| **Overhead** | Minimal | Low | Significant |
 
 ---
 

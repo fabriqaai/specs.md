@@ -4,126 +4,138 @@
 
   <!-- Title -->
   <text x="400" y="35" font-family="system-ui, -apple-system, sans-serif" font-size="22" font-weight="700" fill="#F8FAFC" text-anchor="middle">specs.md Framework</text>
-  <text x="400" y="55" font-family="system-ui, -apple-system, sans-serif" font-size="12" fill="#94A3B8" text-anchor="middle">Spec-Driven AI Development with Pluggable Flows</text>
+  <text x="400" y="55" font-family="system-ui, -apple-system, sans-serif" font-size="12" fill="#94A3B8" text-anchor="middle">One Framework, Three Flows, Every Use Case</text>
 
   <!-- Framework Box -->
   <g transform="translate(50, 75)">
-    <!-- Main framework container -->
     <rect width="700" height="310" rx="16" fill="#1E293B" stroke="#334155" stroke-width="2"/>
     <rect width="700" height="40" rx="16" fill="#0F172A"/>
     <rect x="0" y="28" width="700" height="12" fill="#0F172A"/>
     <text x="350" y="26" font-family="system-ui, sans-serif" font-size="14" font-weight="600" fill="#F8FAFC" text-anchor="middle">specs.md Framework - Pluggable Flows</text>
 
-    <!-- AI-DLC Flow (Active) -->
+    <!-- Simple Flow -->
     <g transform="translate(20, 55)">
-      <rect width="440" height="235" rx="10" fill="#052E16" stroke="#22C55E" stroke-width="2"/>
-      <rect width="440" height="32" rx="10" fill="#22C55E"/>
-      <rect x="0" y="22" width="440" height="10" fill="#22C55E"/>
-      <text x="220" y="22" font-family="system-ui, sans-serif" font-size="12" font-weight="600" fill="white" text-anchor="middle">AI-DLC Flow (First Implemented)</text>
-
-      <!-- Three phases row -->
-      <g transform="translate(15, 45)">
-        <text x="205" y="12" font-family="system-ui, sans-serif" font-size="9" font-weight="500" fill="#86EFAC" text-anchor="middle">PHASES</text>
-        <g transform="translate(0, 20)">
-          <rect width="130" height="28" rx="4" fill="#818CF8"/>
-          <text x="65" y="18" font-family="system-ui, sans-serif" font-size="10" fill="white" text-anchor="middle">Inception</text>
-        </g>
-        <g transform="translate(140, 20)">
-          <rect width="130" height="28" rx="4" fill="#34D399"/>
-          <text x="65" y="18" font-family="system-ui, sans-serif" font-size="10" fill="white" text-anchor="middle">Construction</text>
-        </g>
-        <g transform="translate(280, 20)">
-          <rect width="130" height="28" rx="4" fill="#FBBF24"/>
-          <text x="65" y="18" font-family="system-ui, sans-serif" font-size="10" fill="white" text-anchor="middle">Operations</text>
-        </g>
+      <rect width="210" height="175" rx="10" fill="#312E81" stroke="#818CF8" stroke-width="2"/>
+      <rect width="210" height="32" rx="10" fill="#818CF8"/>
+      <rect x="0" y="22" width="210" height="10" fill="#818CF8"/>
+      <text x="105" y="22" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="white" text-anchor="middle">Simple Flow</text>
+      <text x="105" y="50" font-family="system-ui, sans-serif" font-size="9" fill="#A5B4FC" text-anchor="middle">Spec Generation Only</text>
+      <g transform="translate(15, 60)">
+        <rect width="180" height="24" rx="4" fill="#4338CA"/>
+        <text x="90" y="16" font-family="system-ui, sans-serif" font-size="9" fill="#E0E7FF" text-anchor="middle">Requirements → Design → Tasks</text>
       </g>
-
-      <!-- Core components -->
-      <g transform="translate(15, 105)">
-        <text x="205" y="12" font-family="system-ui, sans-serif" font-size="9" font-weight="500" fill="#86EFAC" text-anchor="middle">CORE COMPONENTS</text>
-        <g transform="translate(0, 20)">
-          <rect width="80" height="28" rx="4" fill="#0C4A6E" stroke="#0EA5E9"/>
-          <text x="40" y="18" font-family="system-ui, sans-serif" font-size="8" fill="#7DD3FC" text-anchor="middle">Memory Bank</text>
-        </g>
-        <g transform="translate(85, 20)">
-          <rect width="80" height="28" rx="4" fill="#0C4A6E" stroke="#0EA5E9"/>
-          <text x="40" y="18" font-family="system-ui, sans-serif" font-size="8" fill="#7DD3FC" text-anchor="middle">Standards</text>
-        </g>
-        <g transform="translate(170, 20)">
-          <rect width="80" height="28" rx="4" fill="#0C4A6E" stroke="#0EA5E9"/>
-          <text x="40" y="18" font-family="system-ui, sans-serif" font-size="8" fill="#7DD3FC" text-anchor="middle">Agent System</text>
-        </g>
-        <g transform="translate(255, 20)">
-          <rect width="75" height="28" rx="4" fill="#0C4A6E" stroke="#0EA5E9"/>
-          <text x="37" y="18" font-family="system-ui, sans-serif" font-size="8" fill="#7DD3FC" text-anchor="middle">Templates</text>
-        </g>
-        <g transform="translate(335, 20)">
-          <rect width="75" height="28" rx="4" fill="#0C4A6E" stroke="#0EA5E9"/>
-          <text x="37" y="18" font-family="system-ui, sans-serif" font-size="8" fill="#7DD3FC" text-anchor="middle">Commands</text>
-        </g>
+      <g transform="translate(15, 95)">
+        <rect width="85" height="35" rx="4" fill="#1E1B4B" stroke="#4338CA"/>
+        <text x="42" y="15" font-family="system-ui, sans-serif" font-size="8" fill="#A5B4FC" text-anchor="middle">1 Agent</text>
+        <text x="42" y="28" font-family="system-ui, sans-serif" font-size="8" fill="#94A3B8" text-anchor="middle">3 Checkpoints</text>
       </g>
-
-      <!-- Bolt types -->
-      <g transform="translate(15, 165)">
-        <text x="205" y="12" font-family="system-ui, sans-serif" font-size="9" font-weight="500" fill="#86EFAC" text-anchor="middle">BOLT TYPES</text>
-        <g transform="translate(0, 20)">
-          <rect width="130" height="28" rx="4" fill="#14532D" stroke="#22C55E"/>
-          <text x="65" y="18" font-family="system-ui, sans-serif" font-size="9" fill="#86EFAC" text-anchor="middle">DDD Construction</text>
-        </g>
-        <g transform="translate(140, 20)">
-          <rect width="130" height="28" rx="4" fill="#14532D" stroke="#22C55E"/>
-          <text x="65" y="18" font-family="system-ui, sans-serif" font-size="9" fill="#86EFAC" text-anchor="middle">Simple Construction</text>
-        </g>
-        <g transform="translate(280, 20)">
-          <rect width="130" height="28" rx="4" fill="#1E293B" stroke="#475569" stroke-dasharray="4 2"/>
-          <text x="65" y="18" font-family="system-ui, sans-serif" font-size="9" fill="#64748B" text-anchor="middle">Future Bolt Types...</text>
-        </g>
+      <g transform="translate(110, 95)">
+        <rect width="85" height="35" rx="4" fill="#1E1B4B" stroke="#4338CA"/>
+        <text x="42" y="15" font-family="system-ui, sans-serif" font-size="8" fill="#A5B4FC" text-anchor="middle">No Execution</text>
+        <text x="42" y="28" font-family="system-ui, sans-serif" font-size="8" fill="#94A3B8" text-anchor="middle">Spec Only</text>
+      </g>
+      <g transform="translate(15, 140)">
+        <text x="90" y="12" font-family="system-ui, sans-serif" font-size="8" fill="#A5B4FC" text-anchor="middle">Best for: Prototypes, MVPs, Handoff</text>
       </g>
     </g>
 
-    <!-- Future Flows Section -->
-    <g transform="translate(480, 55)">
-      <rect width="200" height="235" rx="10" fill="#1E293B" stroke="#475569" stroke-dasharray="4 2"/>
-      <text x="100" y="25" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="#64748B" text-anchor="middle">Future Flows</text>
-
-      <!-- Future Flow Placeholder 1 -->
-      <g transform="translate(15, 45)">
-        <rect width="170" height="55" rx="8" fill="#1E293B" stroke="#475569" stroke-dasharray="4 2"/>
-        <text x="85" y="32" font-family="system-ui, sans-serif" font-size="10" fill="#64748B" text-anchor="middle">Custom Flow 1</text>
+    <!-- FIRE Flow -->
+    <g transform="translate(245, 55)">
+      <rect width="210" height="175" rx="10" fill="#78350F" stroke="#F59E0B" stroke-width="2"/>
+      <rect width="210" height="32" rx="10" fill="#F59E0B"/>
+      <rect x="0" y="22" width="210" height="10" fill="#F59E0B"/>
+      <text x="105" y="22" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="white" text-anchor="middle">FIRE Flow</text>
+      <text x="105" y="50" font-family="system-ui, sans-serif" font-size="9" fill="#FCD34D" text-anchor="middle">AI-DLC Simplified</text>
+      <g transform="translate(15, 60)">
+        <rect width="180" height="24" rx="4" fill="#B45309"/>
+        <text x="90" y="16" font-family="system-ui, sans-serif" font-size="9" fill="#FEF3C7" text-anchor="middle">Plan → Execute (Adaptive)</text>
       </g>
-
-      <!-- Future Flow Placeholder 2 -->
-      <g transform="translate(15, 115)">
-        <rect width="170" height="55" rx="8" fill="#1E293B" stroke="#475569" stroke-dasharray="4 2"/>
-        <text x="85" y="32" font-family="system-ui, sans-serif" font-size="10" fill="#64748B" text-anchor="middle">Custom Flow 2</text>
+      <g transform="translate(15, 95)">
+        <rect width="85" height="35" rx="4" fill="#451A03" stroke="#B45309"/>
+        <text x="42" y="15" font-family="system-ui, sans-serif" font-size="8" fill="#FCD34D" text-anchor="middle">3 Agents</text>
+        <text x="42" y="28" font-family="system-ui, sans-serif" font-size="8" fill="#94A3B8" text-anchor="middle">0-2 Checkpoints</text>
       </g>
+      <g transform="translate(110, 95)">
+        <rect width="85" height="35" rx="4" fill="#451A03" stroke="#B45309"/>
+        <text x="42" y="15" font-family="system-ui, sans-serif" font-size="8" fill="#FCD34D" text-anchor="middle">Runs + Walkthroughs</text>
+        <text x="42" y="28" font-family="system-ui, sans-serif" font-size="8" fill="#94A3B8" text-anchor="middle">Brownfield</text>
+      </g>
+      <g transform="translate(15, 140)">
+        <text x="90" y="12" font-family="system-ui, sans-serif" font-size="8" fill="#FCD34D" text-anchor="middle">Best for: Solo/Small Teams, Monorepos</text>
+      </g>
+    </g>
 
-      <!-- Tool integrations -->
-      <g transform="translate(15, 185)">
-        <text x="85" y="10" font-family="system-ui, sans-serif" font-size="9" font-weight="500" fill="#94A3B8" text-anchor="middle">Tool Integrations</text>
-        <g transform="translate(0, 18)">
-          <rect width="40" height="22" rx="4" fill="#1E293B" stroke="#475569"/>
-          <text x="20" y="15" font-family="system-ui, sans-serif" font-size="7" fill="#94A3B8" text-anchor="middle">Claude</text>
-        </g>
-        <g transform="translate(45, 18)">
-          <rect width="40" height="22" rx="4" fill="#1E293B" stroke="#475569"/>
-          <text x="20" y="15" font-family="system-ui, sans-serif" font-size="7" fill="#94A3B8" text-anchor="middle">Cursor</text>
-        </g>
-        <g transform="translate(90, 18)">
-          <rect width="40" height="22" rx="4" fill="#1E293B" stroke="#475569"/>
-          <text x="20" y="15" font-family="system-ui, sans-serif" font-size="7" fill="#94A3B8" text-anchor="middle">Copilot</text>
-        </g>
-        <g transform="translate(135, 18)">
-          <rect width="35" height="22" rx="4" fill="#1E293B" stroke="#475569"/>
-          <text x="17" y="15" font-family="system-ui, sans-serif" font-size="7" fill="#94A3B8" text-anchor="middle">...</text>
-        </g>
+    <!-- AI-DLC Flow -->
+    <g transform="translate(470, 55)">
+      <rect width="210" height="175" rx="10" fill="#14532D" stroke="#22C55E" stroke-width="2"/>
+      <rect width="210" height="32" rx="10" fill="#22C55E"/>
+      <rect x="0" y="22" width="210" height="10" fill="#22C55E"/>
+      <text x="105" y="22" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="white" text-anchor="middle">AI-DLC Flow</text>
+      <text x="105" y="50" font-family="system-ui, sans-serif" font-size="9" fill="#86EFAC" text-anchor="middle">Full Methodology with DDD</text>
+      <g transform="translate(15, 60)">
+        <rect width="55" height="24" rx="4" fill="#166534"/>
+        <text x="27" y="16" font-family="system-ui, sans-serif" font-size="8" fill="#DCFCE7" text-anchor="middle">Inception</text>
+      </g>
+      <g transform="translate(75, 60)">
+        <rect width="65" height="24" rx="4" fill="#166534"/>
+        <text x="32" y="16" font-family="system-ui, sans-serif" font-size="8" fill="#DCFCE7" text-anchor="middle">Construction</text>
+      </g>
+      <g transform="translate(145, 60)">
+        <rect width="50" height="24" rx="4" fill="#166534"/>
+        <text x="25" y="16" font-family="system-ui, sans-serif" font-size="8" fill="#DCFCE7" text-anchor="middle">Operations</text>
+      </g>
+      <g transform="translate(15, 95)">
+        <rect width="85" height="35" rx="4" fill="#052E16" stroke="#166534"/>
+        <text x="42" y="15" font-family="system-ui, sans-serif" font-size="8" fill="#86EFAC" text-anchor="middle">4 Agents</text>
+        <text x="42" y="28" font-family="system-ui, sans-serif" font-size="8" fill="#94A3B8" text-anchor="middle">10-26 Checkpoints</text>
+      </g>
+      <g transform="translate(110, 95)">
+        <rect width="85" height="35" rx="4" fill="#052E16" stroke="#166534"/>
+        <text x="42" y="15" font-family="system-ui, sans-serif" font-size="8" fill="#86EFAC" text-anchor="middle">Bolts + DDD</text>
+        <text x="42" y="28" font-family="system-ui, sans-serif" font-size="8" fill="#94A3B8" text-anchor="middle">Full Traceability</text>
+      </g>
+      <g transform="translate(15, 140)">
+        <text x="90" y="12" font-family="system-ui, sans-serif" font-size="8" fill="#86EFAC" text-anchor="middle">Best for: Teams, Complex Domains</text>
+      </g>
+    </g>
+
+    <!-- Tool Integrations Row -->
+    <g transform="translate(20, 245)">
+      <text x="350" y="12" font-family="system-ui, sans-serif" font-size="10" font-weight="500" fill="#94A3B8" text-anchor="middle">Works with Any AI Coding Tool</text>
+      <g transform="translate(85, 22)">
+        <rect width="80" height="24" rx="4" fill="#334155" stroke="#475569"/>
+        <text x="40" y="16" font-family="system-ui, sans-serif" font-size="9" fill="#CBD5E1" text-anchor="middle">Claude Code</text>
+      </g>
+      <g transform="translate(175, 22)">
+        <rect width="60" height="24" rx="4" fill="#334155" stroke="#475569"/>
+        <text x="30" y="16" font-family="system-ui, sans-serif" font-size="9" fill="#CBD5E1" text-anchor="middle">Cursor</text>
+      </g>
+      <g transform="translate(245, 22)">
+        <rect width="60" height="24" rx="4" fill="#334155" stroke="#475569"/>
+        <text x="30" y="16" font-family="system-ui, sans-serif" font-size="9" fill="#CBD5E1" text-anchor="middle">Copilot</text>
+      </g>
+      <g transform="translate(315, 22)">
+        <rect width="60" height="24" rx="4" fill="#334155" stroke="#475569"/>
+        <text x="30" y="16" font-family="system-ui, sans-serif" font-size="9" fill="#CBD5E1" text-anchor="middle">Windsurf</text>
+      </g>
+      <g transform="translate(385, 22)">
+        <rect width="50" height="24" rx="4" fill="#334155" stroke="#475569"/>
+        <text x="25" y="16" font-family="system-ui, sans-serif" font-size="9" fill="#CBD5E1" text-anchor="middle">Kiro</text>
+      </g>
+      <g transform="translate(445, 22)">
+        <rect width="70" height="24" rx="4" fill="#334155" stroke="#475569"/>
+        <text x="35" y="16" font-family="system-ui, sans-serif" font-size="9" fill="#CBD5E1" text-anchor="middle">Antigravity</text>
+      </g>
+      <g transform="translate(525, 22)">
+        <rect width="50" height="24" rx="4" fill="#334155" stroke="#475569"/>
+        <text x="25" y="16" font-family="system-ui, sans-serif" font-size="9" fill="#CBD5E1" text-anchor="middle">+ more</text>
       </g>
     </g>
   </g>
 
   <!-- Bottom tagline -->
-  <g transform="translate(50, 400)">
-    <rect width="220" height="16" rx="4" fill="#422006"/>
-    <text x="110" y="12" font-family="system-ui, sans-serif" font-size="9" fill="#FDE68A" text-anchor="middle">AI Proposes - Human Validates - AI Executes</text>
+  <g transform="translate(185, 400)">
+    <rect width="430" height="16" rx="4" fill="#78350F"/>
+    <text x="215" y="12" font-family="system-ui, sans-serif" font-size="9" fill="#FCD34D" text-anchor="middle">Choose Your Flow: Simple for Specs • FIRE for Speed • AI-DLC for Scale</text>
   </g>
 </svg>

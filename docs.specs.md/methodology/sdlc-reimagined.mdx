@@ -209,30 +209,43 @@ AI-DLC isn't a tool—it's a **methodology** that includes:
 
 ---
 
-## specs.md: AI-DLC Implementation
+## specs.md: Three Flows for Every Use Case
 
-**specs.md** is a faithful implementation of AWS's AI-DLC methodology.
+**specs.md** is an AI-native development framework with pluggable flows. Choose the level of methodology that matches your project needs.
 
-<CardGroup cols={2}>
-  <Card title="specs.md" icon="rocket" href="/methodology/what-is-ai-dlc">
-    **Available Now**
+<CardGroup cols={3}>
+  <Card title="Simple Flow" icon="feather" href="/simple-flow/overview">
+    **Spec Generation Only**
 
-    For complex systems requiring architectural trade-offs, multi-team coordination, regulated environments, and enterprise scalability.
+    Quick requirements, design, and task documents without execution tracking.
 
-    - Phase-based agents
-    - Memory Bank for persistent context
-    - DDD integration as core
-    - Mob ritual support
+    - 1 agent, 3 phase gates
+    - Kiro-style workflow
+    - Best for: prototypes, handoff
   </Card>
-  <Card title="specs.md (Simple Flow)" icon="bolt" href="/simple-flow/overview">
-    **Available Now**
+  <Card title="FIRE Flow" icon="bolt" href="/fire-flow/overview">
+    **Rapid Execution**
 
-    For simpler projects and teams wanting a lighter entry point.
+    Ship in hours with adaptive checkpoints and first-class brownfield support.
 
-    - Kiro-style workflow: Requirements → Design → Tasks
-    - Graduate to full AI-DLC when complexity demands
+    - 3 agents, 0-2 checkpoints
+    - Monorepo support
+    - Best for: solo/small teams
+  </Card>
+  <Card title="AI-DLC Flow" icon="building" href="/methodology/what-is-ai-dlc">
+    **Full Methodology**
+
+    Complete AI-DLC implementation with DDD and comprehensive traceability.
+
+    - 4 agents, 10-26 checkpoints
+    - Mob rituals, DDD as core
+    - Best for: teams, complex domains
   </Card>
 </CardGroup>
+
+<Info>
+  **Not sure which flow?** Check out our [Choose Your Flow](/architecture/choose-flow) guide.
+</Info>
 
 ---
 

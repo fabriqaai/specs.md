@@ -5,26 +5,23 @@ description: Understanding the specs.md flow architecture
 
 ## Framework Architecture
 
-specs.md is built as a **pluggable framework** where development methodologies are implemented as **flows**. This architecture allows different teams to use different development approaches.
+specs.md is built as a **pluggable framework** where development methodologies are implemented as **flows**. Choose the flow that matches your project needs.
 
 ```mermaid
 flowchart TB
     subgraph Framework[specs.md Framework]
-        subgraph Flows[Flows]
-            subgraph AIDLC[AI-DLC Flow]
-                MB[Memory Bank]
-                ST[Standards]
-                AS[Agents]
-                TM[Templates]
-            end
-            FF[Future Flows...]
+        subgraph Flows[Available Flows]
+            Simple[Simple Flow<br/>Spec Generation]
+            FIRE[FIRE Flow<br/>Rapid Execution]
+            AIDLC[AI-DLC Flow<br/>Full Methodology]
         end
     end
 
     style Framework fill:#1E293B,stroke:#334155,color:#fff
     style Flows fill:#052E16,stroke:#22C55E,color:#fff
-    style AIDLC fill:#22C55E,stroke:#16A34A,color:#fff
-    style FF fill:#475569,stroke:#64748B,color:#fff,stroke-dasharray: 5 5
+    style Simple fill:#818CF8,stroke:#6366F1,color:#fff
+    style FIRE fill:#F59E0B,stroke:#D97706,color:#fff
+    style AIDLC fill:#8B5CF6,stroke:#7C3AED,color:#fff
 ```
 
 ## What is a Flow?
@@ -32,38 +29,83 @@ flowchart TB
 A **flow** is a complete development methodology implementation that includes:
 
 <CardGroup cols={2}>
-  <Card title="Phases" icon="diagram-project">
-    Sequential stages of development (e.g., Inception, Construction, Operations)
-  </Card>
   <Card title="Agents" icon="robot">
-    Specialized AI agents for each phase
+    Specialized AI agents that guide development
   </Card>
-  <Card title="Templates" icon="file-code">
-    Structured artifacts and outputs
+  <Card title="Artifacts" icon="file-code">
+    Structured outputs for each phase
   </Card>
-  <Card title="Bolt Types" icon="bolt">
-    Execution patterns for different work types
+  <Card title="State Management" icon="database">
+    Tracking progress and context
+  </Card>
+  <Card title="Standards" icon="ruler">
+    Project guidelines and conventions
   </Card>
 </CardGroup>
 
 ## Available Flows
 
-Each flow implements a specific development approach with its own components:
+| Flow | Checkpoints | Agents | Best For |
+|------|-------------|--------|----------|
+| **[Simple](/simple-flow/overview)** | 3 (phase gates) | 1 | Spec generation only |
+| **[FIRE](/fire-flow/overview)** | 0-2 (adaptive) | 3 | Solo/small teams, brownfield |
+| **[AI-DLC](/core-concepts/intents)** | 10-26 | 4 | Teams, complex domains |
 
-| Flow | Status | Description |
-|------|--------|-------------|
-| **AI-DLC** | Implemented | AI-Driven Development Lifecycle from AWS |
-| *(Future)* | Planned | Additional methodologies can be added |
+<Info>
+  **Not sure which flow?** Check out our [Choose Your Flow](/architecture/choose-flow) guide.
+</Info>
+
+## Simple Flow
+
+**Simple Flow** generates structured specs without execution tracking—perfect for quick feature planning.
+
+| Aspect | Details |
+|--------|---------|
+| **Agent** | 1 (specsmd-agent) |
+| **Output** | `requirements.md`, `design.md`, `tasks.md` |
+| **Phases** | Requirements → Design → Tasks |
+| **Best For** | Prototypes, MVPs, spec handoff |
+
+<Card title="Simple Flow Documentation" icon="feather" href="/simple-flow/overview">
+  Learn more about Simple Flow
+</Card>
+
+## FIRE Flow
+
+**FIRE (Fast Intent-Run Engineering)** is AI-DLC simplified—same intent-driven philosophy with adaptive checkpoints instead of comprehensive gates.
+
+```mermaid
+flowchart LR
+    O[Orchestrator] --> P[Planner]
+    O --> B[Builder]
+    P --> S[(State)]
+    B --> S
+    B --> C[Codebase]
+
+    style O fill:#8B5CF6,stroke:#7C3AED,color:#fff
+    style P fill:#818CF8,stroke:#6366F1,color:#fff
+    style B fill:#34D399,stroke:#10B981,color:#fff
+    style S fill:#FBBF24,stroke:#F59E0B,color:#fff
+```
+
+| Aspect | Details |
+|--------|---------|
+| **Agents** | 3 (Orchestrator, Planner, Builder) |
+| **Checkpoints** | 0-2 adaptive (Autopilot, Confirm, Validate) |
+| **Best For** | Solo/small teams, brownfield, monorepos |
+| **Key Features** | Walkthrough generation, hierarchical standards |
+
+<Card title="FIRE Flow Documentation" icon="bolt" href="/fire-flow/overview">
+  Learn more about FIRE Flow
+</Card>
 
 ## AI-DLC Flow
 
-AI-DLC (AI-Driven Development Lifecycle) is the first flow implemented in specs.md. It implements the methodology developed by AWS.
-
-### Three Phases
+**AI-DLC (AI-Driven Development Lifecycle)** is the full methodology with DDD and comprehensive traceability.
 
 ```mermaid
 flowchart TB
-    MA[Master Agent<br/>Orchestrates & Navigates] --> IA[Inception]
+    MA[Master Agent] --> IA[Inception]
     MA --> CA[Construction]
     MA --> OA[Operations]
 
@@ -75,37 +117,27 @@ flowchart TB
     style OA fill:#FBBF24,stroke:#F59E0B,color:#fff
 ```
 
-| Phase | Agent | Purpose |
-|-------|-------|---------|
-| **Inception** | Inception Agent | Capture intents, elaborate requirements, decompose into units |
-| **Construction** | Construction Agent | Execute bolts through validated stages |
-| **Operations** | Operations Agent | Deploy, verify, and monitor |
+| Aspect | Details |
+|--------|---------|
+| **Agents** | 4 (Master, Inception, Construction, Operations) |
+| **Phases** | Inception → Construction → Operations |
+| **Best For** | Teams, complex domains, regulated environments |
+| **Key Features** | DDD integration, Mob rituals, full traceability |
 
-### Bolt Types
-
-The AI-DLC flow supports two bolt types:
+### Bolt Types (AI-DLC)
 
 | Type | Best For | Stages |
 |------|----------|--------|
-| **DDD Construction** | Complex domain logic, business rules | Model → Design → ADR → Code → Test |
-| **Simple Construction** | UI, integrations, utilities | Plan → Implement → Test |
+| **DDD Construction** | Complex domain logic | Model → Design → ADR → Code → Test |
+| **Simple Construction** | UI, integrations | Plan → Implement → Test |
 
-## Creating Custom Flows
-
-<Info>
-  Custom flow creation is a planned feature. The architecture is designed to support multiple flows, with AI-DLC as the reference implementation.
-</Info>
-
-A custom flow would include:
-
-1. **Flow Definition** - Metadata, phases, and configuration
-2. **Phase Agents** - Specialized agents for each phase
-3. **Bolt Types** - Custom execution patterns
-4. **Templates** - Artifacts specific to the methodology
+<Card title="AI-DLC Documentation" icon="building" href="/methodology/what-is-ai-dlc">
+  Learn more about AI-DLC Flow
+</Card>
 
 ## Tool Integration
 
-Flows integrate with AI coding tools through the shared core:
+All flows integrate with AI coding tools:
 
 | Tool | Integration Method |
 |------|-------------------|
@@ -114,23 +146,28 @@ Flows integrate with AI coding tools through the shared core:
 | **GitHub Copilot** | Agents in `.github/agents/` |
 | **Google Antigravity** | Agents in `.agent/agents/` |
 
-All tools share the same Memory Bank and can work with any installed flow.
-
 ## Next Steps
 
-<CardGroup cols={2}>
+<CardGroup cols={3}>
   <Card
-    title="AI-DLC Methodology"
-    icon="arrow-right"
-    href="/methodology/what-is-ai-dlc"
+    title="Choose Your Flow"
+    icon="compass"
+    href="/architecture/choose-flow"
   >
-    Deep dive into the AI-DLC flow
+    Detailed comparison guide
   </Card>
   <Card
-    title="Memory Bank"
-    icon="database"
-    href="/core-concepts/memory-bank"
+    title="Installation"
+    icon="download"
+    href="/getting-started/installation"
   >
-    Learn about the shared artifact storage
+    Install and select your flow
+  </Card>
+  <Card
+    title="VS Code Extension"
+    icon="puzzle-piece"
+    href="/getting-started/ide-extension"
+  >
+    Track progress visually
   </Card>
 </CardGroup>

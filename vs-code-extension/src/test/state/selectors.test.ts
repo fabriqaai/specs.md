@@ -94,13 +94,14 @@ suite('State Selectors Test Suite', () => {
             assert.strictEqual(result, null);
         });
 
-        test('should return first intent when no active bolts', () => {
+        test('should return null when no active or queued bolts', () => {
             const intents = [
                 createIntent({ number: '001', name: 'first' }),
                 createIntent({ number: '002', name: 'second' })
             ];
             const result = selectCurrentIntentDefault(intents, []);
-            assert.strictEqual(result?.name, 'first');
+            // New behavior: return null when no active/queued work, not first intent
+            assert.strictEqual(result, null);
         });
 
         test('should return intent with active bolt', () => {
@@ -115,13 +116,17 @@ suite('State Selectors Test Suite', () => {
             assert.strictEqual(result?.name, 'second');
         });
 
-        test('should prefer intent with in-progress status', () => {
+        test('should return intent with queued bolt when no active bolt', () => {
             const intents = [
-                createIntent({ number: '001', name: 'complete', status: ArtifactStatus.Complete }),
-                createIntent({ number: '002', name: 'in-progress', status: ArtifactStatus.InProgress })
+                createIntent({ number: '001', name: 'first' }),
+                createIntent({ number: '002', name: 'second' })
             ];
-            const result = selectCurrentIntentDefault(intents, []);
-            assert.strictEqual(result?.name, 'in-progress');
+            // Draft bolt (queued) for second intent
+            const bolts = [
+                createBolt({ id: 'bolt-1', intent: '002', status: ArtifactStatus.Draft, isBlocked: false })
+            ];
+            const result = selectCurrentIntentDefault(intents, bolts);
+            assert.strictEqual(result?.name, 'second');
         });
     });
 
