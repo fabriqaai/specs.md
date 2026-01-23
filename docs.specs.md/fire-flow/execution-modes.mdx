@@ -17,23 +17,63 @@ FIRE's breakthrough is **adaptive checkpoints** that scale with complexity. Inst
 These combine to determine the execution mode:
 
 ```mermaid
-graph LR
-    subgraph "Risk Level"
-        L[Low] --> M[Medium] --> H[High]
+flowchart LR
+    subgraph Inputs[" "]
+        WC[Work Complexity]
+        AC[Autonomy Config]
     end
 
-    subgraph "Checkpoints"
-        L --> A["0 (Autopilot)"]
-        M --> C["1 (Confirm)"]
-        H --> V["2 (Validate)"]
+    E{Adaptive<br/>Engine}
+
+    subgraph Modes[" "]
+        AP[Autopilot<br/>0 checkpoints]
+        CO[Confirm<br/>1 checkpoint]
+        VA[Validate<br/>2 checkpoints]
     end
 
-    style L fill:#34D399,stroke:#10B981,color:#fff
-    style M fill:#FBBF24,stroke:#F59E0B,color:#fff
-    style H fill:#EF4444,stroke:#DC2626,color:#fff
-    style A fill:#34D399,stroke:#10B981,color:#fff
-    style C fill:#FBBF24,stroke:#F59E0B,color:#fff
-    style V fill:#EF4444,stroke:#DC2626,color:#fff
+    WC --> E
+    AC --> E
+    E --> AP
+    E --> CO
+    E --> VA
+
+    style WC fill:#60A5FA,stroke:#3B82F6,color:#fff
+    style AC fill:#60A5FA,stroke:#3B82F6,color:#fff
+    style E fill:#8B5CF6,stroke:#7C3AED,color:#fff
+    style AP fill:#34D399,stroke:#10B981,color:#fff
+    style CO fill:#FBBF24,stroke:#F59E0B,color:#fff
+    style VA fill:#EF4444,stroke:#DC2626,color:#fff
+```
+
+### Mode Comparison
+
+```mermaid
+flowchart TB
+    subgraph AUTO["Autopilot (0 checkpoints)"]
+        A1[AI Plans] --> A2[AI Executes] --> A3[Walkthrough]
+    end
+
+    subgraph CONF["Confirm (1 checkpoint)"]
+        C1[AI Plans] --> C2[Human Confirms] --> C3[AI Executes] --> C4[Walkthrough]
+    end
+
+    subgraph VALI["Validate (2 checkpoints)"]
+        V1[AI Designs] --> V2[Human Reviews] --> V3[AI Plans] --> V4[Human Approves] --> V5[AI Executes] --> V6[Walkthrough]
+    end
+
+    style A1 fill:#34D399,stroke:#10B981,color:#fff
+    style A2 fill:#34D399,stroke:#10B981,color:#fff
+    style A3 fill:#34D399,stroke:#10B981,color:#fff
+    style C1 fill:#818CF8,stroke:#6366F1,color:#fff
+    style C2 fill:#F472B6,stroke:#EC4899,color:#fff
+    style C3 fill:#818CF8,stroke:#6366F1,color:#fff
+    style C4 fill:#818CF8,stroke:#6366F1,color:#fff
+    style V1 fill:#8B5CF6,stroke:#7C3AED,color:#fff
+    style V2 fill:#F472B6,stroke:#EC4899,color:#fff
+    style V3 fill:#8B5CF6,stroke:#7C3AED,color:#fff
+    style V4 fill:#F472B6,stroke:#EC4899,color:#fff
+    style V5 fill:#8B5CF6,stroke:#7C3AED,color:#fff
+    style V6 fill:#8B5CF6,stroke:#7C3AED,color:#fff
 ```
 
 ## Autopilot Mode (0 Checkpoints)
@@ -50,18 +90,9 @@ graph LR
 
 ### Flow
 
-```mermaid
-sequenceDiagram
-    participant U as User
-    participant B as Builder
-    participant C as Codebase
+**Start → AI Plans → AI Executes → Walkthrough**
 
-    U->>B: Start work item
-    B->>B: Load context
-    B->>C: Execute changes
-    B->>B: Generate walkthrough
-    B->>U: Present walkthrough
-```
+No human checkpoints. AI loads context, executes changes directly, and generates a walkthrough for post-review.
 
 ### Example
 
@@ -110,25 +141,9 @@ Error message now displays correctly on failed login.
 
 ### Flow
 
-```mermaid
-sequenceDiagram
-    participant U as User
-    participant B as Builder
-    participant C as Codebase
+**Start → AI Plans → ✋ Human Confirms → AI Executes → Walkthrough**
 
-    U->>B: Start work item
-    B->>B: Generate plan
-    B->>U: Present plan
-    U->>B: Confirm (y/n)
-    alt Confirmed
-        B->>C: Execute changes
-        B->>B: Generate walkthrough
-        B->>U: Present walkthrough
-    else Rejected
-        B->>U: Request feedback
-        B->>B: Revise plan
-    end
-```
+One checkpoint: you review the AI's plan before execution. Reject to provide feedback and get a revised plan.
 
 ### Example
 
@@ -177,27 +192,9 @@ The Builder will revise and present an updated plan.
 
 ### Flow
 
-```mermaid
-sequenceDiagram
-    participant U as User
-    participant B as Builder
-    participant C as Codebase
+**Start → AI Designs → ✋ Human Reviews → AI Plans → ✋ Human Approves → AI Executes → Walkthrough**
 
-    U->>B: Start work item
-    B->>B: Generate design document
-    B->>U: Present design for review
-    U->>B: Design approved (y/n)
-    alt Design Approved
-        B->>B: Generate implementation plan
-        B->>U: Present implementation plan
-        U->>B: Implementation approved (y/n)
-        alt Implementation Approved
-            B->>C: Execute changes
-            B->>B: Generate walkthrough
-            B->>U: Present walkthrough
-        end
-    end
-```
+Two checkpoints: first review the design approach, then approve the implementation plan. This separates "is this the right approach?" from "is the plan complete?"
 
 ### Example
 
