@@ -67,15 +67,6 @@
             ]
           },
           {
-            "group": "Why specs.md",
-            "pages": [
-              "methodology/sdlc-reimagined",
-              "methodology/what-is-ai-dlc",
-              "methodology/ai-dlc-vs-agile",
-              "methodology/three-phases"
-            ]
-          },
-          {
             "group": "Framework",
             "pages": [
               "architecture/flows",
@@ -97,6 +88,15 @@
             "group": "AI-DLC Flow",
             "pages": [
               "agents/quick-start",
+              {
+                "group": "Methodology",
+                "pages": [
+                  "methodology/sdlc-reimagined",
+                  "methodology/what-is-ai-dlc",
+                  "methodology/ai-dlc-vs-agile",
+                  "methodology/three-phases"
+                ]
+              },
               {
                 "group": "Concepts",
                 "pages": [
