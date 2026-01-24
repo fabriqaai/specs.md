@@ -37,6 +37,7 @@ class AnalyticsTracker {
 
     private mixpanel: MixpanelLike | null = null;
     private enabled = false;
+    private developmentMode = false;
     private machineId: string | null = null;
     private sessionId: string | null = null;
     private baseProperties: BaseProperties | null = null;
@@ -84,6 +85,12 @@ class AnalyticsTracker {
         }
 
         this.initialized = true;
+
+        // Check if running in development mode (Extension Development Host)
+        this.developmentMode = context.extensionMode === vscode.ExtensionMode.Development;
+        if (this.developmentMode) {
+            console.log('[specsmd] Running in development mode - analytics will log to console');
+        }
 
         try {
             // Check privacy opt-out BEFORE any initialization
@@ -179,8 +186,13 @@ class AnalyticsTracker {
                 ...properties,
             };
 
+            // In development mode, log full event data to console
+            if (this.developmentMode) {
+                console.log(`[specsmd analytics] ${eventName}`, JSON.stringify(eventData, null, 2));
+                return; // Don't send to Mixpanel in development mode
+            }
+
             // Fire and forget - don't await, no callback handling
-            console.log(`[specsmd] Tracking event: ${eventName}`);
             this.mixpanel.track(eventName, eventData);
         } catch {
             // Silent failure - analytics should never break extension
@@ -209,6 +221,12 @@ class AnalyticsTracker {
                 ...this.baseProperties,
                 ...properties,
             };
+
+            // In development mode, log full event data to console
+            if (this.developmentMode) {
+                console.log(`[specsmd analytics] ${eventName}`, JSON.stringify(eventData, null, 2));
+                return; // Don't send to Mixpanel in development mode
+            }
 
             await new Promise<void>((resolve) => {
                 try {
@@ -262,6 +280,15 @@ class AnalyticsTracker {
      */
     public getSessionId(): string | null {
         return this.sessionId;
+    }
+
+    /**
+     * Check if running in development mode
+     *
+     * @returns true if running in Extension Development Host
+     */
+    public isDevelopmentMode(): boolean {
+        return this.developmentMode;
     }
 }
 
