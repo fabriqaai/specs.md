@@ -1,7 +1,7 @@
 # FIRE Flow Configuration
 # Fast Intent-Run Engineering - Simplified AI-native development
 
-# FIRE Flow Version (used by migrate skill to detect outdated projects)
+# FIRE Flow Version
 version: "0.1.8"
 
 # Artifact folder (created at project initialization)
