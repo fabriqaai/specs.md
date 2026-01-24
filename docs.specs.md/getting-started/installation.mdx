@@ -124,7 +124,25 @@ After installation, you'll see the following structure based on your selected fl
     - `/specsmd-operations-agent`
   </Tab>
   <Tab title="Cursor">
-    Rules are installed in `.cursor/rules/` using `.mdc` format.
+    Commands are installed in `.cursor/rules/` using `.mdc` format. Invoke them by typing `/` followed by the command name:
+
+    <Frame>
+      <img src="/images/cursor-commands.png" alt="Cursor Commands" style={{ borderRadius: '8px' }} />
+    </Frame>
+
+    **Simple Flow:**
+    - `/specsmd-agent`
+
+    **FIRE Flow:**
+    - `/specsmd-fire`
+    - `/specsmd-fire-planner`
+    - `/specsmd-fire-builder`
+
+    **AI-DLC Flow:**
+    - `/specsmd-master-agent`
+    - `/specsmd-inception-agent`
+    - `/specsmd-construction-agent`
+    - `/specsmd-operations-agent`
   </Tab>
   <Tab title="GitHub Copilot">
     Agents are installed in `.github/agents/` using `.agent.md` format.
