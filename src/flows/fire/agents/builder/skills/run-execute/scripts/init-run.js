@@ -317,13 +317,15 @@ function initRun(rootPath, workItems, scope) {
   // Read state
   const state = readState(statePath);
 
-  // Check for existing active run
-  if (state.active_run) {
-    throw fireError(
-      `A run is already active: "${state.active_run.id}".`,
-      'INIT_080',
-      `Complete or cancel run "${state.active_run.id}" before starting a new one.`
-    );
+  // Initialize runs structure if needed
+  if (!state.runs) {
+    state.runs = { active: [], completed: [] };
+  }
+  if (!Array.isArray(state.runs.active)) {
+    state.runs.active = [];
+  }
+  if (!Array.isArray(state.runs.completed)) {
+    state.runs.completed = [];
   }
 
   // Generate run ID (checks both history AND file system)
@@ -345,14 +347,14 @@ function initRun(rootPath, workItems, scope) {
     status: index === 0 ? 'in_progress' : 'pending',
   }));
 
-  // Update state with active run
-  state.active_run = {
+  // Add to active runs list (supports multiple parallel runs)
+  state.runs.active.push({
     id: runId,
     scope: detectedScope,
     work_items: stateWorkItems,
     current_item: workItems[0].id,
     started: startTime,
-  };
+  });
 
   // Save state
   writeState(statePath, state);

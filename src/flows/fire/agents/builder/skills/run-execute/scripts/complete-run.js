@@ -248,25 +248,22 @@ function completeCurrentItem(rootPath, runId, params = {}) {
   const { statePath, runLogPath } = validateFireProject(rootPath, runId);
   const state = readState(statePath);
 
-  if (!state.active_run) {
+  // Find run in active runs list
+  const activeRuns = state.runs?.active || [];
+  const runIndex = activeRuns.findIndex(r => r.id === runId);
+
+  if (runIndex === -1) {
     throw fireError(
-      'No active run found in state.yaml.',
+      `Run "${runId}" not found in active runs.`,
       'COMPLETE_040',
       'The run may have already been completed or was never started.'
     );
   }
 
-  if (state.active_run.id !== runId) {
-    throw fireError(
-      `Run ID mismatch. Active run is "${state.active_run.id}" but trying to complete "${runId}".`,
-      'COMPLETE_041',
-      `Complete the active run "${state.active_run.id}" first.`
-    );
-  }
-
+  const activeRun = activeRuns[runIndex];
   const completedTime = new Date().toISOString();
-  const workItems = state.active_run.work_items || [];
-  const currentItemId = state.active_run.current_item;
+  const workItems = activeRun.work_items || [];
+  const currentItemId = activeRun.current_item;
 
   // Find and mark current item as completed
   let currentItemIndex = -1;
@@ -297,12 +294,13 @@ function completeCurrentItem(rootPath, runId, params = {}) {
     }
   }
 
-  // Update state
-  state.active_run.work_items = workItems;
-  state.active_run.current_item = nextItem ? nextItem.id : null;
+  // Update active run in list
+  activeRun.work_items = workItems;
+  activeRun.current_item = nextItem ? nextItem.id : null;
+  state.runs.active[runIndex] = activeRun;
 
   // Update run log
-  updateRunLog(runLogPath, state.active_run, completionParams, completedTime, false);
+  updateRunLog(runLogPath, activeRun, completionParams, completedTime, false);
 
   // Save state
   writeState(statePath, state);
@@ -335,25 +333,32 @@ function completeRun(rootPath, runId, params = {}) {
   const { statePath, runLogPath } = validateFireProject(rootPath, runId);
   const state = readState(statePath);
 
-  if (!state.active_run) {
+  // Initialize runs structure if needed
+  if (!state.runs) {
+    state.runs = { active: [], completed: [] };
+  }
+  if (!Array.isArray(state.runs.active)) {
+    state.runs.active = [];
+  }
+  if (!Array.isArray(state.runs.completed)) {
+    state.runs.completed = [];
+  }
+
+  // Find run in active runs list
+  const runIndex = state.runs.active.findIndex(r => r.id === runId);
+
+  if (runIndex === -1) {
     throw fireError(
-      'No active run found in state.yaml.',
+      `Run "${runId}" not found in active runs.`,
       'COMPLETE_040',
       'The run may have already been completed or was never started.'
     );
   }
 
-  if (state.active_run.id !== runId) {
-    throw fireError(
-      `Run ID mismatch. Active run is "${state.active_run.id}" but trying to complete "${runId}".`,
-      'COMPLETE_041',
-      `Complete the active run "${state.active_run.id}" first.`
-    );
-  }
-
+  const activeRun = state.runs.active[runIndex];
   const completedTime = new Date().toISOString();
-  const workItems = state.active_run.work_items || [];
-  const scope = state.active_run.scope || 'single';
+  const workItems = activeRun.work_items || [];
+  const scope = activeRun.scope || 'single';
 
   // Mark all items as completed
   for (const item of workItems) {
@@ -363,11 +368,11 @@ function completeRun(rootPath, runId, params = {}) {
     }
   }
 
-  state.active_run.work_items = workItems;
-  state.active_run.current_item = null;
+  activeRun.work_items = workItems;
+  activeRun.current_item = null;
 
   // Update run log
-  updateRunLog(runLogPath, state.active_run, completionParams, completedTime, true);
+  updateRunLog(runLogPath, activeRun, completionParams, completedTime, true);
 
   // Build completed run record
   const completedRun = {
@@ -378,15 +383,12 @@ function completeRun(rootPath, runId, params = {}) {
       intent: i.intent,
       mode: i.mode,
     })),
+    started: activeRun.started,
     completed: completedTime,
   };
 
-  // Get existing runs history or initialize
-  const existingRuns = state.runs || { completed: [] };
-  const existingCompleted = Array.isArray(existingRuns.completed) ? existingRuns.completed : [];
-
   // Check for duplicate (idempotency)
-  const alreadyRecorded = existingCompleted.some(r => r.id === runId);
+  const alreadyRecorded = state.runs.completed.some(r => r.id === runId);
 
   // Update work item status in intents
   if (Array.isArray(state.intents)) {
@@ -405,11 +407,11 @@ function completeRun(rootPath, runId, params = {}) {
     }
   }
 
-  // Update state
-  state.active_run = null;
-  state.runs = {
-    completed: alreadyRecorded ? existingCompleted : [...existingCompleted, completedRun],
-  };
+  // Remove from active runs and add to completed
+  state.runs.active.splice(runIndex, 1);
+  if (!alreadyRecorded) {
+    state.runs.completed.push(completedRun);
+  }
 
   // Save state
   writeState(statePath, state);

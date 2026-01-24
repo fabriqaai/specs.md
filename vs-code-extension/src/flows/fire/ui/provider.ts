@@ -168,7 +168,7 @@ export class FireUIProvider implements FlowUIProvider {
      */
     private _transformRunsData(state: FireWebviewSnapshot) {
         return {
-            activeRun: state.activeRun ? this._transformRun(state.activeRun) : null,
+            activeRuns: state.activeRuns.map(r => this._transformRun(r)),
             completedRuns: state.completedRuns.map(r => this._transformRun(r)),
             stats: state.stats,
             ui: state.ui
@@ -178,9 +178,7 @@ export class FireUIProvider implements FlowUIProvider {
     /**
      * Transform a run to the UI data format.
      */
-    private _transformRun(run: FireWebviewSnapshot['activeRun']) {
-        if (!run) return null;
-
+    private _transformRun(run: FireWebviewSnapshot['activeRuns'][0]) {
         return {
             id: run.id,
             scope: run.scope,
@@ -204,8 +202,11 @@ export class FireUIProvider implements FlowUIProvider {
      * Get current context string.
      */
     private _getCurrentContext(state: FireWebviewSnapshot): string | null {
-        if (state.activeRun) {
-            return `Run: ${state.activeRun.id}`;
+        if (state.activeRuns.length > 0) {
+            if (state.activeRuns.length === 1) {
+                return `Run: ${state.activeRuns[0].id}`;
+            }
+            return `${state.activeRuns.length} Active Runs`;
         }
 
         const activeIntent = state.intents.find(i => i.status === 'in_progress');

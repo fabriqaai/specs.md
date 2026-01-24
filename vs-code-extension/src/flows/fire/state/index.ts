@@ -79,7 +79,7 @@ export class FireStateManager implements FlowStateManager<FireWebviewSnapshot> {
             project: artifacts.project,
             workspace: artifacts.workspace,
             intents: artifacts.intents,
-            activeRun: artifacts.activeRun,
+            activeRuns: artifacts.activeRuns,
             completedRuns,
             standards: artifacts.standards,
             stats,
@@ -130,10 +130,14 @@ export class FireStateManager implements FlowStateManager<FireWebviewSnapshot> {
             ? Math.round((stats.completedWorkItems / stats.totalWorkItems) * 100)
             : 0;
 
-        // Current context is the active run or first in-progress intent
+        // Current context is the active run(s) or first in-progress intent
         let currentContext: string | null = null;
-        if (artifacts.activeRun) {
-            currentContext = `Run: ${artifacts.activeRun.id}`;
+        if (artifacts.activeRuns.length > 0) {
+            if (artifacts.activeRuns.length === 1) {
+                currentContext = `Run: ${artifacts.activeRuns[0].id}`;
+            } else {
+                currentContext = `${artifacts.activeRuns.length} Active Runs`;
+            }
         } else {
             const activeIntent = artifacts.intents.find(i => i.status === 'in_progress');
             if (activeIntent) {
@@ -213,10 +217,10 @@ export class FireStateManager implements FlowStateManager<FireWebviewSnapshot> {
     }
 
     /**
-     * Get active run.
+     * Get active runs (supports multiple parallel runs).
      */
-    getActiveRun(): FireRun | null {
-        return this._state.artifacts?.activeRun || null;
+    getActiveRuns(): FireRun[] {
+        return this._state.artifacts?.activeRuns || [];
     }
 
     /**
@@ -245,7 +249,7 @@ export class FireStateManager implements FlowStateManager<FireWebviewSnapshot> {
                 pendingWorkItems: 0,
                 totalRuns: 0,
                 completedRuns: 0,
-                hasActiveRun: false
+                activeRunsCount: 0
             };
         }
         return calculateFireStats(artifacts);
@@ -277,7 +281,7 @@ export class FireStateManager implements FlowStateManager<FireWebviewSnapshot> {
             project: null,
             workspace: null,
             intents: [],
-            activeRun: null,
+            activeRuns: [],
             completedRuns: [],
             standards: [],
             stats: {
@@ -291,7 +295,7 @@ export class FireStateManager implements FlowStateManager<FireWebviewSnapshot> {
                 pendingWorkItems: 0,
                 totalRuns: 0,
                 completedRuns: 0,
-                hasActiveRun: false
+                activeRunsCount: 0
             },
             ui: this._state.ui
         };

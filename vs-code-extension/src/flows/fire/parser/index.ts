@@ -73,10 +73,10 @@ export class FireParser implements FlowParser<FireArtifacts> {
             const runs = await this._scanRuns(rootPath, state);
             const standards = await this._scanStandards(rootPath);
 
-            // Determine active run
-            const activeRun = state.activeRun
-                ? runs.find(r => r.id === state.activeRun?.id) || null
-                : null;
+            // Determine active runs (supports multiple parallel runs)
+            const activeRuns = (state.runs?.active || [])
+                .map(ar => runs.find(r => r.id === ar.id))
+                .filter((r): r is FireRun => r != null);
 
             return {
                 isProject: true,
@@ -87,7 +87,7 @@ export class FireParser implements FlowParser<FireArtifacts> {
                 workspace,
                 intents,
                 runs,
-                activeRun,
+                activeRuns,
                 standards
             };
         } catch (error) {
@@ -175,7 +175,7 @@ export class FireParser implements FlowParser<FireArtifacts> {
             workspace: null,
             intents: [],
             runs: [],
-            activeRun: null,
+            activeRuns: [],
             standards: []
         };
     }
@@ -360,14 +360,14 @@ export class FireParser implements FlowParser<FireArtifacts> {
                     completedAt = parsed.completedAt;
                 }
 
-                // Check if this is the active run
-                const isActiveRun = state.activeRun?.id === runId;
-                if (isActiveRun && state.activeRun) {
+                // Check if this is an active run (supports multiple parallel runs)
+                const activeRun = state.runs?.active?.find(ar => ar.id === runId);
+                if (activeRun) {
                     // Use state for active run info
-                    scope = state.activeRun.scope;
-                    workItems = state.activeRun.workItems;
-                    currentItem = state.activeRun.currentItem;
-                    startedAt = state.activeRun.started;
+                    scope = activeRun.scope;
+                    workItems = activeRun.workItems;
+                    currentItem = activeRun.currentItem;
+                    startedAt = activeRun.started;
                 }
 
                 // Check completed runs in state
@@ -550,6 +550,20 @@ export class FireParser implements FlowParser<FireArtifacts> {
      * Normalize raw YAML state (snake_case) to FireState (camelCase).
      */
     private _normalizeState(raw: RawFireState): FireState {
+        // Parse active runs from runs.active array
+        const activeRuns = (raw.runs?.active || []).map(ar => ({
+            id: ar.id,
+            scope: ar.scope,
+            workItems: (ar.work_items || ar.workItems || []).map(w => ({
+                id: w.id,
+                intentId: w.intent || w.intentId || '',
+                mode: this._normalizeMode(w.mode) || 'confirm',
+                status: (w.status as 'pending' | 'in_progress' | 'completed' | 'failed') || 'pending'
+            })),
+            currentItem: ar.current_item || ar.currentItem || '',
+            started: ar.started || ''
+        }));
+
         return {
             project: raw.project ? {
                 name: raw.project.name || '',
@@ -575,19 +589,8 @@ export class FireParser implements FlowParser<FireArtifacts> {
                     mode: w.mode as ExecutionMode | undefined
                 }))
             })),
-            activeRun: raw.active_run || raw.activeRun ? {
-                id: (raw.active_run || raw.activeRun)!.id,
-                scope: (raw.active_run || raw.activeRun)!.scope,
-                workItems: ((raw.active_run || raw.activeRun)!.work_items || (raw.active_run || raw.activeRun)!.workItems || []).map(w => ({
-                    id: w.id,
-                    intentId: w.intent || w.intentId || '',
-                    mode: this._normalizeMode(w.mode) || 'confirm',
-                    status: (w.status as 'pending' | 'in_progress' | 'completed' | 'failed') || 'pending'
-                })),
-                currentItem: (raw.active_run || raw.activeRun)!.current_item || (raw.active_run || raw.activeRun)!.currentItem || '',
-                started: (raw.active_run || raw.activeRun)!.started || ''
-            } : null,
             runs: {
+                active: activeRuns,
                 completed: (raw.runs?.completed || []).map(r => ({
                     id: r.id,
                     workItems: (r.work_items || r.workItems || []).map(w => {
@@ -637,9 +640,8 @@ interface RawFireState {
         work_items?: Array<{ id: string; status?: FireStatus; mode?: string }>;
         workItems?: Array<{ id: string; status?: FireStatus; mode?: string }>;
     }>;
-    active_run?: RawActiveRun;
-    activeRun?: RawActiveRun;
     runs?: {
+        active?: RawActiveRun[];
         completed?: Array<{
             id: string;
             intent?: string;

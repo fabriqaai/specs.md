@@ -55,14 +55,16 @@ state:
       - title: "Intent title"
       - status: "pending | in_progress | completed"
       - work_items: "List of work items"
-    active_run:
-      - id: "Current run ID"
-      - scope: "single | batch | wide"
-      - work_items: "List of work items in this run"
-      - current_item: "Work item currently being executed"
-      - started: "ISO 8601 timestamp"
     runs:
+      - active: "List of currently active runs (supports multiple parallel runs)"
       - completed: "List of completed runs with id, work_item, intent, completed timestamp"
+    # Each run (active or completed) has:
+    #   - id: "Run ID (e.g., run-001)"
+    #   - scope: "single | batch | wide"
+    #   - work_items: "List of work items in this run"
+    #   - current_item: "Work item currently being executed (active runs only)"
+    #   - started: "ISO 8601 timestamp"
+    #   - completed: "ISO 8601 timestamp (completed runs only)"
 
 # Data Conventions
 conventions:

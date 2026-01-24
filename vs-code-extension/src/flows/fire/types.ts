@@ -196,8 +196,8 @@ export interface FireState {
     project: FireProject;
     workspace: FireWorkspace;
     intents: FireStateIntent[];
-    activeRun: FireActiveRun | null;
     runs: {
+        active: FireActiveRun[];
         completed: CompletedRun[];
     };
 }
@@ -255,8 +255,8 @@ export interface FireArtifacts {
     intents: FireIntent[];
     /** All runs (active and completed) */
     runs: FireRun[];
-    /** Active run if any */
-    activeRun: FireRun | null;
+    /** Active runs (supports multiple parallel runs) */
+    activeRuns: FireRun[];
     /** Standards documents */
     standards: FireStandard[];
 }
@@ -320,7 +320,7 @@ export interface FireStats {
     pendingWorkItems: number;
     totalRuns: number;
     completedRuns: number;
-    hasActiveRun: boolean;
+    activeRunsCount: number;
 }
 
 /**
@@ -342,7 +342,7 @@ export function calculateFireStats(artifacts: FireArtifacts): FireStats {
         pendingWorkItems: workItems.filter(w => w.status === 'pending').length,
         totalRuns: runs.length,
         completedRuns: runs.filter(r => r.completedAt != null).length,
-        hasActiveRun: artifacts.activeRun != null
+        activeRunsCount: artifacts.activeRuns.length
     };
 }
 
@@ -360,8 +360,8 @@ export interface FireWebviewSnapshot {
     workspace: FireWorkspace | null;
     /** All intents */
     intents: FireIntent[];
-    /** Active run if any */
-    activeRun: FireRun | null;
+    /** Active runs (supports multiple parallel runs) */
+    activeRuns: FireRun[];
     /** Completed runs */
     completedRuns: FireRun[];
     /** Standards */

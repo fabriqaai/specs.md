@@ -140,7 +140,7 @@ describe('init-run', () => {
       createStateFile({
         project: { name: 'test-project' },
         intents: [],
-        active_run: null,
+        runs: { active: [], completed: [] },
       });
     });
 
@@ -210,50 +210,65 @@ describe('init-run', () => {
   });
 
   // ===========================================================================
-  // Active Run Tests
+  // Multiple Active Runs Tests
   // ===========================================================================
 
-  describe('active run detection', () => {
-    it('should throw when active run already exists', () => {
+  describe('multiple active runs support', () => {
+    it('should allow starting a new run when another is active', () => {
+      // Create existing run folder and state
+      mkdirSync(join(runsPath, 'run-001'));
       createStateFile({
         project: { name: 'test-project' },
         intents: [],
-        active_run: {
-          id: 'run-001',
-          work_items: [{ id: 'existing-wi', intent: 'existing-intent', mode: 'autopilot', status: 'in_progress' }],
-          current_item: 'existing-wi',
-          started: '2024-01-01T00:00:00Z',
+        runs: {
+          active: [{
+            id: 'run-001',
+            scope: 'single',
+            work_items: [{ id: 'existing-wi', intent: 'existing-intent', mode: 'autopilot', status: 'in_progress' }],
+            current_item: 'existing-wi',
+            started: '2024-01-01T00:00:00Z',
+          }],
+          completed: [],
         },
       });
 
-      expect(() => initRun(testRoot, singleWorkItem())).toThrow();
+      const result: InitRunResult = initRun(testRoot, singleWorkItem());
+      expect(result.runId).toBe('run-002');
     });
 
-    it('should include existing run ID in error message', () => {
+    it('should add new run to active runs list', () => {
+      mkdirSync(join(runsPath, 'run-001'));
       createStateFile({
         project: { name: 'test-project' },
         intents: [],
-        active_run: {
-          id: 'run-existing',
-          work_items: [{ id: 'existing-wi', intent: 'existing-intent', mode: 'autopilot', status: 'in_progress' }],
-          current_item: 'existing-wi',
-          started: '2024-01-01T00:00:00Z',
+        runs: {
+          active: [{
+            id: 'run-001',
+            scope: 'single',
+            work_items: [{ id: 'existing-wi', intent: 'existing-intent', mode: 'autopilot', status: 'in_progress' }],
+            current_item: 'existing-wi',
+            started: '2024-01-01T00:00:00Z',
+          }],
+          completed: [],
         },
       });
 
-      try {
-        initRun(testRoot, singleWorkItem());
-        expect.fail('Should have thrown');
-      } catch (error) {
-        expect((error as FireError).message).toContain('run-existing');
-      }
+      initRun(testRoot, singleWorkItem());
+
+      const state = readStateFile() as {
+        runs: { active: Array<{ id: string }> };
+      };
+
+      expect(state.runs.active).toHaveLength(2);
+      expect(state.runs.active[0].id).toBe('run-001');
+      expect(state.runs.active[1].id).toBe('run-002');
     });
 
-    it('should allow init when active_run is null', () => {
+    it('should allow init when runs.active is empty', () => {
       createStateFile({
         project: { name: 'test-project' },
         intents: [],
-        active_run: null,
+        runs: { active: [], completed: [] },
       });
 
       const result: InitRunResult = initRun(testRoot, singleWorkItem());
@@ -270,7 +285,7 @@ describe('init-run', () => {
       createStateFile({
         project: { name: 'test-project' },
         intents: [],
-        active_run: null,
+        runs: { active: [], completed: [] },
       });
     });
 
@@ -322,24 +337,26 @@ describe('init-run', () => {
       expect(content).toContain('status: in_progress');
     });
 
-    it('should update state.yaml with active_run', () => {
+    it('should update state.yaml with run in runs.active', () => {
       const result: InitRunResult = initRun(testRoot, singleWorkItem());
 
       const state = readStateFile() as {
-        active_run: {
-          id: string;
-          scope: string;
-          work_items: WorkItem[];
-          current_item: string;
+        runs: {
+          active: Array<{
+            id: string;
+            scope: string;
+            work_items: WorkItem[];
+            current_item: string;
+          }>;
         };
       };
 
-      expect(state.active_run).toBeDefined();
-      expect(state.active_run.id).toBe(result.runId);
-      expect(state.active_run.scope).toBe('single');
-      expect(state.active_run.work_items).toHaveLength(1);
-      expect(state.active_run.work_items[0].id).toBe('WI-001');
-      expect(state.active_run.current_item).toBe('WI-001');
+      expect(state.runs.active).toHaveLength(1);
+      expect(state.runs.active[0].id).toBe(result.runId);
+      expect(state.runs.active[0].scope).toBe('single');
+      expect(state.runs.active[0].work_items).toHaveLength(1);
+      expect(state.runs.active[0].work_items[0].id).toBe('WI-001');
+      expect(state.runs.active[0].current_item).toBe('WI-001');
     });
 
     it('should set started timestamp in ISO format', () => {
@@ -348,11 +365,11 @@ describe('init-run', () => {
       initRun(testRoot, singleWorkItem());
 
       const after = new Date().toISOString();
-      const state = readStateFile() as { active_run: { started: string } };
+      const state = readStateFile() as { runs: { active: Array<{ started: string }> } };
 
-      expect(state.active_run.started).toBeDefined();
-      expect(state.active_run.started >= before).toBe(true);
-      expect(state.active_run.started <= after).toBe(true);
+      expect(state.runs.active[0].started).toBeDefined();
+      expect(state.runs.active[0].started >= before).toBe(true);
+      expect(state.runs.active[0].started <= after).toBe(true);
     });
 
     it('should return success result with all fields', () => {
@@ -377,7 +394,7 @@ describe('init-run', () => {
       createStateFile({
         project: { name: 'test-project' },
         intents: [],
-        active_run: null,
+        runs: { active: [], completed: [] },
       });
     });
 
@@ -450,15 +467,17 @@ describe('init-run', () => {
       initRun(testRoot, workItems);
 
       const state = readStateFile() as {
-        active_run: {
-          work_items: WorkItem[];
+        runs: {
+          active: Array<{
+            work_items: WorkItem[];
+          }>;
         };
       };
 
-      expect(state.active_run.work_items).toHaveLength(3);
-      expect(state.active_run.work_items[0].id).toBe('WI-001');
-      expect(state.active_run.work_items[1].id).toBe('WI-002');
-      expect(state.active_run.work_items[2].id).toBe('WI-003');
+      expect(state.runs.active[0].work_items).toHaveLength(3);
+      expect(state.runs.active[0].work_items[0].id).toBe('WI-001');
+      expect(state.runs.active[0].work_items[1].id).toBe('WI-002');
+      expect(state.runs.active[0].work_items[2].id).toBe('WI-003');
     });
   });
 
@@ -471,8 +490,8 @@ describe('init-run', () => {
       createStateFile({
         project: { name: 'test-project' },
         intents: [],
-        active_run: null,
         runs: {
+          active: [],
           completed: [
             { id: 'run-001', work_items: [{ id: 'wi-1', intent: 'int-1', mode: 'autopilot' }], completed: '2024-01-01T00:00:00Z' },
             { id: 'run-010', work_items: [{ id: 'wi-2', intent: 'int-1', mode: 'autopilot' }], completed: '2024-01-02T00:00:00Z' },
@@ -492,8 +511,8 @@ describe('init-run', () => {
       createStateFile({
         project: { name: 'test-project' },
         intents: [],
-        active_run: null,
         runs: {
+          active: [],
           completed: [
             { id: 'run-001', work_items: [{ id: 'wi-1', intent: 'int-1', mode: 'autopilot' }], completed: '2024-01-01T00:00:00Z' },
           ],
@@ -524,7 +543,7 @@ describe('init-run', () => {
     });
 
     it('should use INIT_010 for missing work item id', () => {
-      createStateFile({ active_run: null, intents: [] });
+      createStateFile({ runs: { active: [], completed: [] }, intents: [] });
 
       try {
         initRun(testRoot, [{ intent: 'INT-001', mode: 'autopilot' }]);

@@ -368,7 +368,7 @@ export class SpecsmdWebviewProvider implements vscode.WebviewViewProvider {
                     filePath: string;
                 }>;
             }>;
-            activeRun: {
+            activeRuns: Array<{
                 id: string;
                 scope: string;
                 workItems: Array<{ id: string; intentId: string; mode: string; status: string }>;
@@ -379,7 +379,7 @@ export class SpecsmdWebviewProvider implements vscode.WebviewViewProvider {
                 hasPlan: boolean;
                 hasWalkthrough: boolean;
                 hasTestReport: boolean;
-            } | null;
+            }>;
             completedRuns: Array<{
                 id: string;
                 scope: string;
@@ -399,7 +399,7 @@ export class SpecsmdWebviewProvider implements vscode.WebviewViewProvider {
                 pendingWorkItems: number;
                 totalRuns: number;
                 completedRuns: number;
-                hasActiveRun: boolean;
+                activeRunsCount: number;
             };
             ui: { activeTab: string; runsFilter: string; intentsFilter: string; expandedIntents: string[] };
         };
@@ -444,7 +444,7 @@ export class SpecsmdWebviewProvider implements vscode.WebviewViewProvider {
                 dependencies?: string[];
             }>;
         }>;
-        activeRun: {
+        activeRuns: Array<{
             id: string;
             scope: string;
             workItems: Array<{ id: string; intentId: string; mode: string; status: string }>;
@@ -455,7 +455,7 @@ export class SpecsmdWebviewProvider implements vscode.WebviewViewProvider {
             hasPlan: boolean;
             hasWalkthrough: boolean;
             hasTestReport: boolean;
-        } | null;
+        }>;
         completedRuns: Array<{
             id: string;
             scope: string;
@@ -475,7 +475,7 @@ export class SpecsmdWebviewProvider implements vscode.WebviewViewProvider {
             pendingWorkItems: number;
             totalRuns: number;
             completedRuns: number;
-            hasActiveRun: boolean;
+            activeRunsCount: number;
         };
         ui: { activeTab: string; runsFilter: string; intentsFilter: string; expandedIntents: string[] };
     }) {
@@ -507,26 +507,26 @@ export class SpecsmdWebviewProvider implements vscode.WebviewViewProvider {
             files: this._scanRunFiles(run.folderPath)
         }));
 
-        // Build active run data if exists
-        const activeRunData = state.activeRun ? {
-            id: state.activeRun.id,
-            scope: state.activeRun.scope as 'single' | 'batch' | 'wide',
-            workItems: state.activeRun.workItems.map(w => ({
+        // Build active runs data (supports multiple parallel runs)
+        const activeRunsData = (state.activeRuns || []).map(run => ({
+            id: run.id,
+            scope: run.scope as 'single' | 'batch' | 'wide',
+            workItems: run.workItems.map(w => ({
                 id: w.id,
                 intentId: w.intentId,
                 mode: w.mode as 'autopilot' | 'confirm' | 'validate',
                 status: w.status as 'pending' | 'in_progress' | 'completed' | 'failed',
                 title: this._findWorkItemTitle(state.intents, w.id, w.intentId)
             })),
-            currentItem: state.activeRun.currentItem,
-            folderPath: state.activeRun.folderPath,
-            startedAt: state.activeRun.startedAt,
-            completedAt: state.activeRun.completedAt,
-            hasPlan: state.activeRun.hasPlan,
-            hasWalkthrough: state.activeRun.hasWalkthrough,
-            hasTestReport: state.activeRun.hasTestReport,
-            files: this._scanRunFiles(state.activeRun.folderPath)
-        } : null;
+            currentItem: run.currentItem,
+            folderPath: run.folderPath,
+            startedAt: run.startedAt,
+            completedAt: run.completedAt,
+            hasPlan: run.hasPlan,
+            hasWalkthrough: run.hasWalkthrough,
+            hasTestReport: run.hasTestReport,
+            files: this._scanRunFiles(run.folderPath)
+        }));
 
         // Build intents data
         const intentsData = state.intents.map(intent => ({
@@ -548,7 +548,7 @@ export class SpecsmdWebviewProvider implements vscode.WebviewViewProvider {
         return {
             activeTab: (state.ui.activeTab || 'runs') as 'runs' | 'intents' | 'overview',
             runsData: {
-                activeRun: activeRunData,
+                activeRuns: activeRunsData,
                 pendingItems,
                 completedRuns: completedRunsData,
                 stats: {
@@ -558,7 +558,7 @@ export class SpecsmdWebviewProvider implements vscode.WebviewViewProvider {
                     pendingWorkItems: state.stats.pendingWorkItems,
                     totalRuns: state.stats.totalRuns,
                     completedRuns: state.stats.completedRuns,
-                    hasActiveRun: state.stats.hasActiveRun
+                    activeRunsCount: state.stats.activeRunsCount
                 }
             },
             intentsData: {

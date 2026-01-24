@@ -10,6 +10,7 @@ import type { FireRunData } from './fire-run-card.js';
 
 /**
  * Current run section component.
+ * Displays multiple active runs (supports parallel runs).
  *
  * @fires continue-run - When continue button is clicked
  * @fires view-artifact - When artifact button is clicked
@@ -17,16 +18,16 @@ import type { FireRunData } from './fire-run-card.js';
  *
  * @example
  * ```html
- * <fire-current-run .run=${activeRun}></fire-current-run>
+ * <fire-current-run .runs=${activeRuns}></fire-current-run>
  * ```
  */
 @customElement('fire-current-run')
 export class FireCurrentRun extends BaseElement {
     /**
-     * The active run data.
+     * The active runs data (supports multiple parallel runs).
      */
-    @property({ type: Object })
-    run: FireRunData | null = null;
+    @property({ type: Array })
+    runs: FireRunData[] = [];
 
     static styles = [
         ...BaseElement.baseStyles,
@@ -82,18 +83,24 @@ export class FireCurrentRun extends BaseElement {
     ];
 
     render() {
+        const hasRuns = this.runs && this.runs.length > 0;
+        const runCount = this.runs?.length || 0;
+        const sectionTitle = runCount > 1 ? `Active Runs (${runCount})` : 'Current Run';
+
         return html`
             <div class="section">
                 <div class="section-header">
                     <span class="fire-icon">🔥</span>
-                    <span class="section-title">Current Run</span>
+                    <span class="section-title">${sectionTitle}</span>
                 </div>
 
-                ${this.run ? html`
-                    <fire-run-card
-                        .run=${this.run}
-                        ?isActive=${true}
-                    ></fire-run-card>
+                ${hasRuns ? html`
+                    ${this.runs.map(run => html`
+                        <fire-run-card
+                            .run=${run}
+                            ?isActive=${true}
+                        ></fire-run-card>
+                    `)}
                 ` : html`
                     <div class="empty-state">
                         <div class="empty-icon">💤</div>

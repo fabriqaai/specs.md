@@ -22,14 +22,14 @@ export interface FireRunsStats {
     pendingWorkItems: number;
     totalRuns: number;
     completedRuns: number;
-    hasActiveRun: boolean;
+    activeRunsCount: number;
 }
 
 /**
  * Complete runs view data.
  */
 export interface FireRunsViewData {
-    activeRun: FireRunData | null;
+    activeRuns: FireRunData[];
     pendingItems: PendingWorkItemData[];
     completedRuns: CompletedRunData[];
     stats: FireRunsStats;
@@ -122,7 +122,7 @@ export class FireRunsView extends BaseElement {
             return html`<div>Loading...</div>`;
         }
 
-        const { activeRun, pendingItems, completedRuns, stats } = this.data;
+        const { activeRuns, pendingItems, completedRuns, stats } = this.data;
         const progressPercent = stats.totalWorkItems > 0
             ? Math.round((stats.completedWorkItems / stats.totalWorkItems) * 100)
             : 0;
@@ -144,7 +144,7 @@ export class FireRunsView extends BaseElement {
 
             <div class="content">
                 <fire-current-run
-                    .run=${activeRun}
+                    .runs=${activeRuns}
                     @continue-run=${this._handleContinueRun}
                     @view-artifact=${this._handleViewArtifact}
                     @open-file=${this._handleOpenFile}
@@ -158,7 +158,7 @@ export class FireRunsView extends BaseElement {
 
                 <fire-pending-items
                     .items=${pendingItems}
-                    ?hasActiveRun=${stats.hasActiveRun}
+                    ?hasActiveRun=${stats.activeRunsCount > 0}
                     @start-run=${this._handleStartRun}
                     @open-file=${this._handleOpenFile}
                 ></fire-pending-items>

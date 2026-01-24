@@ -206,12 +206,12 @@ ${currentItem.id} (${currentItem.mode})
     beforeEach(() => {
       createStateFile({
         intents: [],
-        active_run: {
+        runs: { active: [{
           id: 'run-001',
           scope: 'single',
           work_items: [{ id: 'WI-001', intent: 'INT-001', mode: 'autopilot', status: 'in_progress' }],
           current_item: 'WI-001',
-        },
+        }], completed: [] },
       });
       createRunFolder('run-001');
     });
@@ -252,12 +252,12 @@ ${currentItem.id} (${currentItem.mode})
     it('should throw when run folder does not exist', () => {
       createStateFile({
         intents: [],
-        active_run: {
+        runs: { active: [{
           id: 'run-001',
           scope: 'single',
           work_items: [{ id: 'WI-001', intent: 'INT-001', mode: 'autopilot', status: 'in_progress' }],
           current_item: 'WI-001',
-        },
+        }], completed: [] },
       });
 
       expect(() => completeRun(testRoot, 'run-001', validParams()))
@@ -267,12 +267,12 @@ ${currentItem.id} (${currentItem.mode})
     it('should throw when run.md does not exist', () => {
       createStateFile({
         intents: [],
-        active_run: {
+        runs: { active: [{
           id: 'run-001',
           scope: 'single',
           work_items: [{ id: 'WI-001', intent: 'INT-001', mode: 'autopilot', status: 'in_progress' }],
           current_item: 'WI-001',
-        },
+        }], completed: [] },
       });
       mkdirSync(join(runsPath, 'run-001'));
 
@@ -293,22 +293,22 @@ ${currentItem.id} (${currentItem.mode})
     it('should throw when no active run exists', () => {
       createStateFile({
         intents: [],
-        active_run: null,
+        runs: { active: [], completed: [] },
       });
 
       expect(() => completeRun(testRoot, 'run-001', validParams()))
         .toThrow('FIRE Error');
     });
 
-    it('should throw when active_run.id does not match runId', () => {
+    it('should throw when runs.active does not contain matching runId', () => {
       createStateFile({
         intents: [],
-        active_run: {
+        runs: { active: [{
           id: 'run-002',
           scope: 'single',
           work_items: [{ id: 'WI-001', intent: 'INT-001', mode: 'autopilot', status: 'in_progress' }],
           current_item: 'WI-001',
-        },
+        }], completed: [] },
       });
 
       expect(() => completeRun(testRoot, 'run-001', validParams()))
@@ -329,12 +329,12 @@ ${currentItem.id} (${currentItem.mode})
             work_items: [{ id: 'WI-001', status: 'in_progress' }],
           },
         ],
-        active_run: {
+        runs: { active: [{
           id: 'run-001',
           scope: 'single',
           work_items: [{ id: 'WI-001', intent: 'INT-001', mode: 'autopilot', status: 'in_progress' }],
           current_item: 'WI-001',
-        },
+        }], completed: [] },
       });
       createRunFolder('run-001');
     });
@@ -367,11 +367,11 @@ ${currentItem.id} (${currentItem.mode})
       expect(result.coverage).toBe(85);
     });
 
-    it('should clear active_run in state.yaml', () => {
+    it('should clear runs.active in state.yaml', () => {
       completeRun(testRoot, 'run-001', validParams());
 
-      const state = readStateFile() as { active_run: unknown };
-      expect(state.active_run).toBeNull();
+      const state = readStateFile() as { runs: { active: unknown[] } };
+      expect(state.runs.active).toHaveLength(0);
     });
 
     it('should record run in runs.completed history', () => {
@@ -471,12 +471,12 @@ ${currentItem.id} (${currentItem.mode})
           { id: 'INT-001', work_items: [{ id: 'WI-001', status: 'in_progress' }, { id: 'WI-002', status: 'pending' }] },
           { id: 'INT-002', work_items: [{ id: 'WI-003', status: 'pending' }] },
         ],
-        active_run: {
+        runs: { active: [{
           id: 'run-001',
           scope: 'batch',
           work_items: batchWorkItems,
           current_item: 'WI-001',
-        },
+        }], completed: [] },
       });
       createRunFolder('run-001', batchWorkItems);
     });
@@ -495,16 +495,16 @@ ${currentItem.id} (${currentItem.mode})
       completeCurrentItem(testRoot, 'run-001', {});
 
       const state = readStateFile() as {
-        active_run: {
+        runs: { active: Array<{
           current_item: string;
           work_items: WorkItem[];
-        };
+        }> };
       };
 
-      expect(state.active_run.current_item).toBe('WI-002');
-      expect(state.active_run.work_items[0].status).toBe('completed');
-      expect(state.active_run.work_items[1].status).toBe('in_progress');
-      expect(state.active_run.work_items[2].status).toBe('pending');
+      expect(state.runs.active[0].current_item).toBe('WI-002');
+      expect(state.runs.active[0].work_items[0].status).toBe('completed');
+      expect(state.runs.active[0].work_items[1].status).toBe('in_progress');
+      expect(state.runs.active[0].work_items[2].status).toBe('pending');
     });
 
     it('should indicate all items completed when finishing last item', () => {
@@ -520,18 +520,18 @@ ${currentItem.id} (${currentItem.mode})
       expect(result.remainingItems).toBe(0);
     });
 
-    it('should NOT clear active_run when completing individual items', () => {
+    it('should NOT clear runs.active when completing individual items', () => {
       completeCurrentItem(testRoot, 'run-001', {});
 
-      const state = readStateFile() as { active_run: object | null };
-      expect(state.active_run).not.toBeNull();
+      const state = readStateFile() as { runs: { active: object[] } };
+      expect(state.runs.active.length).toBeGreaterThan(0);
     });
 
-    it('should NOT record in runs.completed when completing individual items', () => {
+    it('should keep completed list empty when completing individual items', () => {
       completeCurrentItem(testRoot, 'run-001', {});
 
       const state = readStateFile() as { runs?: { completed: unknown[] } };
-      expect(state.runs?.completed).toBeUndefined();
+      expect(state.runs?.completed || []).toHaveLength(0);
     });
   });
 
@@ -552,12 +552,12 @@ ${currentItem.id} (${currentItem.mode})
           { id: 'INT-001', work_items: [{ id: 'WI-001', status: 'completed' }, { id: 'WI-002', status: 'in_progress' }] },
           { id: 'INT-002', work_items: [{ id: 'WI-003', status: 'pending' }] },
         ],
-        active_run: {
+        runs: { active: [{
           id: 'run-001',
           scope: 'batch',
           work_items: batchWorkItems,
           current_item: 'WI-002',
-        },
+        }], completed: [] },
       });
       createRunFolder('run-001', batchWorkItems);
     });
@@ -581,11 +581,11 @@ ${currentItem.id} (${currentItem.mode})
       expect(state.runs.completed[0].work_items).toHaveLength(3);
     });
 
-    it('should clear active_run when completing entire run', () => {
+    it('should clear runs.active when completing entire run', () => {
       completeRun(testRoot, 'run-001', validParams());
 
-      const state = readStateFile() as { active_run: unknown };
-      expect(state.active_run).toBeNull();
+      const state = readStateFile() as { runs: { active: unknown[] } };
+      expect(state.runs.active).toHaveLength(0);
     });
 
     it('should record all work items in runs.completed', () => {
@@ -635,12 +635,12 @@ ${currentItem.id} (${currentItem.mode})
             work_items: [{ id: 'WI-001', status: 'in_progress' }],
           },
         ],
-        active_run: {
+        runs: { active: [{
           id: 'run-001',
           scope: 'single',
           work_items: [{ id: 'WI-001', intent: 'INT-001', mode: 'autopilot', status: 'in_progress' }],
           current_item: 'WI-001',
-        },
+        }], completed: [] },
       });
       createRunFolder('run-001');
     });
@@ -681,12 +681,12 @@ ${currentItem.id} (${currentItem.mode})
             work_items: [{ id: 'WI-001', status: 'in_progress' }],
           },
         ],
-        active_run: {
+        runs: { active: [{
           id: 'run-001',
           scope: 'single',
           work_items: [{ id: 'WI-001', intent: 'INT-001', mode: 'autopilot', status: 'in_progress' }],
           current_item: 'WI-001',
-        },
+        }], completed: [] },
         custom_field: 'should be preserved',
       });
 
@@ -698,7 +698,7 @@ ${currentItem.id} (${currentItem.mode})
     });
 
     it('should not duplicate runs in history when completing same run', () => {
-      // Set up state with existing completed runs
+      // Set up state with existing completed runs (and run-001 in active)
       createStateFile({
         intents: [
           {
@@ -706,13 +706,13 @@ ${currentItem.id} (${currentItem.mode})
             work_items: [{ id: 'WI-001', status: 'in_progress' }],
           },
         ],
-        active_run: {
-          id: 'run-001',
-          scope: 'single',
-          work_items: [{ id: 'WI-001', intent: 'INT-001', mode: 'autopilot', status: 'in_progress' }],
-          current_item: 'WI-001',
-        },
         runs: {
+          active: [{
+            id: 'run-001',
+            scope: 'single',
+            work_items: [{ id: 'WI-001', intent: 'INT-001', mode: 'autopilot', status: 'in_progress' }],
+            current_item: 'WI-001',
+          }],
           completed: [
             { id: 'run-001', scope: 'single', work_items: [{ id: 'WI-001', intent: 'INT-001', mode: 'autopilot' }], completed: '2024-01-01T00:00:00Z' },
           ],
@@ -730,7 +730,7 @@ ${currentItem.id} (${currentItem.mode})
     });
 
     it('should append to existing completed runs history', () => {
-      // Set up state with existing completed runs
+      // Set up state with existing completed runs (and run-002 in active)
       createStateFile({
         intents: [
           {
@@ -738,13 +738,13 @@ ${currentItem.id} (${currentItem.mode})
             work_items: [{ id: 'WI-001', status: 'in_progress' }],
           },
         ],
-        active_run: {
-          id: 'run-002',
-          scope: 'single',
-          work_items: [{ id: 'WI-001', intent: 'INT-001', mode: 'autopilot', status: 'in_progress' }],
-          current_item: 'WI-001',
-        },
         runs: {
+          active: [{
+            id: 'run-002',
+            scope: 'single',
+            work_items: [{ id: 'WI-001', intent: 'INT-001', mode: 'autopilot', status: 'in_progress' }],
+            current_item: 'WI-001',
+          }],
           completed: [
             { id: 'run-001', scope: 'single', work_items: [{ id: 'WI-other', intent: 'INT-001', mode: 'autopilot' }], completed: '2024-01-01T00:00:00Z' },
           ],
