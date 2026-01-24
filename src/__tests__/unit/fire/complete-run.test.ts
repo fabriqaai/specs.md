@@ -1,5 +1,5 @@
 /**
- * Unit tests for complete-run.js
+ * Unit tests for complete-run.cjs
  *
  * Tests for completing FIRE runs including:
  * - Input validation (rootPath, runId)
@@ -25,7 +25,7 @@ import * as yaml from 'yaml';
 
 // Import the module under test (CommonJS module)
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-const { completeRun, completeCurrentItem } = require('../../../flows/fire/agents/builder/skills/run-execute/scripts/complete-run.js');
+const { completeRun, completeCurrentItem } = require('../../../flows/fire/agents/builder/skills/run-execute/scripts/complete-run.cjs');
 
 // Helper types
 interface WorkItem {

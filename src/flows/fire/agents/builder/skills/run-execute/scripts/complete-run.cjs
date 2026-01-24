@@ -11,9 +11,9 @@
  *   - --complete-run: Marks all items done and finalizes entire run
  *
  * Usage:
- *   Complete current item:  node complete-run.js <rootPath> <runId> --complete-item [options]
- *   Complete entire run:    node complete-run.js <rootPath> <runId> --complete-run [options]
- *   Complete (single/auto): node complete-run.js <rootPath> <runId> [options]
+ *   Complete current item:  node complete-run.cjs <rootPath> <runId> --complete-item [options]
+ *   Complete entire run:    node complete-run.cjs <rootPath> <runId> --complete-run [options]
+ *   Complete (single/auto): node complete-run.cjs <rootPath> <runId> [options]
  *
  * Options:
  *   --files-created=JSON   - JSON array of {path, purpose}
@@ -678,9 +678,9 @@ function parseArgs(args) {
 
 function printUsage() {
   console.error('Usage:');
-  console.error('  Complete current item: node complete-run.js <rootPath> <runId> --complete-item [options]');
-  console.error('  Complete entire run:   node complete-run.js <rootPath> <runId> --complete-run [options]');
-  console.error('  Auto (single runs):    node complete-run.js <rootPath> <runId> [options]');
+  console.error('  Complete current item: node complete-run.cjs <rootPath> <runId> --complete-item [options]');
+  console.error('  Complete entire run:   node complete-run.cjs <rootPath> <runId> --complete-run [options]');
+  console.error('  Auto (single runs):    node complete-run.cjs <rootPath> <runId> [options]');
   console.error('');
   console.error('Arguments:');
   console.error('  rootPath  - Project root directory');
@@ -698,8 +698,8 @@ function printUsage() {
   console.error('  --coverage=N           - Coverage percentage');
   console.error('');
   console.error('Examples:');
-  console.error('  node complete-run.js /project run-003 --complete-item');
-  console.error('  node complete-run.js /project run-003 --complete-run --tests=5 --coverage=85');
+  console.error('  node complete-run.cjs /project run-003 --complete-item');
+  console.error('  node complete-run.cjs /project run-003 --complete-run --tests=5 --coverage=85');
 }
 
 // =============================================================================

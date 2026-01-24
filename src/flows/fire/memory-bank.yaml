@@ -97,7 +97,7 @@ naming:
     example: "run-001/"
     note: "Sequential 3-digit number, folder per run"
     contents:
-      - "run.md"           # Run log (created by init-run.js)
+      - "run.md"           # Run log (created by init-run.cjs)
       - "plan.md"          # Implementation plan (ALL modes, created BEFORE implementation)
       - "test-report.md"   # Test results and coverage (created AFTER tests pass)
       - "review-report.md" # Code review findings (created by code-review skill)

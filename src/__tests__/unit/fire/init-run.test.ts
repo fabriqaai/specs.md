@@ -1,5 +1,5 @@
 /**
- * Unit tests for init-run.js
+ * Unit tests for init-run.cjs
  *
  * Tests for initializing FIRE runs including:
  * - Input validation (rootPath, work items)
@@ -24,7 +24,7 @@ import * as yaml from 'yaml';
 
 // Import the module under test (CommonJS module)
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-const { initRun } = require('../../../flows/fire/agents/builder/skills/run-execute/scripts/init-run.js');
+const { initRun } = require('../../../flows/fire/agents/builder/skills/run-execute/scripts/init-run.cjs');
 
 // Helper types
 interface WorkItem {

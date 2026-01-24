@@ -80,7 +80,7 @@ Supports both single-item and multi-item (batch/wide) runs.
 </degrees_of_freedom>
 
 <llm critical="true">
-  <mandate>USE SCRIPTS — NEVER bypass init-run.js or complete-run.js</mandate>
+  <mandate>USE SCRIPTS — NEVER bypass init-run.cjs or complete-run.cjs</mandate>
   <mandate>ALWAYS CREATE plan.md — Create plan BEFORE implementation starts (ALL modes)</mandate>
   <mandate>ALWAYS CREATE test-report.md — Create test report AFTER tests complete</mandate>
   <mandate>ALWAYS RUN code-review — Invoke code-review skill after tests pass</mandate>
@@ -94,7 +94,7 @@ Supports both single-item and multi-item (batch/wide) runs.
 
   | Artifact | When Created | Created By |
   |----------|--------------|------------|
-  | run.md | Start of run | init-run.js script |
+  | run.md | Start of run | init-run.cjs script |
   | plan.md | BEFORE implementation (Step 4) | Agent using template |
   | test-report.md | AFTER tests pass (Step 6) | Agent using template |
   | review-report.md | AFTER test report (Step 6b) | code-review skill |
@@ -105,16 +105,16 @@ Supports both single-item and multi-item (batch/wide) runs.
 
 <flow>
   <step n="1" title="Initialize Run">
-    <critical>MUST call init-run.js script. DO NOT use mkdir directly.</critical>
+    <critical>MUST call init-run.cjs script. DO NOT use mkdir directly.</critical>
     <note>The script creates BOTH the folder AND run.md file.</note>
 
     <action>Prepare work items JSON array:</action>
     <code>
       # For single item:
-      node scripts/init-run.js {rootPath} {workItemId} {intentId} {mode}
+      node scripts/init-run.cjs {rootPath} {workItemId} {intentId} {mode}
 
       # For batch/wide (multiple items):
-      node scripts/init-run.js {rootPath} --batch '[
+      node scripts/init-run.cjs {rootPath} --batch '[
         {"id": "item-1", "intent": "intent-1", "mode": "autopilot"},
         {"id": "item-2", "intent": "intent-1", "mode": "confirm"}
       ]' --scope=batch
@@ -124,7 +124,7 @@ Supports both single-item and multi-item (batch/wide) runs.
     <action>Verify run.md was created in .specs-fire/runs/{run-id}/</action>
 
     <check if="run.md not found">
-      <error>init-run.js failed to create run.md. Check script output.</error>
+      <error>init-run.cjs failed to create run.md. Check script output.</error>
     </check>
   </step>
 
@@ -457,9 +457,9 @@ Supports both single-item and multi-item (batch/wide) runs.
     <substep n="7b" title="Route Based on Batch Status">
       <check if="scope in [batch, wide] AND pending_count > 0">
         <critical>DO NOT call --complete-run yet - more items remain!</critical>
-        <action>Call complete-run.js with --complete-item flag:</action>
+        <action>Call complete-run.cjs with --complete-item flag:</action>
         <code>
-          node scripts/complete-run.js {rootPath} {runId} --complete-item
+          node scripts/complete-run.cjs {rootPath} {runId} --complete-item
         </code>
         <action>Parse output JSON for nextItem and remainingItems</action>
         <output>
@@ -472,9 +472,9 @@ Supports both single-item and multi-item (batch/wide) runs.
 
       <check if="scope == single OR pending_count == 0">
         <action>All items complete - finalize the run</action>
-        <action>Call complete-run.js with --complete-run flag:</action>
+        <action>Call complete-run.cjs with --complete-run flag:</action>
         <code>
-          node scripts/complete-run.js {rootPath} {runId} --complete-run \
+          node scripts/complete-run.cjs {rootPath} {runId} --complete-run \
             --files-created='[{"path":"...","purpose":"..."}]' \
             --files-modified='[{"path":"...","changes":"..."}]' \
             --tests=5 --coverage=85
@@ -510,16 +510,16 @@ Supports both single-item and multi-item (batch/wide) runs.
 <scripts>
   | Script | Purpose | Usage |
   |--------|---------|-------|
-  | `scripts/init-run.js` | Initialize run record and folder | Creates run.md with all work items |
-  | `scripts/complete-run.js` | Finalize run and update state | `--complete-item` or `--complete-run` |
+  | `scripts/init-run.cjs` | Initialize run record and folder | Creates run.md with all work items |
+  | `scripts/complete-run.cjs` | Finalize run and update state | `--complete-item` or `--complete-run` |
 
-  <script name="init-run.js">
+  <script name="init-run.cjs">
     ```bash
     # Single work item
-    node scripts/init-run.js /project work-item-id intent-id autopilot
+    node scripts/init-run.cjs /project work-item-id intent-id autopilot
 
     # Batch/wide (multiple items)
-    node scripts/init-run.js /project --batch '[
+    node scripts/init-run.cjs /project --batch '[
       {"id": "wi-1", "intent": "int-1", "mode": "autopilot"},
       {"id": "wi-2", "intent": "int-1", "mode": "confirm"}
     ]' --scope=batch
@@ -539,13 +539,13 @@ Supports both single-item and multi-item (batch/wide) runs.
     </output_format>
   </script>
 
-  <script name="complete-run.js">
+  <script name="complete-run.cjs">
     ```bash
     # Complete current item (batch runs - moves to next item)
-    node scripts/complete-run.js /project run-001 --complete-item
+    node scripts/complete-run.cjs /project run-001 --complete-item
 
     # Complete entire run (single runs or final item in batch)
-    node scripts/complete-run.js /project run-001 --complete-run \
+    node scripts/complete-run.cjs /project run-001 --complete-run \
       --files-created='[{"path":"src/new.ts","purpose":"New feature"}]' \
       --files-modified='[{"path":"src/old.ts","changes":"Added import"}]' \
       --tests=5 --coverage=85
@@ -597,11 +597,11 @@ Supports both single-item and multi-item (batch/wide) runs.
 </file_tracking_format>
 
 <run_folder_structure>
-  After init-run.js creates a run:
+  After init-run.cjs creates a run:
 
   ```
   .specs-fire/runs/run-001/
-  ├── run.md           # Created by init-run.js, updated by complete-run.js
+  ├── run.md           # Created by init-run.cjs, updated by complete-run.cjs
   ├── plan.md          # Created BEFORE implementation (ALL modes - required)
   ├── test-report.md   # Created AFTER tests pass (required)
   ├── review-report.md # Created by code-review skill (Step 6b)
@@ -609,7 +609,7 @@ Supports both single-item and multi-item (batch/wide) runs.
   ```
 
   <timeline>
-    1. `run.md` — Created at run start by init-run.js
+    1. `run.md` — Created at run start by init-run.cjs
     2. `plan.md` — Created BEFORE implementation begins (Step 4)
     3. `test-report.md` — Created AFTER tests pass (Step 6)
     4. `review-report.md` — Created by code-review skill (Step 6b)
@@ -626,7 +626,7 @@ Supports both single-item and multi-item (batch/wide) runs.
 </run_folder_structure>
 
 <success_criteria>
-  <criterion>Run initialized via init-run.js script</criterion>
+  <criterion>Run initialized via init-run.cjs script</criterion>
   <criterion>Standards loaded with hierarchical resolution</criterion>
   <criterion>Constitution loaded from root (if exists)</criterion>
   <criterion>Module-specific standards applied to module files</criterion>
@@ -636,6 +636,6 @@ Supports both single-item and multi-item (batch/wide) runs.
   <criterion>test-report.md created AFTER tests pass</criterion>
   <criterion>code-review skill invoked and completed</criterion>
   <criterion>review-report.md created</criterion>
-  <criterion>Run completed via complete-run.js script</criterion>
+  <criterion>Run completed via complete-run.cjs script</criterion>
   <criterion>walkthrough.md generated</criterion>
 </success_criteria>

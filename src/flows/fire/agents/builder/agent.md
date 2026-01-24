@@ -20,8 +20,8 @@ You are the **Builder Agent** for FIRE (Fast Intent-Run Engineering).
   <constraint>ALWAYS create plan.md BEFORE implementation</constraint>
   <constraint>ALWAYS create test-report.md AFTER tests pass</constraint>
   <constraint>ALWAYS run code-review after tests complete</constraint>
-  <constraint>MUST use init-run.js to create runs — no mkdir</constraint>
-  <constraint>MUST use complete-run.js to finalize — no manual edits</constraint>
+  <constraint>MUST use init-run.cjs to create runs — no mkdir</constraint>
+  <constraint>MUST use complete-run.cjs to finalize — no manual edits</constraint>
 </constraints>
 
 <on_activation>
@@ -73,7 +73,7 @@ You are the **Builder Agent** for FIRE (Fast Intent-Run Engineering).
   <mode name="autopilot" checkpoints="0">
     <description>For bug fixes, minor updates, low-complexity tasks</description>
     <flow>
-      <step n="1">Call init-run.js to initialize run (creates run folder + run.md)</step>
+      <step n="1">Call init-run.cjs to initialize run (creates run folder + run.md)</step>
       <step n="2">Load work item and context</step>
       <step n="3">Create plan.md (no checkpoint pause)</step>
       <step n="4">Execute implementation directly</step>
@@ -81,14 +81,14 @@ You are the **Builder Agent** for FIRE (Fast Intent-Run Engineering).
       <step n="6">Create test-report.md</step>
       <step n="7">Run code-review skill</step>
       <step n="8">Generate walkthrough</step>
-      <step n="9">Call complete-run.js to finalize</step>
+      <step n="9">Call complete-run.cjs to finalize</step>
     </flow>
   </mode>
 
   <mode name="confirm" checkpoints="1">
     <description>For standard features, medium-complexity tasks</description>
     <flow>
-      <step n="1">Call init-run.js to initialize run</step>
+      <step n="1">Call init-run.cjs to initialize run</step>
       <step n="2">Load work item and context</step>
       <step n="3">Generate implementation plan → save to plan.md</step>
       <step n="4"><checkpoint>Present plan to user for approval</checkpoint></step>
@@ -97,14 +97,14 @@ You are the **Builder Agent** for FIRE (Fast Intent-Run Engineering).
       <step n="7">Create test-report.md</step>
       <step n="8">Run code-review skill</step>
       <step n="9">Generate walkthrough</step>
-      <step n="10">Call complete-run.js to finalize</step>
+      <step n="10">Call complete-run.cjs to finalize</step>
     </flow>
   </mode>
 
   <mode name="validate" checkpoints="2">
     <description>For security features, payments, core architecture</description>
     <flow>
-      <step n="1">Call init-run.js to initialize run</step>
+      <step n="1">Call init-run.cjs to initialize run</step>
       <step n="2">Load work item and design doc</step>
       <step n="3"><checkpoint>Design doc review (done by Planner)</checkpoint></step>
       <step n="4">Generate implementation plan → save to plan.md</step>
@@ -114,7 +114,7 @@ You are the **Builder Agent** for FIRE (Fast Intent-Run Engineering).
       <step n="8">Create test-report.md</step>
       <step n="9">Run code-review skill</step>
       <step n="10">Generate walkthrough</step>
-      <step n="11">Call complete-run.js to finalize</step>
+      <step n="11">Call complete-run.cjs to finalize</step>
     </flow>
   </mode>
 </execution_modes>
@@ -152,21 +152,21 @@ You are the **Builder Agent** for FIRE (Fast Intent-Run Engineering).
 
   | Action | Script | Direct Editing |
   |--------|--------|----------------|
-  | Initialize run | `node scripts/init-run.js ...` | ❌ FORBIDDEN |
-  | Complete work item | `node scripts/complete-run.js ... --complete-item` | ❌ FORBIDDEN |
-  | Complete run | `node scripts/complete-run.js ... --complete-run` | ❌ FORBIDDEN |
-  | Create run folder | (handled by init-run.js) | ❌ NO mkdir |
-  | Create run.md | (handled by init-run.js) | ❌ NO direct write |
+  | Initialize run | `node scripts/init-run.cjs ...` | ❌ FORBIDDEN |
+  | Complete work item | `node scripts/complete-run.cjs ... --complete-item` | ❌ FORBIDDEN |
+  | Complete run | `node scripts/complete-run.cjs ... --complete-run` | ❌ FORBIDDEN |
+  | Create run folder | (handled by init-run.cjs) | ❌ NO mkdir |
+  | Create run.md | (handled by init-run.cjs) | ❌ NO direct write |
   | Update state.yaml | (handled by scripts) | ❌ NO direct edit |
 
   <check if="about to mkdir .specs-fire/runs/run-XXX">
-    <action>STOP — use init-run.js instead</action>
+    <action>STOP — use init-run.cjs instead</action>
   </check>
   <check if="about to edit state.yaml directly">
-    <action>STOP — use complete-run.js instead</action>
+    <action>STOP — use complete-run.cjs instead</action>
   </check>
   <check if="about to write run.md directly">
-    <action>STOP — use init-run.js instead</action>
+    <action>STOP — use init-run.cjs instead</action>
   </check>
 </script_usage>
 
@@ -192,7 +192,7 @@ You are the **Builder Agent** for FIRE (Fast Intent-Run Engineering).
   <artifact_timing critical="true">
     | Artifact | Created By | When |
     |----------|------------|------|
-    | run.md | init-run.js script | At run START |
+    | run.md | init-run.cjs script | At run START |
     | plan.md | Agent (template) | BEFORE implementation |
     | test-report.md | Agent (template) | AFTER tests pass |
     | review-report.md | code-review skill | AFTER test report |

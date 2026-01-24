@@ -11,12 +11,12 @@
  * - existing run folders in .specs-fire/runs/
  *
  * Usage:
- *   Single item: node init-run.js <rootPath> <workItemId> <intentId> <mode>
- *   Batch/Wide:  node init-run.js <rootPath> --batch '<workItemsJson>'
+ *   Single item: node init-run.cjs <rootPath> <workItemId> <intentId> <mode>
+ *   Batch/Wide:  node init-run.cjs <rootPath> --batch '<workItemsJson>'
  *
  * Examples:
- *   node init-run.js /project login-endpoint user-auth confirm
- *   node init-run.js /project --batch '[{"id":"wi-1","intent":"int-1","mode":"autopilot"}]'
+ *   node init-run.cjs /project login-endpoint user-auth confirm
+ *   node init-run.cjs /project --batch '[{"id":"wi-1","intent":"int-1","mode":"autopilot"}]'
  */
 
 const fs = require('fs');
@@ -377,8 +377,8 @@ function initRun(rootPath, workItems, scope) {
 
 function printUsage() {
   console.error('Usage:');
-  console.error('  Single item: node init-run.js <rootPath> <workItemId> <intentId> <mode>');
-  console.error('  Batch/Wide:  node init-run.js <rootPath> --batch \'<workItemsJson>\' [--scope=<scope>]');
+  console.error('  Single item: node init-run.cjs <rootPath> <workItemId> <intentId> <mode>');
+  console.error('  Batch/Wide:  node init-run.cjs <rootPath> --batch \'<workItemsJson>\' [--scope=<scope>]');
   console.error('');
   console.error('Arguments:');
   console.error('  rootPath      - Project root directory');
@@ -394,8 +394,8 @@ function printUsage() {
   console.error('  [{"id": "wi-1", "intent": "int-1", "mode": "autopilot"}, ...]');
   console.error('');
   console.error('Examples:');
-  console.error('  node init-run.js /project login-endpoint user-auth confirm');
-  console.error('  node init-run.js /project --batch \'[{"id":"wi-1","intent":"int-1","mode":"autopilot"}]\'');
+  console.error('  node init-run.cjs /project login-endpoint user-auth confirm');
+  console.error('  node init-run.cjs /project --batch \'[{"id":"wi-1","intent":"int-1","mode":"autopilot"}]\'');
 }
 
 if (require.main === module) {

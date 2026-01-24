@@ -211,7 +211,7 @@ __tests__/
         │       │       └── work-items/
         │       └── runs/
         │           └── RUN-001/
-        │               ├── run.md         # Created by init-run.js
+        │               ├── run.md         # Created by init-run.cjs
         │               └── plan.md        # Implementation plan
         │
         ├── 06-run-completed/              # All artifacts present
@@ -949,7 +949,7 @@ import { initRun } from '../../../src/flows/fire/agents/builder/skills/run-execu
 import * as fs from 'fs-extra';
 import * as path from 'path';
 
-describe('init-run.js', () => {
+describe('init-run.cjs', () => {
   const testDir = path.join(__dirname, 'test-workspace');
 
   beforeEach(async () => {
@@ -1019,7 +1019,7 @@ import { completeRun } from '../../../src/flows/fire/agents/builder/skills/run-e
 import * as fs from 'fs-extra';
 import * as path from 'path';
 
-describe('complete-run.js', () => {
+describe('complete-run.cjs', () => {
   const testDir = path.join(__dirname, 'test-workspace');
 
   beforeEach(async () => {
@@ -1090,7 +1090,7 @@ describe('complete-run.js', () => {
 description: "Builder Agent Script Invocation"
 
 tests:
-  - description: "Builder uses init-run.js to create runs"
+  - description: "Builder uses init-run.cjs to create runs"
     vars:
       skill: "run-execute"
       action: "start new run"
@@ -1098,12 +1098,12 @@ tests:
       - type: llm-rubric
         value: |
           Builder MUST:
-          1. Invoke init-run.js script to create run
+          1. Invoke init-run.cjs script to create run
           2. NOT directly write to state.yaml
           3. NOT manually create run.md
           Return PASS if script is used for run creation.
 
-  - description: "Builder uses complete-run.js to finalize"
+  - description: "Builder uses complete-run.cjs to finalize"
     vars:
       skill: "run-execute"
       action: "complete run"
@@ -1111,7 +1111,7 @@ tests:
       - type: llm-rubric
         value: |
           Builder MUST:
-          1. Invoke complete-run.js script to finalize
+          1. Invoke complete-run.cjs script to finalize
           2. NOT directly edit state.yaml
           3. Pass completed work items to script
           Return PASS if script is used for completion.
@@ -1339,7 +1339,7 @@ npm run test:fire
 | **Mode Testing** | Autopilot (0), Confirm (1), Validate (2) checkpoint enforcement |
 | **Autonomy Bias** | Tests for autonomous/balanced/controlled mode mapping |
 | **Standards Resolution** | Hierarchical resolution with constitution never overridden |
-| **Script Testing** | Unit tests (Vitest) + invocation tests (Promptfoo) for init-run.js, complete-run.js |
+| **Script Testing** | Unit tests (Vitest) + invocation tests (Promptfoo) for init-run.cjs, complete-run.cjs |
 
 ### Key Differences from AI-DLC Testing
 
@@ -1350,7 +1350,7 @@ npm run test:fire
 | Agents | 4 (Master, Inception, Construction, Operations) | 3 (Orchestrator, Planner, Builder) |
 | State Fixtures | 6 states | 7 states (includes monorepo) |
 | Standards | Flat | Hierarchical (monorepo support) |
-| State Management | Direct | Script-based (init-run.js, complete-run.js) |
+| State Management | Direct | Script-based (init-run.cjs, complete-run.cjs) |
 
 ---
 
