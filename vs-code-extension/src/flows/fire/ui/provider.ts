@@ -238,15 +238,28 @@ export class FireUIProvider implements FlowUIProvider {
 
     /**
      * Handle run start request.
+     * Shows a popup with the command to start the run.
      */
-    private _handleStartRun(msg: { workItemIds: string[] }): void {
-        // In a full implementation, this would:
-        // 1. Call FIRE CLI to start a new run
-        // 2. Update state
-        // 3. Refresh the view
-        vscode.window.showInformationMessage(
-            `Starting run with ${msg.workItemIds.length} work item(s)...`
+    private async _handleStartRun(msg: { workItemIds: string[] }): Promise<void> {
+        if (!msg.workItemIds || msg.workItemIds.length === 0) {
+            vscode.window.showWarningMessage('No work items selected for run.');
+            return;
+        }
+
+        // Build command: /specsmd-fire-builder item1.md item2.md ...
+        const workItemFiles = msg.workItemIds.map(id => `${id}.md`).join(' ');
+        const command = `/specsmd-fire-builder ${workItemFiles}`;
+
+        const result = await vscode.window.showInformationMessage(
+            `Run this command to start the run:\n\n${command}`,
+            { modal: true },
+            'Copy to Clipboard'
         );
+
+        if (result === 'Copy to Clipboard') {
+            await vscode.env.clipboard.writeText(command);
+            vscode.window.showInformationMessage('Command copied to clipboard!');
+        }
     }
 
     /**
