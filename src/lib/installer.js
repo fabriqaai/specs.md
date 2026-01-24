@@ -173,17 +173,17 @@ async function install() {
     ];
     CLIUtils.displayNextSteps(nextSteps);
 
-    // Display IDE extension info
+    // Display IDE extension info with brand colors
     const extensionInfo = [
-      'Enhance your experience with the specsmd IDE extension!',
+      CLIUtils.logoGradient('Enhance your experience with the specsmd IDE extension!'),
       '',
-      `${theme.info('Learn more:')}      ${LINKS.ideExtension}`,
-      `${theme.info('VS Code:')}         ${LINKS.vscodeMarketplace}`,
-      `${theme.info('Cursor/Antigravity/Windsurf:')} ${LINKS.openVsx}`
+      `${theme.primary('Learn more:')}               ${LINKS.ideExtension}`,
+      `${theme.primary('VS Code:')}                  ${LINKS.vscodeMarketplace}`,
+      `${theme.primary('Cursor/Antigravity/Windsurf:')} ${LINKS.openVsx}`
     ].join('\n');
     CLIUtils.displayBox(extensionInfo, {
-      title: 'IDE Extension',
-      borderColor: 'info',
+      title: CLIUtils.logoGradient(' ★ IDE Extension ★ '),
+      borderColor: 'primary',
       padding: 1
     });
     console.log('');
