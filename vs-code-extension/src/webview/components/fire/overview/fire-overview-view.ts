@@ -336,6 +336,26 @@ export class FireOverviewView extends BaseElement {
                 height: 18px;
                 fill: currentColor;
             }
+
+            .feedback-message {
+                text-align: center;
+                font-size: 11px;
+                color: var(--description-foreground);
+                margin-bottom: 12px;
+                padding: 8px 12px;
+                background: var(--editor-background);
+                border-radius: 6px;
+            }
+
+            .feedback-link {
+                color: var(--status-active);
+                cursor: pointer;
+                text-decoration: underline;
+            }
+
+            .feedback-link:hover {
+                opacity: 0.8;
+            }
         `
     ];
 
@@ -450,6 +470,9 @@ export class FireOverviewView extends BaseElement {
 
                 <!-- Resources Footer -->
                 <div class="resources-footer">
+                    <div class="feedback-message">
+                        We're new! Help us improve — <span class="feedback-link" @click=${() => this._openExternal('https://specs.md/feedback')}>share your feedback</span>
+                    </div>
                     <div class="resources-title">Resources</div>
                     <div class="resources-links">
                         <div class="resource-link" @click=${() => this._openExternal('https://specs.md')} title="Website">

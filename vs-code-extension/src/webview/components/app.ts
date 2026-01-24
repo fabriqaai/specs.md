@@ -592,6 +592,26 @@ export class SpecsmdApp extends BaseElement {
                 height: 18px;
             }
 
+            .overview-feedback-message {
+                text-align: center;
+                font-size: 11px;
+                color: var(--description-foreground);
+                margin-bottom: 12px;
+                padding: 8px 12px;
+                background: var(--editor-background);
+                border-radius: 6px;
+            }
+
+            .overview-feedback-link {
+                color: var(--status-active);
+                cursor: pointer;
+                text-decoration: underline;
+            }
+
+            .overview-feedback-link:hover {
+                opacity: 0.8;
+            }
+
             /* ==================== EMPTY STATE ==================== */
             .empty-state {
                 padding: 20px;
@@ -768,6 +788,17 @@ export class SpecsmdApp extends BaseElement {
                 }
             });
         });
+
+        // Feedback link
+        const feedbackLink = overviewView.querySelector('.overview-feedback-link') as HTMLElement | null;
+        if (feedbackLink) {
+            feedbackLink.addEventListener('click', () => {
+                const url = feedbackLink.dataset.url;
+                if (url) {
+                    vscode.postMessage({ type: 'openExternal', url });
+                }
+            });
+        }
     }
 
     /**

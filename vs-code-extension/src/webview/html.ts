@@ -527,6 +527,9 @@ export function getOverviewViewHtml(data: WebviewData): string {
         </div>
 
         <div class="overview-resources-footer">
+            <div class="overview-feedback-message">
+                We're new! Help us improve — <span class="overview-feedback-link" data-url="https://specs.md/feedback">share your feedback</span>
+            </div>
             <div class="overview-section-title">Resources</div>
             <div class="overview-resources-links">
                 <div class="overview-resource-link" data-url="https://specs.md" title="Website">
