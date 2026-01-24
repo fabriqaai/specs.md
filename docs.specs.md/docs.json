@@ -162,7 +162,9 @@
           {
             "group": "Videos",
             "pages": [
-              "learn"
+              "learn/index",
+              "learn/fire-flow-intro",
+              "learn/aidlc-bolt-execution"
             ]
           }
         ]
