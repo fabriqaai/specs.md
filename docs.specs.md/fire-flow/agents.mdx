@@ -25,9 +25,9 @@ graph TD
 
 | Agent | Role | Invocation |
 |-------|------|------------|
-| **Orchestrator** | Entry point, routing, session management | `/fire-orchestrator` |
-| **Planner** | Intent capture, work item decomposition | `/fire-planner` |
-| **Builder** | Run execution, walkthrough generation | `/fire-builder` |
+| **Orchestrator** | Entry point, routing, session management | `/specsmd-fire` |
+| **Planner** | Intent capture, work item decomposition | `/specsmd-fire-planner` |
+| **Builder** | Run execution, walkthrough generation | `/specsmd-fire-builder` |
 
 ## Orchestrator Agent
 
@@ -60,7 +60,7 @@ flowchart TD
 ### Usage
 
 ```
-/fire-orchestrator
+/specsmd-fire
 
 ---
 Reading project state...
@@ -78,7 +78,7 @@ Routing to Builder for next work item execution.
 Orchestrator maintains context across sessions:
 
 ```
-/fire-orchestrator
+/specsmd-fire
 
 ---
 Resuming previous session...
@@ -122,7 +122,7 @@ sequenceDiagram
     participant U as User
     participant P as Planner
 
-    U->>P: /fire-planner
+    U->>P: /specsmd-fire-planner
     P->>U: What do you want to build?
     U->>P: User authentication system
     P->>U: Clarifying questions...
@@ -137,7 +137,7 @@ sequenceDiagram
 ### Example Session
 
 ```
-/fire-planner
+/specsmd-fire-planner
 
 ---
 What would you like to build?
@@ -270,7 +270,7 @@ Builder follows strict brownfield rules:
 ### Example Session
 
 ```
-/fire-builder
+/specsmd-fire-builder
 
 ---
 Selecting next work item...
@@ -318,8 +318,8 @@ Work item complete. Next: password-reset
 Call agents directly when you know what you need:
 
 ```
-/fire-planner     # Capture new intent
-/fire-builder     # Execute work items
+/specsmd-fire-planner     # Capture new intent
+/specsmd-fire-builder     # Execute work items
 ```
 
 ### Orchestrator Routing
@@ -327,7 +327,7 @@ Call agents directly when you know what you need:
 Let Orchestrator decide based on state:
 
 ```
-/fire-orchestrator   # Routes to appropriate agent
+/specsmd-fire   # Routes to appropriate agent
 ```
 
 ### Mid-Session Switching
@@ -335,7 +335,7 @@ Let Orchestrator decide based on state:
 You can switch agents mid-session:
 
 ```
-/fire-builder
+/specsmd-fire-builder
 
 ---
 Executing login-endpoint...
@@ -344,7 +344,7 @@ Executing login-endpoint...
 
 Switching to Planner...
 
-/fire-planner
+/specsmd-fire-planner
 ```
 
 ## Agent Communication
@@ -372,10 +372,10 @@ graph LR
 
 | Command | Agent | Purpose |
 |---------|-------|---------|
-| `/fire-orchestrator` | Orchestrator | Entry point, routing |
-| `/fire-planner` | Planner | Intent capture, planning |
-| `/fire-builder` | Builder | Execution, walkthroughs |
+| `/specsmd-fire` | Orchestrator | Entry point, routing |
+| `/specsmd-fire-planner` | Planner | Intent capture, planning |
+| `/specsmd-fire-builder` | Builder | Execution, walkthroughs |
 
 <Info>
-  For most workflows, start with `/fire-orchestrator` and let it route you.
+  For most workflows, start with `/specsmd-fire` and let it route you.
 </Info>

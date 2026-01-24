@@ -40,12 +40,12 @@ In your AI coding tool, invoke the FIRE Planner:
 <Tabs>
   <Tab title="Claude Code">
     ```
-    /fire-planner
+    /specsmd-fire-planner
     ```
   </Tab>
   <Tab title="Cursor">
     ```
-    /fire-planner
+    /specsmd-fire-planner
     ```
     Or use the `@` prefix:
     ```
@@ -102,12 +102,12 @@ work_items:
 <Tabs>
   <Tab title="Claude Code">
     ```
-    /fire-builder
+    /specsmd-fire-builder
     ```
   </Tab>
   <Tab title="Cursor">
     ```
-    /fire-builder
+    /specsmd-fire-builder
     ```
     Or use the `@` prefix:
     ```
@@ -292,9 +292,9 @@ project/
 
 | Command | Description |
 |---------|-------------|
-| `/fire-orchestrator` | Entry point, routes to appropriate agent |
-| `/fire-planner` | Capture intents, decompose work items |
-| `/fire-builder` | Execute work items, generate walkthroughs |
+| `/specsmd-fire` | Entry point, routes to appropriate agent |
+| `/specsmd-fire-planner` | Capture intents, decompose work items |
+| `/specsmd-fire-builder` | Execute work items, generate walkthroughs |
 
 ## Troubleshooting
 
@@ -312,7 +312,7 @@ project/
     Review generated standards in `.specs-fire/standards/` and edit as needed. The Planner respects your overrides.
   </Accordion>
   <Accordion title="Multiple intents exist">
-    Run `/fire-orchestrator` to see all intents and their status, then specify which to work on.
+    Run `/specsmd-fire` to see all intents and their status, then specify which to work on.
   </Accordion>
 </AccordionGroup>
 
