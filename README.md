@@ -18,6 +18,34 @@ Choose the flow that matches your project needs: **Simple** for quick specs, **F
 
 ---
 
+## VS Code Extension
+
+Track your progress with our sidebar extension for VS Code and compatible IDEs.
+
+<p align="center">
+  <img src="vs-code-extension/resources/extension-preview.png" alt="VS Code Extension Preview" width="800" />
+</p>
+
+<p align="center">
+  <img src="images/fire1.png" alt="FIRE Flow - Intents View" width="400" />
+  <img src="images/fire3.png" alt="FIRE Flow - Runs View" width="400" />
+</p>
+
+> **Note:** Works with any VS Code-based IDE including [Cursor](https://cursor.sh), [Google Antigravity](https://antigravity.google), [Windsurf](https://codeium.com/windsurf), and others.
+
+**Features:**
+- Flow switcher for AI-DLC and FIRE views
+- Active run/bolt tracking with progress indicators
+- Intent and work item visualization
+- Click-to-open spec files
+
+**Install from:**
+- [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=fabriqaai.specsmd) — VS Code, GitHub Codespaces
+- [Open VSX Registry](https://open-vsx.org/extension/fabriqaai/specsmd) — Cursor, Windsurf, Amazon Kiro, Google Antigravity, VSCodium, Gitpod, Google IDX
+- [GitHub Releases (VSIX)](https://github.com/fabriqaai/specs.md/releases) — Manual installation
+
+---
+
 ## Three Flows, Every Use Case
 
 | Flow | Optimized For | Agents | Checkpoints |
@@ -56,6 +84,12 @@ During installation, select your flow:
 ```
 
 The installer detects your AI coding tools and sets up agent definitions, slash commands, and project structure for your selected flow.
+
+### Install VS Code Extension (Optional)
+
+Track your progress visually with our sidebar extension:
+- [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=fabriqaai.specsmd) — VS Code, GitHub Codespaces
+- [Open VSX Registry](https://open-vsx.org/extension/fabriqaai/specsmd) — Cursor, Windsurf, Amazon Kiro, Google Antigravity
 
 ### Verify Installation
 
@@ -163,29 +197,6 @@ memory-bank/
 ```
 
 [AI-DLC Flow Documentation →](https://specs.md/aidlc/overview)
-
----
-
-## VS Code Extension
-
-Track your progress with our sidebar extension for VS Code and compatible IDEs.
-
-<p align="center">
-  <img src="vs-code-extension/resources/extension-preview.png" alt="VS Code Extension Preview" width="800" />
-</p>
-
-> **Note:** Works with any VS Code-based IDE including [Cursor](https://cursor.sh), [Google Antigravity](https://antigravity.google), [Windsurf](https://codeium.com/windsurf), and others.
-
-**Features:**
-- Flow switcher for AI-DLC and FIRE views
-- Active run/bolt tracking with progress indicators
-- Intent and work item visualization
-- Click-to-open spec files
-
-**Install from:**
-- [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=fabriqaai.specsmd) — VS Code, GitHub Codespaces
-- [Open VSX Registry](https://open-vsx.org/extension/fabriqaai/specsmd) — Cursor, Windsurf, Amazon Kiro, Google Antigravity, VSCodium, Gitpod, Google IDX
-- [GitHub Releases (VSIX)](https://github.com/fabriqaai/specs.md/releases) — Manual installation
 
 ---
 
