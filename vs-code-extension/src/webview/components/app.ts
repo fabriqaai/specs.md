@@ -560,11 +560,20 @@ export class SpecsmdApp extends BaseElement {
                 border-top: 1px solid var(--border-color);
             }
 
+            .overview-resources-title {
+                font-size: 9px;
+                font-weight: 600;
+                text-transform: uppercase;
+                color: var(--description-foreground);
+                letter-spacing: 0.5px;
+                margin-bottom: 8px;
+                text-align: center;
+            }
+
             .overview-resources-links {
                 display: flex;
                 gap: 12px;
                 justify-content: center;
-                margin-top: 8px;
             }
 
             .overview-resource-link {
@@ -596,7 +605,7 @@ export class SpecsmdApp extends BaseElement {
                 text-align: center;
                 font-size: 11px;
                 color: var(--description-foreground);
-                margin-bottom: 12px;
+                margin-top: 12px;
                 padding: 8px 12px;
                 background: var(--editor-background);
                 border-radius: 6px;

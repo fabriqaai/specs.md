@@ -527,10 +527,7 @@ export function getOverviewViewHtml(data: WebviewData): string {
         </div>
 
         <div class="overview-resources-footer">
-            <div class="overview-feedback-message">
-                We're new! Help us improve — <span class="overview-feedback-link" data-url="https://specs.md/feedback">share your feedback</span>
-            </div>
-            <div class="overview-section-title">Resources</div>
+            <div class="overview-resources-title">Links</div>
             <div class="overview-resources-links">
                 <div class="overview-resource-link" data-url="https://specs.md" title="Website">
                     <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -547,6 +544,9 @@ export function getOverviewViewHtml(data: WebviewData): string {
                         <path fill="currentColor" d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
                     </svg>
                 </div>
+            </div>
+            <div class="overview-feedback-message">
+                We're new! Help us improve — <span class="overview-feedback-link" data-url="https://specs.md/feedback">share your feedback</span>
             </div>
         </div>
     </div>`;

@@ -303,6 +303,7 @@ export class FireOverviewView extends BaseElement {
                 color: var(--description-foreground);
                 letter-spacing: 0.5px;
                 margin-bottom: 8px;
+                text-align: center;
             }
 
             .resources-links {
@@ -341,7 +342,7 @@ export class FireOverviewView extends BaseElement {
                 text-align: center;
                 font-size: 11px;
                 color: var(--description-foreground);
-                margin-bottom: 12px;
+                margin-top: 12px;
                 padding: 8px 12px;
                 background: var(--editor-background);
                 border-radius: 6px;
@@ -470,10 +471,7 @@ export class FireOverviewView extends BaseElement {
 
                 <!-- Resources Footer -->
                 <div class="resources-footer">
-                    <div class="feedback-message">
-                        We're new! Help us improve — <span class="feedback-link" @click=${() => this._openExternal('https://specs.md/feedback')}>share your feedback</span>
-                    </div>
-                    <div class="resources-title">Resources</div>
+                    <div class="resources-title">Links</div>
                     <div class="resources-links">
                         <div class="resource-link" @click=${() => this._openExternal('https://specs.md')} title="Website">
                             <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -490,6 +488,9 @@ export class FireOverviewView extends BaseElement {
                                 <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
                             </svg>
                         </div>
+                    </div>
+                    <div class="feedback-message">
+                        We're new! Help us improve — <span class="feedback-link" @click=${() => this._openExternal('https://specs.md/feedback')}>share your feedback</span>
                     </div>
                 </div>
             </div>
