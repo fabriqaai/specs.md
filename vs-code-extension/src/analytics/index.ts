@@ -46,6 +46,18 @@ export {
     PROJECT_EVENTS,
 } from './projectMetricsEvents';
 
+// FIRE flow engagement event exports
+export {
+    trackFireTabChanged,
+    trackFireRunStarted,
+    trackFireRunContinued,
+    trackFireArtifactViewed,
+    trackFireWorkItemOpened,
+    trackFireFilterChanged,
+    trackFireIntentToggled,
+    FIRE_EVENTS,
+} from './fireEngagementEvents';
+
 // Type exports
 export type {
     IDEInfo,

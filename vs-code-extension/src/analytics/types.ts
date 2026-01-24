@@ -107,6 +107,11 @@ export interface WelcomeViewDisplayedProperties {
 // ============================================
 
 /**
+ * Flow type identifier for analytics
+ */
+export type FlowType = 'aidlc' | 'fire';
+
+/**
  * Tab identifiers for navigation tracking.
  * Includes both AI-DLC tabs (bolts, specs, overview) and FIRE tabs (runs, intents, overview).
  */

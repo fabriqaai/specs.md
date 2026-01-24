@@ -13,6 +13,7 @@ import type {
     ArtifactType,
     TabId,
     FilterType,
+    FlowType,
     EventProperties,
 } from './types';
 
@@ -29,10 +30,12 @@ const ENGAGEMENT_EVENTS = {
  *
  * @param fromTab - Previous tab (null on first navigation)
  * @param toTab - New active tab
+ * @param flowType - Flow type (aidlc or fire)
  */
 export function trackTabChanged(
     fromTab: TabId | null,
-    toTab: TabId
+    toTab: TabId,
+    flowType: FlowType = 'aidlc'
 ): void {
     try {
         // Don't track if navigating to same tab
@@ -41,6 +44,7 @@ export function trackTabChanged(
         }
 
         const properties: EventProperties = {
+            flow_type: flowType,
             from_tab: fromTab,
             to_tab: toTab,
         };
@@ -52,7 +56,7 @@ export function trackTabChanged(
 }
 
 /**
- * Track bolt action event
+ * Track bolt action event (AI-DLC specific)
  *
  * @param action - Type of action performed
  * @param boltType - Type of bolt (normalized)
@@ -65,6 +69,7 @@ export function trackBoltAction(
 ): void {
     try {
         const properties: EventProperties = {
+            flow_type: 'aidlc' as FlowType,
             action,
             bolt_type: boltType,
             bolt_status: boltStatus,
@@ -81,13 +86,16 @@ export function trackBoltAction(
  *
  * @param artifactType - Type of artifact opened
  * @param source - Which view the artifact was opened from
+ * @param flowType - Flow type (aidlc or fire)
  */
 export function trackArtifactOpened(
     artifactType: ArtifactType,
-    source: TabId
+    source: TabId,
+    flowType: FlowType = 'aidlc'
 ): void {
     try {
         const properties: EventProperties = {
+            flow_type: flowType,
             artifact_type: artifactType,
             source,
         };
@@ -103,13 +111,16 @@ export function trackArtifactOpened(
  *
  * @param filterType - Type of filter changed
  * @param filterValue - New filter value
+ * @param flowType - Flow type (aidlc or fire)
  */
 export function trackFilterChanged(
     filterType: FilterType,
-    filterValue: string
+    filterValue: string,
+    flowType: FlowType = 'aidlc'
 ): void {
     try {
         const properties: EventProperties = {
+            flow_type: flowType,
             filter_type: filterType,
             filter_value: sanitizeFilterValue(filterValue),
         };
