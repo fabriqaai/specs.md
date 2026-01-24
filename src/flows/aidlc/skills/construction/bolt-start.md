@@ -194,7 +194,7 @@ If the bolt type specifies automatic validation criteria, follow those rules.
 ┌─────────────────────────────────────────────────────────────┐
 │  FINAL STAGE DETECTED                                       │
 │  → Re-read Step 10 NOW                                     │
-│  → You MUST run: node .specsmd/aidlc/scripts/bolt-complete.js │
+│  → You MUST run: node .specsmd/aidlc/scripts/bolt-complete.cjs │
 │  → Do NOT manually edit story files                        │
 └─────────────────────────────────────────────────────────────┘
 ```
@@ -235,7 +235,7 @@ stages_completed:
 ⛔ HARD GATE - SCRIPT EXECUTION REQUIRED
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 You CANNOT report bolt completion without:
-1. Running the bolt-complete.js script
+1. Running the bolt-complete.cjs script
 2. Showing the script output to the user
 
 If you skip this, the memory-bank becomes inconsistent.
@@ -245,7 +245,7 @@ Do NOT manually edit story files - the script handles everything.
 **Run this command:**
 
 ```bash
-node .specsmd/aidlc/scripts/bolt-complete.js {bolt-id}
+node .specsmd/aidlc/scripts/bolt-complete.cjs {bolt-id}
 ```
 
 **What this command does (deterministically):**

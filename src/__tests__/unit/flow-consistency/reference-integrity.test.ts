@@ -26,12 +26,12 @@ beforeAll(async () => {
 describe('Flow Files - Reference Integrity', () => {
 
   describe('Skills should reference existing scripts', () => {
-    it('bolt-start.md should reference existing bolt-complete.js', async () => {
+    it('bolt-start.md should reference existing bolt-complete.cjs', async () => {
       const content = await readFlowFile('skills/construction/bolt-start.md');
 
       expect(content).toMatch(/bolt-complete\.js/);
 
-      const scriptPath = path.join(SCRIPTS_PATH, 'bolt-complete.js');
+      const scriptPath = path.join(SCRIPTS_PATH, 'bolt-complete.cjs');
       const exists = await fs.pathExists(scriptPath);
 
       if (!exists) {

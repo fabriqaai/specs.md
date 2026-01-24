@@ -7,8 +7,8 @@
  * Status must cascade correctly: Bolt complete → Stories complete → Unit complete → Intent complete
  *
  * Usage:
- *   node .specsmd/aidlc/scripts/status-integrity.js
- *   node .specsmd/aidlc/scripts/status-integrity.js --fix
+ *   node .specsmd/aidlc/scripts/status-integrity.cjs
+ *   node .specsmd/aidlc/scripts/status-integrity.cjs --fix
  *
  * Cross-platform: Works on Linux, macOS, Windows via Node.js
  */
@@ -577,15 +577,15 @@ const shouldFix = args.includes('--fix') || args.includes('-f');
 
 if (args.includes('--help') || args.includes('-h')) {
     console.log(`
-Usage: node status-integrity.js [options]
+Usage: node status-integrity.cjs [options]
 
 Options:
   --fix, -f    Automatically fix status inconsistencies
   --help, -h   Show this help message
 
 Examples:
-  node .specsmd/aidlc/scripts/status-integrity.js
-  node .specsmd/aidlc/scripts/status-integrity.js --fix
+  node .specsmd/aidlc/scripts/status-integrity.cjs
+  node .specsmd/aidlc/scripts/status-integrity.cjs --fix
 `);
     process.exit(0);
 }

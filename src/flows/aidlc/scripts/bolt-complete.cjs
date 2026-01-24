@@ -115,11 +115,11 @@
  *
  *   From agent skill (bolt-start.md Step 10):
  *
- *     node .specsmd/aidlc/scripts/bolt-complete.js 016-analytics-tracker
+ *     node .specsmd/aidlc/scripts/bolt-complete.cjs 016-analytics-tracker
  *
  *   With optional stage name:
  *
- *     node .specsmd/aidlc/scripts/bolt-complete.js 016-analytics-tracker --last-stage test
+ *     node .specsmd/aidlc/scripts/bolt-complete.cjs 016-analytics-tracker --last-stage test
  *
  * ═══════════════════════════════════════════════════════════════════════════════
  */
@@ -594,7 +594,7 @@ const lastStage = process.argv['--last-stage'] || null;
 
 if (!boltId) {
     console.error(`${colors.red}Error:${colors.reset} Bolt ID required`);
-    console.error(`${colors.dim}Usage: node bolt-complete.js <bolt-id> [--last-stage <stage-name>]${colors.reset}`);
+    console.error(`${colors.dim}Usage: node bolt-complete.cjs <bolt-id> [--last-stage <stage-name>]${colors.reset}`);
     process.exit(1);
 }
 
