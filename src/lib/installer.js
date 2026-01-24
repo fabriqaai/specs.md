@@ -174,18 +174,17 @@ async function install() {
     CLIUtils.displayNextSteps(nextSteps);
 
     // Display IDE extension info with brand colors
-    const extensionInfo = [
-      CLIUtils.logoGradient('Enhance your experience with the specsmd IDE extension!'),
-      '',
-      `${theme.primary('Learn more:')}               ${LINKS.ideExtension}`,
-      `${theme.primary('VS Code:')}                  ${LINKS.vscodeMarketplace}`,
-      `${theme.primary('Cursor/Antigravity/Windsurf:')} ${LINKS.openVsx}`
-    ].join('\n');
-    CLIUtils.displayBox(extensionInfo, {
-      title: CLIUtils.logoGradient(' ★ IDE Extension ★ '),
-      borderColor: 'primary',
-      padding: 1
-    });
+    console.log('\n' + theme.primary('─'.repeat(72)));
+    console.log(CLIUtils.logoGradient('  ★ IDE Extension'));
+    console.log(theme.primary('─'.repeat(72)));
+    console.log('');
+    console.log('  ' + CLIUtils.logoGradient('Enhance your experience with the specsmd IDE extension!'));
+    console.log('');
+    console.log(`  ${theme.primary('Learn more:')}                ${LINKS.ideExtension}`);
+    console.log(`  ${theme.primary('VS Code:')}                   ${LINKS.vscodeMarketplace}`);
+    console.log(`  ${theme.primary('Cursor/Antigravity/Windsurf:')} ${LINKS.openVsx}`);
+    console.log('');
+    console.log(theme.primary('─'.repeat(72)) + '\n');
     console.log('');
   } catch (error) {
     // Track installation failure
