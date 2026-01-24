@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - 'CHANGELOG.md'
+  workflow_dispatch:  # Manual trigger for testing
 
 concurrency:
   group: tweet-changelog
