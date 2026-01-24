@@ -10,7 +10,7 @@ Choose the flow that matches your project needs: **Simple** for quick specs, **F
 
 [![npm version](https://img.shields.io/npm/v/specsmd)](https://www.npmjs.com/package/specsmd)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Documentation](https://img.shields.io/badge/docs-specs.md-CD6B4D)](https://docs.specs.md)
+[![Documentation](https://img.shields.io/badge/docs-specs.md-CD6B4D)](https://specs.md)
 
 <p align="center">
   <img src="docs.specs.md/images/quickstart.gif" alt="specs.md demo" width="800" />
@@ -95,7 +95,7 @@ specs/
     └── tasks.md
 ```
 
-[Simple Flow Documentation →](https://docs.specs.md/simple-flow/overview)
+[Simple Flow Documentation →](https://specs.md/simple-flow/overview)
 
 ---
 
@@ -127,7 +127,7 @@ specs/
 └── walkthroughs/        # Generated documentation
 ```
 
-[FIRE Flow Documentation →](https://docs.specs.md/fire-flow/overview)
+[FIRE Flow Documentation →](https://specs.md/fire-flow/overview)
 
 ---
 
@@ -162,7 +162,7 @@ memory-bank/
 └── operations/          # Deployment context
 ```
 
-[AI-DLC Flow Documentation →](https://docs.specs.md/aidlc/overview)
+[AI-DLC Flow Documentation →](https://specs.md/aidlc/overview)
 
 ---
 
@@ -306,8 +306,8 @@ specs.md supports everything from quick prototypes (Simple) to complex enterpris
 
 ## Resources
 
-- [Documentation](https://docs.specs.md)
-- [Choose Your Flow Guide](https://docs.specs.md/architecture/choose-flow)
+- [Documentation](https://specs.md)
+- [Choose Your Flow Guide](https://specs.md/architecture/choose-flow)
 - [AI-DLC Specification (AWS)](https://aws.amazon.com/blogs/devops/ai-driven-development-life-cycle/)
 - [npm Package](https://www.npmjs.com/package/specsmd)
 - [GitHub Issues](https://github.com/fabriqaai/specs.md/issues)
