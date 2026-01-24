@@ -31,7 +31,10 @@ const FLOWS = {
 
 const LINKS = {
     website: 'https://specs.md',
-    flows: 'https://specs.md/flows'
+    flows: 'https://specs.md/architecture/flows',
+    ideExtension: 'https://specs.md/getting-started/ide-extension',
+    vscodeMarketplace: 'https://marketplace.visualstudio.com/items?itemName=fabriqaai.specsmd',
+    openVsx: 'https://open-vsx.org/extension/fabriqaai/specsmd'
 };
 
 module.exports = {

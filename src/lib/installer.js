@@ -172,6 +172,21 @@ async function install() {
       `Open ${selectedToolNames.join(' or ')} and run /specsmd-master-agent`
     ];
     CLIUtils.displayNextSteps(nextSteps);
+
+    // Display IDE extension info
+    const extensionInfo = [
+      'Enhance your experience with the specsmd IDE extension!',
+      '',
+      `${theme.info('Learn more:')}      ${LINKS.ideExtension}`,
+      `${theme.info('VS Code:')}         ${LINKS.vscodeMarketplace}`,
+      `${theme.info('Cursor/Windsurf:')} ${LINKS.openVsx}`
+    ].join('\n');
+    CLIUtils.displayBox(extensionInfo, {
+      title: 'IDE Extension',
+      borderColor: 'info',
+      padding: 1
+    });
+    console.log('');
   } catch (error) {
     // Track installation failure
     const errorCategory = categorizeError(error);
