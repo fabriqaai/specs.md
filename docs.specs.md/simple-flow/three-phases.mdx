@@ -7,16 +7,16 @@ description: "Requirements, Design, and Tasks in Simple Flow"
 
 Simple Flow guides you through three sequential phases, each producing a markdown document:
 
-```mermaid
-graph LR
-    A[Feature Idea] --> B[Requirements]
-    B --> C[Design]
-    C --> D[Tasks]
-    D --> E[Execute]
-
-    style B fill:#818CF8,stroke:#6366F1,color:#fff
-    style C fill:#34D399,stroke:#10B981,color:#fff
-    style D fill:#FBBF24,stroke:#F59E0B,color:#fff
+```mermaid actions={false}
+flowchart LR
+    A(Feature Idea):::build --> B(Requirements):::plan
+    B --> C(Design):::build
+    C --> D(Tasks):::warn
+    D --> E(Execute):::done
+    classDef plan fill:#fff,stroke:#6366F1,color:#4338CA,stroke-width:1.5px,rx:8,ry:8
+    classDef build fill:#fff,stroke:#0EA5E9,color:#0369A1,stroke-width:1.5px,rx:8,ry:8
+    classDef warn fill:#fff,stroke:#F59E0B,color:#B45309,stroke-width:1.5px,rx:8,ry:8
+    classDef done fill:#fff,stroke:#10B981,color:#047857,stroke-width:1.5px,rx:8,ry:8
 ```
 
 Each phase requires explicit approval before proceeding to the next.
@@ -92,23 +92,22 @@ Define **how** to build it with technical architecture.
 
 All visual diagrams use Mermaid syntax:
 
-```mermaid
-graph TB
+```mermaid actions={false}
+flowchart TB
     subgraph Frontend
-        UI[Login Form]
+        UI(Login Form):::plan
     end
 
     subgraph Backend
-        API[Auth API]
-        DB[(User DB)]
+        API(Auth API):::build
+        DB[(User DB)]:::done
     end
 
     UI --> API
     API --> DB
-
-    style UI fill:#818CF8,stroke:#6366F1,color:#fff
-    style API fill:#34D399,stroke:#10B981,color:#fff
-    style DB fill:#60A5FA,stroke:#3B82F6,color:#fff
+    classDef plan fill:#fff,stroke:#6366F1,color:#4338CA,stroke-width:1.5px,rx:8,ry:8
+    classDef build fill:#fff,stroke:#0EA5E9,color:#0369A1,stroke-width:1.5px,rx:8,ry:8
+    classDef done fill:#fff,stroke:#10B981,color:#047857,stroke-width:1.5px,rx:8,ry:8
 ```
 
 ### Example Data Model

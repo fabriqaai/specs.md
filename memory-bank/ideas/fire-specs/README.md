@@ -290,10 +290,14 @@ intents:
       - id: session-management
         status: in_progress
 
-active_run:
-  id: run-002
-  work_item: session-management
-  started: 2026-01-19T10:00:00Z
+runs:
+  active:
+    - id: run-002
+      work_items:
+        - session-management
+      current_item: session-management
+      started: 2026-01-19T10:00:00Z
+  completed: []
 ```
 
 State updates are handled by TypeScript scripts for consistency.

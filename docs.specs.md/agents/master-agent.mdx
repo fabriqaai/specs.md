@@ -139,29 +139,29 @@ The agent provides context-aware answers using:
 
 The Master Agent doesn't have checkpoints - it routes to specialized agents based on project state:
 
-```mermaid
+```mermaid actions={false}
 flowchart TB
-    Start[/specsmd-master-agent/] --> Check{Standards exist?}
+    Start(specsmd-master-agent):::design --> Check{{"Standards exist?"}}:::check
 
     Check -->|No| New[New User Flow]
     Check -->|Yes| Return[Returning User Flow]
 
     subgraph New[New User]
-        E[Explain AI-DLC] --> Init[Project Init]
+        E(Explain AI-DLC):::plan --> Init(Project Init):::plan
     end
 
     subgraph Return[Returning User]
-        Analyze[Analyze Context] --> Route[Route to Agent]
+        Analyze(Analyze Context):::build --> Route(Route to Agent):::build
     end
 
-    Route --> IA[Inception Agent]
-    Route --> CA[Construction Agent]
-    Route --> OA[Operations Agent]
-
-    style Check fill:#F472B6,stroke:#EC4899,color:#fff
-    style IA fill:#818CF8,stroke:#6366F1,color:#fff
-    style CA fill:#34D399,stroke:#10B981,color:#fff
-    style OA fill:#FBBF24,stroke:#F59E0B,color:#fff
+    Route --> IA(Inception Agent):::plan
+    Route --> CA(Construction Agent):::build
+    Route --> OA(Operations Agent):::warn
+    classDef design fill:#fff,stroke:#A855F7,color:#7E22CE,stroke-width:1.5px,rx:8,ry:8
+    classDef plan fill:#fff,stroke:#6366F1,color:#4338CA,stroke-width:1.5px,rx:8,ry:8
+    classDef build fill:#fff,stroke:#0EA5E9,color:#0369A1,stroke-width:1.5px,rx:8,ry:8
+    classDef warn fill:#fff,stroke:#F59E0B,color:#B45309,stroke-width:1.5px,rx:8,ry:8
+    classDef check fill:#fff,stroke:#EC4899,color:#BE185D,stroke-width:2px,rx:8,ry:8
 ```
 
 <Info>

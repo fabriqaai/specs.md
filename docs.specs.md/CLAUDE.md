@@ -96,78 +96,72 @@ description: Brief description for SEO
 ---
 ```
 
-## Mermaid Diagram Theme
+## Mermaid Diagram Style Guide
 
-Use consistent styling for all Mermaid diagrams. Copy these styles into your diagrams.
+Modern, clean mermaid diagrams with **white backgrounds**, colored strokes, and rounded corners.
 
-### Color Palette
+### Key Rules
 
-| Role               | Color  | Hex       | Usage                         |
-|--------------------|--------|-----------|-------------------------------|
-| Master/Primary     | Purple | `#8B5CF6` | Master Agent, primary elements |
-| Inception          | Indigo | `#818CF8` | Inception phase, planning     |
-| Construction       | Green  | `#34D399` | Construction phase, building  |
-| Operations         | Amber  | `#FBBF24` | Operations phase, deployment  |
-| Human/Validation   | Pink   | `#F472B6` | Human review, checkpoints     |
-| AI/System          | Cyan   | `#22D3EE` | AI actions, automation        |
-| Core/Infrastructure| Blue   | `#60A5FA` | Core components               |
-| High Risk          | Red    | `#EF4444` | Critical systems, validate mode |
-| FIRE Flow          | Orange | `#F59E0B` | FIRE flow identity in diagrams |
-| Future/Placeholder | Gray   | `#64748B` | Planned features              |
+1. **Always use `actions={false}`** to hide zoom/pan controls
+2. **Use `flowchart`** instead of `graph` for better styling support
+3. **Use `classDef`** for reusable styles instead of inline `style` statements
+4. **Use rounded nodes `()`** for a softer, modern look
+5. **Use diamond nodes `{{}}`** for decision points/checkpoints
+6. **White backgrounds** with colored strokes for all nodes
+7. **Add `rx:8,ry:8`** for rounded corners
 
-### Standard Style Definitions
+### Color Palette (White Background Theme)
 
-**Agent Flow Diagram:**
-```
-style MA fill:#8B5CF6,stroke:#7C3AED,color:#fff
-style IA fill:#818CF8,stroke:#6366F1,color:#fff
-style CA fill:#34D399,stroke:#10B981,color:#fff
-style OA fill:#FBBF24,stroke:#F59E0B,color:#fff
-```
+| Role               | Fill      | Stroke    | Text      | Usage                         |
+|--------------------|-----------|-----------|-----------|-------------------------------|
+| Design/Primary     | `#fff`    | `#A855F7` | `#7E22CE` | Design phase, primary elements |
+| Plan/Inception     | `#fff`    | `#6366F1` | `#4338CA` | Planning phase                |
+| Build/Construction | `#fff`    | `#0EA5E9` | `#0369A1` | Building, implementation      |
+| Done/Success       | `#fff`    | `#10B981` | `#047857` | Completed states              |
+| Checkpoint/Human   | `#fff`    | `#EC4899` | `#BE185D` | Human review, validation (2px stroke) |
+| Warning/Operations | `#fff`    | `#F59E0B` | `#B45309` | Operations, warnings          |
 
-**Human Checkpoints Diagram:**
-```
-style Stage fill:#818CF8,stroke:#6366F1,color:#fff
-style Gate fill:#F472B6,stroke:#EC4899,color:#fff
-```
+### Standard Class Definitions
 
-**Role Comparison (Human vs AI):**
-```
-style Human fill:#60A5FA,stroke:#3B82F6,color:#fff
-style AI fill:#34D399,stroke:#10B981,color:#fff
-style Validate fill:#F472B6,stroke:#EC4899,color:#fff
+```mermaid
+classDef design fill:#fff,stroke:#A855F7,color:#7E22CE,stroke-width:1.5px,rx:8,ry:8
+classDef plan fill:#fff,stroke:#6366F1,color:#4338CA,stroke-width:1.5px,rx:8,ry:8
+classDef build fill:#fff,stroke:#0EA5E9,color:#0369A1,stroke-width:1.5px,rx:8,ry:8
+classDef done fill:#fff,stroke:#10B981,color:#047857,stroke-width:1.5px,rx:8,ry:8
+classDef check fill:#fff,stroke:#EC4899,color:#BE185D,stroke-width:2px,rx:8,ry:8
+classDef warn fill:#fff,stroke:#F59E0B,color:#B45309,stroke-width:1.5px,rx:8,ry:8
 ```
 
-**Framework Architecture:**
-```
-style Framework fill:#1E293B,stroke:#334155,color:#fff
-style Core fill:#0C4A6E,stroke:#0EA5E9,color:#fff
-style Flows fill:#052E16,stroke:#22C55E,color:#fff
-style Active fill:#22C55E,stroke:#16A34A,color:#fff
-style Future fill:#475569,stroke:#64748B,color:#fff,stroke-dasharray: 5 5
+### Example: Execution Flow
+
+```mermaid actions={false}
+flowchart TB
+    A(Plan):::plan --> B{{"✋ Approve"}}:::check --> C(Build):::build --> D(Done):::done
+    classDef plan fill:#fff,stroke:#6366F1,color:#4338CA,stroke-width:1.5px,rx:8,ry:8
+    classDef check fill:#fff,stroke:#EC4899,color:#BE185D,stroke-width:2px,rx:8,ry:8
+    classDef build fill:#fff,stroke:#0EA5E9,color:#0369A1,stroke-width:1.5px,rx:8,ry:8
+    classDef done fill:#fff,stroke:#10B981,color:#047857,stroke-width:1.5px,rx:8,ry:8
 ```
 
-**Bolt Types:**
-```
-style DDD fill:#8B5CF6,stroke:#7C3AED,color:#fff
-style Simple fill:#34D399,stroke:#10B981,color:#fff
-style Spike fill:#FBBF24,stroke:#F59E0B,color:#fff
+### Example: Agent Flow
+
+```mermaid actions={false}
+flowchart LR
+    U(User):::build --> O(Orchestrator):::design --> P(Planner):::plan
+    O --> B(Builder):::build
+    classDef design fill:#fff,stroke:#A855F7,color:#7E22CE,stroke-width:1.5px,rx:8,ry:8
+    classDef plan fill:#fff,stroke:#6366F1,color:#4338CA,stroke-width:1.5px,rx:8,ry:8
+    classDef build fill:#fff,stroke:#0EA5E9,color:#0369A1,stroke-width:1.5px,rx:8,ry:8
 ```
 
-**FIRE Flow Execution Modes:**
-```
-style Autopilot fill:#34D399,stroke:#10B981,color:#fff
-style Confirm fill:#818CF8,stroke:#6366F1,color:#fff
-style Validate fill:#8B5CF6,stroke:#7C3AED,color:#fff
-style HighRisk fill:#EF4444,stroke:#DC2626,color:#fff
-```
+### Example: Phase Diagram
 
-**FIRE Flow Work Items:**
-```
-style Intent fill:#8B5CF6,stroke:#7C3AED,color:#fff
-style WorkItem fill:#818CF8,stroke:#6366F1,color:#fff
-style Run fill:#34D399,stroke:#10B981,color:#fff
-style Done fill:#FBBF24,stroke:#F59E0B,color:#fff
+```mermaid actions={false}
+flowchart LR
+    I(Inception):::plan --> C(Construction):::build --> O(Operations):::warn
+    classDef plan fill:#fff,stroke:#6366F1,color:#4338CA,stroke-width:1.5px,rx:8,ry:8
+    classDef build fill:#fff,stroke:#0EA5E9,color:#0369A1,stroke-width:1.5px,rx:8,ry:8
+    classDef warn fill:#fff,stroke:#F59E0B,color:#B45309,stroke-width:1.5px,rx:8,ry:8
 ```
 
 ## Brand Colors

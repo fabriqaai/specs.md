@@ -116,24 +116,21 @@ FIRE is **Adaptive Spec-Driven Development**—it analyzes work complexity and y
 
 ## Flow Comparison Matrix
 
-```mermaid
-graph TD
+```mermaid actions={false}
+flowchart TD
     subgraph "Complexity vs Overhead"
-        S[Simple Flow]
-        F[FIRE Flow]
-        A[AI-DLC Flow]
+        S(Simple Flow):::plan
+        F(FIRE Flow):::warn
+        A(AI-DLC Flow):::design
     end
 
-    S -->|"Low complexity<br/>Low overhead"| Quick[Quick Specs]
-    F -->|"Medium complexity<br/>Low overhead"| Rapid[Rapid Execution]
-    A -->|"High complexity<br/>Full process"| Complete[Complete Lifecycle]
-
-    style S fill:#818CF8,stroke:#6366F1,color:#fff
-    style F fill:#F59E0B,stroke:#D97706,color:#fff
-    style A fill:#8B5CF6,stroke:#7C3AED,color:#fff
-    style Quick fill:#34D399,stroke:#10B981,color:#fff
-    style Rapid fill:#34D399,stroke:#10B981,color:#fff
-    style Complete fill:#34D399,stroke:#10B981,color:#fff
+    S -->|"Low complexity"| Quick(Quick Specs):::done
+    F -->|"Medium complexity"| Rapid(Rapid Execution):::done
+    A -->|"High complexity"| Complete(Complete Lifecycle):::done
+    classDef design fill:#fff,stroke:#A855F7,color:#7E22CE,stroke-width:1.5px,rx:8,ry:8
+    classDef plan fill:#fff,stroke:#6366F1,color:#4338CA,stroke-width:1.5px,rx:8,ry:8
+    classDef warn fill:#fff,stroke:#F59E0B,color:#B45309,stroke-width:1.5px,rx:8,ry:8
+    classDef done fill:#fff,stroke:#10B981,color:#047857,stroke-width:1.5px,rx:8,ry:8
 ```
 
 ## Switching Between Flows

@@ -128,52 +128,24 @@ A lightweight bolt for UI, integrations, and utilities:
 
 ### DDD Construction Checkpoints
 
-```mermaid
+```mermaid actions={false}
 flowchart LR
-    subgraph Stages
-        M[Model] --> D[Design] --> A[ADR] --> I[Implement] --> T[Test]
-    end
-
-    subgraph Gates
-        M -.-> G1[Human Review]
-        D -.-> G2[Human Review]
-        A -.-> G3[Human Review]
-        I -.-> G4[Human Review]
-        T -.-> G5[Human Review]
-    end
-
-    style M fill:#818CF8,stroke:#6366F1,color:#fff
-    style D fill:#818CF8,stroke:#6366F1,color:#fff
-    style A fill:#818CF8,stroke:#6366F1,color:#fff
-    style I fill:#34D399,stroke:#10B981,color:#fff
-    style T fill:#FBBF24,stroke:#F59E0B,color:#fff
-    style G1 fill:#F472B6,stroke:#EC4899,color:#fff
-    style G2 fill:#F472B6,stroke:#EC4899,color:#fff
-    style G3 fill:#F472B6,stroke:#EC4899,color:#fff
-    style G4 fill:#F472B6,stroke:#EC4899,color:#fff
-    style G5 fill:#F472B6,stroke:#EC4899,color:#fff
+    M(Model):::plan --> G1{{"✋"}}:::check --> D(Design):::plan --> G2{{"✋"}}:::check --> A(ADR):::plan --> G3{{"✋"}}:::check --> I(Implement):::build --> G4{{"✋"}}:::check --> T(Test):::done --> G5{{"✋"}}:::check
+    classDef plan fill:#fff,stroke:#6366F1,color:#4338CA,stroke-width:1.5px,rx:8,ry:8
+    classDef build fill:#fff,stroke:#0EA5E9,color:#0369A1,stroke-width:1.5px,rx:8,ry:8
+    classDef done fill:#fff,stroke:#10B981,color:#047857,stroke-width:1.5px,rx:8,ry:8
+    classDef check fill:#fff,stroke:#EC4899,color:#BE185D,stroke-width:2px,rx:8,ry:8
 ```
 
 ### Simple Construction Checkpoints
 
-```mermaid
+```mermaid actions={false}
 flowchart LR
-    subgraph Stages
-        P[Plan] --> I[Implement] --> T[Test]
-    end
-
-    subgraph Gates
-        P -.-> G1[Human Review]
-        I -.-> G2[Human Review]
-        T -.-> G3[Human Review]
-    end
-
-    style P fill:#818CF8,stroke:#6366F1,color:#fff
-    style I fill:#34D399,stroke:#10B981,color:#fff
-    style T fill:#FBBF24,stroke:#F59E0B,color:#fff
-    style G1 fill:#F472B6,stroke:#EC4899,color:#fff
-    style G2 fill:#F472B6,stroke:#EC4899,color:#fff
-    style G3 fill:#F472B6,stroke:#EC4899,color:#fff
+    P(Plan):::plan --> G1{{"✋"}}:::check --> I(Implement):::build --> G2{{"✋"}}:::check --> T(Test):::done --> G3{{"✋"}}:::check
+    classDef plan fill:#fff,stroke:#6366F1,color:#4338CA,stroke-width:1.5px,rx:8,ry:8
+    classDef build fill:#fff,stroke:#0EA5E9,color:#0369A1,stroke-width:1.5px,rx:8,ry:8
+    classDef done fill:#fff,stroke:#10B981,color:#047857,stroke-width:1.5px,rx:8,ry:8
+    classDef check fill:#fff,stroke:#EC4899,color:#BE185D,stroke-width:2px,rx:8,ry:8
 ```
 
 ## Executing Bolts

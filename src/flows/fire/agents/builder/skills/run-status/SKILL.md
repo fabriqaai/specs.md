@@ -15,7 +15,7 @@ Display current run status and progress.
 
 <flow>
   <step n="1" title="Check Active Run">
-    <action>Read state.yaml for active_run</action>
+    <action>Read state.yaml for runs.active[] array</action>
     <check if="no active run">
       <output>
         No active run. Last completed run: {last-run-id}

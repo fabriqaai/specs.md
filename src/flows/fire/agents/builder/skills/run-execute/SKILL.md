@@ -36,14 +36,14 @@ Supports both single-item and multi-item (batch/wide) runs.
   Before starting execution, check if resuming an interrupted run:
 
   <step n="0" title="Check for Active Run">
-    <action>Check state.yaml for active_run</action>
+    <action>Check state.yaml for runs.active[] array</action>
 
-    <check if="no active_run">
+    <check if="runs.active is empty">
       <goto step="1">No active run, start fresh</goto>
     </check>
 
-    <check if="active_run exists">
-      <action>Load run state from .specs-fire/runs/{active_run.id}/run.md</action>
+    <check if="runs.active has entries">
+      <action>Load run state from .specs-fire/runs/{runs.active[0].id}/run.md</action>
       <action>Get current_item and its status from state.yaml</action>
       <action>Check for existing artifacts and LOAD if present:</action>
 
@@ -131,7 +131,7 @@ Supports both single-item and multi-item (batch/wide) runs.
   <step n="2" title="Load Work Item Context">
     <note>For batch runs, repeat steps 2-6b for each work item</note>
 
-    <action>Get current_item from state.yaml active_run</action>
+    <action>Get current_item from state.yaml runs.active[0]</action>
     <action>Load work item from .specs-fire/intents/{intent}/work-items/{id}.md</action>
     <action>Read intent brief for broader context</action>
     <action>Load project standards using hierarchical resolution:</action>

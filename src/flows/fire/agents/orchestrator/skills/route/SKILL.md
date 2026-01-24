@@ -42,11 +42,11 @@ Analyze project state and route user to the appropriate agent.
   </step>
 
   <step n="2" title="Check Active Run">
-    <check if="active_run exists and status == in_progress">
+    <check if="runs.active is not empty">
       <output>
-        Resuming active run: {active_run.id}
-        Scope: {active_run.scope}
-        Current item: {active_run.current_item}
+        Resuming active run: {runs.active[0].id}
+        Scope: {runs.active[0].scope}
+        Current item: {runs.active[0].current_item}
         Progress: {completed_count}/{total_count} items
       </output>
       <route_to>builder-agent (run-execute)</route_to>
@@ -107,7 +107,7 @@ Analyze project state and route user to the appropriate agent.
   ```
   state.yaml + file system scan
       │
-      ├── active_run? ──────────────> Builder (run-execute, resume)
+      ├── runs.active? ─────────────> Builder (run-execute, resume)
       │
       ├── pending work items? ──────> Builder (run-plan, then execute)
       │

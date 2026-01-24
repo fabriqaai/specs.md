@@ -219,29 +219,23 @@ The Construction Agent's checkpoints are defined by the bolt type. Each bolt typ
 
 ### DDD Construction (5 checkpoints)
 
-```mermaid
+```mermaid actions={false}
 flowchart LR
-    M[Model] --> G1{Gate}
-    G1 --> D[Design]
-    D --> G2{Gate}
-    G2 --> A[ADR]
-    A --> G3{Gate}
-    G3 --> I[Implement]
-    I --> G4{Gate}
-    G4 --> T[Test]
-    T --> G5{Gate}
-    G5 --> Done((Done))
-
-    style G1 fill:#F472B6,stroke:#EC4899,color:#fff
-    style G2 fill:#F472B6,stroke:#EC4899,color:#fff
-    style G3 fill:#F472B6,stroke:#EC4899,color:#fff
-    style G4 fill:#F472B6,stroke:#EC4899,color:#fff
-    style G5 fill:#F472B6,stroke:#EC4899,color:#fff
-    style M fill:#818CF8,stroke:#6366F1,color:#fff
-    style D fill:#818CF8,stroke:#6366F1,color:#fff
-    style A fill:#818CF8,stroke:#6366F1,color:#fff
-    style I fill:#34D399,stroke:#10B981,color:#fff
-    style T fill:#FBBF24,stroke:#F59E0B,color:#fff
+    M(Model):::plan --> G1{{"✋"}}:::check
+    G1 --> D(Design):::plan
+    D --> G2{{"✋"}}:::check
+    G2 --> A(ADR):::plan
+    A --> G3{{"✋"}}:::check
+    G3 --> I(Implement):::build
+    I --> G4{{"✋"}}:::check
+    G4 --> T(Test):::warn
+    T --> G5{{"✋"}}:::check
+    G5 --> Done((Done)):::done
+    classDef plan fill:#fff,stroke:#6366F1,color:#4338CA,stroke-width:1.5px,rx:8,ry:8
+    classDef build fill:#fff,stroke:#0EA5E9,color:#0369A1,stroke-width:1.5px,rx:8,ry:8
+    classDef warn fill:#fff,stroke:#F59E0B,color:#B45309,stroke-width:1.5px,rx:8,ry:8
+    classDef check fill:#fff,stroke:#EC4899,color:#BE185D,stroke-width:2px,rx:8,ry:8
+    classDef done fill:#fff,stroke:#10B981,color:#047857,stroke-width:1.5px,rx:8,ry:8
 ```
 
 | Gate | After Stage | Purpose |
@@ -254,21 +248,19 @@ flowchart LR
 
 ### Simple Construction (3 checkpoints)
 
-```mermaid
+```mermaid actions={false}
 flowchart LR
-    S[Spec] --> G1{Gate}
-    G1 --> I[Implement]
-    I --> G2{Gate}
-    G2 --> T[Test]
-    T --> G3{Gate}
-    G3 --> Done((Done))
-
-    style G1 fill:#F472B6,stroke:#EC4899,color:#fff
-    style G2 fill:#F472B6,stroke:#EC4899,color:#fff
-    style G3 fill:#F472B6,stroke:#EC4899,color:#fff
-    style S fill:#818CF8,stroke:#6366F1,color:#fff
-    style I fill:#34D399,stroke:#10B981,color:#fff
-    style T fill:#FBBF24,stroke:#F59E0B,color:#fff
+    S(Spec):::plan --> G1{{"✋"}}:::check
+    G1 --> I(Implement):::build
+    I --> G2{{"✋"}}:::check
+    G2 --> T(Test):::warn
+    T --> G3{{"✋"}}:::check
+    G3 --> Done((Done)):::done
+    classDef plan fill:#fff,stroke:#6366F1,color:#4338CA,stroke-width:1.5px,rx:8,ry:8
+    classDef build fill:#fff,stroke:#0EA5E9,color:#0369A1,stroke-width:1.5px,rx:8,ry:8
+    classDef warn fill:#fff,stroke:#F59E0B,color:#B45309,stroke-width:1.5px,rx:8,ry:8
+    classDef check fill:#fff,stroke:#EC4899,color:#BE185D,stroke-width:2px,rx:8,ry:8
+    classDef done fill:#fff,stroke:#10B981,color:#047857,stroke-width:1.5px,rx:8,ry:8
 ```
 
 | Gate | After Stage | Purpose |

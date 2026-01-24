@@ -5,7 +5,7 @@
  *
  * Supports both single and batch/wide runs.
  *
- * For single runs: Completes the run and clears active_run.
+ * For single runs: Completes the run and removes from runs.active[].
  * For batch/wide runs:
  *   - --complete-item: Marks current work item done, moves to next
  *   - --complete-run: Marks all items done and finalizes entire run

@@ -7,21 +7,18 @@ description: Understanding the specs.md flow architecture
 
 specs.md is built as a **pluggable framework** where development methodologies are implemented as **flows**. Choose the flow that matches your project needs.
 
-```mermaid
+```mermaid actions={false}
 flowchart TB
     subgraph Framework[specs.md Framework]
         subgraph Flows[Available Flows]
-            Simple[Simple Flow<br/>Spec Generation]
-            FIRE[FIRE Flow<br/>Rapid Execution]
-            AIDLC[AI-DLC Flow<br/>Full Methodology]
+            Simple(Simple Flow):::plan
+            FIRE(FIRE Flow):::warn
+            AIDLC(AI-DLC Flow):::design
         end
     end
-
-    style Framework fill:#1E293B,stroke:#334155,color:#fff
-    style Flows fill:#052E16,stroke:#22C55E,color:#fff
-    style Simple fill:#818CF8,stroke:#6366F1,color:#fff
-    style FIRE fill:#F59E0B,stroke:#D97706,color:#fff
-    style AIDLC fill:#8B5CF6,stroke:#7C3AED,color:#fff
+    classDef design fill:#fff,stroke:#A855F7,color:#7E22CE,stroke-width:1.5px,rx:8,ry:8
+    classDef plan fill:#fff,stroke:#6366F1,color:#4338CA,stroke-width:1.5px,rx:8,ry:8
+    classDef warn fill:#fff,stroke:#F59E0B,color:#B45309,stroke-width:1.5px,rx:8,ry:8
 ```
 
 ## What is a Flow?
@@ -74,18 +71,18 @@ A **flow** is a complete development methodology implementation that includes:
 
 **FIRE (Fast Intent-Run Engineering)** is an Adaptive Spec-Driven Development flow. It right-sizes the rigor to complexity—design docs when needed, implementation plans otherwise.
 
-```mermaid
+```mermaid actions={false}
 flowchart LR
-    O[Orchestrator] --> P[Planner]
-    O --> B[Builder]
-    P --> S[(State)]
+    O(Orchestrator):::design --> P(Planner):::plan
+    O --> B(Builder):::build
+    P --> S[(State)]:::warn
     B --> S
-    B --> C[Codebase]
-
-    style O fill:#8B5CF6,stroke:#7C3AED,color:#fff
-    style P fill:#818CF8,stroke:#6366F1,color:#fff
-    style B fill:#34D399,stroke:#10B981,color:#fff
-    style S fill:#FBBF24,stroke:#F59E0B,color:#fff
+    B --> C[(Codebase)]:::done
+    classDef design fill:#fff,stroke:#A855F7,color:#7E22CE,stroke-width:1.5px,rx:8,ry:8
+    classDef plan fill:#fff,stroke:#6366F1,color:#4338CA,stroke-width:1.5px,rx:8,ry:8
+    classDef build fill:#fff,stroke:#0EA5E9,color:#0369A1,stroke-width:1.5px,rx:8,ry:8
+    classDef warn fill:#fff,stroke:#F59E0B,color:#B45309,stroke-width:1.5px,rx:8,ry:8
+    classDef done fill:#fff,stroke:#10B981,color:#047857,stroke-width:1.5px,rx:8,ry:8
 ```
 
 | Aspect | Details |
@@ -103,18 +100,16 @@ flowchart LR
 
 **AI-DLC (AI-Driven Development Lifecycle)** is the full methodology with DDD and comprehensive traceability.
 
-```mermaid
+```mermaid actions={false}
 flowchart TB
-    MA[Master Agent] --> IA[Inception]
-    MA --> CA[Construction]
-    MA --> OA[Operations]
-
+    MA(Master Agent):::design --> IA(Inception):::plan
+    MA --> CA(Construction):::build
+    MA --> OA(Operations):::warn
     IA --> CA --> OA
-
-    style MA fill:#8B5CF6,stroke:#7C3AED,color:#fff
-    style IA fill:#818CF8,stroke:#6366F1,color:#fff
-    style CA fill:#34D399,stroke:#10B981,color:#fff
-    style OA fill:#FBBF24,stroke:#F59E0B,color:#fff
+    classDef design fill:#fff,stroke:#A855F7,color:#7E22CE,stroke-width:1.5px,rx:8,ry:8
+    classDef plan fill:#fff,stroke:#6366F1,color:#4338CA,stroke-width:1.5px,rx:8,ry:8
+    classDef build fill:#fff,stroke:#0EA5E9,color:#0369A1,stroke-width:1.5px,rx:8,ry:8
+    classDef warn fill:#fff,stroke:#F59E0B,color:#B45309,stroke-width:1.5px,rx:8,ry:8
 ```
 
 | Aspect | Details |

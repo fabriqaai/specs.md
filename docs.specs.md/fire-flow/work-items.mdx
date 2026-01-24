@@ -7,28 +7,21 @@ description: The core units of execution in FIRE flow
 
 FIRE uses a streamlined hierarchy compared to AI-DLC:
 
-```mermaid
-graph TD
-    I[Intent] --> W1[Work Item 1]
-    I --> W2[Work Item 2]
-    I --> W3[Work Item 3]
-    W1 --> R1[Run]
-    W2 --> R2[Run]
-    W3 --> R3[Run]
-    R1 --> T1[Walkthrough]
-    R2 --> T2[Walkthrough]
-    R3 --> T3[Walkthrough]
-
-    style I fill:#8B5CF6,stroke:#7C3AED,color:#fff
-    style W1 fill:#818CF8,stroke:#6366F1,color:#fff
-    style W2 fill:#818CF8,stroke:#6366F1,color:#fff
-    style W3 fill:#818CF8,stroke:#6366F1,color:#fff
-    style R1 fill:#34D399,stroke:#10B981,color:#fff
-    style R2 fill:#34D399,stroke:#10B981,color:#fff
-    style R3 fill:#34D399,stroke:#10B981,color:#fff
-    style T1 fill:#FBBF24,stroke:#F59E0B,color:#fff
-    style T2 fill:#FBBF24,stroke:#F59E0B,color:#fff
-    style T3 fill:#FBBF24,stroke:#F59E0B,color:#fff
+```mermaid actions={false}
+flowchart TD
+    I(Intent):::design --> W1(Work Item 1):::plan
+    I --> W2(Work Item 2):::plan
+    I --> W3(Work Item 3):::plan
+    W1 --> R1(Run):::build
+    W2 --> R2(Run):::build
+    W3 --> R3(Run):::build
+    R1 --> T1(Walkthrough):::done
+    R2 --> T2(Walkthrough):::done
+    R3 --> T3(Walkthrough):::done
+    classDef design fill:#fff,stroke:#A855F7,color:#7E22CE,stroke-width:1.5px,rx:8,ry:8
+    classDef plan fill:#fff,stroke:#6366F1,color:#4338CA,stroke-width:1.5px,rx:8,ry:8
+    classDef build fill:#fff,stroke:#0EA5E9,color:#0369A1,stroke-width:1.5px,rx:8,ry:8
+    classDef done fill:#fff,stroke:#10B981,color:#047857,stroke-width:1.5px,rx:8,ry:8
 ```
 
 | Level | FIRE | AI-DLC Equivalent |
@@ -172,7 +165,7 @@ A **Run** is a single execution cycle for a work item. It's atomic: either compl
 
 ### Run Lifecycle
 
-```mermaid
+```mermaid actions={false}
 stateDiagram-v2
     [*] --> Loading: Start Run
     Loading --> Planning: Context Loaded

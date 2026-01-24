@@ -11,16 +11,13 @@ description: Fast Intent-Run Engineering - Ship in hours with adaptive checkpoin
   **Check when necessary, not check everything.** FIRE dynamically decides when to ask for human input and when to burn through the task, saving your attention for moments that actually matter.
 </Info>
 
-```mermaid
-graph LR
-    I[Intent] --> W[Work Items]
-    W --> R[Runs]
-    R --> D[Done]
-
-    style I fill:#8B5CF6,stroke:#7C3AED,color:#fff
-    style W fill:#818CF8,stroke:#6366F1,color:#fff
-    style R fill:#34D399,stroke:#10B981,color:#fff
-    style D fill:#FBBF24,stroke:#F59E0B,color:#fff
+```mermaid actions={false}
+flowchart LR
+    I(Intent):::design --> W(Work Items):::plan --> R(Runs):::build --> D(Done):::done
+    classDef design fill:#fff,stroke:#A855F7,color:#7E22CE,stroke-width:1.5px,rx:8,ry:8
+    classDef plan fill:#fff,stroke:#6366F1,color:#4338CA,stroke-width:1.5px,rx:8,ry:8
+    classDef build fill:#fff,stroke:#0EA5E9,color:#0369A1,stroke-width:1.5px,rx:8,ry:8
+    classDef done fill:#fff,stroke:#10B981,color:#047857,stroke-width:1.5px,rx:8,ry:8
 ```
 
 ## Key Differentiators
@@ -153,52 +150,6 @@ FIRE doesn't guess—it analyzes two inputs to decide the execution path:
 
 These combine to dynamically choose when to ask and when to burn through:
 
-```mermaid
-graph LR
-    subgraph "Autopilot (0 checkpoints)"
-        A1[Plan] --> A2[Implement] --> A3[Test] --> A4[Review] --> A5[Walkthrough]
-    end
-
-    style A1 fill:#34D399,stroke:#10B981,color:#fff
-    style A2 fill:#34D399,stroke:#10B981,color:#fff
-    style A3 fill:#34D399,stroke:#10B981,color:#fff
-    style A4 fill:#34D399,stroke:#10B981,color:#fff
-    style A5 fill:#34D399,stroke:#10B981,color:#fff
-```
-*Zero stops. AI burns through.*
-
-```mermaid
-graph LR
-    subgraph "Confirm (1 checkpoint)"
-        C1[Plan] --> C2{{"✋ Approve Plan?"}} --> C3[Implement] --> C4[Test] --> C5[Review] --> C6[Walkthrough]
-    end
-
-    style C1 fill:#818CF8,stroke:#6366F1,color:#fff
-    style C2 fill:#F472B6,stroke:#EC4899,color:#fff
-    style C3 fill:#818CF8,stroke:#6366F1,color:#fff
-    style C4 fill:#818CF8,stroke:#6366F1,color:#fff
-    style C5 fill:#818CF8,stroke:#6366F1,color:#fff
-    style C6 fill:#818CF8,stroke:#6366F1,color:#fff
-```
-*One stop before coding.*
-
-```mermaid
-graph LR
-    subgraph "Validate (2 checkpoints)"
-        V1[Design] --> V2{{"✋ Approve Design?"}} --> V3[Plan] --> V4{{"✋ Approve Plan?"}} --> V5[Implement] --> V6[Test] --> V7[Review] --> V8[Walkthrough]
-    end
-
-    style V1 fill:#8B5CF6,stroke:#7C3AED,color:#fff
-    style V2 fill:#F472B6,stroke:#EC4899,color:#fff
-    style V3 fill:#8B5CF6,stroke:#7C3AED,color:#fff
-    style V4 fill:#F472B6,stroke:#EC4899,color:#fff
-    style V5 fill:#8B5CF6,stroke:#7C3AED,color:#fff
-    style V6 fill:#8B5CF6,stroke:#7C3AED,color:#fff
-    style V7 fill:#8B5CF6,stroke:#7C3AED,color:#fff
-    style V8 fill:#8B5CF6,stroke:#7C3AED,color:#fff
-```
-*Two stops. Design review, then plan approval.*
-
 | Mode | Checkpoints | Use For |
 |------|-------------|---------|
 | **Autopilot** | 0 | Bug fixes, minor updates, well-defined changes |
@@ -211,23 +162,9 @@ You configure your autonomy preference during project initialization:
   <img src="/images/fire_adaptive.png" alt="FIRE Autonomy Configuration" style={{ borderRadius: '8px' }} />
 </Frame>
 
-<Info>
-  Learn more about execution modes in the [Execution Modes](/fire-flow/execution-modes) guide.
-</Info>
-
-## Three-Agent Architecture
-
-FIRE uses three specialized agents:
-
-| Agent | Role | Key Skills |
-|-------|------|------------|
-| **Orchestrator** | Entry point, routing, session management | Route requests, resume sessions |
-| **Planner** | Intent capture, work item decomposition | Capture intents, generate design docs |
-| **Builder** | Run execution, walkthrough generation | Execute runs, track changes |
-
-<Info>
-  Learn more in the [FIRE Agents](/fire-flow/agents) documentation.
-</Info>
+<Card title="Execution Modes" icon="sliders" href="/fire-flow/execution-modes">
+  Learn how Autopilot, Confirm, and Validate modes work with detailed flow diagrams
+</Card>
 
 ## Project Structure
 

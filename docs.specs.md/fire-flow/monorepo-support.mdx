@@ -11,22 +11,22 @@ FIRE is designed from the ground up for real-world projects, including complex m
   <img src="/images/fire_monorepo.png" alt="FIRE Monorepo Detection" style={{ borderRadius: '8px' }} />
 </Frame>
 
-```mermaid
-graph TD
+```mermaid actions={false}
+flowchart TD
     subgraph "Project Root"
-        R[".specs-fire/standards/"]
-        C[constitution.md]
-        TS[tech-stack.md]
+        R(.specs-fire/standards/):::build
+        C(constitution.md):::design
+        TS(tech-stack.md):::plan
     end
 
     subgraph "packages/api"
-        A[".specs-fire/standards/"]
-        ATS[tech-stack.md - Go, Echo]
+        A(.specs-fire/standards/):::build
+        ATS(tech-stack.md - Go):::done
     end
 
     subgraph "packages/web"
-        W[".specs-fire/standards/"]
-        WTS[tech-stack.md - React, TypeScript]
+        W(.specs-fire/standards/):::build
+        WTS(tech-stack.md - React):::done
     end
 
     R --> C
@@ -35,11 +35,10 @@ graph TD
     C -.->|inherited| W
     TS -.->|overridden| ATS
     TS -.->|overridden| WTS
-
-    style C fill:#8B5CF6,stroke:#7C3AED,color:#fff
-    style TS fill:#818CF8,stroke:#6366F1,color:#fff
-    style ATS fill:#34D399,stroke:#10B981,color:#fff
-    style WTS fill:#34D399,stroke:#10B981,color:#fff
+    classDef design fill:#fff,stroke:#A855F7,color:#7E22CE,stroke-width:1.5px,rx:8,ry:8
+    classDef plan fill:#fff,stroke:#6366F1,color:#4338CA,stroke-width:1.5px,rx:8,ry:8
+    classDef build fill:#fff,stroke:#0EA5E9,color:#0369A1,stroke-width:1.5px,rx:8,ry:8
+    classDef done fill:#fff,stroke:#10B981,color:#047857,stroke-width:1.5px,rx:8,ry:8
 ```
 
 ## Hierarchical Standards
@@ -210,7 +209,7 @@ FIRE treats existing codebases as **first-class citizens**.
 
 For brownfield projects, FIRE infers standards from existing code:
 
-```mermaid
+```mermaid actions={false}
 sequenceDiagram
     participant U as User
     participant P as Planner

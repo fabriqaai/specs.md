@@ -109,20 +109,12 @@ If you're familiar with BMAD agents, here's how they map to AI-DLC:
 
 ## Complexity vs Control Trade-off
 
-```mermaid
-graph LR
-    subgraph Simplicity
-        SM[specs.md<br/>3 agents]
-    end
-    subgraph Complexity
-        BM[BMAD<br/>19+ agents]
-    end
-
-    SM --> |"More agents<br/>More control"| BM
+```mermaid actions={false}
+flowchart LR
+    SM(specs.md<br/>3 agents):::done --> |"More agents<br/>More control"| BM(BMAD<br/>19+ agents):::design
     BM --> |"Fewer agents<br/>Simpler mental model"| SM
-
-    style SM fill:#34D399,stroke:#10B981,color:#fff
-    style BM fill:#8B5CF6,stroke:#7C3AED,color:#fff
+    classDef design fill:#fff,stroke:#A855F7,color:#7E22CE,stroke-width:1.5px,rx:8,ry:8
+    classDef done fill:#fff,stroke:#10B981,color:#047857,stroke-width:1.5px,rx:8,ry:8
 ```
 
 ---

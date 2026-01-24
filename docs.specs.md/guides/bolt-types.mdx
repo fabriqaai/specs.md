@@ -7,22 +7,11 @@ description: A practical guide to selecting the right bolt type for your work
 
 The AI-DLC flow in specs.md provides two bolt types, each optimized for different types of work. Choosing the right bolt type ensures you have the appropriate level of rigor and structure for your task.
 
-```mermaid
+```mermaid actions={false}
 flowchart LR
-    subgraph DDD[DDD Construction]
-        D1[Complex domain logic]
-        D2[Business rules]
-        D3[5 stages - Most rigorous]
-    end
-
-    subgraph Simple[Simple Construction]
-        S1[UI, integrations]
-        S2[Utilities, CRUD]
-        S3[3 stages - Lightweight]
-    end
-
-    style DDD fill:#8B5CF6,stroke:#7C3AED,color:#fff
-    style Simple fill:#34D399,stroke:#10B981,color:#fff
+    DDD(DDD Construction<br/>Complex domain logic<br/>5 stages):::design --> Simple(Simple Construction<br/>UI, integrations<br/>3 stages):::done
+    classDef design fill:#fff,stroke:#A855F7,color:#7E22CE,stroke-width:1.5px,rx:8,ry:8
+    classDef done fill:#fff,stroke:#10B981,color:#047857,stroke-width:1.5px,rx:8,ry:8
 ```
 
 ## Quick Decision Guide

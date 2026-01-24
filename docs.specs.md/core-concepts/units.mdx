@@ -140,16 +140,15 @@ The agent will:
 
 Units should be loosely coupled, but some dependencies are natural:
 
-```mermaid
+```mermaid actions={false}
 flowchart TB
-    REG[Registration] -->|creates| SESSION[Session Mgmt]
-    LOGIN[Login] --> SESSION
-    PWD[Password Mgmt] -->|uses| SESSION
-
-    style REG fill:#818CF8,stroke:#6366F1,color:#fff
-    style LOGIN fill:#34D399,stroke:#10B981,color:#fff
-    style SESSION fill:#8B5CF6,stroke:#7C3AED,color:#fff
-    style PWD fill:#FBBF24,stroke:#F59E0B,color:#fff
+    REG(Registration):::plan -->|creates| SESSION(Session Mgmt):::design
+    LOGIN(Login):::done --> SESSION
+    PWD(Password Mgmt):::warn -->|uses| SESSION
+    classDef design fill:#fff,stroke:#A855F7,color:#7E22CE,stroke-width:1.5px,rx:8,ry:8
+    classDef plan fill:#fff,stroke:#6366F1,color:#4338CA,stroke-width:1.5px,rx:8,ry:8
+    classDef done fill:#fff,stroke:#10B981,color:#047857,stroke-width:1.5px,rx:8,ry:8
+    classDef warn fill:#fff,stroke:#F59E0B,color:#B45309,stroke-width:1.5px,rx:8,ry:8
 ```
 
 <Warning>

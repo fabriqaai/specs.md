@@ -16,65 +16,56 @@ FIRE's breakthrough is **adaptive checkpoints** that scale with complexity. Inst
 
 These combine to determine the execution mode:
 
-```mermaid
+```mermaid actions={false}
 flowchart LR
-    subgraph Inputs[" "]
-        WC[Work Complexity]
-        AC[Autonomy Config]
-    end
-
-    E{Adaptive<br/>Engine}
-
-    subgraph Modes[" "]
-        AP[Autopilot<br/>0 checkpoints]
-        CO[Confirm<br/>1 checkpoint]
-        VA[Validate<br/>2 checkpoints]
-    end
-
-    WC --> E
-    AC --> E
-    E --> AP
-    E --> CO
-    E --> VA
-
-    style WC fill:#60A5FA,stroke:#3B82F6,color:#fff
-    style AC fill:#60A5FA,stroke:#3B82F6,color:#fff
-    style E fill:#8B5CF6,stroke:#7C3AED,color:#fff
-    style AP fill:#34D399,stroke:#10B981,color:#fff
-    style CO fill:#FBBF24,stroke:#F59E0B,color:#fff
-    style VA fill:#EF4444,stroke:#DC2626,color:#fff
+    WC(Work Complexity):::build --> E{{"Adaptive Engine"}}:::design
+    AC(Autonomy Config):::build --> E
+    E --> AP(Autopilot):::done
+    E --> CO(Confirm):::plan
+    E --> VA(Validate):::check
+    classDef design fill:#fff,stroke:#A855F7,color:#7E22CE,stroke-width:1.5px,rx:8,ry:8
+    classDef plan fill:#fff,stroke:#6366F1,color:#4338CA,stroke-width:1.5px,rx:8,ry:8
+    classDef build fill:#fff,stroke:#0EA5E9,color:#0369A1,stroke-width:1.5px,rx:8,ry:8
+    classDef done fill:#fff,stroke:#10B981,color:#047857,stroke-width:1.5px,rx:8,ry:8
+    classDef check fill:#fff,stroke:#EC4899,color:#BE185D,stroke-width:2px,rx:8,ry:8
 ```
 
 ### Mode Comparison
 
-```mermaid
-flowchart TB
-    subgraph AUTO["Autopilot (0 checkpoints)"]
-        A1[AI Plans] --> A2[AI Executes] --> A3[Walkthrough]
-    end
-
-    subgraph CONF["Confirm (1 checkpoint)"]
-        C1[AI Plans] --> C2[Human Confirms] --> C3[AI Executes] --> C4[Walkthrough]
-    end
-
-    subgraph VALI["Validate (2 checkpoints)"]
-        V1[AI Designs] --> V2[Human Reviews] --> V3[AI Plans] --> V4[Human Approves] --> V5[AI Executes] --> V6[Walkthrough]
-    end
-
-    style A1 fill:#34D399,stroke:#10B981,color:#fff
-    style A2 fill:#34D399,stroke:#10B981,color:#fff
-    style A3 fill:#34D399,stroke:#10B981,color:#fff
-    style C1 fill:#818CF8,stroke:#6366F1,color:#fff
-    style C2 fill:#F472B6,stroke:#EC4899,color:#fff
-    style C3 fill:#818CF8,stroke:#6366F1,color:#fff
-    style C4 fill:#818CF8,stroke:#6366F1,color:#fff
-    style V1 fill:#8B5CF6,stroke:#7C3AED,color:#fff
-    style V2 fill:#F472B6,stroke:#EC4899,color:#fff
-    style V3 fill:#8B5CF6,stroke:#7C3AED,color:#fff
-    style V4 fill:#F472B6,stroke:#EC4899,color:#fff
-    style V5 fill:#8B5CF6,stroke:#7C3AED,color:#fff
-    style V6 fill:#8B5CF6,stroke:#7C3AED,color:#fff
-```
+<CardGroup cols={3}>
+  <Card title="Autopilot" icon="bolt">
+    ```mermaid actions={false}
+    flowchart TB
+        A1(Plan):::build --> A2(Execute):::build --> A3(Walkthrough):::build --> A4(Done):::done
+        classDef build fill:#fff,stroke:#0EA5E9,color:#0369A1,stroke-width:1.5px,rx:8,ry:8
+        classDef done fill:#fff,stroke:#10B981,color:#047857,stroke-width:1.5px,rx:8,ry:8
+    ```
+    **0 checkpoints** - AI executes directly
+  </Card>
+  <Card title="Confirm" icon="circle-check">
+    ```mermaid actions={false}
+    flowchart TB
+        C1(Plan):::plan --> C2{{"✋ Confirm"}}:::check --> C3(Execute):::build --> C4(Done):::done
+        classDef plan fill:#fff,stroke:#6366F1,color:#4338CA,stroke-width:1.5px,rx:8,ry:8
+        classDef build fill:#fff,stroke:#0EA5E9,color:#0369A1,stroke-width:1.5px,rx:8,ry:8
+        classDef done fill:#fff,stroke:#10B981,color:#047857,stroke-width:1.5px,rx:8,ry:8
+        classDef check fill:#fff,stroke:#EC4899,color:#BE185D,stroke-width:2px,rx:8,ry:8
+    ```
+    **1 checkpoint** - Human confirms plan
+  </Card>
+  <Card title="Validate" icon="shield-check">
+    ```mermaid actions={false}
+    flowchart TB
+        V1(Design):::design --> V2{{"✋ Review"}}:::check --> V3(Plan):::plan --> V4{{"✋ Approve"}}:::check --> V5(Execute):::build --> V6(Done):::done
+        classDef design fill:#fff,stroke:#A855F7,color:#7E22CE,stroke-width:1.5px,rx:8,ry:8
+        classDef plan fill:#fff,stroke:#6366F1,color:#4338CA,stroke-width:1.5px,rx:8,ry:8
+        classDef build fill:#fff,stroke:#0EA5E9,color:#0369A1,stroke-width:1.5px,rx:8,ry:8
+        classDef done fill:#fff,stroke:#10B981,color:#047857,stroke-width:1.5px,rx:8,ry:8
+        classDef check fill:#fff,stroke:#EC4899,color:#BE185D,stroke-width:2px,rx:8,ry:8
+    ```
+    **2 checkpoints** - Design + plan review
+  </Card>
+</CardGroup>
 
 ## Autopilot Mode (0 Checkpoints)
 
@@ -297,57 +288,4 @@ This prevents:
   </Accordion>
 </AccordionGroup>
 
-## Mode Override
 
-You can override the suggested mode:
-
-```
-Work Item: Add logging to payment service
-Suggested Mode: Autopilot
-
-> Override to Confirm
-
-Mode updated to Confirm.
-```
-
-<Warning>
-  **Never downgrade** security-sensitive work items. If FIRE suggests Validate, there's a reason.
-</Warning>
-
-## Default Mode by Project Type
-
-FIRE sets a default mode based on your project:
-
-| Project Type | Default Mode | Rationale |
-|--------------|--------------|-----------|
-| **Greenfield** | Confirm | New code, want to verify approach |
-| **Brownfield** | Confirm | Existing patterns to respect |
-| **Monorepo** | Confirm | Multiple modules, need coordination |
-| **Security-focused** | Validate | Higher stakes require more review |
-
-You can change the default in `state.yaml`:
-
-```yaml
-workspace:
-  default_mode: confirm  # autopilot, confirm, or validate
-```
-
-## Metrics
-
-FIRE tracks execution mode metrics:
-
-```yaml
-metrics:
-  runs_by_mode:
-    autopilot: 15
-    confirm: 8
-    validate: 3
-  first_run_success:
-    autopilot: 93%
-    confirm: 87%
-    validate: 95%
-```
-
-<Info>
-  High Validate success rates indicate the two-stage review catches issues before execution.
-</Info>

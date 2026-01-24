@@ -296,39 +296,6 @@ Plan the scope of a run by discovering available work items and suggesting group
   </step>
 </flow>
 
-<state_schema_updates>
-  **workspace section additions**:
-
-  ```yaml
-  workspace:
-    # ... existing fields ...
-    run_scope_preference: batch  # single | batch | wide (learned)
-    run_scope_history:
-      - choice: batch
-        items_count: 4
-        timestamp: 2026-01-19T10:00:00Z
-  ```
-
-  **active_run with multi-item support**:
-
-  ```yaml
-  active_run:
-    id: run-001
-    scope: batch  # single | batch | wide
-    work_items:
-      - id: 01-stats-data-model
-        intent: session-stats
-        mode: autopilot
-        status: completed
-      - id: 02-stats-api-endpoint
-        intent: session-stats
-        mode: autopilot
-        status: in_progress
-    current_item: 02-stats-api-endpoint
-    started: 2026-01-19T10:00:00Z
-  ```
-
-</state_schema_updates>
 
 <file_discovery_logic>
 

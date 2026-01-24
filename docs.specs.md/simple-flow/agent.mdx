@@ -7,18 +7,17 @@ description: The single agent that guides you through spec generation
 
 Simple Flow uses a single agent (`/specsmd-agent`) that guides you through all three phases: Requirements, Design, and Tasks.
 
-```mermaid
+```mermaid actions={false}
 flowchart LR
-    A[specsmd-agent] --> R[Requirements]
-    A --> D[Design]
-    A --> T[Tasks]
-    A --> E[Execute]
-
-    style A fill:#8B5CF6,stroke:#7C3AED,color:#fff
-    style R fill:#818CF8,stroke:#6366F1,color:#fff
-    style D fill:#34D399,stroke:#10B981,color:#fff
-    style T fill:#FBBF24,stroke:#F59E0B,color:#fff
-    style E fill:#F472B6,stroke:#EC4899,color:#fff
+    A(specsmd-agent):::design --> R(Requirements):::plan
+    A --> D(Design):::build
+    A --> T(Tasks):::warn
+    A --> E(Execute):::check
+    classDef design fill:#fff,stroke:#A855F7,color:#7E22CE,stroke-width:1.5px,rx:8,ry:8
+    classDef plan fill:#fff,stroke:#6366F1,color:#4338CA,stroke-width:1.5px,rx:8,ry:8
+    classDef build fill:#fff,stroke:#0EA5E9,color:#0369A1,stroke-width:1.5px,rx:8,ry:8
+    classDef warn fill:#fff,stroke:#F59E0B,color:#B45309,stroke-width:1.5px,rx:8,ry:8
+    classDef check fill:#fff,stroke:#EC4899,color:#BE185D,stroke-width:2px,rx:8,ry:8
 ```
 
 ## Invoking the Agent

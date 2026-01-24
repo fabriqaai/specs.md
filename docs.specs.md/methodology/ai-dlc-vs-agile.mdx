@@ -39,30 +39,23 @@ description: How AI-DLC compares to traditional Agile methods
 
 ### Traditional Agile
 
-```mermaid
+```mermaid actions={false}
 flowchart LR
-    H1[Human] --> P[Plans] --> H2[Human] --> E[Executes] --> AI[AI assists]
-
-    style H1 fill:#60A5FA,stroke:#3B82F6,color:#fff
-    style P fill:#60A5FA,stroke:#3B82F6,color:#fff
-    style H2 fill:#60A5FA,stroke:#3B82F6,color:#fff
-    style E fill:#60A5FA,stroke:#3B82F6,color:#fff
-    style AI fill:#94A3B8,stroke:#64748B,color:#fff
+    H1(Human):::plan --> P(Plans):::plan --> H2(Human):::plan --> E(Executes):::plan --> AI(AI assists):::build
+    classDef plan fill:#fff,stroke:#6366F1,color:#4338CA,stroke-width:1.5px,rx:8,ry:8
+    classDef build fill:#fff,stroke:#0EA5E9,color:#0369A1,stroke-width:1.5px,rx:8,ry:8
 ```
 
 Humans drive the entire process. AI tools (copilots, assistants) help with specific tasks but don't lead.
 
 ### AI-DLC
 
-```mermaid
+```mermaid actions={false}
 flowchart LR
-    H1[Human] --> I[Defines Intent] --> AI1[AI Proposes] --> H2[Human Validates] --> AI2[AI Executes]
-
-    style H1 fill:#60A5FA,stroke:#3B82F6,color:#fff
-    style I fill:#60A5FA,stroke:#3B82F6,color:#fff
-    style AI1 fill:#34D399,stroke:#10B981,color:#fff
-    style H2 fill:#F472B6,stroke:#EC4899,color:#fff
-    style AI2 fill:#34D399,stroke:#10B981,color:#fff
+    H1(Human):::plan --> I(Defines Intent):::plan --> AI1(AI Proposes):::done --> H2(Human Validates):::check --> AI2(AI Executes):::done
+    classDef plan fill:#fff,stroke:#6366F1,color:#4338CA,stroke-width:1.5px,rx:8,ry:8
+    classDef done fill:#fff,stroke:#10B981,color:#047857,stroke-width:1.5px,rx:8,ry:8
+    classDef check fill:#fff,stroke:#EC4899,color:#BE185D,stroke-width:2px,rx:8,ry:8
 ```
 
 AI leads the conversation. Humans provide intent and validation. AI handles decomposition, planning, and execution.

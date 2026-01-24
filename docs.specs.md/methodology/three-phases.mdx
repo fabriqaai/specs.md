@@ -7,18 +7,16 @@ description: Deep dive into Inception, Construction, and Operations
 
 AI-DLC organizes development into three distinct phases, each with specialized agents and clear outputs.
 
-```mermaid
+```mermaid actions={false}
 flowchart TB
-    MA[Master Agent<br/>Orchestrates & Navigates] --> IA[Inception]
-    MA --> CA[Construction]
-    MA --> OA[Operations]
-
+    MA(Master Agent):::design --> IA(Inception):::plan
+    MA --> CA(Construction):::build
+    MA --> OA(Operations):::warn
     IA --> CA --> OA
-
-    style MA fill:#8B5CF6,stroke:#7C3AED,color:#fff
-    style IA fill:#818CF8,stroke:#6366F1,color:#fff
-    style CA fill:#34D399,stroke:#10B981,color:#fff
-    style OA fill:#FBBF24,stroke:#F59E0B,color:#fff
+    classDef design fill:#fff,stroke:#A855F7,color:#7E22CE,stroke-width:1.5px,rx:8,ry:8
+    classDef plan fill:#fff,stroke:#6366F1,color:#4338CA,stroke-width:1.5px,rx:8,ry:8
+    classDef build fill:#fff,stroke:#0EA5E9,color:#0369A1,stroke-width:1.5px,rx:8,ry:8
+    classDef warn fill:#fff,stroke:#F59E0B,color:#B45309,stroke-width:1.5px,rx:8,ry:8
 ```
 
 ## Phase 1: Inception

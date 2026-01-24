@@ -11,18 +11,16 @@ description: Full AI-Driven Development Lifecycle with comprehensive traceabilit
   **AI proposes, human validates.** Like Google Maps—humans set the destination, AI provides step-by-step directions, humans maintain oversight at every checkpoint.
 </Info>
 
-```mermaid
-graph LR
-    I[Intent] --> U[Units]
-    U --> S[Stories]
-    S --> B[Bolts]
-    B --> D[Done]
-
-    style I fill:#8B5CF6,stroke:#7C3AED,color:#fff
-    style U fill:#818CF8,stroke:#6366F1,color:#fff
-    style S fill:#818CF8,stroke:#6366F1,color:#fff
-    style B fill:#34D399,stroke:#10B981,color:#fff
-    style D fill:#FBBF24,stroke:#F59E0B,color:#fff
+```mermaid actions={false}
+flowchart LR
+    I(Intent):::design --> U(Units):::plan
+    U --> S(Stories):::plan
+    S --> B(Bolts):::build
+    B --> D(Done):::done
+    classDef design fill:#fff,stroke:#A855F7,color:#7E22CE,stroke-width:1.5px,rx:8,ry:8
+    classDef plan fill:#fff,stroke:#6366F1,color:#4338CA,stroke-width:1.5px,rx:8,ry:8
+    classDef build fill:#fff,stroke:#0EA5E9,color:#0369A1,stroke-width:1.5px,rx:8,ry:8
+    classDef done fill:#fff,stroke:#10B981,color:#047857,stroke-width:1.5px,rx:8,ry:8
 ```
 
 ## Key Differentiators
@@ -39,6 +37,9 @@ graph LR
   </Card>
   <Card title="Four Specialized Agents" icon="robot">
     Master, Inception, Construction, and Operations agents with clear responsibilities.
+  </Card>
+  <Card title="Walkthrough Generation" icon="file-lines">
+    Every change documented automatically. Review what AI did without digging through code.
   </Card>
 </CardGroup>
 
@@ -98,43 +99,32 @@ graph LR
 
 AI-DLC follows three sequential phases:
 
-```mermaid
+```mermaid actions={false}
 flowchart LR
     subgraph Inception["Inception Phase"]
-        I1[Capture Intent] --> I2[Elaborate Requirements]
-        I2 --> I3[Decompose Units]
-        I3 --> I4[Plan Bolts]
+        I1(Capture):::plan --> I2(Elaborate):::plan
+        I2 --> I3(Decompose):::plan
+        I3 --> I4(Plan Bolts):::plan
     end
 
     subgraph Construction["Construction Phase"]
-        C1[Domain Model] --> C2[Technical Design]
-        C2 --> C3[ADR Analysis]
-        C3 --> C4[Implement]
-        C4 --> C5[Test]
+        C1(Model):::build --> C2(Design):::build
+        C2 --> C3(ADR):::build
+        C3 --> C4(Implement):::build
+        C4 --> C5(Test):::build
     end
 
     subgraph Operations["Operations Phase"]
-        O1[Build] --> O2[Deploy]
-        O2 --> O3[Verify]
-        O3 --> O4[Monitor]
+        O1(Build):::warn --> O2(Deploy):::warn
+        O2 --> O3(Verify):::warn
+        O3 --> O4(Monitor):::warn
     end
 
     Inception --> Construction
     Construction --> Operations
-
-    style I1 fill:#818CF8,stroke:#6366F1,color:#fff
-    style I2 fill:#818CF8,stroke:#6366F1,color:#fff
-    style I3 fill:#818CF8,stroke:#6366F1,color:#fff
-    style I4 fill:#818CF8,stroke:#6366F1,color:#fff
-    style C1 fill:#34D399,stroke:#10B981,color:#fff
-    style C2 fill:#34D399,stroke:#10B981,color:#fff
-    style C3 fill:#34D399,stroke:#10B981,color:#fff
-    style C4 fill:#34D399,stroke:#10B981,color:#fff
-    style C5 fill:#34D399,stroke:#10B981,color:#fff
-    style O1 fill:#FBBF24,stroke:#F59E0B,color:#fff
-    style O2 fill:#FBBF24,stroke:#F59E0B,color:#fff
-    style O3 fill:#FBBF24,stroke:#F59E0B,color:#fff
-    style O4 fill:#FBBF24,stroke:#F59E0B,color:#fff
+    classDef plan fill:#fff,stroke:#6366F1,color:#4338CA,stroke-width:1.5px,rx:8,ry:8
+    classDef build fill:#fff,stroke:#0EA5E9,color:#0369A1,stroke-width:1.5px,rx:8,ry:8
+    classDef warn fill:#fff,stroke:#F59E0B,color:#B45309,stroke-width:1.5px,rx:8,ry:8
 ```
 
 | Phase | Agent | Ritual | Output |

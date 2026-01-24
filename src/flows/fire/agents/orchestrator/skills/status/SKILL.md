@@ -257,8 +257,8 @@ Detect inconsistencies and offer interactive resolution.
   </step>
 
   <step n="7" title="Detect Stale Runs">
-    <action>For each active run:</action>
-    <action>Calculate age: now - active_run.started</action>
+    <action>For each run in runs.active[]:</action>
+    <action>Calculate age: now - run.started</action>
 
     <check if="active run started more than 24 hours ago">
       <add_issue type="stale_run" severity="info" needs_user_decision="true">

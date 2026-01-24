@@ -106,14 +106,14 @@ state:
           complexity: "low | medium | high"
           mode: "autopilot | confirm | validate"
 
-  active_run:
-    id: "run-id"
-    scope: "single | batch | wide"
-    work_items: []
-    current_item: "work-item-id"
-    status: "in_progress | completed"
-
-  runs: []
+  runs:
+    active:
+      - id: "run-id"
+        scope: "single | batch | wide"
+        work_items: []
+        current_item: "work-item-id"
+        status: "in_progress"
+    completed: []
 
 # ─────────────────────────────────────────────────────────────────────────────────
 # STANDARDS BEHAVIOR
