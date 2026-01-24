@@ -158,27 +158,31 @@ Plan the scope of a run by discovering available work items and suggesting group
 
     <grouping_rules>
       <rule>Dependencies = SEQUENTIAL execution in SAME run (NOT separate runs)</rule>
-      <rule>Different modes CAN be in same run (executed sequentially)</rule>
+      <rule>batch mode: Group items BY mode type (autopilot together, confirm together, etc.)</rule>
+      <rule>wide mode: ALL items in ONE run regardless of mode (executed sequentially)</rule>
       <rule>Cross-intent items allowed in same run if compatible</rule>
-      <rule>Validate mode items may benefit from running alone (more checkpoints)</rule>
+      <rule>Validate mode items may benefit from batch (separate run with focused checkpoints)</rule>
     </grouping_rules>
 
     <generate_options>
       <option name="single">
         Each work item in its own run
         Total runs: {count of pending items}
+        Maximum control, review after each item
       </option>
 
       <option name="batch">
-        All pending items in ONE run
-        Execute sequentially (dependencies respected by order)
-        Checkpoints pause at confirm/validate items
-        Total runs: 1
+        Group items BY MODE into separate runs
+        Total runs: 1 per mode type present (e.g., autopilot run, confirm run, validate run)
+        Less context switching within each run
+        Example: 3 autopilot + 2 confirm + 1 validate = 3 runs
       </option>
 
       <option name="wide">
-        Same as batch - all items in one run
+        ALL items in ONE run regardless of mode
         Total runs: 1
+        Execute sequentially, pause at confirm/validate checkpoints
+        Maximum throughput, minimum interruption between runs
       </option>
     </generate_options>
   </step>
@@ -213,12 +217,16 @@ Plan the scope of a run by discovering available work items and suggesting group
       **[1] One at a time** — {single_count} separate runs
           Most controlled, review after each run
 
-      **[2] Sequential chain** — 1 run with {count} items (Recommended)
-          Execute in order: {item1} → {item2} → ...
-          Checkpoints pause at confirm/validate items
+      **[2] Group by mode** — {batch_run_count} run(s)
+          {autopilot_count} autopilot items → Run A (no pauses)
+          {confirm_count} confirm items → Run B (1 checkpoint each)
+          {validate_count} validate items → Run C (2 checkpoints each)
+          Less context switching per run
 
-      **[3] All together** — Same as [2]
-          1 run, sequential execution
+      **[3] All in one** — 1 run with all {count} items (Recommended)
+          Execute sequentially: {item1} → {item2} → ...
+          Pause at confirm/validate checkpoints
+          Maximum throughput
 
       Choose [1/2/3]:
     </template_output>
@@ -228,10 +236,24 @@ Plan the scope of a run by discovering available work items and suggesting group
     <check if="response == 1">
       <set>run_scope = single</set>
       <set>work_items_for_run = [first_pending_item]</set>
+      <note>User will re-invoke run-plan after each run completes</note>
     </check>
-    <check if="response == 2 or response == 3">
+
+    <check if="response == 2">
       <set>run_scope = batch</set>
+      <action>Group pending items by mode:</action>
+      <substep>autopilot_items = items where mode == autopilot</substep>
+      <substep>confirm_items = items where mode == confirm</substep>
+      <substep>validate_items = items where mode == validate</substep>
+      <action>Start with first non-empty group (autopilot preferred)</action>
+      <set>work_items_for_run = first_mode_group_in_dependency_order</set>
+      <note>After this run, user re-invokes for next mode group</note>
+    </check>
+
+    <check if="response == 3">
+      <set>run_scope = wide</set>
       <set>work_items_for_run = all_pending_items_in_dependency_order</set>
+      <note>All items in one run, sequential execution</note>
     </check>
   </step>
 

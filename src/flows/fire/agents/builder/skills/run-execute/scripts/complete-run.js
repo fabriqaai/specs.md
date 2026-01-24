@@ -103,6 +103,128 @@ function validateFireProject(rootPath, runId) {
 }
 
 // =============================================================================
+// Frontmatter Helpers
+// =============================================================================
+
+/**
+ * Parse YAML frontmatter from markdown content.
+ * Returns { frontmatter: object, body: string } or null if no frontmatter.
+ */
+function parseFrontmatter(content) {
+  const match = content.match(/^---\n([\s\S]*?)\n---/);
+  if (!match) return null;
+
+  try {
+    const frontmatter = yaml.parse(match[1]);
+    const body = content.slice(match[0].length);
+    return { frontmatter, body };
+  } catch (err) {
+    return null;
+  }
+}
+
+/**
+ * Reconstruct markdown content from frontmatter and body.
+ */
+function buildMarkdownWithFrontmatter(frontmatter, body) {
+  return `---\n${yaml.stringify(frontmatter)}---${body}`;
+}
+
+// =============================================================================
+// Markdown Frontmatter Sync
+// =============================================================================
+
+/**
+ * Update work item markdown file frontmatter with new status.
+ */
+function updateWorkItemMarkdown(rootPath, intentId, workItemId, status, runId, completedAt) {
+  const filePath = path.join(rootPath, '.specs-fire', 'intents', intentId, 'work-items', `${workItemId}.md`);
+
+  if (!fs.existsSync(filePath)) {
+    // File doesn't exist - not an error, just skip
+    return false;
+  }
+
+  try {
+    const content = fs.readFileSync(filePath, 'utf8');
+    const parsed = parseFrontmatter(content);
+
+    if (!parsed) {
+      // No valid frontmatter - skip
+      return false;
+    }
+
+    // Update frontmatter fields
+    parsed.frontmatter.status = status;
+    if (runId) parsed.frontmatter.run_id = runId;
+    if (completedAt && status === 'completed') {
+      parsed.frontmatter.completed_at = completedAt;
+    }
+
+    const newContent = buildMarkdownWithFrontmatter(parsed.frontmatter, parsed.body);
+    fs.writeFileSync(filePath, newContent);
+    return true;
+  } catch (err) {
+    // Log but don't fail - markdown sync is best-effort
+    console.error(`Warning: Could not update work item markdown ${filePath}: ${err.message}`);
+    return false;
+  }
+}
+
+/**
+ * Update intent brief.md frontmatter based on work item statuses.
+ */
+function updateIntentMarkdown(rootPath, intentId, state) {
+  const filePath = path.join(rootPath, '.specs-fire', 'intents', intentId, 'brief.md');
+
+  if (!fs.existsSync(filePath)) {
+    return false;
+  }
+
+  try {
+    // Determine intent status from its work items
+    const intent = state.intents?.find(i => i.id === intentId);
+    if (!intent || !Array.isArray(intent.work_items)) {
+      return false;
+    }
+
+    const allCompleted = intent.work_items.every(wi => wi.status === 'completed');
+    const anyInProgress = intent.work_items.some(wi => wi.status === 'in_progress');
+
+    let newStatus = 'pending';
+    if (allCompleted) {
+      newStatus = 'completed';
+    } else if (anyInProgress || intent.work_items.some(wi => wi.status === 'completed')) {
+      newStatus = 'in_progress';
+    }
+
+    const content = fs.readFileSync(filePath, 'utf8');
+    const parsed = parseFrontmatter(content);
+
+    if (!parsed) {
+      return false;
+    }
+
+    // Only update if status actually changed
+    if (parsed.frontmatter.status === newStatus) {
+      return false;
+    }
+
+    parsed.frontmatter.status = newStatus;
+    if (allCompleted) {
+      parsed.frontmatter.completed_at = new Date().toISOString();
+    }
+
+    const newContent = buildMarkdownWithFrontmatter(parsed.frontmatter, parsed.body);
+    fs.writeFileSync(filePath, newContent);
+    return true;
+  } catch (err) {
+    console.error(`Warning: Could not update intent markdown ${filePath}: ${err.message}`);
+    return false;
+  }
+}
+
+// =============================================================================
 // State Operations
 // =============================================================================
 
@@ -140,6 +262,10 @@ function writeState(statePath, state) {
 // Run Log Operations
 // =============================================================================
 
+/**
+ * Update run.md using proper YAML parsing instead of fragile regex.
+ * This ensures frontmatter updates work regardless of field order or formatting.
+ */
 function updateRunLog(runLogPath, activeRun, params, completedTime, isFullCompletion) {
   let content;
   try {
@@ -152,35 +278,62 @@ function updateRunLog(runLogPath, activeRun, params, completedTime, isFullComple
     );
   }
 
-  // If full completion, update run status
-  if (isFullCompletion) {
-    content = content.replace(/status: in_progress/, 'status: completed');
-    content = content.replace(/completed: null/, `completed: ${completedTime}`);
+  // Parse frontmatter using YAML (robust approach)
+  const parsed = parseFrontmatter(content);
+  if (!parsed) {
+    throw fireError(
+      'Invalid run.md format - no valid YAML frontmatter found.',
+      'COMPLETE_032',
+      'Ensure run.md has valid ---\\n...\\n--- frontmatter.'
+    );
   }
 
-  // Update work items status in frontmatter
+  let { frontmatter, body } = parsed;
+
+  // Update frontmatter fields
+  if (isFullCompletion) {
+    frontmatter.status = 'completed';
+    frontmatter.completed = completedTime;
+  }
+
+  frontmatter.current_item = activeRun.current_item || null;
+
+  // Update work_items array in frontmatter
   if (activeRun.work_items && Array.isArray(activeRun.work_items)) {
-    for (const item of activeRun.work_items) {
-      // Update status in YAML frontmatter
-      const statusPattern = new RegExp(`(id: ${item.id}\\n\\s+intent: [^\\n]+\\n\\s+mode: [^\\n]+\\n\\s+status: )(\\w+)`);
-      content = content.replace(statusPattern, `$1${item.status}`);
+    frontmatter.work_items = activeRun.work_items.map(item => ({
+      id: item.id,
+      intent: item.intent,
+      mode: item.mode,
+      status: item.status,
+    }));
+  }
 
-      // Update status in markdown body
-      const bodyPattern = new RegExp(`(\\*\\*${item.id}\\*\\* \\([^)]+\\) — )(\\w+)`);
-      content = content.replace(bodyPattern, `$1${item.status}`);
-    }
+  // Update markdown body sections
+  // Update Work Items section
+  if (activeRun.work_items && Array.isArray(activeRun.work_items)) {
+    const workItemsLines = activeRun.work_items.map((item, i) =>
+      `${i + 1}. **${item.id}** (${item.mode}) — ${item.status}`
+    ).join('\n');
 
-    // Update current_item in frontmatter
-    content = content.replace(/current_item: [^\n]+/, `current_item: ${activeRun.current_item || 'none'}`);
+    body = body.replace(
+      /## Work Items\n[\s\S]*?(?=\n## )/,
+      `## Work Items\n${workItemsLines}\n\n`
+    );
 
     // Update Current Item section
     if (activeRun.current_item) {
       const currentItem = activeRun.work_items.find(i => i.id === activeRun.current_item);
       if (currentItem) {
-        content = content.replace(/## Current Item\n[^\n]+/, `## Current Item\n${currentItem.id} (${currentItem.mode})`);
+        body = body.replace(
+          /## Current Item\n[^\n]+/,
+          `## Current Item\n${currentItem.id} (${currentItem.mode})`
+        );
       }
     } else {
-      content = content.replace(/## Current Item\n[^\n]+/, `## Current Item\n(all completed)`);
+      body = body.replace(
+        /## Current Item\n[^\n]+/,
+        `## Current Item\n(all completed)`
+      );
     }
   }
 
@@ -199,14 +352,14 @@ function updateRunLog(runLogPath, activeRun, params, completedTime, isFullComple
       : '(none)';
 
     // Replace placeholder sections
-    content = content.replace('## Files Created\n(none yet)', `## Files Created\n${filesCreatedText}`);
-    content = content.replace('## Files Modified\n(none yet)', `## Files Modified\n${filesModifiedText}`);
-    content = content.replace('## Decisions\n(none yet)', `## Decisions\n${decisionsText}`);
+    body = body.replace('## Files Created\n(none yet)', `## Files Created\n${filesCreatedText}`);
+    body = body.replace('## Files Modified\n(none yet)', `## Files Modified\n${filesModifiedText}`);
+    body = body.replace('## Decisions\n(none yet)', `## Decisions\n${decisionsText}`);
 
     // Add summary if not present
-    if (!content.includes('## Summary')) {
+    if (!body.includes('## Summary')) {
       const itemCount = activeRun.work_items ? activeRun.work_items.length : 1;
-      content += `
+      body += `
 
 ## Summary
 
@@ -220,8 +373,11 @@ function updateRunLog(runLogPath, activeRun, params, completedTime, isFullComple
     }
   }
 
+  // Reconstruct content with updated frontmatter and body
+  const newContent = buildMarkdownWithFrontmatter(frontmatter, body);
+
   try {
-    fs.writeFileSync(runLogPath, content);
+    fs.writeFileSync(runLogPath, newContent);
   } catch (err) {
     throw fireError(
       `Failed to write run log: ${err.message}`,
@@ -301,6 +457,26 @@ function completeCurrentItem(rootPath, runId, params = {}) {
 
   // Update run log
   updateRunLog(runLogPath, activeRun, completionParams, completedTime, false);
+
+  // Sync markdown frontmatter for completed work item
+  const completedWorkItem = workItems.find(wi => wi.id === currentItemId);
+  if (completedWorkItem) {
+    updateWorkItemMarkdown(
+      rootPath,
+      completedWorkItem.intent,
+      currentItemId,
+      'completed',
+      runId,
+      completedTime
+    );
+    // Update intent status based on its work items
+    updateIntentMarkdown(rootPath, completedWorkItem.intent, state);
+  }
+
+  // Also update next item's markdown to in_progress
+  if (nextItem) {
+    updateWorkItemMarkdown(rootPath, nextItem.intent, nextItem.id, 'in_progress', null, null);
+  }
 
   // Save state
   writeState(statePath, state);
@@ -390,7 +566,8 @@ function completeRun(rootPath, runId, params = {}) {
   // Check for duplicate (idempotency)
   const alreadyRecorded = state.runs.completed.some(r => r.id === runId);
 
-  // Update work item status in intents
+  // Update work item status in intents (state.yaml)
+  const affectedIntents = new Set();
   if (Array.isArray(state.intents)) {
     for (const workItem of workItems) {
       for (const intent of state.intents) {
@@ -399,6 +576,8 @@ function completeRun(rootPath, runId, params = {}) {
             if (wi.id === workItem.id) {
               wi.status = 'completed';
               wi.run_id = runId;
+              wi.completed_at = completedTime;
+              affectedIntents.add(intent.id);
               break;
             }
           }
@@ -413,8 +592,25 @@ function completeRun(rootPath, runId, params = {}) {
     state.runs.completed.push(completedRun);
   }
 
-  // Save state
+  // Save state first (so markdown sync has correct state)
   writeState(statePath, state);
+
+  // Sync markdown frontmatter for all completed work items
+  for (const workItem of workItems) {
+    updateWorkItemMarkdown(
+      rootPath,
+      workItem.intent,
+      workItem.id,
+      'completed',
+      runId,
+      workItem.completed_at || completedTime
+    );
+  }
+
+  // Update intent markdown for all affected intents
+  for (const intentId of affectedIntents) {
+    updateIntentMarkdown(rootPath, intentId, state);
+  }
 
   return {
     success: true,

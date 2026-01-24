@@ -275,9 +275,38 @@ Supports both single-item and multi-item (batch/wide) runs.
 
   <step n="4" title="Generate Plan (Autopilot Only)" if="mode == autopilot">
     <note>Confirm and Validate modes already saved plan in Step 3b/3c</note>
-    <action>Generate implementation plan</action>
-    <action>Save plan using template: templates/plan.md.hbs</action>
-    <action>Write to: .specs-fire/runs/{run-id}/plan.md</action>
+
+    <batch_handling critical="true">
+      <check if="batch/wide run AND plan.md already exists">
+        <action>Read existing plan.md content</action>
+        <action>Append new section for current work item:</action>
+        <format>
+          ---
+
+          ## Work Item: {work_item_id}
+
+          ### Approach
+          {describe approach for this specific work item}
+
+          ### Files to Create
+          {list files}
+
+          ### Files to Modify
+          {list files}
+
+          ### Tests
+          {list test files}
+        </format>
+        <action>Write updated plan.md (preserving previous sections)</action>
+      </check>
+
+      <check if="plan.md does not exist OR single run">
+        <action>Generate implementation plan</action>
+        <action>Save plan using template: templates/plan.md.hbs</action>
+        <action>Write to: .specs-fire/runs/{run-id}/plan.md</action>
+      </check>
+    </batch_handling>
+
     <output>
       Plan saved to: .specs-fire/runs/{run-id}/plan.md
       (Autopilot mode - continuing without checkpoint)
@@ -332,8 +361,33 @@ Supports both single-item and multi-item (batch/wide) runs.
     <action>Validate acceptance criteria from work item</action>
 
     <critical>Create test report AFTER tests pass</critical>
-    <action>Generate test report using template: templates/test-report.md.hbs</action>
-    <action>Write to: .specs-fire/runs/{run-id}/test-report.md</action>
+
+    <batch_handling critical="true">
+      <check if="batch/wide run AND test-report.md already exists">
+        <action>Read existing test-report.md content</action>
+        <action>Append new section for current work item:</action>
+        <format>
+          ---
+
+          ## Work Item: {work_item_id}
+
+          ### Test Results
+          - Passed: {passed_count}
+          - Failed: {failed_count}
+          - Skipped: {skipped_count}
+
+          ### Acceptance Criteria Validation
+          {validation_results}
+        </format>
+        <action>Write updated test-report.md (preserving previous sections)</action>
+      </check>
+
+      <check if="test-report.md does not exist OR single run">
+        <action>Generate test report using template: templates/test-report.md.hbs</action>
+        <action>Write to: .specs-fire/runs/{run-id}/test-report.md</action>
+      </check>
+    </batch_handling>
+
     <action>Include in test report:</action>
     <substep>Test results summary (passed/failed/skipped)</substep>
     <substep>Code coverage percentage</substep>
@@ -387,31 +441,47 @@ Supports both single-item and multi-item (batch/wide) runs.
   </step>
 
   <step n="7" title="Complete Current Work Item">
-    <critical>MUST call complete-run.js script. Check if more items remain.</critical>
+    <llm critical="true">
+      <mandate>BATCH RUNS: You MUST loop until ALL items are done</mandate>
+      <mandate>NEVER call --complete-run until ALL items have artifacts</mandate>
+      <mandate>ALWAYS check pending count BEFORE deciding which flag to use</mandate>
+    </llm>
 
-    <check if="batch run with more items pending">
-      <action>Call complete-run.js with --complete-item flag:</action>
-      <code>
-        node scripts/complete-run.js {rootPath} {runId} --complete-item
-      </code>
-      <action>Parse output for nextItem</action>
-      <output>
-        Work item {current_item} complete.
-        Next: {nextItem}
-      </output>
-      <goto step="2">Continue with next work item</goto>
-    </check>
+    <substep n="7a" title="Check Batch Status">
+      <action>Read state.yaml runs.active[{runId}]</action>
+      <action>Get scope value: single, batch, or wide</action>
+      <action>Count work_items where status == "pending"</action>
+      <action>Store pending_count for decision</action>
+    </substep>
 
-    <check if="last item or single item run">
-      <action>Call complete-run.js with --complete-run flag:</action>
-      <code>
-        node scripts/complete-run.js {rootPath} {runId} --complete-run \
-          --files-created='[{"path":"...","purpose":"..."}]' \
-          --files-modified='[{"path":"...","changes":"..."}]' \
-          --tests=5 --coverage=85
-      </code>
-      <goto step="8"/>
-    </check>
+    <substep n="7b" title="Route Based on Batch Status">
+      <check if="scope in [batch, wide] AND pending_count > 0">
+        <critical>DO NOT call --complete-run yet - more items remain!</critical>
+        <action>Call complete-run.js with --complete-item flag:</action>
+        <code>
+          node scripts/complete-run.js {rootPath} {runId} --complete-item
+        </code>
+        <action>Parse output JSON for nextItem and remainingItems</action>
+        <output>
+          Completed: {current_item}
+          Next item: {nextItem}
+          Remaining: {remainingItems} items
+        </output>
+        <goto step="2">MUST continue with next work item - loop back NOW</goto>
+      </check>
+
+      <check if="scope == single OR pending_count == 0">
+        <action>All items complete - finalize the run</action>
+        <action>Call complete-run.js with --complete-run flag:</action>
+        <code>
+          node scripts/complete-run.js {rootPath} {runId} --complete-run \
+            --files-created='[{"path":"...","purpose":"..."}]' \
+            --files-modified='[{"path":"...","changes":"..."}]' \
+            --tests=5 --coverage=85
+        </code>
+        <goto step="8"/>
+      </check>
+    </substep>
   </step>
 
   <step n="8" title="Generate Walkthrough">
