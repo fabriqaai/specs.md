@@ -179,7 +179,7 @@ async function install() {
       '',
       `${theme.info('Learn more:')}      ${LINKS.ideExtension}`,
       `${theme.info('VS Code:')}         ${LINKS.vscodeMarketplace}`,
-      `${theme.info('Cursor/Windsurf:')} ${LINKS.openVsx}`
+      `${theme.info('Cursor/Antigravity/Windsurf:')} ${LINKS.openVsx}`
     ].join('\n');
     CLIUtils.displayBox(extensionInfo, {
       title: 'IDE Extension',
