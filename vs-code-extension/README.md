@@ -89,7 +89,7 @@ Works with VS Code and all VS Code-based IDEs:
 
 ## Contributing
 
-See the [Developer Guide](./DEVGUIDE.md) for architecture details and development setup.
+See the [Developer Guide](https://github.com/fabriqaai/specs.md/blob/main/vs-code-extension/DEVGUIDE.md) for architecture details and development setup.
 
 ---
 
