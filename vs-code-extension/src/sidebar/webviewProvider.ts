@@ -447,7 +447,7 @@ export class SpecsmdWebviewProvider implements vscode.WebviewViewProvider {
         activeRuns: Array<{
             id: string;
             scope: string;
-            workItems: Array<{ id: string; intentId: string; mode: string; status: string }>;
+            workItems: Array<{ id: string; intentId: string; mode: string; status: string; currentPhase?: string }>;
             currentItem: string | null;
             folderPath: string;
             startedAt: string;
@@ -516,6 +516,7 @@ export class SpecsmdWebviewProvider implements vscode.WebviewViewProvider {
                 intentId: w.intentId,
                 mode: w.mode as 'autopilot' | 'confirm' | 'validate',
                 status: w.status as 'pending' | 'in_progress' | 'completed' | 'failed',
+                currentPhase: w.currentPhase,
                 title: this._findWorkItemTitle(state.intents, w.id, w.intentId)
             })),
             currentItem: run.currentItem,
