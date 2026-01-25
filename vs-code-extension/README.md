@@ -13,6 +13,16 @@ When AI writes your code, you need visibility. specsmd gives you a real-time vie
 <br>
 
 <p align="center">
+  <a href="https://www.youtube.com/watch?v=PMjy3nOYRks">
+    <img src="https://img.youtube.com/vi/PMjy3nOYRks/maxresdefault.jpg" alt="Watch specsmd in action" width="700">
+  </a>
+</p>
+
+<p align="center"><strong>▶️ Watch specsmd in action</strong></p>
+
+<br>
+
+<p align="center">
   <img src="https://mintcdn.com/fabriqa/mrOVK7s3Qgek_IVz/images/extension-gallery/fireflow-extension/1.png?w=2500&fit=max&auto=format&n=mrOVK7s3Qgek_IVz&q=85&s=bb74989dc12584ab85618d74c6dbe07a" alt="Track every AI run with status, files, and progress" width="700">
 </p>
 
