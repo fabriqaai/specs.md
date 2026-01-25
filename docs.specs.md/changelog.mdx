@@ -10,6 +10,34 @@ All notable changes to specs.md.
   **Subscribe to updates:** [RSS Feed](/changelog/rss.xml) | [GitHub Releases](https://github.com/fabriqaai/specs.md/releases)
 </Info>
 
+<Update label="January 25, 2026" description="v0.1.11" tags={["FIRE", "VS Code"]}>
+### Per-Work-Item Phase Tracking
+
+The VS Code extension now shows real-time phase progress for each work item in FIRE runs. Track exactly where your AI agent is in the Plan → Execute → Test → Review pipeline.
+
+<Frame>
+  <img src="/images/fire-phase-tracking/work-item-in-progress.png" alt="Work item showing Test phase in progress" />
+</Frame>
+
+**First work item in Test phase** - completed Plan and Execute, now running tests.
+
+<Frame>
+  <img src="/images/fire-phase-tracking/work-item-completed.png" alt="Multiple work items with phase tracking" />
+</Frame>
+
+**Progress through multiple work items** - first item completed all phases, second item now in Test phase.
+
+### Added
+
+- Per-work-item phase tracking in FIRE flow (Plan → Execute → Test → Review)
+- Real-time phase progress indicator showing which phase each work item is currently in
+- Visual distinction between completed phases (green checkmarks) and active phase (orange highlight)
+
+### Changed
+
+- Phase tracking now updates at work item level instead of run level for better granularity
+</Update>
+
 <Update label="January 24, 2026" description="v0.1.10" tags={["FIRE", "VS Code"]}>
 ### Added
 
