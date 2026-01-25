@@ -1297,6 +1297,13 @@ export class SpecsmdWebviewProvider implements vscode.WebviewViewProvider {
             case 'startRun':
                 await this._handleFireStartRun((message as { workItemIds: string[] }).workItemIds);
                 break;
+
+            case 'openWorkItem':
+                await this._handleOpenWorkItem(
+                    (message as { id: string; intentId: string }).id,
+                    (message as { id: string; intentId: string }).intentId
+                );
+                break;
         }
     }
 
@@ -1325,6 +1332,27 @@ export class SpecsmdWebviewProvider implements vscode.WebviewViewProvider {
             await vscode.env.clipboard.writeText(command);
             vscode.window.showInformationMessage('Command copied to clipboard!');
         }
+    }
+
+    /**
+     * Handle opening a work item by constructing its path from intent and work item IDs.
+     */
+    private async _handleOpenWorkItem(workItemId: string, intentId: string): Promise<void> {
+        const workspacePath = this._getWorkspacePath();
+        if (!workspacePath) return;
+
+        // Construct the work item file path
+        // Path: .specs-fire/intents/{intentId}/work-items/{workItemId}.md
+        const workItemPath = vscode.Uri.joinPath(
+            vscode.Uri.file(workspacePath),
+            '.specs-fire',
+            'intents',
+            intentId,
+            'work-items',
+            `${workItemId}.md`
+        );
+
+        await openFile(workItemPath.fsPath);
     }
 
     /**

@@ -29,7 +29,8 @@ export type WebviewToExtensionMessage =
     | { type: 'fireTabChange'; tab: string }
     | { type: 'fireIntentsFilter'; filter: string }
     | { type: 'fireToggleExpand'; intentId: string; expanded: boolean }
-    | { type: 'startRun'; workItemIds: string[] };
+    | { type: 'startRun'; workItemIds: string[] }
+    | { type: 'openWorkItem'; id: string; intentId: string };
 
 /**
  * Activity filter options.
