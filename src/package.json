@@ -1,6 +1,6 @@
 {
   "name": "specsmd",
-  "version": "0.1.19",
+  "version": "0.1.20",
   "description": "Multi-agent orchestration system for AI-native software development. Delivers AI-DLC, Agile, and custom SDLC flows as markdown-based agent systems.",
   "main": "lib/installer.js",
   "bin": {
