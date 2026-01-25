@@ -99,10 +99,8 @@ fire/agents/builder/
     │
     └── walkthrough-generate/
         ├── SKILL.md
-        ├── templates/
-        │   └── walkthrough.md.hbs
-        └── scripts/
-            └── render-walkthrough.ts
+        └── templates/
+            └── walkthrough.md.hbs
 ```
 
 ### Run Log Structure

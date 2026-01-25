@@ -21,7 +21,7 @@ Create the walkthrough-generate skill that produces implementation walkthroughs 
 - [ ] Document key decisions made during execution
 - [ ] Include verification steps (how to test)
 - [ ] Include test coverage summary
-- [ ] Script generates walkthrough from structured data
+- [ ] Agent generates walkthrough from template (no script needed)
 
 ## SKILL.md Content
 
@@ -79,14 +79,10 @@ version: 1.0.0
     </step>
 
     <step n="5" title="Generate Walkthrough">
-      <action script="render-walkthrough.ts">
-        Render template with gathered data
-      </action>
-      <action>
-        Save to: .specs-fire/walkthroughs/{run_id}-{work_item_id}.md
-      </action>
+      <action>Generate walkthrough using template: templates/walkthrough.md.hbs</action>
+      <action>Save to: .specs-fire/runs/{run-id}/walkthrough.md</action>
       <output>
-        Walkthrough generated: .specs-fire/walkthroughs/{run_id}-{work_item_id}.md
+        Walkthrough generated: .specs-fire/runs/{run-id}/walkthrough.md
       </output>
     </step>
   </workflow>
@@ -120,12 +116,6 @@ version: 1.0.0
   <templates>
     <template name="walkthrough" path="./templates/walkthrough.md.hbs"/>
   </templates>
-
-  <scripts>
-    <script name="render-walkthrough" path="./scripts/render-walkthrough.ts">
-      Renders walkthrough from structured implementation data
-    </script>
-  </scripts>
 
   <success_criteria>
     <criterion>Walkthrough saved to walkthroughs/ directory</criterion>
@@ -224,10 +214,8 @@ mode: {{mode}}
 ```
 fire/agents/builder/skills/walkthrough-generate/
 ├── SKILL.md
-├── templates/
-│   └── walkthrough.md.hbs
-└── scripts/
-    └── render-walkthrough.ts
+└── templates/
+    └── walkthrough.md.hbs
 ```
 
 ## Dependencies
