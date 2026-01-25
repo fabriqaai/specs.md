@@ -260,8 +260,14 @@ export class FireWorkItem extends BaseElement {
     }
 
     private _renderPhasesRow(phases: WorkItemPhaseData[]) {
-        // Only show phases row for items that are in progress or have started
+        // Only show phases row for completed items or items with explicit phase data
+        // Don't show for in_progress items without phase tracking (misleading)
         if (this.item.status === 'pending') {
+            return nothing;
+        }
+
+        // Only show phases if item is completed OR has explicit phase data
+        if (this.item.status === 'in_progress' && !this.item.currentPhase && !this.item.phases) {
             return nothing;
         }
 
