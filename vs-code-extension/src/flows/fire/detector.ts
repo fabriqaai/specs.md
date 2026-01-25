@@ -2,44 +2,74 @@
  * FIRE Flow Detector
  *
  * Detects if a workspace contains a FIRE flow project
- * by checking for the .specs-fire directory.
+ * by checking for the .specsmd/manifest.yaml with flow: fire.
  */
 
 import * as path from 'path';
-import { FlowId, FlowInfo } from '../../core/types';
-import { BaseFlowDetector } from '../../core/flowDetector';
+import * as fs from 'fs';
+import * as yaml from 'js-yaml';
+import { FlowId, FlowDetectionResult } from '../../core/types';
+import { BaseFlowDetector, directoryExists, fileExists, readFileSafe } from '../../core/flowDetector';
 
 /**
  * FIRE flow detector implementation.
  *
  * Detects FIRE projects by looking for:
- * - .specs-fire/ directory (primary)
- * - .specs-fire/state.yaml file (confirmation)
+ * - .specsmd/manifest.yaml with flow: fire
+ * - .specsmd/fire/ directory (flow definition)
+ * - .specs-fire/ directory (project artifacts, optional)
  */
 export class FireFlowDetector extends BaseFlowDetector {
     readonly flowId: FlowId = 'fire';
     readonly displayName = 'FIRE';
-    readonly rootFolder = '.specs-fire';
+    readonly rootFolder = '.specsmd/fire';
     readonly icon = '🔥';
 
     /**
-     * Get the path to check for FIRE flow detection.
+     * Override synchronous detection to check manifest.yaml.
      */
-    protected getDetectionPath(workspacePath: string): string {
-        return path.join(workspacePath, this.rootFolder);
-    }
+    detectSync(workspacePath: string): FlowDetectionResult {
+        try {
+            const manifestPath = path.join(workspacePath, '.specsmd', 'manifest.yaml');
 
-    /**
-     * Build flow info after successful detection.
-     */
-    protected buildFlowInfo(workspacePath: string, detectionPath: string): FlowInfo {
-        return {
-            id: this.flowId,
-            displayName: this.displayName,
-            rootFolder: this.rootFolder,
-            flowPath: detectionPath,
-            icon: this.icon
-        };
+            // Check if manifest exists
+            if (!fileExists(manifestPath)) {
+                return { detected: false, flowPath: null };
+            }
+
+            // Read and parse manifest
+            const manifestContent = readFileSafe(manifestPath);
+            if (!manifestContent) {
+                return { detected: false, flowPath: null };
+            }
+
+            const manifest = yaml.load(manifestContent) as { flow?: string; version?: string };
+
+            // Check if flow is fire
+            if (manifest?.flow !== 'fire') {
+                return { detected: false, flowPath: null };
+            }
+
+            // Verify .specsmd/fire directory exists (flow definition)
+            const fireFlowPath = path.join(workspacePath, '.specsmd', 'fire');
+            if (!directoryExists(fireFlowPath)) {
+                return { detected: false, flowPath: null };
+            }
+
+            // Check for .specs-fire directory (project artifacts)
+            // This is optional - project might just have flow definition
+            const artifactsPath = path.join(workspacePath, '.specs-fire');
+            const hasArtifacts = directoryExists(artifactsPath);
+
+            return {
+                detected: true,
+                flowPath: hasArtifacts ? artifactsPath : fireFlowPath,
+                version: manifest.version
+            };
+        } catch (error) {
+            console.error('FireFlowDetector.detectSync error:', error);
+            return { detected: false, flowPath: null };
+        }
     }
 }
 
