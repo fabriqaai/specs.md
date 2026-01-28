@@ -8,7 +8,7 @@ This document captures quality-increasing patterns from AIDLC that should be ado
 
 ## P0 - Critical (High Impact)
 
-### 1. Progress Display Blocks
+### 1. Progress Display Blocks ✅ DONE
 
 **AIDLC Pattern:**
 Every skill starts with a visual progress indicator showing where the agent is in the workflow.
@@ -33,7 +33,7 @@ Every skill starts with a visual progress indicator showing where the agent is i
 
 ---
 
-### 2. ⛔ HARD GATE Markers (AI Guidance, NOT Human Checkpoint)
+### 2. ⛔ HARD GATE Markers (AI Guidance, NOT Human Checkpoint) ✅ DONE
 
 **AIDLC Pattern:**
 Critical steps use ASCII art boxes to break attention and emphasize mandatory actions **for the AI**.
@@ -56,7 +56,7 @@ If you skip this, state becomes inconsistent.
 
 ---
 
-### 3. Enhanced Walkthrough Template
+### 3. Enhanced Walkthrough Template ✅ DONE
 
 **Current FIRE walkthrough sections:**
 - Summary
