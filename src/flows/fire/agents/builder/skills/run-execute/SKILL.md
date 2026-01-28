@@ -9,6 +9,24 @@ Execute work items based on their assigned mode (autopilot, confirm, validate).
 Supports both single-item and multi-item (batch/wide) runs.
 </objective>
 
+<progress_display>
+  Show current position in workflow:
+
+  ```text
+  ### Run Progress
+  - [ ] Run initialized (init-run.cjs)
+  - [ ] Context loaded
+  - [ ] Plan generated  ← {current_step}
+  - [ ] Implementation
+  - [ ] Tests passing
+  - [ ] Code review
+  - [ ] Run completed (complete-run.cjs)
+  - [ ] Walkthrough generated
+  ```
+
+  Update markers as you progress: [x] = done, ← current = active step
+</progress_display>
+
 <prerequisites>
   Before executing scripts, ensure required dependencies are installed:
 
@@ -105,8 +123,14 @@ Supports both single-item and multi-item (batch/wide) runs.
 
 <flow>
   <step n="1" title="Initialize Run">
-    <critical>MUST call init-run.cjs script. DO NOT use mkdir directly.</critical>
-    <note>The script creates BOTH the folder AND run.md file.</note>
+    <hard_gate>
+      ⛔ HARD GATE - SCRIPT EXECUTION REQUIRED
+      ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+      You MUST call init-run.cjs script.
+      DO NOT use mkdir or create files directly.
+      The script creates BOTH the folder AND run.md file.
+      If you skip this, state.yaml will be inconsistent.
+    </hard_gate>
 
     <action>Prepare work items JSON array:</action>
     <code>
@@ -450,6 +474,16 @@ Supports both single-item and multi-item (batch/wide) runs.
   </step>
 
   <step n="7" title="Complete Current Work Item">
+    <hard_gate>
+      ⛔ HARD GATE - SCRIPT EXECUTION REQUIRED
+      ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+      You MUST call complete-run.cjs script.
+      DO NOT manually update state.yaml or run.md.
+      Use --complete-item for batch runs with remaining items.
+      Use --complete-run only when ALL items are done.
+      If you skip this, state becomes inconsistent.
+    </hard_gate>
+
     <llm critical="true">
       <mandate>BATCH RUNS: You MUST loop until ALL items are done</mandate>
       <mandate>NEVER call --complete-run until ALL items have artifacts</mandate>
