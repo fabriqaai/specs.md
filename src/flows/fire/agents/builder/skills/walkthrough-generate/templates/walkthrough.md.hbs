@@ -16,6 +16,22 @@ mode: {{mode}}
 
 {{structure_overview}}
 
+{{#if architecture}}
+## Architecture
+
+### Pattern Used
+
+{{architecture.pattern}}
+
+{{#if architecture.layer_diagram}}
+### Layer Structure
+
+```text
+{{architecture.layer_diagram}}
+```
+{{/if}}
+{{/if}}
+
 ## Files Changed
 
 ### Created
@@ -40,6 +56,30 @@ mode: {{mode}}
 | (none) | |
 {{/unless}}
 
+{{#if domain_model}}
+## Domain Model
+
+{{#if domain_model.entities}}
+### Entities
+
+| Entity | Properties | Business Rules |
+|--------|------------|----------------|
+{{#each domain_model.entities}}
+| {{this.name}} | {{this.properties}} | {{this.rules}} |
+{{/each}}
+{{/if}}
+
+{{#if domain_model.value_objects}}
+### Value Objects
+
+| Value Object | Properties | Constraints |
+|--------------|------------|-------------|
+{{#each domain_model.value_objects}}
+| {{this.name}} | {{this.properties}} | {{this.constraints}} |
+{{/each}}
+{{/if}}
+{{/if}}
+
 ## Key Implementation Details
 
 {{#each implementation_details}}
@@ -48,6 +88,26 @@ mode: {{mode}}
 {{this.description}}
 
 {{/each}}
+
+{{#if security_considerations}}
+## Security Considerations
+
+| Concern | Approach |
+|---------|----------|
+{{#each security_considerations}}
+| {{this.concern}} | {{this.approach}} |
+{{/each}}
+{{/if}}
+
+{{#if performance_considerations}}
+## Performance Considerations
+
+| Requirement | Implementation |
+|-------------|----------------|
+{{#each performance_considerations}}
+| {{this.requirement}} | {{this.implementation}} |
+{{/each}}
+{{/if}}
 
 ## Decisions Made
 
@@ -95,6 +155,14 @@ None
 - Tests added: {{tests_added}}
 - Coverage: {{coverage}}%
 - Status: {{test_status}}
+
+## Ready for Review
+
+- [{{#if ready.acceptance_met}}x{{else}} {{/if}}] All acceptance criteria met
+- [{{#if ready.tests_passing}}x{{else}} {{/if}}] Tests passing
+- [{{#if ready.no_critical_issues}}x{{else}} {{/if}}] No critical issues
+- [{{#if ready.docs_updated}}x{{else}} {{/if}}] Documentation updated (if applicable)
+- [{{#if ready.notes_captured}}x{{else}} {{/if}}] Developer notes captured
 
 ## Developer Notes
 
