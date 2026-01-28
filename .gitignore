@@ -31,3 +31,6 @@ coverage/
 # Misc
 .cache/
 *.tmp
+
+# Personal
+todo.md
