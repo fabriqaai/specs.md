@@ -48,6 +48,12 @@ export class FireCompletedRuns extends BaseElement {
     runs: CompletedRunData[] = [];
 
     /**
+     * Display limit for completed runs. Configurable via settings.
+     */
+    @property({ type: Number })
+    displayLimit = 5;
+
+    /**
      * Whether section is expanded.
      */
     @state()
@@ -60,15 +66,10 @@ export class FireCompletedRuns extends BaseElement {
     private _expandedRunIds: Set<string> = new Set();
 
     /**
-     * Whether to show all runs or just the first 10.
+     * Whether to show all runs or just the configured limit.
      */
     @state()
     private _showAll = false;
-
-    /**
-     * Default limit for displayed runs.
-     */
-    private static readonly DEFAULT_LIMIT = 10;
 
     static styles = [
         ...BaseElement.baseStyles,
@@ -250,15 +251,15 @@ export class FireCompletedRuns extends BaseElement {
                 padding: 8px;
                 margin-top: 4px;
                 cursor: pointer;
-                color: var(--link-foreground, #3794ff);
+                color: var(--description-foreground);
                 font-size: 11px;
                 border-radius: 4px;
-                transition: background 0.15s ease;
+                transition: background 0.15s ease, color 0.15s ease;
             }
 
             .show-more:hover {
                 background: var(--editor-background);
-                text-decoration: underline;
+                color: var(--foreground);
             }
         `
     ];
@@ -271,7 +272,7 @@ export class FireCompletedRuns extends BaseElement {
             return dateB - dateA;
         });
 
-        const limit = FireCompletedRuns.DEFAULT_LIMIT;
+        const limit = this.displayLimit;
         const hasMore = sortedRuns.length > limit;
         const displayedRuns = this._showAll ? sortedRuns : sortedRuns.slice(0, limit);
         const hiddenCount = sortedRuns.length - limit;

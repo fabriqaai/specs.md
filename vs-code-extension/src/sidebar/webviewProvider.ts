@@ -546,12 +546,17 @@ export class SpecsmdWebviewProvider implements vscode.WebviewViewProvider {
             }))
         }));
 
+        // Get display limit from settings
+        const config = vscode.workspace.getConfiguration('specsmd');
+        const completedRunsDisplayLimit = config.get<number>('fireFlow.completedRunsDisplayLimit', 5);
+
         return {
             activeTab: (state.ui.activeTab || 'runs') as 'runs' | 'intents' | 'overview',
             runsData: {
                 activeRuns: activeRunsData,
                 pendingItems,
                 completedRuns: completedRunsData,
+                completedRunsDisplayLimit,
                 stats: {
                     totalWorkItems: state.stats.totalWorkItems,
                     completedWorkItems: state.stats.completedWorkItems,
