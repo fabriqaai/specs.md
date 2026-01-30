@@ -357,11 +357,21 @@ export class FireCompletedRuns extends BaseElement {
     }
 
     private _getFileIcon(fileName: string): string {
-        if (fileName.includes('plan')) return '📋';
-        if (fileName.includes('test')) return '🧪';
-        if (fileName.includes('walkthrough')) return '📝';
-        if (fileName.includes('review')) return '👁️';
-        if (fileName.includes('run')) return '🔥';
+        if (fileName.includes('plan')) {
+            return '📋';
+        }
+        if (fileName.includes('test')) {
+            return '🧪';
+        }
+        if (fileName.includes('walkthrough')) {
+            return '📝';
+        }
+        if (fileName.includes('review')) {
+            return '👁️';
+        }
+        if (fileName.includes('run')) {
+            return '🔥';
+        }
         return '📄';
     }
 
