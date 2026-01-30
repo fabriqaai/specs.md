@@ -2,7 +2,7 @@
  * FireCompletedRuns - Section showing completed runs.
  */
 
-import { html, css, nothing } from 'lit';
+import { html, css, nothing, PropertyValues } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
 import { BaseElement } from '../../shared/base-element.js';
 import '../shared/fire-scope-badge.js';
@@ -33,6 +33,7 @@ export interface CompletedRunData {
  *
  * @fires view-run - When a run is clicked to view details
  * @fires open-file - When a file is clicked to open
+ * @fires show-all-change - When show all state changes (for persistence)
  *
  * @example
  * ```html
@@ -49,9 +50,19 @@ export class FireCompletedRuns extends BaseElement {
 
     /**
      * Display limit for completed runs. Configurable via settings.
+     * Clamped to 1-100 range.
      */
+    private _displayLimit = 5;
+
     @property({ type: Number })
-    displayLimit = 5;
+    get displayLimit(): number {
+        return this._displayLimit;
+    }
+    set displayLimit(value: number) {
+        const oldValue = this._displayLimit;
+        this._displayLimit = Math.max(1, Math.min(100, value || 5));
+        this.requestUpdate('displayLimit', oldValue);
+    }
 
     /**
      * Whether section is expanded.
@@ -67,9 +78,16 @@ export class FireCompletedRuns extends BaseElement {
 
     /**
      * Whether to show all runs or just the configured limit.
+     * Can be set externally for state persistence.
+     */
+    @property({ type: Boolean })
+    showAll = false;
+
+    /**
+     * Memoized sorted runs (sorted by completedAt descending).
      */
     @state()
-    private _showAll = false;
+    private _sortedRuns: CompletedRunData[] = [];
 
     static styles = [
         ...BaseElement.baseStyles,
@@ -264,17 +282,24 @@ export class FireCompletedRuns extends BaseElement {
         `
     ];
 
-    render() {
-        // Sort runs by completedAt descending (newest first)
-        const sortedRuns = [...this.runs].sort((a, b) => {
-            const dateA = new Date(a.completedAt).getTime();
-            const dateB = new Date(b.completedAt).getTime();
-            return dateB - dateA;
-        });
+    /**
+     * Memoize sorting when runs change.
+     */
+    protected willUpdate(changedProperties: PropertyValues): void {
+        if (changedProperties.has('runs')) {
+            this._sortedRuns = [...this.runs].sort((a, b) => {
+                const dateA = new Date(a.completedAt).getTime();
+                const dateB = new Date(b.completedAt).getTime();
+                return dateB - dateA;
+            });
+        }
+    }
 
+    render() {
+        const sortedRuns = this._sortedRuns;
         const limit = this.displayLimit;
         const hasMore = sortedRuns.length > limit;
-        const displayedRuns = this._showAll ? sortedRuns : sortedRuns.slice(0, limit);
+        const displayedRuns = this.showAll ? sortedRuns : sortedRuns.slice(0, limit);
         const hiddenCount = sortedRuns.length - limit;
 
         return html`
@@ -295,7 +320,7 @@ export class FireCompletedRuns extends BaseElement {
                         </div>
                         ${hasMore ? html`
                             <div class="show-more" @click=${this._toggleShowAll}>
-                                ${this._showAll
+                                ${this.showAll
                                     ? 'Show Less'
                                     : `Show ${hiddenCount} More`}
                             </div>
@@ -358,19 +383,22 @@ export class FireCompletedRuns extends BaseElement {
     }
 
     private _getFileIcon(fileName: string): string {
-        if (fileName.includes('plan')) {
-            return '📋';
-        }
-        if (fileName.includes('test')) {
+        const lowerName = fileName.toLowerCase();
+
+        // Check more specific patterns first (test before plan)
+        if (lowerName.includes('test')) {
             return '🧪';
         }
-        if (fileName.includes('walkthrough')) {
+        if (lowerName.includes('walkthrough')) {
             return '📝';
         }
-        if (fileName.includes('review')) {
+        if (lowerName.includes('review')) {
             return '👁️';
         }
-        if (fileName.includes('run')) {
+        if (lowerName.includes('plan')) {
+            return '📋';
+        }
+        if (lowerName.includes('run')) {
             return '🔥';
         }
         return '📄';
@@ -381,7 +409,13 @@ export class FireCompletedRuns extends BaseElement {
     }
 
     private _toggleShowAll(): void {
-        this._showAll = !this._showAll;
+        this.showAll = !this.showAll;
+        // Dispatch event for state persistence
+        this.dispatchEvent(new CustomEvent('show-all-change', {
+            detail: { showAll: this.showAll },
+            bubbles: true,
+            composed: true
+        }));
     }
 
     private _handleRunHeaderClick(run: CompletedRunData): void {
