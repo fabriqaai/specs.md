@@ -32,6 +32,7 @@ export interface FireRunsViewData {
     activeRuns: FireRunData[];
     pendingItems: PendingWorkItemData[];
     completedRuns: CompletedRunData[];
+    completedRunsDisplayLimit?: number;
     stats: FireRunsStats;
 }
 
@@ -152,6 +153,7 @@ export class FireRunsView extends BaseElement {
 
                 <fire-completed-runs
                     .runs=${completedRuns}
+                    .displayLimit=${this.data.completedRunsDisplayLimit}
                     @view-run=${this._handleViewRun}
                     @open-file=${this._handleOpenFile}
                 ></fire-completed-runs>

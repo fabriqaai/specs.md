@@ -98,21 +98,35 @@
                 }
             ]
         },
-        "configuration": {
-            "title": "specsmd",
-            "properties": {
-                "specsmd.telemetry.enabled": {
-                    "type": "boolean",
-                    "default": true,
-                    "description": "Enable anonymous usage telemetry to help improve specsmd. No personally identifiable information is collected."
-                },
-                "specsmd.markdownEditor": {
-                    "type": "string",
-                    "default": "default",
-                    "markdownDescription": "Markdown editor to use when opening files from specsmd. Use `default` for text editor, `preview` for markdown preview, `side-by-side` for both, or enter a custom editor viewType (e.g., `fabriqa.markdownEditor`). [Select from available editors](command:specsmd.selectMarkdownEditor)"
+        "configuration": [
+            {
+                "title": "specsmd",
+                "properties": {
+                    "specsmd.telemetry.enabled": {
+                        "type": "boolean",
+                        "default": true,
+                        "description": "Enable anonymous usage telemetry to help improve specsmd. No personally identifiable information is collected."
+                    },
+                    "specsmd.markdownEditor": {
+                        "type": "string",
+                        "default": "default",
+                        "markdownDescription": "Markdown editor to use when opening files from specsmd. Use `default` for text editor, `preview` for markdown preview, `side-by-side` for both, or enter a custom editor viewType (e.g., `fabriqa.markdownEditor`). [Select from available editors](command:specsmd.selectMarkdownEditor)"
+                    }
+                }
+            },
+            {
+                "title": "Fire Flow",
+                "properties": {
+                    "specsmd.fireFlow.completedRunsDisplayLimit": {
+                        "type": "number",
+                        "default": 5,
+                        "minimum": 1,
+                        "maximum": 100,
+                        "description": "Number of completed runs to display by default in the Runs view."
+                    }
                 }
             }
-        }
+        ]
     },
     "scripts": {
         "vscode:prepublish": "npm run compile -- --production",

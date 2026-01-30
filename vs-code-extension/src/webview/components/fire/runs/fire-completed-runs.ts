@@ -2,7 +2,7 @@
  * FireCompletedRuns - Section showing completed runs.
  */
 
-import { html, css, nothing } from 'lit';
+import { html, css, nothing, PropertyValues } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
 import { BaseElement } from '../../shared/base-element.js';
 import '../shared/fire-scope-badge.js';
@@ -33,6 +33,7 @@ export interface CompletedRunData {
  *
  * @fires view-run - When a run is clicked to view details
  * @fires open-file - When a file is clicked to open
+ * @fires show-all-change - When show all state changes (for persistence)
  *
  * @example
  * ```html
@@ -48,6 +49,22 @@ export class FireCompletedRuns extends BaseElement {
     runs: CompletedRunData[] = [];
 
     /**
+     * Display limit for completed runs. Configurable via settings.
+     * Clamped to 1-100 range.
+     */
+    private _displayLimit = 5;
+
+    @property({ type: Number })
+    get displayLimit(): number {
+        return this._displayLimit;
+    }
+    set displayLimit(value: number) {
+        const oldValue = this._displayLimit;
+        this._displayLimit = Math.max(1, Math.min(100, value || 5));
+        this.requestUpdate('displayLimit', oldValue);
+    }
+
+    /**
      * Whether section is expanded.
      */
     @state()
@@ -58,6 +75,19 @@ export class FireCompletedRuns extends BaseElement {
      */
     @state()
     private _expandedRunIds: Set<string> = new Set();
+
+    /**
+     * Whether to show all runs or just the configured limit.
+     * Can be set externally for state persistence.
+     */
+    @property({ type: Boolean })
+    showAll = false;
+
+    /**
+     * Memoized sorted runs (sorted by completedAt descending).
+     */
+    @state()
+    private _sortedRuns: CompletedRunData[] = [];
 
     static styles = [
         ...BaseElement.baseStyles,
@@ -231,10 +261,47 @@ export class FireCompletedRuns extends BaseElement {
                 overflow: hidden;
                 text-overflow: ellipsis;
             }
+
+            .show-more {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                padding: 8px;
+                margin-top: 4px;
+                cursor: pointer;
+                color: var(--description-foreground);
+                font-size: 11px;
+                border-radius: 4px;
+                transition: background 0.15s ease, color 0.15s ease;
+            }
+
+            .show-more:hover {
+                background: var(--editor-background);
+                color: var(--foreground);
+            }
         `
     ];
 
+    /**
+     * Memoize sorting when runs change.
+     */
+    protected willUpdate(changedProperties: PropertyValues): void {
+        if (changedProperties.has('runs')) {
+            this._sortedRuns = [...this.runs].sort((a, b) => {
+                const dateA = new Date(a.completedAt).getTime();
+                const dateB = new Date(b.completedAt).getTime();
+                return dateB - dateA;
+            });
+        }
+    }
+
     render() {
+        const sortedRuns = this._sortedRuns;
+        const limit = this.displayLimit;
+        const hasMore = sortedRuns.length > limit;
+        const displayedRuns = this.showAll ? sortedRuns : sortedRuns.slice(0, limit);
+        const hiddenCount = sortedRuns.length - limit;
+
         return html`
             <div class="section">
                 <div class="section-header" @click=${this._toggleExpanded}>
@@ -247,10 +314,17 @@ export class FireCompletedRuns extends BaseElement {
                 </div>
 
                 ${this._expanded ? html`
-                    ${this.runs.length > 0 ? html`
+                    ${sortedRuns.length > 0 ? html`
                         <div class="runs-list">
-                            ${this.runs.slice(0, 10).map(run => this._renderRunContainer(run))}
+                            ${displayedRuns.map(run => this._renderRunContainer(run))}
                         </div>
+                        ${hasMore ? html`
+                            <div class="show-more" @click=${this._toggleShowAll}>
+                                ${this.showAll
+                                    ? 'Show Less'
+                                    : `Show ${hiddenCount} More`}
+                            </div>
+                        ` : nothing}
                     ` : html`
                         <div class="empty-state">
                             No completed runs yet
@@ -302,14 +376,46 @@ export class FireCompletedRuns extends BaseElement {
     private _renderFile(file: RunFileData) {
         return html`
             <div class="run-file" @click=${(e: Event) => this._handleFileClick(e, file)}>
-                <span class="file-icon">📄</span>
+                <span class="file-icon">${this._getFileIcon(file.name)}</span>
                 <span class="file-name">${file.name}</span>
             </div>
         `;
     }
 
+    private _getFileIcon(fileName: string): string {
+        const lowerName = fileName.toLowerCase();
+
+        // Check more specific patterns first (test before plan)
+        if (lowerName.includes('test')) {
+            return '🧪';
+        }
+        if (lowerName.includes('walkthrough')) {
+            return '📝';
+        }
+        if (lowerName.includes('review')) {
+            return '👁️';
+        }
+        if (lowerName.includes('plan')) {
+            return '📋';
+        }
+        if (lowerName.includes('run')) {
+            return '🔥';
+        }
+        return '📄';
+    }
+
     private _toggleExpanded(): void {
         this._expanded = !this._expanded;
+    }
+
+    private _toggleShowAll(): void {
+        this.showAll = !this.showAll;
+        // Dispatch event for state persistence
+        this.dispatchEvent(new CustomEvent('show-all-change', {
+            detail: { showAll: this.showAll },
+            bubbles: true,
+            composed: true
+        }));
     }
 
     private _handleRunHeaderClick(run: CompletedRunData): void {
