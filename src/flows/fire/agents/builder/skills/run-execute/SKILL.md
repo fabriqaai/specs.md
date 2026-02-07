@@ -43,28 +43,48 @@ Supports both single-item and multi-item (batch/wide) runs.
     </check>
 
     <check if="runs.active has entries">
-      <action>Load run state from .specs-fire/runs/{runs.active[0].id}/run.md</action>
-      <action>Get current_item and its status from state.yaml</action>
-      <action>Check for existing artifacts and LOAD if present:</action>
+      <action>Load active run from state.yaml runs.active[0]</action>
+      <action>Read scope (single/batch/wide) and work_items array</action>
 
-      <substep>design.md → if exists, LOAD from .specs-fire/intents/{intent}/work-items/{id}-design.md</substep>
-      <substep>plan.md → if exists, LOAD from .specs-fire/runs/{run-id}/plan.md (skip plan generation)</substep>
-      <substep>test-report.md → if exists, tests already passed (skip to Step 6b)</substep>
-      <substep>review-report.md → if exists, review done (skip to Step 7)</substep>
+      <substep n="0a" title="Enumerate Work Item Status">
+        <action>For EACH work item in runs.active[0].work_items, classify by status:</action>
+        <action>Build status summary from state.yaml (NOT from artifact files):</action>
+        <format>
+          [DONE] {item-id} — completed
+          [WORKING] {item-id} (phase: {current_phase}) — in_progress
+          [PENDING] {item-id} — pending
+        </format>
+        <action>Count: completed={X}, in_progress={Y}, pending={Z}</action>
+      </substep>
 
-      <determine_resume_point>
-        | Artifacts Present | Resume At |
-        |-------------------|-----------|
-        | None | Step 3 (Generate Plan) |
-        | plan.md only | Step 5 (Implementation) |
-        | plan.md + test-report.md | Step 6b (Code Review) |
-        | plan.md + test-report.md + review-report.md | Step 7 (Complete Item) |
-      </determine_resume_point>
+      <substep n="0b" title="Determine Resume Point for Current Item">
+        <action>Get current_item from state.yaml</action>
+        <action>Read current_phase from the current item's entry in work_items</action>
+
+        <determine_resume_point>
+          Use current_phase from state.yaml to determine resume point:
+
+          | current_phase | Resume At |
+          |---------------|-----------|
+          | plan (or unset) | Step 3 (Generate Plan) |
+          | execute | Step 5 (Implementation) |
+          | test | Step 6 (Run Tests) |
+          | review | Step 6b (Code Review) |
+        </determine_resume_point>
+      </substep>
+
+      <llm critical="true">
+        <mandate>NEVER call --complete-item for items with status "completed" — they are already done</mandate>
+        <mandate>NEVER re-execute steps (plan, implement, test) for completed items</mandate>
+        <mandate>ONLY work on the current_item identified in state.yaml</mandate>
+        <mandate>Use current_phase from state.yaml — do NOT infer phase from artifact file existence</mandate>
+      </llm>
 
       <output>
-        Resuming run {run-id} for work item {current_item}.
+        Resuming run {run-id} ({scope}) for work item {current_item}.
         Mode: {mode}
-        Loaded existing artifacts: {artifact_list}
+        Phase: {current_phase}
+        Status: {completed_count} done, {in_progress_count} working, {pending_count} pending
         Resuming at: Step {step_number}
       </output>
     </check>

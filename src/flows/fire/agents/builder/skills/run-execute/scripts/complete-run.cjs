@@ -21,6 +21,7 @@
  *   --decisions=JSON       - JSON array of {decision, choice, rationale}
  *   --tests=N              - Number of tests added
  *   --coverage=N           - Coverage percentage
+ *   --force                - Override phase guard (skip review phase check)
  */
 
 const fs = require('fs');
@@ -391,7 +392,7 @@ function updateRunLog(runLogPath, activeRun, params, completedTime, isFullComple
 // Complete Current Item (for batch runs)
 // =============================================================================
 
-function completeCurrentItem(rootPath, runId, params = {}) {
+function completeCurrentItem(rootPath, runId, params = {}, options = {}) {
   const completionParams = {
     filesCreated: params.filesCreated || [],
     filesModified: params.filesModified || [],
@@ -399,6 +400,7 @@ function completeCurrentItem(rootPath, runId, params = {}) {
     testsAdded: params.testsAdded || 0,
     coverage: params.coverage || 0,
   };
+  const force = options.force || false;
 
   validateInputs(rootPath, runId);
   const { statePath, runLogPath } = validateFireProject(rootPath, runId);
@@ -437,6 +439,16 @@ function completeCurrentItem(rootPath, runId, params = {}) {
       `Current item "${currentItemId}" not found in work items.`,
       'COMPLETE_050',
       'The run state may be corrupted.'
+    );
+  }
+
+  // Phase guard: item must be at 'review' phase before completion
+  const currentPhase = workItems[currentItemIndex].current_phase;
+  if (!force && currentPhase !== 'review') {
+    throw fireError(
+      `Cannot complete item "${currentItemId}" — current phase is "${currentPhase || 'unknown'}", not "review".`,
+      'COMPLETE_051',
+      'The item must reach the review phase before completion. Use --force to override.'
     );
   }
 
@@ -497,7 +509,7 @@ function completeCurrentItem(rootPath, runId, params = {}) {
 // Complete Entire Run
 // =============================================================================
 
-function completeRun(rootPath, runId, params = {}) {
+function completeRun(rootPath, runId, params = {}, options = {}) {
   const completionParams = {
     filesCreated: params.filesCreated || [],
     filesModified: params.filesModified || [],
@@ -505,6 +517,7 @@ function completeRun(rootPath, runId, params = {}) {
     testsAdded: params.testsAdded || 0,
     coverage: params.coverage || 0,
   };
+  const force = options.force || false;
 
   validateInputs(rootPath, runId);
   const { statePath, runLogPath } = validateFireProject(rootPath, runId);
@@ -536,6 +549,21 @@ function completeRun(rootPath, runId, params = {}) {
   const completedTime = new Date().toISOString();
   const workItems = activeRun.work_items || [];
   const scope = activeRun.scope || 'single';
+
+  // Phase guard: all non-completed items must be at 'review' phase
+  if (!force) {
+    const notReady = workItems.filter(
+      item => item.status !== 'completed' && item.current_phase !== 'review'
+    );
+    if (notReady.length > 0) {
+      const list = notReady.map(i => `${i.id} (phase: ${i.current_phase || 'unknown'})`).join(', ');
+      throw fireError(
+        `Cannot complete run — ${notReady.length} item(s) have not reached review phase: ${list}.`,
+        'COMPLETE_060',
+        'All items must reach the review phase before run completion. Use --force to override.'
+      );
+    }
+  }
 
   // Mark all items as completed
   for (const item of workItems) {
@@ -636,6 +664,7 @@ function parseArgs(args) {
     runId: args[1],
     completeItem: false,
     completeRunFlag: false,
+    force: false,
     filesCreated: [],
     filesModified: [],
     decisions: [],
@@ -649,6 +678,8 @@ function parseArgs(args) {
       result.completeItem = true;
     } else if (arg === '--complete-run') {
       result.completeRunFlag = true;
+    } else if (arg === '--force') {
+      result.force = true;
     } else if (arg.startsWith('--files-created=')) {
       try {
         result.filesCreated = JSON.parse(arg.substring('--files-created='.length));
@@ -690,6 +721,7 @@ function printUsage() {
   console.error('Flags:');
   console.error('  --complete-item  - Complete only the current work item (batch/wide runs)');
   console.error('  --complete-run   - Complete the entire run');
+  console.error('  --force          - Override phase guard (skip review phase check)');
   console.error('');
   console.error('Options:');
   console.error('  --files-created=JSON   - JSON array of {path, purpose}');
@@ -718,6 +750,7 @@ if (require.main === module) {
   const params = parseArgs(args);
 
   try {
+    const cliOptions = { force: params.force };
     let result;
     if (params.completeItem) {
       result = completeCurrentItem(params.rootPath, params.runId, {
@@ -726,7 +759,7 @@ if (require.main === module) {
         decisions: params.decisions,
         testsAdded: params.testsAdded,
         coverage: params.coverage,
-      });
+      }, cliOptions);
     } else {
       // Default: complete entire run
       result = completeRun(params.rootPath, params.runId, {
@@ -735,7 +768,7 @@ if (require.main === module) {
         decisions: params.decisions,
         testsAdded: params.testsAdded,
         coverage: params.coverage,
-      });
+      }, cliOptions);
     }
     console.log(JSON.stringify(result, null, 2));
     process.exit(0);
