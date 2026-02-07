@@ -164,6 +164,7 @@
             "pages": [
               "learn/index",
               "learn/fire-flow-intro",
+              "learn/fire-flow-resume-run",
               "learn/aidlc-bolt-execution"
             ]
           }
