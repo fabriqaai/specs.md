@@ -283,7 +283,7 @@ export class FireParser implements FlowParser<FireArtifacts> {
 
         try {
             const files = fs.readdirSync(workItemsPath)
-                .filter(f => f.endsWith('.md'));
+                .filter(f => f.endsWith('.md') && !f.endsWith('-design.md'));
 
             for (const file of files) {
                 const workItemId = file.replace('.md', '');
