@@ -164,6 +164,14 @@ export class FireUIProvider implements FlowUIProvider {
     // =========================================================================
 
     /**
+     * Get the completed runs display limit from settings.
+     */
+    private _getCompletedRunsDisplayLimit(): number {
+        const config = vscode.workspace.getConfiguration('specsmd');
+        return config.get<number>('fireFlow.completedRunsDisplayLimit', 5);
+    }
+
+    /**
      * Transform state to runs data format expected by Lit components.
      */
     private _transformRunsData(state: FireWebviewSnapshot) {
@@ -206,6 +214,7 @@ export class FireUIProvider implements FlowUIProvider {
             activeRuns: state.activeRuns.map(r => this._transformRun(r, workItemLookup)),
             pendingItems,
             completedRuns: state.completedRuns.map(r => this._transformRun(r, workItemLookup)),
+            completedRunsDisplayLimit: this._getCompletedRunsDisplayLimit(),
             stats: state.stats,
             ui: state.ui
         };

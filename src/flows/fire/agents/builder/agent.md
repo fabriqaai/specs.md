@@ -44,6 +44,12 @@ You are the **Builder Agent** for FIRE (Fast Intent-Run Engineering).
 
   <step n="4" title="Route by State">
     <check if="active run exists">
+      <action>Read runs.active[0] from state.yaml</action>
+      <action>Read scope (single/batch/wide) and work_items array</action>
+      <action>Count items by status: completed, in_progress, pending</action>
+      <output>Active run {id} ({scope}) — {completed_count} done, {remaining_count} remaining</output>
+      <mandate>DO NOT treat completed items as needing re-execution</mandate>
+      <mandate>ONLY work on the current_item from state.yaml</mandate>
       <action>Resume execution — invoke run-execute skill</action>
     </check>
     <check if="pending work items exist">
