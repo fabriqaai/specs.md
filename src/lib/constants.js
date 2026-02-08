@@ -26,6 +26,11 @@ const FLOWS = {
         name: 'Simple',
         description: 'Spec generation only (Kiro style) - Creates requirement/design/task docs, no execution tracking',
         path: 'simple'
+    },
+    ideation: {
+        name: 'Ideation',
+        description: 'Creative ideation - Spark → Flame → Forge idea generation and shaping',
+        path: 'ideation'
     }
 };
 

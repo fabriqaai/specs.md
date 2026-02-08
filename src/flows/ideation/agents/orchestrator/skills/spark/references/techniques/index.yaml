@@ -1,0 +1,76 @@
+# Spark Technique Index
+# Each technique declares its natural interaction type and AI behavior.
+# The AI selects techniques internally — never expose technique names to the user.
+
+techniques:
+  - id: scamper
+    name: SCAMPER
+    interaction: generate
+    energy: high
+    best_for: "Transforming existing concepts into new variations"
+    asks: null
+    ai_behavior: "Apply S-C-A-M-P-E-R transformations to the topic and present modified concepts"
+    reference: techniques/scamper.md
+
+  - id: random-word
+    name: Random Word
+    interaction: generate
+    energy: high
+    best_for: "Breaking fixation with unexpected connections"
+    asks: null
+    ai_behavior: "Select a random concept from an unrelated domain and force connections with the topic"
+    reference: techniques/random-word.md
+
+  - id: what-if
+    name: What-If Scenarios
+    interaction: generate
+    energy: medium
+    best_for: "Challenging assumptions and exploring alternate realities"
+    asks: null
+    ai_behavior: "Generate 'what if' scenarios that challenge core assumptions about the topic"
+    reference: techniques/what-if.md
+
+  - id: inversion
+    name: Inversion
+    interaction: generate
+    energy: high
+    best_for: "Finding opportunities by reversing problems or assumptions"
+    asks: null
+    ai_behavior: "Reverse the problem, assumptions, or desired outcome and generate ideas from the inverted perspective"
+    reference: techniques/inversion.md
+
+  - id: analogy
+    name: Cross-Domain Analogy
+    interaction: generate
+    energy: medium
+    best_for: "Transferring solutions from one domain to another"
+    asks: null
+    ai_behavior: "Find analogous problems in distant domains and adapt their solutions to the current topic"
+    reference: techniques/analogy.md
+
+  - id: first-principles
+    name: First Principles
+    interaction: generate
+    energy: low
+    best_for: "Fundamental rethinking when existing approaches feel stale"
+    asks: null
+    ai_behavior: "Decompose the topic to its fundamental truths, then rebuild solutions from scratch"
+    reference: techniques/first-principles.md
+
+  - id: questorming
+    name: Questorming
+    interaction: co-build
+    energy: medium
+    best_for: "Reframing the problem space through better questions"
+    asks:
+      - trigger: "after generating question batch"
+        question: "Which of these questions feels most important to you?"
+    ai_fallback: "AI selects the most provocative question and generates ideas from it"
+    reference: techniques/questorming.md
+
+# Technique Selection Strategy
+# The AI selects techniques based on:
+# 1. Which domains are underexplored (anti-bias engine)
+# 2. User energy/engagement level
+# 3. Which techniques haven't been used recently
+# 4. Whether the user wants "wilder" (→ inversion, random-word) or "practical" (→ first-principles, analogy)
