@@ -20,7 +20,7 @@ Generate genuinely diverse, surprising ideas through rapid batches. AI is the cr
 
 <llm critical="true">
   <mandate>NEVER ask setup questions — generate ideas immediately on receiving a topic</mandate>
-  <mandate>NEVER name techniques to the user — use them internally, present only the ideas</mandate>
+  <mandate>SHOW which technique was used for each idea — e.g., "(via Inversion)" or "(via First Principles)" — so the user understands the thinking approach</mandate>
   <mandate>ALWAYS use the deep thinking protocol before generating each batch</mandate>
   <mandate>ALWAYS present ideas as vivid, specific, memorable concepts — not abstract descriptions</mandate>
   <mandate>NEVER more than 2 questions in a row — always generate something creative first</mandate>
@@ -82,6 +82,7 @@ Generate genuinely diverse, surprising ideas through rapid batches. AI is the cr
     <format>
       **S{batch}-{number}** — {vivid idea title}
       {2-3 sentence description — specific, concrete, imaginative}
+      *(technique: {technique used, e.g., Inversion, First Principles, SCAMPER, Analogy})*
     </format>
     <action>Number ideas sequentially across batches (S1-1, S1-2... S2-1, S2-2...)</action>
     <anti_bias>
