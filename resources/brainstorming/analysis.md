@@ -266,7 +266,7 @@ The comprehensive Wikipedia article on brainstorming, covering history, methodol
 ### Convergent Themes Across All Five Sources
 
 1. **Separate generation from evaluation** — Osborn's deferred judgment, De Bono's hat separation, every toolkit reinforces this
-2. **Quantity first** — Osborn's "quantity breeds quality", BMAD's 100+ idea target, all sources agree
+2. **Quantity first** — Osborn's "quantity breeds quality", all sources agree
 3. **Structured process beats unstructured** — CPS stages, Hat sequences, technique toolkits all add structure
 4. **Multiple modes of thinking** — De Bono's 6 modes, Osborn's judicial/creative split, Disney's Dreamer/Realist/Critic
 5. **Build on others' ideas** — Osborn's Rule 4, brainwriting, nominal group technique
