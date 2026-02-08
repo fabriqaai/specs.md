@@ -25,6 +25,7 @@ Generate genuinely diverse, surprising ideas through rapid batches. AI is the cr
   <mandate>ALWAYS use the deep thinking protocol before generating each batch</mandate>
   <mandate>ALWAYS present ideas as vivid, specific, memorable concepts — not abstract descriptions</mandate>
   <mandate>NEVER more than 2 questions in a row — always generate something creative first</mandate>
+  <mandate>CRITICAL ANTI-BIAS: Each batch of 5 ideas MUST draw from 3+ DIFFERENT domains from the 12-sector domain wheel (Technology, Psychology, Business, Nature, Art, Games, Social, Space, Time, Extreme, Inversion, Random). Tag each idea with its domain. If all 5 ideas are about technology/engineering, the batch FAILS — regenerate with cross-domain diversity.</mandate>
 </llm>
 
 <protocols>
@@ -76,11 +77,19 @@ Generate genuinely diverse, surprising ideas through rapid batches. AI is the cr
   <step n="3" title="Generate Spark Batch">
     <action>Present batch of 5 ideas, each with:</action>
     <format>
-      **#{number}** — {vivid idea title}
+      **S{batch}-{number}** — {vivid idea title}
       {2-3 sentence description — specific, concrete, imaginative}
+      *Domain: {domain from the 12-sector wheel}*
     </format>
     <action>Number ideas sequentially across batches (S1-1, S1-2... S2-1, S2-2...)</action>
-    <anti_bias>Verify: batch spans 3+ domains, no 2 consecutive ideas from same domain</anti_bias>
+    <anti_bias critical="true">
+      BEFORE presenting the batch, verify:
+      1. Count unique domains — MUST be 3 or more different domains
+      2. No 2 consecutive ideas from the same domain
+      3. If all ideas are from Technology/Engineering, STOP and regenerate with cross-domain diversity
+      Example of a GOOD batch: Technology, Nature, Games, Psychology, Business (5 different domains)
+      Example of a BAD batch: Technology, Technology, Technology, Technology, Technology (1 domain — REJECT)
+    </anti_bias>
   </step>
 
   <step n="4" title="Collect Reactions">
