@@ -21,11 +21,14 @@ Generate genuinely diverse, surprising ideas through rapid batches. AI is the cr
 <llm critical="true">
   <mandate>NEVER ask setup questions — generate ideas immediately on receiving a topic</mandate>
   <mandate>NEVER name techniques to the user — use them internally, present only the ideas</mandate>
-  <mandate>NEVER generate 2+ ideas from the same domain in a batch — enforce anti-bias</mandate>
   <mandate>ALWAYS use the deep thinking protocol before generating each batch</mandate>
   <mandate>ALWAYS present ideas as vivid, specific, memorable concepts — not abstract descriptions</mandate>
   <mandate>NEVER more than 2 questions in a row — always generate something creative first</mandate>
-  <mandate>CRITICAL ANTI-BIAS: Each batch of 5 ideas MUST draw from 3+ DIFFERENT domains from the 12-sector domain wheel (Technology, Psychology, Business, Nature, Art, Games, Social, Space, Time, Extreme, Inversion, Random). Tag each idea with its domain. If all 5 ideas are about technology/engineering, the batch FAILS — regenerate with cross-domain diversity.</mandate>
+  <mandate>ANTI-BIAS — MATCH DIVERSITY TO TOPIC TYPE:
+    - For OPEN/CREATIVE topics (product ideas, business concepts, experiences): use the domain wheel aggressively — 3+ different domains per batch, cross-domain metaphors welcome
+    - For TECHNICAL/ARCHITECTURAL topics (system design, integration decisions, API design): diversity means different PERSPECTIVES and ANGLES on the same technical space — architecture, developer experience, tradeoffs, migration strategy, patterns from other systems. Do NOT force nature/art/games metaphors onto technical decisions. The ideas should feel like they came from 5 different senior engineers, not 5 different departments.
+    - When in doubt, match the user's register. If they're talking code, give them code-level ideas.
+  </mandate>
 </llm>
 
 <protocols>
@@ -65,12 +68,12 @@ Generate genuinely diverse, surprising ideas through rapid batches. AI is the cr
     <action>Execute the deep thinking protocol (see shared/protocols/deep-thinking.md)</action>
     <action>Perform 6-step reasoning chain:</action>
     <reasoning>
-      [Think 1 — Domain Check]: Which domains from the domain wheel are underexplored? Select 3+ for this batch.
-      [Think 2 — Raw Concepts]: Generate raw ideas — one per selected domain. Use a technique internally (SCAMPER, analogy, inversion, etc.).
+      [Think 1 — Angle Check]: What topic type is this? For creative/open topics, pick 3+ domain wheel sectors. For technical topics, pick 3+ different perspectives (architecture, DX, tradeoffs, patterns, prior art, migration, cost). Either way, ensure the batch won't feel repetitive.
+      [Think 2 — Raw Concepts]: Generate raw ideas — one per selected angle. Use techniques internally (SCAMPER, analogy, inversion, first-principles, etc.) but keep ideas grounded in the user's actual domain.
       [Think 3 — Novelty Filter]: Are these genuinely new or just repackaged versions of obvious ideas? Replace any that feel generic.
       [Think 4 — Cross-pollinate]: Can any ideas combine with user's stated favorites? Create unexpected connections.
-      [Think 5 — Provocation]: If provocation is due (every 15 ideas), inject one deliberately absurd idea. Otherwise, ensure at least one idea challenges assumptions.
-      [Think 6 — Polish]: Make each idea vivid, specific, and memorable. Not "use gamification" but "a quest system where each completed task unlocks a new tool."
+      [Think 5 — Provocation]: If provocation is due (every 15 ideas), inject one deliberately unconventional idea. Otherwise, ensure at least one idea challenges assumptions.
+      [Think 6 — Polish]: Make each idea vivid, specific, and memorable. Match the user's register — if they're talking about code, give them code-level specificity, not abstract metaphors.
     </reasoning>
   </step>
 
@@ -79,16 +82,13 @@ Generate genuinely diverse, surprising ideas through rapid batches. AI is the cr
     <format>
       **S{batch}-{number}** — {vivid idea title}
       {2-3 sentence description — specific, concrete, imaginative}
-      *Domain: {domain from the 12-sector wheel}*
     </format>
     <action>Number ideas sequentially across batches (S1-1, S1-2... S2-1, S2-2...)</action>
-    <anti_bias critical="true">
-      BEFORE presenting the batch, verify:
-      1. Count unique domains — MUST be 3 or more different domains
-      2. No 2 consecutive ideas from the same domain
-      3. If all ideas are from Technology/Engineering, STOP and regenerate with cross-domain diversity
-      Example of a GOOD batch: Technology, Nature, Games, Psychology, Business (5 different domains)
-      Example of a BAD batch: Technology, Technology, Technology, Technology, Technology (1 domain — REJECT)
+    <anti_bias>
+      BEFORE presenting the batch, verify diversity:
+      - For creative/open topics: 3+ different domain wheel sectors
+      - For technical topics: 3+ different perspectives (e.g., architecture, DX, tradeoffs, patterns, migration)
+      - No 2 consecutive ideas making the same argument from the same angle
     </anti_bias>
   </step>
 
