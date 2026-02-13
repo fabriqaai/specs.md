@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 You can also view this changelog at [specs.md/changelog](https://specs.md/changelog).
 
+## [0.1.23] - 2026-02-13
+
+### Fixed
+
+- Codex installer now creates proper skills instead of flat `.md` files that Codex cannot read
+- Commands are transformed into `.codex/skills/<name>/SKILL.md` with proper YAML frontmatter
+
 ## [0.1.11] - 2026-01-25
 
 ### Per-Work-Item Phase Tracking
@@ -186,6 +193,7 @@ The VS Code extension now shows real-time phase progress for each work item in F
 
 ---
 
+[0.1.23]: https://github.com/fabriqaai/specs.md/compare/v0.1.22...v0.1.23
 [0.1.11]: https://github.com/fabriqaai/specs.md/compare/v0.1.10...v0.1.11
 [0.1.10]: https://github.com/fabriqaai/specs.md/compare/v0.1.9...v0.1.10
 [0.1.9]: https://github.com/fabriqaai/specs.md/compare/v0.1.8...v0.1.9

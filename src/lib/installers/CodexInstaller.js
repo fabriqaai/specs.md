@@ -62,17 +62,6 @@ class CodexInstaller extends ToolInstaller {
                 await fs.ensureDir(skillDir);
                 await fs.writeFile(path.join(skillDir, 'SKILL.md'), skillContent, 'utf8');
 
-                // Write agents/openai.yaml
-                const agentsDir = path.join(skillDir, 'agents');
-                await fs.ensureDir(agentsDir);
-                const openaiYaml = [
-                    'interface:',
-                    `  display_name: "specsmd ${commandName}"`,
-                    `  short_description: "${description || 'specsmd agent'}"`,
-                    `  default_prompt: "Use $${skillName} to start spec-driven development"`
-                ].join('\n');
-                await fs.writeFile(path.join(agentsDir, 'openai.yaml'), openaiYaml, 'utf8');
-
                 installedFiles.push(skillName);
             } catch (err) {
                 console.log(theme.warning(`  Failed to install ${cmdFile}: ${err.message}`));
