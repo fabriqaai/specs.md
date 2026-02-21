@@ -2936,12 +2936,13 @@ function createDashboardApp(deps) {
 
     let contentNode;
     if (splitPreviewLayout && !overlayPreviewOpen) {
+      const previewBodyLines = Math.max(1, contentRowsBudget - 3);
       const previewPanel = {
         key: 'preview-split',
         title: `Preview: ${effectivePreviewTarget?.label || 'unknown'}`,
         lines: previewLines,
         borderColor: 'magenta',
-        maxLines: Math.max(4, contentRowsBudget)
+        maxLines: previewBodyLines
       };
 
       contentNode = React.createElement(
