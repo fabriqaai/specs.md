@@ -881,6 +881,30 @@ function pushFileEntry(entries, seenPaths, candidate) {
   });
 }
 
+function buildIntentScopedLabel(snapshot, intentId, filePath, fallbackName = 'file.md') {
+  const safeIntentId = typeof intentId === 'string' && intentId.trim() !== ''
+    ? intentId
+    : '';
+  const safeFallback = typeof fallbackName === 'string' && fallbackName.trim() !== ''
+    ? fallbackName
+    : 'file.md';
+
+  if (typeof filePath === 'string' && filePath.trim() !== '') {
+    if (safeIntentId && typeof snapshot?.rootPath === 'string' && snapshot.rootPath.trim() !== '') {
+      const intentPath = path.join(snapshot.rootPath, 'intents', safeIntentId);
+      const relativePath = path.relative(intentPath, filePath);
+      if (relativePath && !relativePath.startsWith('..') && !path.isAbsolute(relativePath)) {
+        return `${safeIntentId}/${relativePath.split(path.sep).join('/')}`;
+      }
+    }
+
+    const basename = path.basename(filePath);
+    return safeIntentId ? `${safeIntentId}/${basename}` : basename;
+  }
+
+  return safeIntentId ? `${safeIntentId}/${safeFallback}` : safeFallback;
+}
+
 function collectFireRunFiles(run) {
   if (!run || typeof run.folderPath !== 'string') {
     return [];
@@ -1023,14 +1047,24 @@ function getRunFileEntries(snapshot, flow, options = {}) {
   const pendingItems = Array.isArray(snapshot?.pendingItems) ? snapshot.pendingItems : [];
   for (const pendingItem of pendingItems) {
     pushFileEntry(entries, seenPaths, {
-      label: `${pendingItem?.intentId || 'intent'}/${pendingItem?.id || 'work-item'}.md`,
+      label: buildIntentScopedLabel(
+        snapshot,
+        pendingItem?.intentId,
+        pendingItem?.filePath,
+        `${pendingItem?.id || 'work-item'}.md`
+      ),
       path: pendingItem?.filePath,
       scope: 'upcoming'
     });
 
     if (pendingItem?.intentId) {
       pushFileEntry(entries, seenPaths, {
-        label: `${pendingItem.intentId}/brief.md`,
+        label: buildIntentScopedLabel(
+          snapshot,
+          pendingItem.intentId,
+          path.join(snapshot?.rootPath || '', 'intents', pendingItem.intentId, 'brief.md'),
+          'brief.md'
+        ),
         path: path.join(snapshot?.rootPath || '', 'intents', pendingItem.intentId, 'brief.md'),
         scope: 'intent'
       });
@@ -1049,7 +1083,12 @@ function getRunFileEntries(snapshot, flow, options = {}) {
     : [];
   for (const intent of completedIntents) {
     pushFileEntry(entries, seenPaths, {
-      label: `${intent.id}/brief.md`,
+      label: buildIntentScopedLabel(
+        snapshot,
+        intent?.id,
+        path.join(snapshot?.rootPath || '', 'intents', intent?.id || '', 'brief.md'),
+        'brief.md'
+      ),
       path: path.join(snapshot?.rootPath || '', 'intents', intent.id, 'brief.md'),
       scope: 'intent'
     });
@@ -1315,11 +1354,16 @@ function buildOverviewIntentGroups(snapshot, flow, filter = 'next') {
       const workItems = Array.isArray(intent?.workItems) ? intent.workItems : [];
       const done = workItems.filter((item) => item.status === 'completed').length;
       const files = [{
-        label: `${intent?.id || 'intent'}/brief.md`,
+        label: buildIntentScopedLabel(snapshot, intent?.id, intent?.filePath, 'brief.md'),
         path: intent?.filePath,
         scope: 'intent'
       }, ...workItems.map((item) => ({
-        label: `${intent?.id || 'intent'}/${item?.id || 'work-item'}.md`,
+        label: buildIntentScopedLabel(
+          snapshot,
+          intent?.id,
+          item?.filePath,
+          `${item?.id || 'work-item'}.md`
+        ),
         path: item?.filePath,
         scope: item?.status === 'completed' ? 'completed' : 'upcoming'
       }))];
@@ -1455,14 +1499,24 @@ function buildPendingGroups(snapshot, flow) {
 
     if (item?.filePath) {
       files.push({
-        label: `${item?.intentId || 'intent'}/${item?.id || 'work-item'}.md`,
+        label: buildIntentScopedLabel(
+          snapshot,
+          item?.intentId,
+          item?.filePath,
+          `${item?.id || 'work-item'}.md`
+        ),
         path: item.filePath,
         scope: 'upcoming'
       });
     }
     if (item?.intentId) {
       files.push({
-        label: `${item.intentId}/brief.md`,
+        label: buildIntentScopedLabel(
+          snapshot,
+          item.intentId,
+          path.join(snapshot?.rootPath || '', 'intents', item.intentId, 'brief.md'),
+          'brief.md'
+        ),
         path: path.join(snapshot?.rootPath || '', 'intents', item.intentId, 'brief.md'),
         scope: 'intent'
       });
@@ -1523,7 +1577,12 @@ function buildCompletedGroups(snapshot, flow) {
       key: `completed:intent:${intent?.id || index}`,
       label: `intent ${intent?.id || 'unknown'} [completed]`,
       files: filterExistingFiles([{
-        label: `${intent?.id || 'intent'}/brief.md`,
+        label: buildIntentScopedLabel(
+          snapshot,
+          intent?.id,
+          path.join(snapshot?.rootPath || '', 'intents', intent?.id || '', 'brief.md'),
+          'brief.md'
+        ),
         path: path.join(snapshot?.rootPath || '', 'intents', intent?.id || '', 'brief.md'),
         scope: 'intent'
       }])
