@@ -10,6 +10,9 @@ function cycleView(current) {
   if (current === 'runs') {
     return 'overview';
   }
+  if (current === 'overview') {
+    return 'health';
+  }
   return 'runs';
 }
 
