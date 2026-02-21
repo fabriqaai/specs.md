@@ -89,6 +89,21 @@ During installation, select your flow:
 
 The installer detects your AI coding tools and sets up agent definitions, slash commands, and project structure for your selected flow.
 
+### Live Dashboard (FIRE)
+
+Track FIRE state continuously from terminal:
+
+```bash
+npx specsmd@latest dashboard
+```
+
+Useful options:
+
+```bash
+npx specsmd@latest dashboard --flow fire --path . --refresh-ms 1000
+npx specsmd@latest dashboard --no-watch
+```
+
 ### Install VS Code Extension (Optional)
 
 Track your progress visually with our sidebar extension:
