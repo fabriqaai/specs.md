@@ -114,18 +114,33 @@ function formatTime(value) {
   return date.toLocaleTimeString();
 }
 
-function buildShortStats(snapshot) {
+function buildShortStats(snapshot, flow) {
   if (!snapshot?.initialized) {
+    if (flow === 'aidlc') {
+      return 'init: waiting for memory-bank scan';
+    }
+    if (flow === 'simple') {
+      return 'init: waiting for specs scan';
+    }
     return 'init: waiting for state.yaml';
   }
 
-  const stats = snapshot.stats;
-  return `runs ${stats.activeRunsCount}/${stats.completedRuns} | intents ${stats.completedIntents}/${stats.totalIntents} | work ${stats.completedWorkItems}/${stats.totalWorkItems}`;
+  const stats = snapshot?.stats || {};
+
+  if (flow === 'aidlc') {
+    return `bolts ${stats.activeBoltsCount || 0}/${stats.completedBolts || 0} | intents ${stats.completedIntents || 0}/${stats.totalIntents || 0} | stories ${stats.completedStories || 0}/${stats.totalStories || 0}`;
+  }
+
+  if (flow === 'simple') {
+    return `specs ${stats.completedSpecs || 0}/${stats.totalSpecs || 0} | tasks ${stats.completedTasks || 0}/${stats.totalTasks || 0} | active ${stats.activeSpecsCount || 0}`;
+  }
+
+  return `runs ${stats.activeRunsCount || 0}/${stats.completedRuns || 0} | intents ${stats.completedIntents || 0}/${stats.totalIntents || 0} | work ${stats.completedWorkItems || 0}/${stats.totalWorkItems || 0}`;
 }
 
 function buildHeaderLine(snapshot, flow, watchEnabled, watchStatus, lastRefreshAt, view, runFilter, width) {
-  const projectName = snapshot?.project?.name || 'Unnamed FIRE project';
-  const shortStats = buildShortStats(snapshot);
+  const projectName = snapshot?.project?.name || 'Unnamed project';
+  const shortStats = buildShortStats(snapshot, flow);
 
   const line = `${flow.toUpperCase()} | ${projectName} | ${shortStats} | watch:${watchEnabled ? watchStatus : 'off'} | ${view}/${runFilter} | ${formatTime(lastRefreshAt)}`;
 
@@ -192,7 +207,7 @@ function buildPhaseTrack(currentPhase) {
   return labels.map((label, index) => (index === currentIndex ? `[${label}]` : ` ${label} `)).join(' - ');
 }
 
-function buildCurrentRunLines(snapshot, width) {
+function buildFireCurrentRunLines(snapshot, width) {
   const run = getCurrentRun(snapshot);
   if (!run) {
     return [truncate('No active run', width)];
@@ -218,7 +233,7 @@ function buildCurrentRunLines(snapshot, width) {
   return lines.map((line) => truncate(line, width));
 }
 
-function buildRunFilesLines(snapshot, width, icons) {
+function buildFireRunFilesLines(snapshot, width, icons) {
   const run = getCurrentRun(snapshot);
   if (!run) {
     return [truncate('No run files (no active run)', width)];
@@ -232,7 +247,7 @@ function buildRunFilesLines(snapshot, width, icons) {
   return files.map((file) => truncate(`${icons.runFile} ${file}`, width));
 }
 
-function buildPendingLines(snapshot, runFilter, width) {
+function buildFirePendingLines(snapshot, runFilter, width) {
   if (runFilter === 'completed') {
     return [truncate('Hidden by run filter: completed', width)];
   }
@@ -248,7 +263,7 @@ function buildPendingLines(snapshot, runFilter, width) {
   });
 }
 
-function buildCompletedLines(snapshot, runFilter, width) {
+function buildFireCompletedLines(snapshot, runFilter, width) {
   if (runFilter === 'active') {
     return [truncate('Hidden by run filter: active', width)];
   }
@@ -265,7 +280,7 @@ function buildCompletedLines(snapshot, runFilter, width) {
   });
 }
 
-function buildStatsLines(snapshot, width) {
+function buildFireStatsLines(snapshot, width) {
   if (!snapshot?.initialized) {
     return [truncate('Waiting for .specs-fire/state.yaml initialization.', width)];
   }
@@ -287,7 +302,7 @@ function buildWarningsLines(snapshot, width) {
   return warnings.map((warning) => truncate(warning, width));
 }
 
-function buildOverviewProjectLines(snapshot, width) {
+function buildFireOverviewProjectLines(snapshot, width) {
   if (!snapshot?.initialized) {
     return [
       truncate('FIRE folder detected, but state.yaml is missing.', width),
@@ -305,7 +320,7 @@ function buildOverviewProjectLines(snapshot, width) {
   ].map((line) => truncate(line, width));
 }
 
-function buildOverviewIntentLines(snapshot, width) {
+function buildFireOverviewIntentLines(snapshot, width) {
   const intents = snapshot?.intents || [];
   if (intents.length === 0) {
     return [truncate('No intents found', width)];
@@ -318,7 +333,7 @@ function buildOverviewIntentLines(snapshot, width) {
   });
 }
 
-function buildOverviewStandardsLines(snapshot, width) {
+function buildFireOverviewStandardsLines(snapshot, width) {
   const expected = ['constitution', 'tech-stack', 'coding-standards', 'testing-standards', 'system-architecture'];
   const actual = new Set((snapshot?.standards || []).map((item) => item.type));
 
@@ -326,6 +341,435 @@ function buildOverviewStandardsLines(snapshot, width) {
     const marker = actual.has(name) ? '[x]' : '[ ]';
     return truncate(`${marker} ${name}.md`, width);
   });
+}
+
+function getEffectiveFlow(flow, snapshot) {
+  const explicitFlow = typeof flow === 'string' && flow !== '' ? flow : null;
+  const snapshotFlow = typeof snapshot?.flow === 'string' && snapshot.flow !== '' ? snapshot.flow : null;
+  return (snapshotFlow || explicitFlow || 'fire').toLowerCase();
+}
+
+function getCurrentBolt(snapshot) {
+  const activeBolts = Array.isArray(snapshot?.activeBolts) ? [...snapshot.activeBolts] : [];
+  if (activeBolts.length === 0) {
+    return null;
+  }
+
+  activeBolts.sort((a, b) => {
+    const aTime = a?.startedAt ? Date.parse(a.startedAt) : 0;
+    const bTime = b?.startedAt ? Date.parse(b.startedAt) : 0;
+    if (bTime !== aTime) {
+      return bTime - aTime;
+    }
+    return String(a?.id || '').localeCompare(String(b?.id || ''));
+  });
+
+  return activeBolts[0] || null;
+}
+
+function buildAidlcStageTrack(bolt) {
+  const stages = Array.isArray(bolt?.stages) ? bolt.stages : [];
+  if (stages.length === 0) {
+    return 'n/a';
+  }
+
+  return stages.map((stage) => {
+    const label = String(stage?.name || '?').charAt(0).toUpperCase();
+    if (stage?.status === 'completed') {
+      return `[${label}]`;
+    }
+    if (stage?.status === 'in_progress') {
+      return `<${label}>`;
+    }
+    return ` ${label} `;
+  }).join('-');
+}
+
+function buildAidlcCurrentRunLines(snapshot, width) {
+  const bolt = getCurrentBolt(snapshot);
+  if (!bolt) {
+    return [truncate('No active bolt', width)];
+  }
+
+  const stages = Array.isArray(bolt.stages) ? bolt.stages : [];
+  const completedStages = stages.filter((stage) => stage.status === 'completed').length;
+  const phaseTrack = buildAidlcStageTrack(bolt);
+  const location = `${bolt.intent || 'unknown-intent'} / ${bolt.unit || 'unknown-unit'}`;
+
+  const lines = [
+    `${bolt.id}  [${bolt.type}]  ${completedStages}/${stages.length} stages done`,
+    `scope: ${location}`,
+    `stage: ${bolt.currentStage || 'n/a'}  |  status: ${bolt.status}`,
+    `phase: ${phaseTrack}`
+  ];
+
+  return lines.map((line) => truncate(line, width));
+}
+
+function buildAidlcRunFilesLines(snapshot, width, icons) {
+  const bolt = getCurrentBolt(snapshot);
+  if (!bolt) {
+    return [truncate('No bolt files (no active bolt)', width)];
+  }
+
+  const files = Array.isArray(bolt.files) ? bolt.files : [];
+  if (files.length === 0) {
+    return [truncate('No markdown files found in active bolt', width)];
+  }
+
+  return files.map((file) => truncate(`${icons.runFile} ${file}`, width));
+}
+
+function buildAidlcPendingLines(snapshot, runFilter, width) {
+  if (runFilter === 'completed') {
+    return [truncate('Hidden by run filter: completed', width)];
+  }
+
+  const pendingBolts = Array.isArray(snapshot?.pendingBolts) ? snapshot.pendingBolts : [];
+  if (pendingBolts.length === 0) {
+    return [truncate('No queued bolts', width)];
+  }
+
+  return pendingBolts.map((bolt) => {
+    const deps = Array.isArray(bolt.blockedBy) && bolt.blockedBy.length > 0
+      ? ` blocked_by:${bolt.blockedBy.join(',')}`
+      : '';
+    const location = `${bolt.intent || 'unknown'}/${bolt.unit || 'unknown'}`;
+    return truncate(`${bolt.id} (${bolt.status}) in ${location}${deps}`, width);
+  });
+}
+
+function buildAidlcCompletedLines(snapshot, runFilter, width) {
+  if (runFilter === 'active') {
+    return [truncate('Hidden by run filter: active', width)];
+  }
+
+  const completedBolts = Array.isArray(snapshot?.completedBolts) ? snapshot.completedBolts : [];
+  if (completedBolts.length === 0) {
+    return [truncate('No completed bolts yet', width)];
+  }
+
+  return completedBolts.map((bolt) =>
+    truncate(`${bolt.id} [${bolt.type}] done at ${bolt.completedAt || 'unknown'}`, width)
+  );
+}
+
+function buildAidlcStatsLines(snapshot, width) {
+  const stats = snapshot?.stats || {};
+
+  return [
+    `intents: ${stats.completedIntents || 0}/${stats.totalIntents || 0} done | in_progress: ${stats.inProgressIntents || 0} | blocked: ${stats.blockedIntents || 0}`,
+    `stories: ${stats.completedStories || 0}/${stats.totalStories || 0} done | in_progress: ${stats.inProgressStories || 0} | pending: ${stats.pendingStories || 0} | blocked: ${stats.blockedStories || 0}`,
+    `bolts: ${stats.activeBoltsCount || 0} active | ${stats.queuedBolts || 0} queued | ${stats.blockedBolts || 0} blocked | ${stats.completedBolts || 0} done`
+  ].map((line) => truncate(line, width));
+}
+
+function buildAidlcOverviewProjectLines(snapshot, width) {
+  const project = snapshot?.project || {};
+  const stats = snapshot?.stats || {};
+
+  return [
+    `project: ${project.name || 'unknown'} | project_type: ${project.projectType || 'unknown'}`,
+    `memory-bank: intents ${stats.totalIntents || 0} | units ${stats.totalUnits || 0} | stories ${stats.totalStories || 0}`,
+    `progress: ${stats.progressPercent || 0}% stories complete | standards: ${(snapshot?.standards || []).length}`
+  ].map((line) => truncate(line, width));
+}
+
+function buildAidlcOverviewIntentLines(snapshot, width) {
+  const intents = Array.isArray(snapshot?.intents) ? snapshot.intents : [];
+  if (intents.length === 0) {
+    return [truncate('No intents found', width)];
+  }
+
+  return intents.map((intent) => {
+    return truncate(
+      `${intent.id}: ${intent.status} (${intent.completedStories || 0}/${intent.storyCount || 0} stories, ${intent.completedUnits || 0}/${intent.unitCount || 0} units)`,
+      width
+    );
+  });
+}
+
+function buildAidlcOverviewStandardsLines(snapshot, width) {
+  const standards = Array.isArray(snapshot?.standards) ? snapshot.standards : [];
+  if (standards.length === 0) {
+    return [truncate('No standards found under memory-bank/standards', width)];
+  }
+
+  return standards.map((standard) =>
+    truncate(`[x] ${standard.name || standard.type || 'unknown'}.md`, width)
+  );
+}
+
+function getCurrentSpec(snapshot) {
+  const specs = Array.isArray(snapshot?.activeSpecs) ? snapshot.activeSpecs : [];
+  if (specs.length === 0) {
+    return null;
+  }
+  return specs[0] || null;
+}
+
+function simplePhaseIndex(state) {
+  if (state === 'requirements_pending') {
+    return 0;
+  }
+  if (state === 'design_pending') {
+    return 1;
+  }
+  return 2;
+}
+
+function buildSimplePhaseTrack(spec) {
+  if (spec?.state === 'completed') {
+    return '[R] - [D] - [T]';
+  }
+
+  const labels = ['R', 'D', 'T'];
+  const current = simplePhaseIndex(spec?.state);
+  return labels.map((label, index) => (index === current ? `[${label}]` : ` ${label} `)).join(' - ');
+}
+
+function buildSimpleCurrentRunLines(snapshot, width) {
+  const spec = getCurrentSpec(snapshot);
+  if (!spec) {
+    return [truncate('No active spec', width)];
+  }
+
+  const files = [
+    spec.hasRequirements ? 'req' : '-',
+    spec.hasDesign ? 'design' : '-',
+    spec.hasTasks ? 'tasks' : '-'
+  ].join('/');
+
+  const lines = [
+    `${spec.name}  [${spec.state}]  ${spec.tasksCompleted}/${spec.tasksTotal} tasks done`,
+    `phase: ${spec.phase}`,
+    `files: ${files}`,
+    `track: ${buildSimplePhaseTrack(spec)}`
+  ];
+
+  return lines.map((line) => truncate(line, width));
+}
+
+function buildSimpleRunFilesLines(snapshot, width, icons) {
+  const spec = getCurrentSpec(snapshot);
+  if (!spec) {
+    return [truncate('No spec files (no active spec)', width)];
+  }
+
+  const files = [];
+  if (spec.hasRequirements) files.push('requirements.md');
+  if (spec.hasDesign) files.push('design.md');
+  if (spec.hasTasks) files.push('tasks.md');
+
+  if (files.length === 0) {
+    return [truncate('No files found in active spec folder', width)];
+  }
+
+  return files.map((file) => truncate(`${icons.runFile} ${file}`, width));
+}
+
+function buildSimplePendingLines(snapshot, runFilter, width) {
+  if (runFilter === 'completed') {
+    return [truncate('Hidden by run filter: completed', width)];
+  }
+
+  const pendingSpecs = Array.isArray(snapshot?.pendingSpecs) ? snapshot.pendingSpecs : [];
+  if (pendingSpecs.length === 0) {
+    return [truncate('No pending specs', width)];
+  }
+
+  return pendingSpecs.map((spec) =>
+    truncate(`${spec.name} (${spec.state}) ${spec.tasksCompleted}/${spec.tasksTotal} tasks`, width)
+  );
+}
+
+function buildSimpleCompletedLines(snapshot, runFilter, width) {
+  if (runFilter === 'active') {
+    return [truncate('Hidden by run filter: active', width)];
+  }
+
+  const completedSpecs = Array.isArray(snapshot?.completedSpecs) ? snapshot.completedSpecs : [];
+  if (completedSpecs.length === 0) {
+    return [truncate('No completed specs yet', width)];
+  }
+
+  return completedSpecs.map((spec) =>
+    truncate(`${spec.name} done at ${spec.updatedAt || 'unknown'} (${spec.tasksCompleted}/${spec.tasksTotal})`, width)
+  );
+}
+
+function buildSimpleStatsLines(snapshot, width) {
+  const stats = snapshot?.stats || {};
+
+  return [
+    `specs: ${stats.completedSpecs || 0}/${stats.totalSpecs || 0} complete | in_progress: ${stats.inProgressSpecs || 0} | pending: ${stats.pendingSpecs || 0}`,
+    `pipeline: ready ${stats.readySpecs || 0} | design_pending ${stats.designPendingSpecs || 0} | tasks_pending ${stats.tasksPendingSpecs || 0}`,
+    `tasks: ${stats.completedTasks || 0}/${stats.totalTasks || 0} complete | pending: ${stats.pendingTasks || 0} | optional: ${stats.optionalTasks || 0}`
+  ].map((line) => truncate(line, width));
+}
+
+function buildSimpleOverviewProjectLines(snapshot, width) {
+  const project = snapshot?.project || {};
+  const stats = snapshot?.stats || {};
+
+  return [
+    `project: ${project.name || 'unknown'} | simple flow`,
+    `specs: ${stats.totalSpecs || 0} total | active: ${stats.activeSpecsCount || 0} | completed: ${stats.completedSpecs || 0}`,
+    `tasks: ${stats.completedTasks || 0}/${stats.totalTasks || 0} complete (${stats.progressPercent || 0}%)`
+  ].map((line) => truncate(line, width));
+}
+
+function buildSimpleOverviewIntentLines(snapshot, width) {
+  const specs = Array.isArray(snapshot?.specs) ? snapshot.specs : [];
+  if (specs.length === 0) {
+    return [truncate('No specs found', width)];
+  }
+
+  return specs.map((spec) =>
+    truncate(`${spec.name}: ${spec.state} (${spec.tasksCompleted}/${spec.tasksTotal} tasks)`, width)
+  );
+}
+
+function buildSimpleOverviewStandardsLines(snapshot, width) {
+  const specs = Array.isArray(snapshot?.specs) ? snapshot.specs : [];
+  if (specs.length === 0) {
+    return [truncate('No spec artifacts found', width)];
+  }
+
+  const reqCount = specs.filter((spec) => spec.hasRequirements).length;
+  const designCount = specs.filter((spec) => spec.hasDesign).length;
+  const tasksCount = specs.filter((spec) => spec.hasTasks).length;
+  const total = specs.length;
+
+  return [
+    `[x] requirements.md coverage ${reqCount}/${total}`,
+    `[x] design.md coverage ${designCount}/${total}`,
+    `[x] tasks.md coverage ${tasksCount}/${total}`
+  ].map((line) => truncate(line, width));
+}
+
+function buildCurrentRunLines(snapshot, width, flow) {
+  const effectiveFlow = getEffectiveFlow(flow, snapshot);
+  if (effectiveFlow === 'aidlc') {
+    return buildAidlcCurrentRunLines(snapshot, width);
+  }
+  if (effectiveFlow === 'simple') {
+    return buildSimpleCurrentRunLines(snapshot, width);
+  }
+  return buildFireCurrentRunLines(snapshot, width);
+}
+
+function buildRunFilesLines(snapshot, width, icons, flow) {
+  const effectiveFlow = getEffectiveFlow(flow, snapshot);
+  if (effectiveFlow === 'aidlc') {
+    return buildAidlcRunFilesLines(snapshot, width, icons);
+  }
+  if (effectiveFlow === 'simple') {
+    return buildSimpleRunFilesLines(snapshot, width, icons);
+  }
+  return buildFireRunFilesLines(snapshot, width, icons);
+}
+
+function buildPendingLines(snapshot, runFilter, width, flow) {
+  const effectiveFlow = getEffectiveFlow(flow, snapshot);
+  if (effectiveFlow === 'aidlc') {
+    return buildAidlcPendingLines(snapshot, runFilter, width);
+  }
+  if (effectiveFlow === 'simple') {
+    return buildSimplePendingLines(snapshot, runFilter, width);
+  }
+  return buildFirePendingLines(snapshot, runFilter, width);
+}
+
+function buildCompletedLines(snapshot, runFilter, width, flow) {
+  const effectiveFlow = getEffectiveFlow(flow, snapshot);
+  if (effectiveFlow === 'aidlc') {
+    return buildAidlcCompletedLines(snapshot, runFilter, width);
+  }
+  if (effectiveFlow === 'simple') {
+    return buildSimpleCompletedLines(snapshot, runFilter, width);
+  }
+  return buildFireCompletedLines(snapshot, runFilter, width);
+}
+
+function buildStatsLines(snapshot, width, flow) {
+  const effectiveFlow = getEffectiveFlow(flow, snapshot);
+  if (!snapshot?.initialized) {
+    if (effectiveFlow === 'aidlc') {
+      return [truncate('Waiting for memory-bank initialization.', width)];
+    }
+    if (effectiveFlow === 'simple') {
+      return [truncate('Waiting for specs/ initialization.', width)];
+    }
+    return [truncate('Waiting for .specs-fire/state.yaml initialization.', width)];
+  }
+
+  if (effectiveFlow === 'aidlc') {
+    return buildAidlcStatsLines(snapshot, width);
+  }
+  if (effectiveFlow === 'simple') {
+    return buildSimpleStatsLines(snapshot, width);
+  }
+  return buildFireStatsLines(snapshot, width);
+}
+
+function buildOverviewProjectLines(snapshot, width, flow) {
+  const effectiveFlow = getEffectiveFlow(flow, snapshot);
+  if (effectiveFlow === 'aidlc') {
+    return buildAidlcOverviewProjectLines(snapshot, width);
+  }
+  if (effectiveFlow === 'simple') {
+    return buildSimpleOverviewProjectLines(snapshot, width);
+  }
+  return buildFireOverviewProjectLines(snapshot, width);
+}
+
+function buildOverviewIntentLines(snapshot, width, flow) {
+  const effectiveFlow = getEffectiveFlow(flow, snapshot);
+  if (effectiveFlow === 'aidlc') {
+    return buildAidlcOverviewIntentLines(snapshot, width);
+  }
+  if (effectiveFlow === 'simple') {
+    return buildSimpleOverviewIntentLines(snapshot, width);
+  }
+  return buildFireOverviewIntentLines(snapshot, width);
+}
+
+function buildOverviewStandardsLines(snapshot, width, flow) {
+  const effectiveFlow = getEffectiveFlow(flow, snapshot);
+  if (effectiveFlow === 'aidlc') {
+    return buildAidlcOverviewStandardsLines(snapshot, width);
+  }
+  if (effectiveFlow === 'simple') {
+    return buildSimpleOverviewStandardsLines(snapshot, width);
+  }
+  return buildFireOverviewStandardsLines(snapshot, width);
+}
+
+function getPanelTitles(flow, snapshot) {
+  const effectiveFlow = getEffectiveFlow(flow, snapshot);
+  if (effectiveFlow === 'aidlc') {
+    return {
+      current: 'Current Bolt',
+      files: 'Bolt Files',
+      pending: 'Queued Bolts',
+      completed: 'Recent Completed Bolts'
+    };
+  }
+  if (effectiveFlow === 'simple') {
+    return {
+      current: 'Current Spec',
+      files: 'Spec Files',
+      pending: 'Pending Specs',
+      completed: 'Recent Completed Specs'
+    };
+  }
+  return {
+    current: 'Current Run',
+    files: 'Run Files',
+    pending: 'Pending Queue',
+    completed: 'Recent Completed Runs'
+  };
 }
 
 function allocateSingleColumnPanels(candidates, rowsBudget) {
@@ -634,6 +1078,7 @@ function createDashboardApp(deps) {
     const reservedRows = 2 + (showHelpLine ? 1 : 0) + (showErrorPanel ? 5 : 0) + (showErrorInline ? 1 : 0);
     const contentRowsBudget = Math.max(4, rows - reservedRows);
     const ultraCompact = rows <= 14;
+    const panelTitles = getPanelTitles(flow, snapshot);
 
     let panelCandidates;
     if (ui.view === 'overview') {
@@ -641,19 +1086,19 @@ function createDashboardApp(deps) {
         {
           key: 'project',
           title: 'Project + Workspace',
-          lines: buildOverviewProjectLines(snapshot, compactWidth),
+          lines: buildOverviewProjectLines(snapshot, compactWidth, flow),
           borderColor: 'green'
         },
         {
           key: 'intent-status',
           title: 'Intent Status',
-          lines: buildOverviewIntentLines(snapshot, compactWidth),
+          lines: buildOverviewIntentLines(snapshot, compactWidth, flow),
           borderColor: 'yellow'
         },
         {
           key: 'standards',
           title: 'Standards',
-          lines: buildOverviewStandardsLines(snapshot, compactWidth),
+          lines: buildOverviewStandardsLines(snapshot, compactWidth, flow),
           borderColor: 'blue'
         }
       ];
@@ -662,7 +1107,7 @@ function createDashboardApp(deps) {
         {
           key: 'stats',
           title: 'Stats',
-          lines: buildStatsLines(snapshot, compactWidth),
+          lines: buildStatsLines(snapshot, compactWidth, flow),
           borderColor: 'magenta'
         },
         {
@@ -685,26 +1130,26 @@ function createDashboardApp(deps) {
       panelCandidates = [
         {
           key: 'current-run',
-          title: 'Current Run',
-          lines: buildCurrentRunLines(snapshot, compactWidth),
+          title: panelTitles.current,
+          lines: buildCurrentRunLines(snapshot, compactWidth, flow),
           borderColor: 'green'
         },
         {
           key: 'run-files',
-          title: 'Run Files',
-          lines: buildRunFilesLines(snapshot, compactWidth, icons),
+          title: panelTitles.files,
+          lines: buildRunFilesLines(snapshot, compactWidth, icons, flow),
           borderColor: 'yellow'
         },
         {
           key: 'pending',
-          title: 'Pending Queue',
-          lines: buildPendingLines(snapshot, ui.runFilter, compactWidth),
+          title: panelTitles.pending,
+          lines: buildPendingLines(snapshot, ui.runFilter, compactWidth, flow),
           borderColor: 'yellow'
         },
         {
           key: 'completed',
-          title: 'Recent Completed Runs',
-          lines: buildCompletedLines(snapshot, ui.runFilter, compactWidth),
+          title: panelTitles.completed,
+          lines: buildCompletedLines(snapshot, ui.runFilter, compactWidth, flow),
           borderColor: 'blue'
         }
       ];
