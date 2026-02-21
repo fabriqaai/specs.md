@@ -16,10 +16,17 @@ function parseRefreshMs(raw) {
 }
 
 function clearTerminalOutput(stream = process.stdout) {
-  if (!stream || !stream.isTTY || typeof stream.write !== 'function') {
+  if (!stream || typeof stream.write !== 'function') {
     return;
   }
 
+  if (stream.isTTY === false) {
+    return;
+  }
+
+  if (typeof console.clear === 'function') {
+    console.clear();
+  }
   stream.write('\u001B[2J\u001B[3J\u001B[H');
 }
 

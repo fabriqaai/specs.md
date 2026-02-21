@@ -18,4 +18,12 @@ describe('dashboard index helpers', () => {
 
     expect(write).not.toHaveBeenCalled();
   });
+
+  it('clears output when tty status is unknown', () => {
+    const write = vi.fn();
+    clearTerminalOutput({ write });
+
+    expect(write).toHaveBeenCalledTimes(1);
+    expect(write).toHaveBeenCalledWith('\u001B[2J\u001B[3J\u001B[H');
+  });
 });
