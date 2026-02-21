@@ -802,7 +802,7 @@ function getSectionOrderForView(view) {
   if (view === 'health') {
     return ['standards', 'stats', 'warnings', 'error-details'];
   }
-  return ['current-run'];
+  return ['current-run', 'run-files'];
 }
 
 function cycleSection(view, currentSectionKey, direction = 1, availableSections = null) {
@@ -1130,6 +1130,73 @@ function buildRunFileGroups(fileEntries) {
     });
   }
   return groups;
+}
+
+function getFileEntityLabel(fileEntry, fallbackIndex = 0) {
+  const rawLabel = typeof fileEntry?.label === 'string' ? fileEntry.label : '';
+  if (rawLabel.includes('/')) {
+    return rawLabel.split('/')[0] || `item-${fallbackIndex + 1}`;
+  }
+
+  const filePath = typeof fileEntry?.path === 'string' ? fileEntry.path : '';
+  if (filePath !== '') {
+    const parentDir = path.basename(path.dirname(filePath));
+    if (parentDir && parentDir !== '.' && parentDir !== path.sep) {
+      return parentDir;
+    }
+
+    const baseName = path.basename(filePath);
+    if (baseName) {
+      return baseName;
+    }
+  }
+
+  return `item-${fallbackIndex + 1}`;
+}
+
+function buildRunFileEntityGroups(snapshot, flow) {
+  const order = ['active', 'upcoming', 'completed', 'intent', 'other'];
+  const rankByScope = new Map(order.map((scope, index) => [scope, index]));
+  const entries = filterExistingFiles(getRunFileEntries(snapshot, flow));
+  const groupsByEntity = new Map();
+
+  for (let index = 0; index < entries.length; index += 1) {
+    const fileEntry = entries[index];
+    const entity = getFileEntityLabel(fileEntry, index);
+    const scope = order.includes(fileEntry?.scope) ? fileEntry.scope : 'other';
+    const scopeRank = rankByScope.get(scope) ?? rankByScope.get('other');
+
+    if (!groupsByEntity.has(entity)) {
+      groupsByEntity.set(entity, {
+        entity,
+        files: [],
+        scope,
+        scopeRank
+      });
+    }
+
+    const group = groupsByEntity.get(entity);
+    group.files.push(fileEntry);
+
+    if (scopeRank < group.scopeRank) {
+      group.scopeRank = scopeRank;
+      group.scope = scope;
+    }
+  }
+
+  return Array.from(groupsByEntity.values())
+    .sort((a, b) => {
+      if (a.scopeRank !== b.scopeRank) {
+        return a.scopeRank - b.scopeRank;
+      }
+      return String(a.entity).localeCompare(String(b.entity));
+    })
+    .map((group) => ({
+      key: `run-files:entity:${group.entity}`,
+      label: `${group.entity} [${formatScope(group.scope)}] (${group.files.length})`,
+      files: filterExistingFiles(group.files)
+    }))
+    .filter((group) => group.files.length > 0);
 }
 
 function normalizeInfoLine(line) {
@@ -1611,10 +1678,13 @@ function buildQuickHelpText(view, options = {}) {
 
   if (view === 'runs' || view === 'intents' || view === 'completed' || view === 'health') {
     if (previewOpen) {
-      parts.push('tab pane', '↑/↓ nav/scroll', 'v close');
+      parts.push('tab pane', '↑/↓ nav/scroll', 'v/space close');
     } else {
-      parts.push('↑/↓ navigate', 'enter expand', 'v preview');
+      parts.push('↑/↓ navigate', 'enter expand', 'v/space preview');
     }
+  }
+  if (view === 'runs') {
+    parts.push('a current', 'f files');
   }
   parts.push(`tab1 ${activeLabel}`);
 
@@ -1651,9 +1721,10 @@ function buildHelpOverlayLines(options = {}) {
     { text: '', color: undefined, bold: false },
     { text: 'Tab 1 Active', color: 'yellow', bold: true },
     `a focus active ${itemLabel}`,
+    `f focus ${itemLabel} files`,
     'up/down or j/k move selection',
     'enter expand/collapse selected folder row',
-    'v preview selected file',
+    'v or space preview selected file',
     'v twice quickly opens fullscreen preview overlay',
     'tab switch focus between main and preview panes',
     'o open selected file in system default app'
@@ -1982,6 +2053,7 @@ function createDashboardApp(deps) {
     });
     const [selectionBySection, setSelectionBySection] = useState({
       'current-run': 0,
+      'run-files': 0,
       'intent-status': 0,
       'completed-runs': 0,
       standards: 0,
@@ -2043,6 +2115,18 @@ function createDashboardApp(deps) {
       currentExpandedGroups
     );
     const shouldHydrateSecondaryTabs = deferredTabsReady || ui.view !== 'runs';
+    const runFileGroups = buildRunFileEntityGroups(snapshot, activeFlow);
+    const runFileExpandedGroups = { ...expandedGroups };
+    for (const group of runFileGroups) {
+      if (runFileExpandedGroups[group.key] == null) {
+        runFileExpandedGroups[group.key] = true;
+      }
+    }
+    const runFileRows = toExpandableRows(
+      runFileGroups,
+      getNoFileMessage(effectiveFlow),
+      runFileExpandedGroups
+    );
     const intentRows = shouldHydrateSecondaryTabs
       ? [
         {
@@ -2098,6 +2182,7 @@ function createDashboardApp(deps) {
 
     const rowsBySection = {
       'current-run': currentRunRows,
+      'run-files': runFileRows,
       'intent-status': intentRows,
       'completed-runs': completedRows,
       standards: standardsRows,
@@ -2231,6 +2316,7 @@ function createDashboardApp(deps) {
         });
         setSelectionBySection({
           'current-run': 0,
+          'run-files': 0,
           'intent-status': 0,
           'completed-runs': 0,
           standards: 0,
@@ -2268,6 +2354,7 @@ function createDashboardApp(deps) {
         });
         setSelectionBySection({
           'current-run': 0,
+          'run-files': 0,
           'intent-status': 0,
           'completed-runs': 0,
           standards: 0,
@@ -2337,6 +2424,11 @@ function createDashboardApp(deps) {
       if (ui.view === 'runs') {
         if (input === 'a') {
           setSectionFocus((previous) => ({ ...previous, runs: 'current-run' }));
+          setPaneFocus('main');
+          return;
+        }
+        if (input === 'f') {
+          setSectionFocus((previous) => ({ ...previous, runs: 'run-files' }));
           setPaneFocus('main');
           return;
         }
@@ -2426,7 +2518,7 @@ function createDashboardApp(deps) {
         return;
       }
 
-      if (input === 'v') {
+      if (input === 'v' || input === ' ' || key.space) {
         const target = selectedFocusedFile || previewTarget;
         if (!target) {
           setStatusLine('Select a file row first.');
@@ -2624,13 +2716,21 @@ function createDashboardApp(deps) {
     const rows = Number.isFinite(terminalSize.rows) ? terminalSize.rows : (process.stdout.rows || 40);
 
     const fullWidth = Math.max(40, cols - 1);
+    const showFlowBar = availableFlowIds.length > 1;
     const showFooterHelpLine = rows >= 10;
     const showErrorPanel = Boolean(error) && rows >= 18;
     const showGlobalErrorPanel = showErrorPanel && ui.view !== 'health' && !ui.showHelp;
     const showErrorInline = Boolean(error) && !showErrorPanel;
+    const showStatusLine = statusLine !== '';
     const densePanels = rows <= 28 || cols <= 120;
 
-    const reservedRows = 2 + (showFooterHelpLine ? 1 : 0) + (showGlobalErrorPanel ? 5 : 0) + (showErrorInline ? 1 : 0);
+    const reservedRows =
+      2 +
+      (showFlowBar ? 1 : 0) +
+      (showFooterHelpLine ? 1 : 0) +
+      (showGlobalErrorPanel ? 5 : 0) +
+      (showErrorInline ? 1 : 0) +
+      (showStatusLine ? 1 : 0);
     const contentRowsBudget = Math.max(4, rows - reservedRows);
     const ultraCompact = rows <= 14;
     const panelTitles = getPanelTitles(activeFlow, snapshot);
@@ -2752,6 +2852,12 @@ function createDashboardApp(deps) {
           title: panelTitles.current,
           lines: sectionLines['current-run'],
           borderColor: 'green'
+        },
+        {
+          key: 'run-files',
+          title: panelTitles.files,
+          lines: sectionLines['run-files'],
+          borderColor: 'yellow'
         }
       ];
     }
