@@ -1,7 +1,8 @@
 const fs = require('fs');
 const path = require('path');
+const { spawnSync } = require('child_process');
 const { createWatchRuntime } = require('../runtime/watch-runtime');
-const { createInitialUIState, cycleView, cycleViewBackward } = require('./store');
+const { createInitialUIState } = require('./store');
 
 function toDashboardError(error, defaultCode = 'DASHBOARD_ERROR') {
   if (!error) {
@@ -54,14 +55,20 @@ function resolveIconSet() {
     runs: '[R]',
     overview: '[O]',
     health: '[H]',
-    runFile: '*'
+    runFile: '*',
+    activeFile: '>',
+    groupCollapsed: '>',
+    groupExpanded: 'v'
   };
 
   const nerd = {
     runs: '󰑮',
     overview: '󰍉',
     health: '󰓦',
-    runFile: '󰈔'
+    runFile: '󰈔',
+    activeFile: '󰜴',
+    groupCollapsed: '󰐕',
+    groupExpanded: '󰐗'
   };
 
   if (mode === 'ascii') {
@@ -730,6 +737,30 @@ function getPanelTitles(flow, snapshot) {
   };
 }
 
+function getSectionOrderForView(view) {
+  if (view === 'overview') {
+    return ['project', 'intent-status', 'standards'];
+  }
+  if (view === 'health') {
+    return ['stats', 'warnings', 'error-details'];
+  }
+  return ['current-run', 'run-files', 'pending', 'completed'];
+}
+
+function cycleSection(view, currentSectionKey, direction = 1, availableSections = null) {
+  const order = Array.isArray(availableSections) && availableSections.length > 0
+    ? availableSections
+    : getSectionOrderForView(view);
+  if (order.length === 0) {
+    return currentSectionKey;
+  }
+
+  const currentIndex = order.indexOf(currentSectionKey);
+  const safeIndex = currentIndex >= 0 ? currentIndex : 0;
+  const nextIndex = (safeIndex + direction + order.length) % order.length;
+  return order[nextIndex];
+}
+
 function fileExists(filePath) {
   try {
     return fs.statSync(filePath).isFile();
@@ -956,23 +987,359 @@ function formatScope(scope) {
   return 'FILE';
 }
 
-function buildSelectableRunFileLines(fileEntries, selectedIndex, icons, width, flow) {
+function getNoPendingMessage(flow) {
+  if (flow === 'aidlc') return 'No queued bolts';
+  if (flow === 'simple') return 'No pending specs';
+  return 'No pending work items';
+}
+
+function getNoCompletedMessage(flow) {
+  if (flow === 'aidlc') return 'No completed bolts yet';
+  if (flow === 'simple') return 'No completed specs yet';
+  return 'No completed runs yet';
+}
+
+function toRunFileRows(fileEntries, flow) {
   if (!Array.isArray(fileEntries) || fileEntries.length === 0) {
-    return [truncate(getNoFileMessage(flow), width)];
+    return [{
+      kind: 'info',
+      key: 'run-files:empty',
+      label: getNoFileMessage(flow),
+      selectable: false
+    }];
   }
 
-  const clampedIndex = clampIndex(selectedIndex, fileEntries.length);
-  return fileEntries.map((file, index) => {
-    const isSelected = index === clampedIndex;
-    const prefix = isSelected ? '>' : ' ';
-    const scope = formatScope(file.scope);
+  return fileEntries.map((file, index) => ({
+    kind: 'file',
+    key: `run-files:${file.path}:${index}`,
+    label: file.label,
+    path: file.path,
+    scope: file.scope || 'file',
+    selectable: true
+  }));
+}
+
+function collectAidlcIntentContextFiles(snapshot, intentId) {
+  if (!snapshot || typeof intentId !== 'string' || intentId.trim() === '') {
+    return [];
+  }
+
+  const intentPath = path.join(snapshot.rootPath || '', 'intents', intentId);
+  return [
+    {
+      label: `${intentId}/requirements.md`,
+      path: path.join(intentPath, 'requirements.md'),
+      scope: 'intent'
+    },
+    {
+      label: `${intentId}/system-context.md`,
+      path: path.join(intentPath, 'system-context.md'),
+      scope: 'intent'
+    },
+    {
+      label: `${intentId}/units.md`,
+      path: path.join(intentPath, 'units.md'),
+      scope: 'intent'
+    }
+  ];
+}
+
+function filterExistingFiles(files) {
+  return (Array.isArray(files) ? files : []).filter((file) =>
+    file && typeof file.path === 'string' && typeof file.label === 'string' && fileExists(file.path)
+  );
+}
+
+function buildPendingGroups(snapshot, flow) {
+  const effectiveFlow = getEffectiveFlow(flow, snapshot);
+
+  if (effectiveFlow === 'aidlc') {
+    const pendingBolts = Array.isArray(snapshot?.pendingBolts) ? snapshot.pendingBolts : [];
+    return pendingBolts.map((bolt, index) => {
+      const deps = Array.isArray(bolt?.blockedBy) && bolt.blockedBy.length > 0
+        ? ` blocked_by:${bolt.blockedBy.join(',')}`
+        : '';
+      const location = `${bolt?.intent || 'unknown'}/${bolt?.unit || 'unknown'}`;
+      const boltFiles = collectAidlcBoltFiles(bolt);
+      const intentFiles = collectAidlcIntentContextFiles(snapshot, bolt?.intent);
+      return {
+        key: `pending:bolt:${bolt?.id || index}`,
+        label: `${bolt?.id || 'unknown'} (${bolt?.status || 'pending'}) in ${location}${deps}`,
+        files: filterExistingFiles([...boltFiles, ...intentFiles])
+      };
+    });
+  }
+
+  if (effectiveFlow === 'simple') {
+    const pendingSpecs = Array.isArray(snapshot?.pendingSpecs) ? snapshot.pendingSpecs : [];
+    return pendingSpecs.map((spec, index) => ({
+      key: `pending:spec:${spec?.name || index}`,
+      label: `${spec?.name || 'unknown'} (${spec?.state || 'pending'}) ${spec?.tasksCompleted || 0}/${spec?.tasksTotal || 0} tasks`,
+      files: filterExistingFiles(collectSimpleSpecFiles(spec))
+    }));
+  }
+
+  const pendingItems = Array.isArray(snapshot?.pendingItems) ? snapshot.pendingItems : [];
+  return pendingItems.map((item, index) => {
+    const deps = Array.isArray(item?.dependencies) && item.dependencies.length > 0
+      ? ` deps:${item.dependencies.join(',')}`
+      : '';
+    const intentTitle = item?.intentTitle || item?.intentId || 'unknown-intent';
+    const files = [];
+
+    if (item?.filePath) {
+      files.push({
+        label: `${item?.intentId || 'intent'}/${item?.id || 'work-item'}.md`,
+        path: item.filePath,
+        scope: 'upcoming'
+      });
+    }
+    if (item?.intentId) {
+      files.push({
+        label: `${item.intentId}/brief.md`,
+        path: path.join(snapshot?.rootPath || '', 'intents', item.intentId, 'brief.md'),
+        scope: 'intent'
+      });
+    }
+
     return {
-      text: truncate(`${prefix} ${icons.runFile} [${scope}] ${file.label}`, width),
-      color: isSelected ? 'cyan' : undefined,
-      bold: isSelected,
-      selected: isSelected
+      key: `pending:item:${item?.intentId || 'intent'}:${item?.id || index}`,
+      label: `${item?.id || 'work-item'} (${item?.mode || 'confirm'}/${item?.complexity || 'medium'}) in ${intentTitle}${deps}`,
+      files: filterExistingFiles(files)
     };
   });
+}
+
+function buildCompletedGroups(snapshot, flow) {
+  const effectiveFlow = getEffectiveFlow(flow, snapshot);
+
+  if (effectiveFlow === 'aidlc') {
+    const completedBolts = Array.isArray(snapshot?.completedBolts) ? snapshot.completedBolts : [];
+    return completedBolts.map((bolt, index) => {
+      const boltFiles = collectAidlcBoltFiles(bolt);
+      const intentFiles = collectAidlcIntentContextFiles(snapshot, bolt?.intent);
+      return {
+        key: `completed:bolt:${bolt?.id || index}`,
+        label: `${bolt?.id || 'unknown'} [${bolt?.type || 'bolt'}] done at ${bolt?.completedAt || 'unknown'}`,
+        files: filterExistingFiles([...boltFiles, ...intentFiles])
+      };
+    });
+  }
+
+  if (effectiveFlow === 'simple') {
+    const completedSpecs = Array.isArray(snapshot?.completedSpecs) ? snapshot.completedSpecs : [];
+    return completedSpecs.map((spec, index) => ({
+      key: `completed:spec:${spec?.name || index}`,
+      label: `${spec?.name || 'unknown'} done at ${spec?.updatedAt || 'unknown'} (${spec?.tasksCompleted || 0}/${spec?.tasksTotal || 0})`,
+      files: filterExistingFiles(collectSimpleSpecFiles(spec))
+    }));
+  }
+
+  const groups = [];
+  const completedRuns = Array.isArray(snapshot?.completedRuns) ? snapshot.completedRuns : [];
+  for (let index = 0; index < completedRuns.length; index += 1) {
+    const run = completedRuns[index];
+    const workItems = Array.isArray(run?.workItems) ? run.workItems : [];
+    const completed = workItems.filter((item) => item.status === 'completed').length;
+    groups.push({
+      key: `completed:run:${run?.id || index}`,
+      label: `${run?.id || 'run'} [${run?.scope || 'single'}] ${completed}/${workItems.length} done at ${run?.completedAt || 'unknown'}`,
+      files: filterExistingFiles(collectFireRunFiles(run).map((file) => ({ ...file, scope: 'completed' })))
+    });
+  }
+
+  const completedIntents = Array.isArray(snapshot?.intents)
+    ? snapshot.intents.filter((intent) => intent?.status === 'completed')
+    : [];
+  for (let index = 0; index < completedIntents.length; index += 1) {
+    const intent = completedIntents[index];
+    groups.push({
+      key: `completed:intent:${intent?.id || index}`,
+      label: `intent ${intent?.id || 'unknown'} [completed]`,
+      files: filterExistingFiles([{
+        label: `${intent?.id || 'intent'}/brief.md`,
+        path: path.join(snapshot?.rootPath || '', 'intents', intent?.id || '', 'brief.md'),
+        scope: 'intent'
+      }])
+    });
+  }
+
+  return groups;
+}
+
+function toExpandableRows(groups, emptyLabel, expandedGroups) {
+  if (!Array.isArray(groups) || groups.length === 0) {
+    return [{
+      kind: 'info',
+      key: 'section:empty',
+      label: emptyLabel,
+      selectable: false
+    }];
+  }
+
+  const rows = [];
+
+  for (const group of groups) {
+    const files = filterExistingFiles(group?.files);
+    const expandable = files.length > 0;
+    const expanded = expandable && Boolean(expandedGroups?.[group.key]);
+
+    rows.push({
+      kind: 'group',
+      key: group.key,
+      label: group.label,
+      expandable,
+      expanded,
+      selectable: true
+    });
+
+    if (expanded) {
+      for (let index = 0; index < files.length; index += 1) {
+        const file = files[index];
+        rows.push({
+          kind: 'file',
+          key: `${group.key}:file:${file.path}:${index}`,
+          label: file.label,
+          path: file.path,
+          scope: file.scope || 'file',
+          selectable: true
+        });
+      }
+    }
+  }
+
+  return rows;
+}
+
+function buildInteractiveRowsLines(rows, selectedIndex, icons, width, isFocusedSection) {
+  if (!Array.isArray(rows) || rows.length === 0) {
+    return [{ text: '', color: undefined, bold: false, selected: false }];
+  }
+
+  const clampedIndex = clampIndex(selectedIndex, rows.length);
+
+  return rows.map((row, index) => {
+    const selectable = row?.selectable !== false;
+    const isSelected = selectable && index === clampedIndex;
+    const cursor = isSelected
+      ? (isFocusedSection ? (icons.activeFile || '>') : '•')
+      : ' ';
+
+    if (row.kind === 'group') {
+      const marker = row.expandable
+        ? (row.expanded ? (icons.groupExpanded || 'v') : (icons.groupCollapsed || '>'))
+        : '-';
+      return {
+        text: truncate(`${cursor} ${marker} ${row.label}`, width),
+        color: isSelected ? (isFocusedSection ? 'green' : 'cyan') : undefined,
+        bold: isSelected,
+        selected: isSelected
+      };
+    }
+
+    if (row.kind === 'file') {
+      const scope = row.scope ? `[${formatScope(row.scope)}] ` : '';
+      return {
+        text: truncate(`${cursor}   ${icons.runFile} ${scope}${row.label}`, width),
+        color: isSelected ? (isFocusedSection ? 'green' : 'cyan') : 'gray',
+        bold: isSelected,
+        selected: isSelected
+      };
+    }
+
+    return {
+      text: truncate(`  ${row.label || ''}`, width),
+      color: 'gray',
+      bold: false,
+      selected: false
+    };
+  });
+}
+
+function getSelectedRow(rows, selectedIndex) {
+  if (!Array.isArray(rows) || rows.length === 0) {
+    return null;
+  }
+  return rows[clampIndex(selectedIndex, rows.length)] || null;
+}
+
+function rowToFileEntry(row) {
+  if (!row || row.kind !== 'file' || typeof row.path !== 'string') {
+    return null;
+  }
+  return {
+    label: row.label || path.basename(row.path),
+    path: row.path,
+    scope: row.scope || 'file'
+  };
+}
+
+function moveRowSelection(rows, currentIndex, direction) {
+  if (!Array.isArray(rows) || rows.length === 0) {
+    return 0;
+  }
+
+  const clamped = clampIndex(currentIndex, rows.length);
+  const step = direction >= 0 ? 1 : -1;
+  let next = clamped + step;
+
+  while (next >= 0 && next < rows.length) {
+    if (rows[next]?.selectable !== false) {
+      return next;
+    }
+    next += step;
+  }
+
+  return clamped;
+}
+
+function openFileWithDefaultApp(filePath) {
+  if (typeof filePath !== 'string' || filePath.trim() === '') {
+    return {
+      ok: false,
+      message: 'No file selected to open.'
+    };
+  }
+
+  if (!fileExists(filePath)) {
+    return {
+      ok: false,
+      message: `File not found: ${filePath}`
+    };
+  }
+
+  let command = null;
+  let args = [];
+
+  if (process.platform === 'darwin') {
+    command = 'open';
+    args = [filePath];
+  } else if (process.platform === 'win32') {
+    command = 'cmd';
+    args = ['/c', 'start', '', filePath];
+  } else {
+    command = 'xdg-open';
+    args = [filePath];
+  }
+
+  const result = spawnSync(command, args, { stdio: 'ignore' });
+  if (result.error) {
+    return {
+      ok: false,
+      message: `Unable to open file: ${result.error.message}`
+    };
+  }
+  if (typeof result.status === 'number' && result.status !== 0) {
+    return {
+      ok: false,
+      message: `Open command failed with exit code ${result.status}.`
+    };
+  }
+
+  return {
+    ok: true,
+    message: `Opened ${filePath}`
+  };
 }
 
 function colorizeMarkdownLine(line, inCodeBlock) {
@@ -1033,7 +1400,9 @@ function colorizeMarkdownLine(line, inCodeBlock) {
   };
 }
 
-function buildPreviewLines(fileEntry, width, scrollOffset) {
+function buildPreviewLines(fileEntry, width, scrollOffset, options = {}) {
+  const fullDocument = options?.fullDocument === true;
+
   if (!fileEntry || typeof fileEntry.path !== 'string') {
     return [{ text: truncate('No file selected', width), color: 'gray', bold: false }];
   }
@@ -1056,8 +1425,8 @@ function buildPreviewLines(fileEntry, width, scrollOffset) {
     bold: true
   };
 
-  const cappedLines = rawLines.slice(0, 300);
-  const hiddenLineCount = Math.max(0, rawLines.length - cappedLines.length);
+  const cappedLines = fullDocument ? rawLines : rawLines.slice(0, 300);
+  const hiddenLineCount = fullDocument ? 0 : Math.max(0, rawLines.length - cappedLines.length);
   let inCodeBlock = false;
 
   const highlighted = cappedLines.map((rawLine, index) => {
@@ -1148,23 +1517,31 @@ function createDashboardApp(deps) {
       maxLines,
       borderColor,
       marginBottom,
-      dense
+      dense,
+      focused
     } = props;
 
     const contentWidth = Math.max(18, width - 4);
     const visibleLines = fitLines(lines, maxLines, contentWidth);
+    const panelBorderColor = focused ? 'cyan' : (borderColor || 'gray');
+    const titleColor = focused ? 'black' : 'cyan';
+    const titleBackground = focused ? 'cyan' : undefined;
 
     return React.createElement(
       Box,
       {
         flexDirection: 'column',
         borderStyle: dense ? 'single' : 'round',
-        borderColor: borderColor || 'gray',
+        borderColor: panelBorderColor,
         paddingX: dense ? 0 : 1,
         width,
         marginBottom: marginBottom || 0
       },
-      React.createElement(Text, { bold: true, color: 'cyan' }, truncate(title, contentWidth)),
+      React.createElement(
+        Text,
+        { bold: true, color: titleColor, backgroundColor: titleBackground },
+        truncate(title, contentWidth)
+      ),
       ...visibleLines.map((line, index) => React.createElement(
         Text,
         {
@@ -1195,8 +1572,8 @@ function createDashboardApp(deps) {
           {
             key: tab.id,
             bold: isActive,
-            color: isActive ? 'black' : 'gray',
-            backgroundColor: isActive ? 'cyan' : undefined
+            color: isActive ? 'white' : 'gray',
+            backgroundColor: isActive ? 'blue' : undefined
           },
           tab.label
         );
@@ -1243,14 +1620,29 @@ function createDashboardApp(deps) {
     const initialNormalizedError = initialError ? toDashboardError(initialError) : null;
     const snapshotHashRef = useRef(safeJsonHash(initialSnapshot || null));
     const errorHashRef = useRef(initialNormalizedError ? safeJsonHash(initialNormalizedError) : null);
+    const lastVPressRef = useRef(0);
 
     const [activeFlow, setActiveFlow] = useState(fallbackFlow);
     const [snapshot, setSnapshot] = useState(initialSnapshot || null);
     const [error, setError] = useState(initialNormalizedError);
     const [ui, setUi] = useState(createInitialUIState());
-    const [selectedFileIndex, setSelectedFileIndex] = useState(0);
+    const [sectionFocus, setSectionFocus] = useState({
+      runs: 'run-files',
+      overview: 'project',
+      health: 'stats'
+    });
+    const [selectionBySection, setSelectionBySection] = useState({
+      'run-files': 0,
+      pending: 0,
+      completed: 0
+    });
+    const [expandedGroups, setExpandedGroups] = useState({});
+    const [previewTarget, setPreviewTarget] = useState(null);
     const [previewOpen, setPreviewOpen] = useState(false);
+    const [paneFocus, setPaneFocus] = useState('main');
+    const [overlayPreviewOpen, setOverlayPreviewOpen] = useState(false);
     const [previewScroll, setPreviewScroll] = useState(0);
+    const [statusLine, setStatusLine] = useState('');
     const [lastRefreshAt, setLastRefreshAt] = useState(new Date().toISOString());
     const [watchStatus, setWatchStatus] = useState(watchEnabled ? 'watching' : 'off');
     const [terminalSize, setTerminalSize] = useState(() => ({
@@ -1273,9 +1665,42 @@ function createDashboardApp(deps) {
         }
       };
     }, [parseSnapshotForFlow, parseSnapshot]);
+
+    const previewVisibleRows = Number.isFinite(terminalSize.rows) ? terminalSize.rows : (process.stdout.rows || 40);
+    const showErrorPanelForSections = Boolean(error) && previewVisibleRows >= 18;
+    const getAvailableSections = useCallback((viewId) => {
+      const base = getSectionOrderForView(viewId);
+      return base.filter((sectionKey) => sectionKey !== 'error-details' || showErrorPanelForSections);
+    }, [showErrorPanelForSections]);
+
     const runFileEntries = getRunFileEntries(snapshot, activeFlow);
-    const clampedSelectedFileIndex = clampIndex(selectedFileIndex, runFileEntries.length);
-    const selectedFile = runFileEntries[clampedSelectedFileIndex] || null;
+    const runFileRows = toRunFileRows(runFileEntries, activeFlow);
+    const pendingRows = toExpandableRows(
+      buildPendingGroups(snapshot, activeFlow),
+      getNoPendingMessage(getEffectiveFlow(activeFlow, snapshot)),
+      expandedGroups
+    );
+    const completedRows = toExpandableRows(
+      buildCompletedGroups(snapshot, activeFlow),
+      getNoCompletedMessage(getEffectiveFlow(activeFlow, snapshot)),
+      expandedGroups
+    );
+
+    const rowsBySection = {
+      'run-files': runFileRows,
+      pending: pendingRows,
+      completed: completedRows
+    };
+
+    const currentSectionOrder = getAvailableSections(ui.view);
+    const focusedSection = currentSectionOrder.includes(sectionFocus[ui.view])
+      ? sectionFocus[ui.view]
+      : (currentSectionOrder[0] || 'current-run');
+
+    const focusedRows = rowsBySection[focusedSection] || [];
+    const focusedIndex = selectionBySection[focusedSection] || 0;
+    const selectedFocusedRow = getSelectedRow(focusedRows, focusedIndex);
+    const selectedFocusedFile = rowToFileEntry(selectedFocusedRow);
 
     const refresh = useCallback(async () => {
       const now = new Date().toISOString();
@@ -1337,41 +1762,6 @@ function createDashboardApp(deps) {
         return;
       }
 
-      if (input === 'v' && ui.view === 'runs') {
-        if (selectedFile) {
-          setPreviewOpen((previous) => !previous);
-          setPreviewScroll(0);
-        }
-        return;
-      }
-
-      if (key.escape && previewOpen) {
-        setPreviewOpen(false);
-        setPreviewScroll(0);
-        return;
-      }
-
-      if (ui.view === 'runs' && (key.upArrow || key.downArrow || input === 'j' || input === 'k')) {
-        const moveDown = key.downArrow || input === 'j';
-        const moveUp = key.upArrow || input === 'k';
-
-        if (previewOpen) {
-          if (moveDown) {
-            setPreviewScroll((previous) => previous + 1);
-          } else if (moveUp) {
-            setPreviewScroll((previous) => Math.max(0, previous - 1));
-          }
-          return;
-        }
-
-        if (moveDown) {
-          setSelectedFileIndex((previous) => clampIndex(previous + 1, runFileEntries.length));
-        } else if (moveUp) {
-          setSelectedFileIndex((previous) => clampIndex(previous - 1, runFileEntries.length));
-        }
-        return;
-      }
-
       if (input === 'h' || input === '?') {
         setUi((previous) => ({ ...previous, showHelp: !previous.showHelp }));
         return;
@@ -1379,31 +1769,19 @@ function createDashboardApp(deps) {
 
       if (input === '1') {
         setUi((previous) => ({ ...previous, view: 'runs' }));
+        setPaneFocus('main');
         return;
       }
 
       if (input === '2') {
         setUi((previous) => ({ ...previous, view: 'overview' }));
+        setPaneFocus('main');
         return;
       }
 
       if (input === '3') {
         setUi((previous) => ({ ...previous, view: 'health' }));
-        return;
-      }
-
-      if (key.tab) {
-        setUi((previous) => ({ ...previous, view: cycleView(previous.view) }));
-        return;
-      }
-
-      if (key.rightArrow) {
-        setUi((previous) => ({ ...previous, view: cycleView(previous.view) }));
-        return;
-      }
-
-      if (key.leftArrow) {
-        setUi((previous) => ({ ...previous, view: cycleViewBackward(previous.view) }));
+        setPaneFocus('main');
         return;
       }
 
@@ -1419,8 +1797,22 @@ function createDashboardApp(deps) {
             : 0;
           return availableFlowIds[nextIndex];
         });
+        setSelectionBySection({
+          'run-files': 0,
+          pending: 0,
+          completed: 0
+        });
+        setSectionFocus({
+          runs: 'run-files',
+          overview: 'project',
+          health: 'stats'
+        });
+        setExpandedGroups({});
+        setPreviewTarget(null);
         setPreviewOpen(false);
+        setOverlayPreviewOpen(false);
         setPreviewScroll(0);
+        setPaneFocus('main');
         return;
       }
 
@@ -1436,8 +1828,210 @@ function createDashboardApp(deps) {
             : 0;
           return availableFlowIds[nextIndex];
         });
+        setSelectionBySection({
+          'run-files': 0,
+          pending: 0,
+          completed: 0
+        });
+        setSectionFocus({
+          runs: 'run-files',
+          overview: 'project',
+          health: 'stats'
+        });
+        setExpandedGroups({});
+        setPreviewTarget(null);
+        setPreviewOpen(false);
+        setOverlayPreviewOpen(false);
+        setPreviewScroll(0);
+        setPaneFocus('main');
+        return;
+      }
+
+      const availableSections = getAvailableSections(ui.view);
+      const activeSection = availableSections.includes(sectionFocus[ui.view])
+        ? sectionFocus[ui.view]
+        : (availableSections[0] || 'current-run');
+
+      if (key.tab && ui.view === 'runs' && previewOpen) {
+        setPaneFocus((previous) => (previous === 'main' ? 'preview' : 'main'));
+        return;
+      }
+
+      if (key.rightArrow || input === 'g') {
+        setSectionFocus((previous) => ({
+          ...previous,
+          [ui.view]: cycleSection(ui.view, activeSection, 1, availableSections)
+        }));
+        setPaneFocus('main');
+        return;
+      }
+
+      if (key.leftArrow || input === 'G') {
+        setSectionFocus((previous) => ({
+          ...previous,
+          [ui.view]: cycleSection(ui.view, activeSection, -1, availableSections)
+        }));
+        setPaneFocus('main');
+        return;
+      }
+
+      if (ui.view === 'runs') {
+        if (input === 'a') {
+          setSectionFocus((previous) => ({ ...previous, runs: 'current-run' }));
+          setPaneFocus('main');
+          return;
+        }
+        if (input === 'f') {
+          setSectionFocus((previous) => ({ ...previous, runs: 'run-files' }));
+          setPaneFocus('main');
+          return;
+        }
+        if (input === 'p') {
+          setSectionFocus((previous) => ({ ...previous, runs: 'pending' }));
+          setPaneFocus('main');
+          return;
+        }
+        if (input === 'c') {
+          setSectionFocus((previous) => ({ ...previous, runs: 'completed' }));
+          setPaneFocus('main');
+          return;
+        }
+      } else if (ui.view === 'overview') {
+        if (input === 'p') {
+          setSectionFocus((previous) => ({ ...previous, overview: 'project' }));
+          return;
+        }
+        if (input === 'i') {
+          setSectionFocus((previous) => ({ ...previous, overview: 'intent-status' }));
+          return;
+        }
+        if (input === 's') {
+          setSectionFocus((previous) => ({ ...previous, overview: 'standards' }));
+          return;
+        }
+      } else if (ui.view === 'health') {
+        if (input === 't') {
+          setSectionFocus((previous) => ({ ...previous, health: 'stats' }));
+          return;
+        }
+        if (input === 'w') {
+          setSectionFocus((previous) => ({ ...previous, health: 'warnings' }));
+          return;
+        }
+        if (input === 'e' && showErrorPanelForSections) {
+          setSectionFocus((previous) => ({ ...previous, health: 'error-details' }));
+          return;
+        }
+      }
+
+      if (key.escape) {
+        if (overlayPreviewOpen) {
+          setOverlayPreviewOpen(false);
+          setPaneFocus('preview');
+          return;
+        }
+        if (previewOpen) {
+          setPreviewOpen(false);
+          setPreviewScroll(0);
+          setPaneFocus('main');
+          return;
+        }
+      }
+
+      if (ui.view === 'runs' && (key.upArrow || key.downArrow || input === 'j' || input === 'k')) {
+        const moveDown = key.downArrow || input === 'j';
+        const moveUp = key.upArrow || input === 'k';
+
+        if (overlayPreviewOpen || (previewOpen && paneFocus === 'preview')) {
+          if (moveDown) {
+            setPreviewScroll((previous) => previous + 1);
+          } else if (moveUp) {
+            setPreviewScroll((previous) => Math.max(0, previous - 1));
+          }
+          return;
+        }
+
+        const targetSection = activeSection === 'current-run' ? 'run-files' : activeSection;
+        if (targetSection !== activeSection) {
+          setSectionFocus((previous) => ({ ...previous, runs: targetSection }));
+        }
+
+        const targetRows = rowsBySection[targetSection] || [];
+        if (targetRows.length === 0) {
+          return;
+        }
+
+        const currentIndex = selectionBySection[targetSection] || 0;
+        const nextIndex = moveDown
+          ? moveRowSelection(targetRows, currentIndex, 1)
+          : moveRowSelection(targetRows, currentIndex, -1);
+
+        setSelectionBySection((previous) => ({
+          ...previous,
+          [targetSection]: nextIndex
+        }));
+        return;
+      }
+
+      if (ui.view === 'runs' && (key.return || key.enter)) {
+        if (activeSection === 'pending' || activeSection === 'completed') {
+          const rowsForSection = rowsBySection[activeSection] || [];
+          const selectedRow = getSelectedRow(rowsForSection, selectionBySection[activeSection] || 0);
+          if (selectedRow?.kind === 'group' && selectedRow.expandable) {
+            setExpandedGroups((previous) => ({
+              ...previous,
+              [selectedRow.key]: !previous[selectedRow.key]
+            }));
+          }
+        }
+        return;
+      }
+
+      if (input === 'v' && ui.view === 'runs') {
+        const target = selectedFocusedFile || previewTarget;
+        if (!target) {
+          setStatusLine('Select a file row first (run files, pending, or completed).');
+          return;
+        }
+
+        const now = Date.now();
+        const isDoublePress = (now - lastVPressRef.current) <= 320;
+        lastVPressRef.current = now;
+
+        if (isDoublePress) {
+          setPreviewTarget(target);
+          setPreviewOpen(true);
+          setOverlayPreviewOpen(true);
+          setPreviewScroll(0);
+          setPaneFocus('preview');
+          return;
+        }
+
+        if (!previewOpen) {
+          setPreviewTarget(target);
+          setPreviewOpen(true);
+          setOverlayPreviewOpen(false);
+          setPreviewScroll(0);
+          setPaneFocus('main');
+          return;
+        }
+
+        if (overlayPreviewOpen) {
+          setOverlayPreviewOpen(false);
+          setPaneFocus('preview');
+          return;
+        }
+
         setPreviewOpen(false);
         setPreviewScroll(0);
+        setPaneFocus('main');
+        return;
+      }
+
+      if (input === 'o' && ui.view === 'runs') {
+        const target = selectedFocusedFile || previewTarget;
+        const result = openFileWithDefaultApp(target?.path);
+        setStatusLine(result.message);
       }
     });
 
@@ -1446,19 +2040,50 @@ function createDashboardApp(deps) {
     }, [refresh]);
 
     useEffect(() => {
-      setSelectedFileIndex((previous) => clampIndex(previous, runFileEntries.length));
-      if (runFileEntries.length === 0) {
-        setPreviewOpen(false);
-        setPreviewScroll(0);
-      }
-    }, [activeFlow, runFileEntries.length, snapshot?.generatedAt]);
+      setSelectionBySection((previous) => ({
+        ...previous,
+        'run-files': clampIndex(previous['run-files'] || 0, runFileRows.length),
+        pending: clampIndex(previous.pending || 0, pendingRows.length),
+        completed: clampIndex(previous.completed || 0, completedRows.length)
+      }));
+    }, [activeFlow, runFileRows.length, pendingRows.length, completedRows.length, snapshot?.generatedAt]);
 
     useEffect(() => {
       if (ui.view !== 'runs') {
         setPreviewOpen(false);
+        setOverlayPreviewOpen(false);
         setPreviewScroll(0);
+        setPaneFocus('main');
       }
     }, [ui.view]);
+
+    useEffect(() => {
+      if (!previewOpen || overlayPreviewOpen || paneFocus !== 'main') {
+        return;
+      }
+      if (!selectedFocusedFile?.path) {
+        return;
+      }
+      if (previewTarget?.path === selectedFocusedFile.path) {
+        return;
+      }
+      setPreviewTarget(selectedFocusedFile);
+      setPreviewScroll(0);
+    }, [previewOpen, overlayPreviewOpen, paneFocus, selectedFocusedFile?.path, previewTarget?.path]);
+
+    useEffect(() => {
+      if (statusLine === '') {
+        return undefined;
+      }
+
+      const timeout = setTimeout(() => {
+        setStatusLine('');
+      }, 3500);
+
+      return () => {
+        clearTimeout(timeout);
+      };
+    }, [statusLine]);
 
     useEffect(() => {
       if (!stdout || typeof stdout.on !== 'function') {
@@ -1529,12 +2154,20 @@ function createDashboardApp(deps) {
       };
     }, [watchEnabled, refreshMs, refresh, rootPath, workspacePath, resolveRootPathForFlow, activeFlow]);
 
+    useEffect(() => {
+      if (!stdout || typeof stdout.write !== 'function') {
+        return;
+      }
+      if (stdout.isTTY === false) {
+        return;
+      }
+      stdout.write('\u001B[2J\u001B[3J\u001B[H');
+    }, [stdout]);
+
     const cols = Number.isFinite(terminalSize.columns) ? terminalSize.columns : (process.stdout.columns || 120);
     const rows = Number.isFinite(terminalSize.rows) ? terminalSize.rows : (process.stdout.rows || 40);
 
     const fullWidth = Math.max(40, cols - 1);
-    const compactWidth = Math.max(18, fullWidth - 4);
-
     const showHelpLine = ui.showHelp && rows >= 14;
     const showErrorPanel = Boolean(error) && rows >= 18;
     const showErrorInline = Boolean(error) && !showErrorPanel;
@@ -1544,28 +2177,72 @@ function createDashboardApp(deps) {
     const contentRowsBudget = Math.max(4, rows - reservedRows);
     const ultraCompact = rows <= 14;
     const panelTitles = getPanelTitles(activeFlow, snapshot);
-    const runFileLines = buildSelectableRunFileLines(runFileEntries, clampedSelectedFileIndex, icons, compactWidth, activeFlow);
-    const previewLines = previewOpen ? buildPreviewLines(selectedFile, compactWidth, previewScroll) : [];
+    const splitPreviewLayout = ui.view === 'runs' && previewOpen && !overlayPreviewOpen && cols >= 110 && rows >= 16;
+    const mainPaneWidth = splitPreviewLayout
+      ? Math.max(34, Math.floor((fullWidth - 1) * 0.52))
+      : fullWidth;
+    const previewPaneWidth = splitPreviewLayout
+      ? Math.max(30, fullWidth - mainPaneWidth - 1)
+      : fullWidth;
+    const mainCompactWidth = Math.max(18, mainPaneWidth - 4);
+    const previewCompactWidth = Math.max(18, previewPaneWidth - 4);
+
+    const runFileLines = buildInteractiveRowsLines(
+      runFileRows,
+      selectionBySection['run-files'] || 0,
+      icons,
+      mainCompactWidth,
+      ui.view === 'runs' && focusedSection === 'run-files' && paneFocus === 'main'
+    );
+    const pendingLines = buildInteractiveRowsLines(
+      pendingRows,
+      selectionBySection.pending || 0,
+      icons,
+      mainCompactWidth,
+      ui.view === 'runs' && focusedSection === 'pending' && paneFocus === 'main'
+    );
+    const completedLines = buildInteractiveRowsLines(
+      completedRows,
+      selectionBySection.completed || 0,
+      icons,
+      mainCompactWidth,
+      ui.view === 'runs' && focusedSection === 'completed' && paneFocus === 'main'
+    );
+    const effectivePreviewTarget = previewTarget || selectedFocusedFile;
+    const previewLines = previewOpen
+      ? buildPreviewLines(effectivePreviewTarget, previewCompactWidth, previewScroll, {
+        fullDocument: overlayPreviewOpen
+      })
+      : [];
 
     let panelCandidates;
-    if (ui.view === 'overview') {
+    if (ui.view === 'runs' && previewOpen && overlayPreviewOpen) {
+      panelCandidates = [
+        {
+          key: 'preview-overlay',
+          title: `Preview: ${effectivePreviewTarget?.label || 'unknown'}`,
+          lines: previewLines,
+          borderColor: 'magenta'
+        }
+      ];
+    } else if (ui.view === 'overview') {
       panelCandidates = [
         {
           key: 'project',
           title: 'Project + Workspace',
-          lines: buildOverviewProjectLines(snapshot, compactWidth, activeFlow),
+          lines: buildOverviewProjectLines(snapshot, mainCompactWidth, activeFlow),
           borderColor: 'green'
         },
         {
           key: 'intent-status',
           title: 'Intent Status',
-          lines: buildOverviewIntentLines(snapshot, compactWidth, activeFlow),
+          lines: buildOverviewIntentLines(snapshot, mainCompactWidth, activeFlow),
           borderColor: 'yellow'
         },
         {
           key: 'standards',
           title: 'Standards',
-          lines: buildOverviewStandardsLines(snapshot, compactWidth, activeFlow),
+          lines: buildOverviewStandardsLines(snapshot, mainCompactWidth, activeFlow),
           borderColor: 'blue'
         }
       ];
@@ -1574,13 +2251,13 @@ function createDashboardApp(deps) {
         {
           key: 'stats',
           title: 'Stats',
-          lines: buildStatsLines(snapshot, compactWidth, activeFlow),
+          lines: buildStatsLines(snapshot, mainCompactWidth, activeFlow),
           borderColor: 'magenta'
         },
         {
           key: 'warnings',
           title: 'Warnings',
-          lines: buildWarningsLines(snapshot, compactWidth),
+          lines: buildWarningsLines(snapshot, mainCompactWidth),
           borderColor: 'red'
         }
       ];
@@ -1589,16 +2266,17 @@ function createDashboardApp(deps) {
         panelCandidates.push({
           key: 'error-details',
           title: 'Error Details',
-          lines: buildErrorLines(error, compactWidth),
+          lines: buildErrorLines(error, mainCompactWidth),
           borderColor: 'red'
         });
       }
     } else {
+      const includeInlinePreviewPanel = previewOpen && !splitPreviewLayout;
       panelCandidates = [
         {
           key: 'current-run',
           title: panelTitles.current,
-          lines: buildCurrentRunLines(snapshot, compactWidth, activeFlow),
+          lines: buildCurrentRunLines(snapshot, mainCompactWidth, activeFlow),
           borderColor: 'green'
         },
         {
@@ -1607,10 +2285,10 @@ function createDashboardApp(deps) {
           lines: runFileLines,
           borderColor: 'yellow'
         },
-        previewOpen
+        includeInlinePreviewPanel
           ? {
             key: 'preview',
-            title: `Preview: ${selectedFile?.label || 'unknown'}`,
+            title: `Preview: ${effectivePreviewTarget?.label || 'unknown'}`,
             lines: previewLines,
             borderColor: 'magenta'
           }
@@ -1618,19 +2296,19 @@ function createDashboardApp(deps) {
         {
           key: 'pending',
           title: panelTitles.pending,
-          lines: buildPendingLines(snapshot, compactWidth, activeFlow),
+          lines: pendingLines,
           borderColor: 'yellow'
         },
         {
           key: 'completed',
           title: panelTitles.completed,
-          lines: buildCompletedLines(snapshot, compactWidth, activeFlow),
+          lines: completedLines,
           borderColor: 'blue'
         }
       ];
     }
 
-    if (ultraCompact) {
+    if (ultraCompact && !splitPreviewLayout) {
       if (previewOpen) {
         panelCandidates = panelCandidates.filter((panel) => panel && (panel.key === 'current-run' || panel.key === 'preview'));
       } else {
@@ -1640,8 +2318,83 @@ function createDashboardApp(deps) {
 
     const panels = allocateSingleColumnPanels(panelCandidates, contentRowsBudget);
     const flowSwitchHint = availableFlowIds.length > 1 ? ' | [ or ] switch flow' : '';
-    const previewHint = previewOpen ? ' | ↑/↓ scroll preview' : ' | ↑/↓ select file | v preview';
-    const helpText = `q quit | r refresh | h/? help | ←/→ or tab switch views | 1 runs | 2 overview | 3 health${previewHint}${flowSwitchHint}`;
+    const sectionHint = ui.view === 'runs'
+      ? ' | a active | f files | p pending | c done'
+      : (ui.view === 'overview' ? ' | p project | i intents | s standards' : ' | t stats | w warnings | e errors');
+    const previewHint = ui.view === 'runs'
+      ? (previewOpen
+        ? ` | tab ${paneFocus === 'preview' ? 'main' : 'preview'} | ↑/↓ ${paneFocus === 'preview' ? 'scroll' : 'navigate'} | v close | vv fullscreen`
+        : ' | ↑/↓ navigate | enter expand | v preview | vv fullscreen | o open')
+      : '';
+    const helpText = `q quit | r refresh | h/? help | 1 runs | 2 overview | 3 health | g/G section${sectionHint}${previewHint}${flowSwitchHint}`;
+
+    const renderPanel = (panel, index, width, isFocused) => React.createElement(SectionPanel, {
+      key: panel.key,
+      title: panel.title,
+      lines: panel.lines,
+      width,
+      maxLines: panel.maxLines,
+      borderColor: panel.borderColor,
+      marginBottom: densePanels ? 0 : (index === panels.length - 1 ? 0 : 1),
+      dense: densePanels,
+      focused: isFocused
+    });
+
+    let contentNode;
+    if (splitPreviewLayout && ui.view === 'runs' && !overlayPreviewOpen) {
+      const previewPanel = {
+        key: 'preview-split',
+        title: `Preview: ${effectivePreviewTarget?.label || 'unknown'}`,
+        lines: previewLines,
+        borderColor: 'magenta',
+        maxLines: Math.max(4, contentRowsBudget)
+      };
+
+      contentNode = React.createElement(
+        Box,
+        { width: fullWidth, flexDirection: 'row' },
+        React.createElement(
+          Box,
+          { width: mainPaneWidth, flexDirection: 'column' },
+          ...panels.map((panel, index) => React.createElement(SectionPanel, {
+            key: panel.key,
+            title: panel.title,
+            lines: panel.lines,
+            width: mainPaneWidth,
+            maxLines: panel.maxLines,
+            borderColor: panel.borderColor,
+            marginBottom: densePanels ? 0 : (index === panels.length - 1 ? 0 : 1),
+            dense: densePanels,
+            focused: paneFocus === 'main' && panel.key === focusedSection
+          }))
+        ),
+        React.createElement(Box, { width: 1 }, React.createElement(Text, null, ' ')),
+        React.createElement(
+          Box,
+          { width: previewPaneWidth, flexDirection: 'column' },
+          React.createElement(SectionPanel, {
+            key: previewPanel.key,
+            title: previewPanel.title,
+            lines: previewPanel.lines,
+            width: previewPaneWidth,
+            maxLines: previewPanel.maxLines,
+            borderColor: previewPanel.borderColor,
+            marginBottom: 0,
+            dense: densePanels,
+            focused: paneFocus === 'preview'
+          })
+        )
+      );
+    } else {
+      contentNode = panels.map((panel, index) => renderPanel(
+        panel,
+        index,
+        fullWidth,
+        (panel.key === 'preview' || panel.key === 'preview-overlay')
+          ? paneFocus === 'preview'
+          : (paneFocus === 'main' && panel.key === focusedSection)
+      ));
+    }
 
     return React.createElement(
       Box,
@@ -1655,24 +2408,19 @@ function createDashboardApp(deps) {
       showErrorPanel
         ? React.createElement(SectionPanel, {
           title: 'Errors',
-          lines: buildErrorLines(error, compactWidth),
+          lines: buildErrorLines(error, Math.max(18, fullWidth - 4)),
           width: fullWidth,
           maxLines: 2,
           borderColor: 'red',
           marginBottom: densePanels ? 0 : 1,
-          dense: densePanels
+          dense: densePanels,
+          focused: paneFocus === 'main' && focusedSection === 'error-details'
         })
         : null,
-      ...panels.map((panel, index) => React.createElement(SectionPanel, {
-        key: panel.key,
-        title: panel.title,
-        lines: panel.lines,
-        width: fullWidth,
-        maxLines: panel.maxLines,
-        borderColor: panel.borderColor,
-        marginBottom: densePanels ? 0 : (index === panels.length - 1 ? 0 : 1),
-        dense: densePanels
-      })),
+      ...(Array.isArray(contentNode) ? contentNode : [contentNode]),
+      statusLine !== ''
+        ? React.createElement(Text, { color: 'yellow' }, truncate(statusLine, fullWidth))
+        : null,
       showHelpLine
         ? React.createElement(Text, { color: 'gray' }, truncate(helpText, fullWidth))
         : null
