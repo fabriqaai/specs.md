@@ -70,7 +70,7 @@ function renderCompletedRunLines(completedRuns, width) {
   return lines.map((line) => truncate(line, width));
 }
 
-function renderRunsViewLines(snapshot, runFilter, width) {
+function renderRunsViewLines(snapshot, width) {
   const lines = [];
 
   if (!snapshot?.initialized) {
@@ -79,16 +79,11 @@ function renderRunsViewLines(snapshot, runFilter, width) {
     return lines.map((line) => truncate(line, width));
   }
 
-  if (runFilter !== 'completed') {
-    lines.push(...renderActiveRunLines(snapshot.activeRuns, width));
-    lines.push('');
-    lines.push(...renderPendingQueueLines(snapshot.pendingItems, width));
-    lines.push('');
-  }
-
-  if (runFilter !== 'active') {
-    lines.push(...renderCompletedRunLines(snapshot.completedRuns, width));
-  }
+  lines.push(...renderActiveRunLines(snapshot.activeRuns, width));
+  lines.push('');
+  lines.push(...renderPendingQueueLines(snapshot.pendingItems, width));
+  lines.push('');
+  lines.push(...renderCompletedRunLines(snapshot.completedRuns, width));
 
   return lines.map((line) => truncate(line, width));
 }

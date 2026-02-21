@@ -30,7 +30,6 @@ function renderHeaderLines(params) {
     flow,
     workspacePath,
     view,
-    runFilter,
     watchEnabled,
     watchStatus,
     lastRefreshAt,
@@ -43,8 +42,7 @@ function renderHeaderLines(params) {
     `path: ${workspacePath}`,
     `updated: ${formatTime(lastRefreshAt)}`,
     `watch: ${watchEnabled ? watchStatus : 'off'}`,
-    `view: ${view}`,
-    `filter: ${runFilter}`
+    `view: ${view}`
   ].join(' | ');
 
   const horizontal = '-'.repeat(Math.max(20, Math.min(width || 120, 120)));

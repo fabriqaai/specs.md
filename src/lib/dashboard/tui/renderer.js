@@ -20,7 +20,6 @@ function buildDashboardLines(params) {
     flow,
     workspacePath,
     view,
-    runFilter,
     watchEnabled,
     watchStatus,
     showHelp,
@@ -36,7 +35,6 @@ function buildDashboardLines(params) {
     flow,
     workspacePath,
     view,
-    runFilter,
     watchEnabled,
     watchStatus,
     lastRefreshAt,
@@ -58,7 +56,7 @@ function buildDashboardLines(params) {
   } else if (view === 'overview') {
     lines.push(...renderOverviewViewLines(snapshot, safeWidth));
   } else {
-    lines.push(...renderRunsViewLines(snapshot, runFilter, safeWidth));
+    lines.push(...renderRunsViewLines(snapshot, safeWidth));
   }
 
   lines.push('');

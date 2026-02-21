@@ -30,6 +30,27 @@ function clearTerminalOutput(stream = process.stdout) {
   stream.write('\u001B[2J\u001B[3J\u001B[H');
 }
 
+function createInkStdout(stream = process.stdout) {
+  if (!stream || typeof stream.write !== 'function') {
+    return stream;
+  }
+
+  return {
+    isTTY: true,
+    get columns() {
+      return stream.columns;
+    },
+    get rows() {
+      return stream.rows;
+    },
+    write: (...args) => stream.write(...args),
+    on: (...args) => (typeof stream.on === 'function' ? stream.on(...args) : undefined),
+    off: (...args) => (typeof stream.off === 'function' ? stream.off(...args) : undefined),
+    once: (...args) => (typeof stream.once === 'function' ? stream.once(...args) : undefined),
+    removeListener: (...args) => (typeof stream.removeListener === 'function' ? stream.removeListener(...args) : undefined)
+  };
+}
+
 const FLOW_CONFIG = {
   fire: {
     markerDir: '.specs-fire',
@@ -44,6 +65,14 @@ const FLOW_CONFIG = {
     parse: parseSimpleDashboard
   }
 };
+
+function resolveRootPathForFlow(workspacePath, flow) {
+  const config = FLOW_CONFIG[flow];
+  if (!config) {
+    return workspacePath;
+  }
+  return path.join(workspacePath, config.markerDir);
+}
 
 function formatStaticFlowText(flow, snapshot, error) {
   if (flow === 'fire') {
@@ -95,7 +124,7 @@ function formatStaticFlowText(flow, snapshot, error) {
   return 'Unsupported flow.';
 }
 
-async function runFlowDashboard(options, flow) {
+async function runFlowDashboard(options, flow, availableFlows = []) {
   const workspacePath = path.resolve(options.path || process.cwd());
   const config = FLOW_CONFIG[flow];
 
@@ -105,13 +134,28 @@ async function runFlowDashboard(options, flow) {
     return;
   }
 
-  const rootPath = path.join(workspacePath, config.markerDir);
+  const flowIds = Array.from(new Set([
+    String(flow || '').toLowerCase(),
+    ...(Array.isArray(availableFlows) ? availableFlows.map((value) => String(value || '').toLowerCase()) : [])
+  ].filter(Boolean)));
+
   const watchEnabled = options.watch !== false;
   const refreshMs = parseRefreshMs(options.refreshMs);
+  const parseSnapshotForFlow = async (flowId) => {
+    const flowConfig = FLOW_CONFIG[flowId];
+    if (!flowConfig) {
+      return {
+        ok: false,
+        error: {
+          code: 'UNSUPPORTED_FLOW',
+          message: `Flow \"${flowId}\" is not supported.`
+        }
+      };
+    }
+    return flowConfig.parse(workspacePath);
+  };
 
-  const parseSnapshot = async () => config.parse(workspacePath);
-
-  const initialResult = await parseSnapshot();
+  const initialResult = await parseSnapshotForFlow(flow);
   clearTerminalOutput();
 
   if (!watchEnabled) {
@@ -134,10 +178,11 @@ async function runFlowDashboard(options, flow) {
   const App = createDashboardApp({
     React,
     ink,
-    parseSnapshot,
+    parseSnapshotForFlow,
     workspacePath,
-    rootPath,
     flow,
+    availableFlows: flowIds,
+    resolveRootPathForFlow: (flowId) => resolveRootPathForFlow(workspacePath, flowId),
     refreshMs,
     watchEnabled,
     initialSnapshot: initialResult.ok ? initialResult.snapshot : null,
@@ -145,7 +190,9 @@ async function runFlowDashboard(options, flow) {
   });
 
   const { waitUntilExit } = ink.render(React.createElement(App), {
-    exitOnCtrlC: true
+    exitOnCtrlC: true,
+    stdout: createInkStdout(process.stdout),
+    stdin: process.stdin
   });
 
   await waitUntilExit();
@@ -173,7 +220,7 @@ async function run(options = {}) {
     console.warn(`Warning: ${detection.warning}`);
   }
 
-  await runFlowDashboard(options, detection.flow);
+  await runFlowDashboard(options, detection.flow, detection.availableFlows);
 }
 
 module.exports = {
@@ -181,5 +228,6 @@ module.exports = {
   runFlowDashboard,
   parseRefreshMs,
   formatStaticFlowText,
-  clearTerminalOutput
+  clearTerminalOutput,
+  createInkStdout
 };

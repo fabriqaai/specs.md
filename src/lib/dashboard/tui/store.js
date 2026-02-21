@@ -1,7 +1,6 @@
 function createInitialUIState() {
   return {
     view: 'runs',
-    runFilter: 'all',
     showHelp: true
   };
 }
@@ -26,19 +25,8 @@ function cycleViewBackward(current) {
   return 'overview';
 }
 
-function cycleRunFilter(current) {
-  if (current === 'all') {
-    return 'active';
-  }
-  if (current === 'active') {
-    return 'completed';
-  }
-  return 'all';
-}
-
 module.exports = {
   createInitialUIState,
   cycleView,
-  cycleViewBackward,
-  cycleRunFilter
+  cycleViewBackward
 };

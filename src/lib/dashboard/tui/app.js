@@ -1,5 +1,7 @@
+const fs = require('fs');
+const path = require('path');
 const { createWatchRuntime } = require('../runtime/watch-runtime');
-const { createInitialUIState, cycleView, cycleViewBackward, cycleRunFilter } = require('./store');
+const { createInitialUIState, cycleView, cycleViewBackward } = require('./store');
 
 function toDashboardError(error, defaultCode = 'DASHBOARD_ERROR') {
   if (!error) {
@@ -89,15 +91,41 @@ function truncate(value, width) {
   return `${text.slice(0, width - 3)}...`;
 }
 
+function normalizePanelLine(line) {
+  if (line && typeof line === 'object' && !Array.isArray(line)) {
+    return {
+      text: typeof line.text === 'string' ? line.text : String(line.text ?? ''),
+      color: line.color,
+      bold: Boolean(line.bold)
+    };
+  }
+
+  return {
+    text: String(line ?? ''),
+    color: undefined,
+    bold: false
+  };
+}
+
 function fitLines(lines, maxLines, width) {
-  const safeLines = (Array.isArray(lines) ? lines : []).map((line) => truncate(line, width));
+  const safeLines = (Array.isArray(lines) ? lines : []).map((line) => {
+    const normalized = normalizePanelLine(line);
+    return {
+      ...normalized,
+      text: truncate(normalized.text, width)
+    };
+  });
 
   if (safeLines.length <= maxLines) {
     return safeLines;
   }
 
   const visible = safeLines.slice(0, Math.max(1, maxLines - 1));
-  visible.push(truncate(`... +${safeLines.length - visible.length} more`, width));
+  visible.push({
+    text: truncate(`... +${safeLines.length - visible.length} more`, width),
+    color: 'gray',
+    bold: false
+  });
   return visible;
 }
 
@@ -138,11 +166,11 @@ function buildShortStats(snapshot, flow) {
   return `runs ${stats.activeRunsCount || 0}/${stats.completedRuns || 0} | intents ${stats.completedIntents || 0}/${stats.totalIntents || 0} | work ${stats.completedWorkItems || 0}/${stats.totalWorkItems || 0}`;
 }
 
-function buildHeaderLine(snapshot, flow, watchEnabled, watchStatus, lastRefreshAt, view, runFilter, width) {
+function buildHeaderLine(snapshot, flow, watchEnabled, watchStatus, lastRefreshAt, view, width) {
   const projectName = snapshot?.project?.name || 'Unnamed project';
   const shortStats = buildShortStats(snapshot, flow);
 
-  const line = `${flow.toUpperCase()} | ${projectName} | ${shortStats} | watch:${watchEnabled ? watchStatus : 'off'} | ${view}/${runFilter} | ${formatTime(lastRefreshAt)}`;
+  const line = `${flow.toUpperCase()} | ${projectName} | ${shortStats} | watch:${watchEnabled ? watchStatus : 'off'} | ${view} | ${formatTime(lastRefreshAt)}`;
 
   return truncate(line, width);
 }
@@ -233,25 +261,7 @@ function buildFireCurrentRunLines(snapshot, width) {
   return lines.map((line) => truncate(line, width));
 }
 
-function buildFireRunFilesLines(snapshot, width, icons) {
-  const run = getCurrentRun(snapshot);
-  if (!run) {
-    return [truncate('No run files (no active run)', width)];
-  }
-
-  const files = ['run.md'];
-  if (run.hasPlan) files.push('plan.md');
-  if (run.hasTestReport) files.push('test-report.md');
-  if (run.hasWalkthrough) files.push('walkthrough.md');
-
-  return files.map((file) => truncate(`${icons.runFile} ${file}`, width));
-}
-
-function buildFirePendingLines(snapshot, runFilter, width) {
-  if (runFilter === 'completed') {
-    return [truncate('Hidden by run filter: completed', width)];
-  }
-
+function buildFirePendingLines(snapshot, width) {
   const pending = snapshot?.pendingItems || [];
   if (pending.length === 0) {
     return [truncate('No pending work items', width)];
@@ -263,11 +273,7 @@ function buildFirePendingLines(snapshot, runFilter, width) {
   });
 }
 
-function buildFireCompletedLines(snapshot, runFilter, width) {
-  if (runFilter === 'active') {
-    return [truncate('Hidden by run filter: active', width)];
-  }
-
+function buildFireCompletedLines(snapshot, width) {
   const completedRuns = snapshot?.completedRuns || [];
   if (completedRuns.length === 0) {
     return [truncate('No completed runs yet', width)];
@@ -406,25 +412,7 @@ function buildAidlcCurrentRunLines(snapshot, width) {
   return lines.map((line) => truncate(line, width));
 }
 
-function buildAidlcRunFilesLines(snapshot, width, icons) {
-  const bolt = getCurrentBolt(snapshot);
-  if (!bolt) {
-    return [truncate('No bolt files (no active bolt)', width)];
-  }
-
-  const files = Array.isArray(bolt.files) ? bolt.files : [];
-  if (files.length === 0) {
-    return [truncate('No markdown files found in active bolt', width)];
-  }
-
-  return files.map((file) => truncate(`${icons.runFile} ${file}`, width));
-}
-
-function buildAidlcPendingLines(snapshot, runFilter, width) {
-  if (runFilter === 'completed') {
-    return [truncate('Hidden by run filter: completed', width)];
-  }
-
+function buildAidlcPendingLines(snapshot, width) {
   const pendingBolts = Array.isArray(snapshot?.pendingBolts) ? snapshot.pendingBolts : [];
   if (pendingBolts.length === 0) {
     return [truncate('No queued bolts', width)];
@@ -439,11 +427,7 @@ function buildAidlcPendingLines(snapshot, runFilter, width) {
   });
 }
 
-function buildAidlcCompletedLines(snapshot, runFilter, width) {
-  if (runFilter === 'active') {
-    return [truncate('Hidden by run filter: active', width)];
-  }
-
+function buildAidlcCompletedLines(snapshot, width) {
   const completedBolts = Array.isArray(snapshot?.completedBolts) ? snapshot.completedBolts : [];
   if (completedBolts.length === 0) {
     return [truncate('No completed bolts yet', width)];
@@ -550,29 +534,7 @@ function buildSimpleCurrentRunLines(snapshot, width) {
   return lines.map((line) => truncate(line, width));
 }
 
-function buildSimpleRunFilesLines(snapshot, width, icons) {
-  const spec = getCurrentSpec(snapshot);
-  if (!spec) {
-    return [truncate('No spec files (no active spec)', width)];
-  }
-
-  const files = [];
-  if (spec.hasRequirements) files.push('requirements.md');
-  if (spec.hasDesign) files.push('design.md');
-  if (spec.hasTasks) files.push('tasks.md');
-
-  if (files.length === 0) {
-    return [truncate('No files found in active spec folder', width)];
-  }
-
-  return files.map((file) => truncate(`${icons.runFile} ${file}`, width));
-}
-
-function buildSimplePendingLines(snapshot, runFilter, width) {
-  if (runFilter === 'completed') {
-    return [truncate('Hidden by run filter: completed', width)];
-  }
-
+function buildSimplePendingLines(snapshot, width) {
   const pendingSpecs = Array.isArray(snapshot?.pendingSpecs) ? snapshot.pendingSpecs : [];
   if (pendingSpecs.length === 0) {
     return [truncate('No pending specs', width)];
@@ -583,11 +545,7 @@ function buildSimplePendingLines(snapshot, runFilter, width) {
   );
 }
 
-function buildSimpleCompletedLines(snapshot, runFilter, width) {
-  if (runFilter === 'active') {
-    return [truncate('Hidden by run filter: active', width)];
-  }
-
+function buildSimpleCompletedLines(snapshot, width) {
   const completedSpecs = Array.isArray(snapshot?.completedSpecs) ? snapshot.completedSpecs : [];
   if (completedSpecs.length === 0) {
     return [truncate('No completed specs yet', width)];
@@ -659,37 +617,26 @@ function buildCurrentRunLines(snapshot, width, flow) {
   return buildFireCurrentRunLines(snapshot, width);
 }
 
-function buildRunFilesLines(snapshot, width, icons, flow) {
+function buildPendingLines(snapshot, width, flow) {
   const effectiveFlow = getEffectiveFlow(flow, snapshot);
   if (effectiveFlow === 'aidlc') {
-    return buildAidlcRunFilesLines(snapshot, width, icons);
+    return buildAidlcPendingLines(snapshot, width);
   }
   if (effectiveFlow === 'simple') {
-    return buildSimpleRunFilesLines(snapshot, width, icons);
+    return buildSimplePendingLines(snapshot, width);
   }
-  return buildFireRunFilesLines(snapshot, width, icons);
+  return buildFirePendingLines(snapshot, width);
 }
 
-function buildPendingLines(snapshot, runFilter, width, flow) {
+function buildCompletedLines(snapshot, width, flow) {
   const effectiveFlow = getEffectiveFlow(flow, snapshot);
   if (effectiveFlow === 'aidlc') {
-    return buildAidlcPendingLines(snapshot, runFilter, width);
+    return buildAidlcCompletedLines(snapshot, width);
   }
   if (effectiveFlow === 'simple') {
-    return buildSimplePendingLines(snapshot, runFilter, width);
+    return buildSimpleCompletedLines(snapshot, width);
   }
-  return buildFirePendingLines(snapshot, runFilter, width);
-}
-
-function buildCompletedLines(snapshot, runFilter, width, flow) {
-  const effectiveFlow = getEffectiveFlow(flow, snapshot);
-  if (effectiveFlow === 'aidlc') {
-    return buildAidlcCompletedLines(snapshot, runFilter, width);
-  }
-  if (effectiveFlow === 'simple') {
-    return buildSimpleCompletedLines(snapshot, runFilter, width);
-  }
-  return buildFireCompletedLines(snapshot, runFilter, width);
+  return buildFireCompletedLines(snapshot, width);
 }
 
 function buildStatsLines(snapshot, width, flow) {
@@ -772,6 +719,203 @@ function getPanelTitles(flow, snapshot) {
   };
 }
 
+function getRunFileEntries(snapshot, flow) {
+  const effectiveFlow = getEffectiveFlow(flow, snapshot);
+
+  if (effectiveFlow === 'aidlc') {
+    const bolt = getCurrentBolt(snapshot);
+    if (!bolt || typeof bolt.path !== 'string') {
+      return [];
+    }
+    const files = Array.isArray(bolt.files) ? bolt.files : [];
+    return files.map((fileName) => ({
+      name: fileName,
+      path: path.join(bolt.path, fileName)
+    }));
+  }
+
+  if (effectiveFlow === 'simple') {
+    const spec = getCurrentSpec(snapshot);
+    if (!spec || typeof spec.path !== 'string') {
+      return [];
+    }
+
+    const files = [];
+    if (spec.hasRequirements) files.push('requirements.md');
+    if (spec.hasDesign) files.push('design.md');
+    if (spec.hasTasks) files.push('tasks.md');
+
+    return files.map((fileName) => ({
+      name: fileName,
+      path: path.join(spec.path, fileName)
+    }));
+  }
+
+  const run = getCurrentRun(snapshot);
+  if (!run || typeof run.folderPath !== 'string') {
+    return [];
+  }
+
+  const files = ['run.md'];
+  if (run.hasPlan) files.push('plan.md');
+  if (run.hasTestReport) files.push('test-report.md');
+  if (run.hasWalkthrough) files.push('walkthrough.md');
+
+  return files.map((fileName) => ({
+    name: fileName,
+    path: path.join(run.folderPath, fileName)
+  }));
+}
+
+function clampIndex(value, length) {
+  if (!Number.isFinite(value)) {
+    return 0;
+  }
+  if (!Number.isFinite(length) || length <= 0) {
+    return 0;
+  }
+  return Math.max(0, Math.min(length - 1, Math.floor(value)));
+}
+
+function getNoFileMessage(flow) {
+  if (flow === 'aidlc') {
+    return 'No bolt files (no active bolt)';
+  }
+  if (flow === 'simple') {
+    return 'No spec files (no active spec)';
+  }
+  return 'No run files (no active run)';
+}
+
+function buildSelectableRunFileLines(fileEntries, selectedIndex, icons, width, flow) {
+  if (!Array.isArray(fileEntries) || fileEntries.length === 0) {
+    return [truncate(getNoFileMessage(flow), width)];
+  }
+
+  const clampedIndex = clampIndex(selectedIndex, fileEntries.length);
+  return fileEntries.map((file, index) => {
+    const isSelected = index === clampedIndex;
+    const prefix = isSelected ? '>' : ' ';
+    return {
+      text: truncate(`${prefix} ${icons.runFile} ${file.name}`, width),
+      color: isSelected ? 'cyan' : undefined,
+      bold: isSelected
+    };
+  });
+}
+
+function colorizeMarkdownLine(line, inCodeBlock) {
+  const text = String(line ?? '');
+
+  if (/^\s*```/.test(text)) {
+    return {
+      color: 'magenta',
+      bold: true,
+      togglesCodeBlock: true
+    };
+  }
+
+  if (/^\s{0,3}#{1,6}\s+/.test(text)) {
+    return {
+      color: 'cyan',
+      bold: true,
+      togglesCodeBlock: false
+    };
+  }
+
+  if (/^\s*[-*+]\s+\[[ xX]\]/.test(text) || /^\s*[-*+]\s+/.test(text) || /^\s*\d+\.\s+/.test(text)) {
+    return {
+      color: 'yellow',
+      bold: false,
+      togglesCodeBlock: false
+    };
+  }
+
+  if (/^\s*>\s+/.test(text)) {
+    return {
+      color: 'gray',
+      bold: false,
+      togglesCodeBlock: false
+    };
+  }
+
+  if (/^\s*---\s*$/.test(text)) {
+    return {
+      color: 'yellow',
+      bold: false,
+      togglesCodeBlock: false
+    };
+  }
+
+  if (inCodeBlock) {
+    return {
+      color: 'green',
+      bold: false,
+      togglesCodeBlock: false
+    };
+  }
+
+  return {
+    color: undefined,
+    bold: false,
+    togglesCodeBlock: false
+  };
+}
+
+function buildPreviewLines(fileEntry, width, scrollOffset) {
+  if (!fileEntry || typeof fileEntry.path !== 'string') {
+    return [{ text: truncate('No file selected', width), color: 'gray', bold: false }];
+  }
+
+  let content;
+  try {
+    content = fs.readFileSync(fileEntry.path, 'utf8');
+  } catch (error) {
+    return [{
+      text: truncate(`Unable to read ${fileEntry.name}: ${error.message}`, width),
+      color: 'red',
+      bold: false
+    }];
+  }
+
+  const rawLines = String(content).split(/\r?\n/);
+  const headLine = {
+    text: truncate(`file: ${fileEntry.path}`, width),
+    color: 'cyan',
+    bold: true
+  };
+
+  const cappedLines = rawLines.slice(0, 300);
+  const hiddenLineCount = Math.max(0, rawLines.length - cappedLines.length);
+  let inCodeBlock = false;
+
+  const highlighted = cappedLines.map((rawLine, index) => {
+    const prefixedLine = `${String(index + 1).padStart(4, ' ')} | ${rawLine}`;
+    const { color, bold, togglesCodeBlock } = colorizeMarkdownLine(rawLine, inCodeBlock);
+    if (togglesCodeBlock) {
+      inCodeBlock = !inCodeBlock;
+    }
+    return {
+      text: truncate(prefixedLine, width),
+      color,
+      bold
+    };
+  });
+
+  if (hiddenLineCount > 0) {
+    highlighted.push({
+      text: truncate(`... ${hiddenLineCount} additional lines hidden`, width),
+      color: 'gray',
+      bold: false
+    });
+  }
+
+  const clampedOffset = clampIndex(scrollOffset, highlighted.length);
+  const body = highlighted.slice(clampedOffset);
+
+  return [headLine, { text: '', color: undefined, bold: false }, ...body];
+}
+
 function allocateSingleColumnPanels(candidates, rowsBudget) {
   const filtered = (candidates || []).filter(Boolean);
   if (filtered.length === 0) {
@@ -810,9 +954,12 @@ function createDashboardApp(deps) {
     React,
     ink,
     parseSnapshot,
+    parseSnapshotForFlow,
     workspacePath,
     rootPath,
     flow,
+    availableFlows,
+    resolveRootPathForFlow,
     refreshMs,
     watchEnabled,
     initialSnapshot,
@@ -847,7 +994,15 @@ function createDashboardApp(deps) {
         marginBottom: marginBottom || 0
       },
       React.createElement(Text, { bold: true, color: 'cyan' }, truncate(title, contentWidth)),
-      ...visibleLines.map((line, index) => React.createElement(Text, { key: `${title}-${index}` }, line))
+      ...visibleLines.map((line, index) => React.createElement(
+        Text,
+        {
+          key: `${title}-${index}`,
+          color: line.color,
+          bold: line.bold
+        },
+        line.text
+      ))
     );
   }
 
@@ -878,17 +1033,53 @@ function createDashboardApp(deps) {
     );
   }
 
+  function FlowBar(props) {
+    const { activeFlow, width, flowIds } = props;
+    if (!Array.isArray(flowIds) || flowIds.length <= 1) {
+      return null;
+    }
+
+    return React.createElement(
+      Box,
+      { width, flexWrap: 'nowrap' },
+      ...flowIds.map((flowId) => {
+        const isActive = flowId === activeFlow;
+        return React.createElement(
+          Text,
+          {
+            key: flowId,
+            bold: isActive,
+            color: isActive ? 'black' : 'gray',
+            backgroundColor: isActive ? 'green' : undefined
+          },
+          ` ${flowId.toUpperCase()} `
+        );
+      })
+    );
+  }
+
   function DashboardApp() {
     const { exit } = useApp();
     const { stdout } = useStdout();
+
+    const fallbackFlow = (initialSnapshot?.flow || flow || 'fire').toLowerCase();
+    const availableFlowIds = Array.from(new Set(
+      (Array.isArray(availableFlows) && availableFlows.length > 0 ? availableFlows : [fallbackFlow])
+        .map((value) => String(value || '').toLowerCase().trim())
+        .filter(Boolean)
+    ));
 
     const initialNormalizedError = initialError ? toDashboardError(initialError) : null;
     const snapshotHashRef = useRef(safeJsonHash(initialSnapshot || null));
     const errorHashRef = useRef(initialNormalizedError ? safeJsonHash(initialNormalizedError) : null);
 
+    const [activeFlow, setActiveFlow] = useState(fallbackFlow);
     const [snapshot, setSnapshot] = useState(initialSnapshot || null);
     const [error, setError] = useState(initialNormalizedError);
     const [ui, setUi] = useState(createInitialUIState());
+    const [selectedFileIndex, setSelectedFileIndex] = useState(0);
+    const [previewOpen, setPreviewOpen] = useState(false);
+    const [previewScroll, setPreviewScroll] = useState(0);
     const [lastRefreshAt, setLastRefreshAt] = useState(new Date().toISOString());
     const [watchStatus, setWatchStatus] = useState(watchEnabled ? 'watching' : 'off');
     const [terminalSize, setTerminalSize] = useState(() => ({
@@ -896,15 +1087,35 @@ function createDashboardApp(deps) {
       rows: stdout?.rows || process.stdout.rows || 40
     }));
     const icons = resolveIconSet();
+    const parseSnapshotForActiveFlow = useCallback(async (flowId) => {
+      if (typeof parseSnapshotForFlow === 'function') {
+        return parseSnapshotForFlow(flowId);
+      }
+      if (typeof parseSnapshot === 'function') {
+        return parseSnapshot();
+      }
+      return {
+        ok: false,
+        error: {
+          code: 'PARSE_CALLBACK_MISSING',
+          message: 'Dashboard parser callback is not configured.'
+        }
+      };
+    }, [parseSnapshotForFlow, parseSnapshot]);
+    const runFileEntries = getRunFileEntries(snapshot, activeFlow);
+    const clampedSelectedFileIndex = clampIndex(selectedFileIndex, runFileEntries.length);
+    const selectedFile = runFileEntries[clampedSelectedFileIndex] || null;
 
     const refresh = useCallback(async () => {
       const now = new Date().toISOString();
 
       try {
-        const result = await parseSnapshot();
+        const result = await parseSnapshotForActiveFlow(activeFlow);
 
         if (result?.ok) {
-          const nextSnapshot = result.snapshot || null;
+          const nextSnapshot = result.snapshot
+            ? { ...result.snapshot, flow: getEffectiveFlow(activeFlow, result.snapshot) }
+            : null;
           const nextSnapshotHash = safeJsonHash(nextSnapshot);
 
           if (nextSnapshotHash !== snapshotHashRef.current) {
@@ -942,7 +1153,7 @@ function createDashboardApp(deps) {
           setLastRefreshAt(now);
         }
       }
-    }, [parseSnapshot, watchEnabled]);
+    }, [activeFlow, parseSnapshotForActiveFlow, watchEnabled]);
 
     useInput((input, key) => {
       if ((key.ctrl && input === 'c') || input === 'q') {
@@ -952,6 +1163,41 @@ function createDashboardApp(deps) {
 
       if (input === 'r') {
         void refresh();
+        return;
+      }
+
+      if (input === 'v' && ui.view === 'runs') {
+        if (selectedFile) {
+          setPreviewOpen((previous) => !previous);
+          setPreviewScroll(0);
+        }
+        return;
+      }
+
+      if (key.escape && previewOpen) {
+        setPreviewOpen(false);
+        setPreviewScroll(0);
+        return;
+      }
+
+      if (ui.view === 'runs' && (key.upArrow || key.downArrow || input === 'j' || input === 'k')) {
+        const moveDown = key.downArrow || input === 'j';
+        const moveUp = key.upArrow || input === 'k';
+
+        if (previewOpen) {
+          if (moveDown) {
+            setPreviewScroll((previous) => previous + 1);
+          } else if (moveUp) {
+            setPreviewScroll((previous) => Math.max(0, previous - 1));
+          }
+          return;
+        }
+
+        if (moveDown) {
+          setSelectedFileIndex((previous) => clampIndex(previous + 1, runFileEntries.length));
+        } else if (moveUp) {
+          setSelectedFileIndex((previous) => clampIndex(previous - 1, runFileEntries.length));
+        }
         return;
       }
 
@@ -990,14 +1236,58 @@ function createDashboardApp(deps) {
         return;
       }
 
-      if (input === 'f') {
-        setUi((previous) => ({ ...previous, runFilter: cycleRunFilter(previous.runFilter) }));
+      if ((input === ']' || input === 'm') && availableFlowIds.length > 1) {
+        snapshotHashRef.current = safeJsonHash(null);
+        errorHashRef.current = null;
+        setSnapshot(null);
+        setError(null);
+        setActiveFlow((previous) => {
+          const index = availableFlowIds.indexOf(previous);
+          const nextIndex = index >= 0
+            ? ((index + 1) % availableFlowIds.length)
+            : 0;
+          return availableFlowIds[nextIndex];
+        });
+        setPreviewOpen(false);
+        setPreviewScroll(0);
+        return;
+      }
+
+      if (input === '[' && availableFlowIds.length > 1) {
+        snapshotHashRef.current = safeJsonHash(null);
+        errorHashRef.current = null;
+        setSnapshot(null);
+        setError(null);
+        setActiveFlow((previous) => {
+          const index = availableFlowIds.indexOf(previous);
+          const nextIndex = index >= 0
+            ? ((index - 1 + availableFlowIds.length) % availableFlowIds.length)
+            : 0;
+          return availableFlowIds[nextIndex];
+        });
+        setPreviewOpen(false);
+        setPreviewScroll(0);
       }
     });
 
     useEffect(() => {
       void refresh();
     }, [refresh]);
+
+    useEffect(() => {
+      setSelectedFileIndex((previous) => clampIndex(previous, runFileEntries.length));
+      if (runFileEntries.length === 0) {
+        setPreviewOpen(false);
+        setPreviewScroll(0);
+      }
+    }, [activeFlow, runFileEntries.length, snapshot?.generatedAt]);
+
+    useEffect(() => {
+      if (ui.view !== 'runs') {
+        setPreviewOpen(false);
+        setPreviewScroll(0);
+      }
+    }, [ui.view]);
 
     useEffect(() => {
       if (!stdout || typeof stdout.on !== 'function') {
@@ -1032,8 +1322,12 @@ function createDashboardApp(deps) {
         return undefined;
       }
 
+      const watchRootPath = resolveRootPathForFlow
+        ? resolveRootPathForFlow(activeFlow)
+        : (rootPath || `${workspacePath}/.specs-fire`);
+
       const runtime = createWatchRuntime({
-        rootPath: rootPath || `${workspacePath}/.specs-fire`,
+        rootPath: watchRootPath,
         debounceMs: 200,
         onRefresh: () => {
           void refresh();
@@ -1062,7 +1356,7 @@ function createDashboardApp(deps) {
         clearInterval(interval);
         void runtime.close();
       };
-    }, [watchEnabled, refreshMs, refresh, rootPath, workspacePath]);
+    }, [watchEnabled, refreshMs, refresh, rootPath, workspacePath, resolveRootPathForFlow, activeFlow]);
 
     const cols = Number.isFinite(terminalSize.columns) ? terminalSize.columns : (process.stdout.columns || 120);
     const rows = Number.isFinite(terminalSize.rows) ? terminalSize.rows : (process.stdout.rows || 40);
@@ -1078,7 +1372,9 @@ function createDashboardApp(deps) {
     const reservedRows = 2 + (showHelpLine ? 1 : 0) + (showErrorPanel ? 5 : 0) + (showErrorInline ? 1 : 0);
     const contentRowsBudget = Math.max(4, rows - reservedRows);
     const ultraCompact = rows <= 14;
-    const panelTitles = getPanelTitles(flow, snapshot);
+    const panelTitles = getPanelTitles(activeFlow, snapshot);
+    const runFileLines = buildSelectableRunFileLines(runFileEntries, clampedSelectedFileIndex, icons, compactWidth, activeFlow);
+    const previewLines = previewOpen ? buildPreviewLines(selectedFile, compactWidth, previewScroll) : [];
 
     let panelCandidates;
     if (ui.view === 'overview') {
@@ -1086,19 +1382,19 @@ function createDashboardApp(deps) {
         {
           key: 'project',
           title: 'Project + Workspace',
-          lines: buildOverviewProjectLines(snapshot, compactWidth, flow),
+          lines: buildOverviewProjectLines(snapshot, compactWidth, activeFlow),
           borderColor: 'green'
         },
         {
           key: 'intent-status',
           title: 'Intent Status',
-          lines: buildOverviewIntentLines(snapshot, compactWidth, flow),
+          lines: buildOverviewIntentLines(snapshot, compactWidth, activeFlow),
           borderColor: 'yellow'
         },
         {
           key: 'standards',
           title: 'Standards',
-          lines: buildOverviewStandardsLines(snapshot, compactWidth, flow),
+          lines: buildOverviewStandardsLines(snapshot, compactWidth, activeFlow),
           borderColor: 'blue'
         }
       ];
@@ -1107,7 +1403,7 @@ function createDashboardApp(deps) {
         {
           key: 'stats',
           title: 'Stats',
-          lines: buildStatsLines(snapshot, compactWidth, flow),
+          lines: buildStatsLines(snapshot, compactWidth, activeFlow),
           borderColor: 'magenta'
         },
         {
@@ -1131,42 +1427,56 @@ function createDashboardApp(deps) {
         {
           key: 'current-run',
           title: panelTitles.current,
-          lines: buildCurrentRunLines(snapshot, compactWidth, flow),
+          lines: buildCurrentRunLines(snapshot, compactWidth, activeFlow),
           borderColor: 'green'
         },
         {
           key: 'run-files',
           title: panelTitles.files,
-          lines: buildRunFilesLines(snapshot, compactWidth, icons, flow),
+          lines: runFileLines,
           borderColor: 'yellow'
         },
+        previewOpen
+          ? {
+            key: 'preview',
+            title: `Preview: ${selectedFile?.name || 'unknown'}`,
+            lines: previewLines,
+            borderColor: 'magenta'
+          }
+          : null,
         {
           key: 'pending',
           title: panelTitles.pending,
-          lines: buildPendingLines(snapshot, ui.runFilter, compactWidth, flow),
+          lines: buildPendingLines(snapshot, compactWidth, activeFlow),
           borderColor: 'yellow'
         },
         {
           key: 'completed',
           title: panelTitles.completed,
-          lines: buildCompletedLines(snapshot, ui.runFilter, compactWidth, flow),
+          lines: buildCompletedLines(snapshot, compactWidth, activeFlow),
           borderColor: 'blue'
         }
       ];
     }
 
     if (ultraCompact) {
-      panelCandidates = [panelCandidates[0]];
+      if (previewOpen) {
+        panelCandidates = panelCandidates.filter((panel) => panel && (panel.key === 'current-run' || panel.key === 'preview'));
+      } else {
+        panelCandidates = [panelCandidates[0]];
+      }
     }
 
     const panels = allocateSingleColumnPanels(panelCandidates, contentRowsBudget);
-
-    const helpText = 'q quit | r refresh | h/? help | ←/→ or tab switch views | 1 runs | 2 overview | 3 health | f run filter';
+    const flowSwitchHint = availableFlowIds.length > 1 ? ' | [ or ] switch flow' : '';
+    const previewHint = previewOpen ? ' | ↑/↓ scroll preview' : ' | ↑/↓ select file | v preview';
+    const helpText = `q quit | r refresh | h/? help | ←/→ or tab switch views | 1 runs | 2 overview | 3 health${previewHint}${flowSwitchHint}`;
 
     return React.createElement(
       Box,
       { flexDirection: 'column', width: fullWidth },
-      React.createElement(Text, { color: 'cyan' }, buildHeaderLine(snapshot, flow, watchEnabled, watchStatus, lastRefreshAt, ui.view, ui.runFilter, fullWidth)),
+      React.createElement(Text, { color: 'cyan' }, buildHeaderLine(snapshot, activeFlow, watchEnabled, watchStatus, lastRefreshAt, ui.view, fullWidth)),
+      React.createElement(FlowBar, { activeFlow, width: fullWidth, flowIds: availableFlowIds }),
       React.createElement(TabsBar, { view: ui.view, width: fullWidth, icons }),
       showErrorInline
         ? React.createElement(Text, { color: 'red' }, truncate(buildErrorLines(error, fullWidth)[0] || 'Error', fullWidth))
