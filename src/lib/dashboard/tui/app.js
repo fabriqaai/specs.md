@@ -1397,6 +1397,81 @@ function openFileWithDefaultApp(filePath) {
   };
 }
 
+function buildQuickHelpText(view, options = {}) {
+  const {
+    previewOpen = false,
+    availableFlowCount = 1
+  } = options;
+
+  const parts = ['1/2/3 views', 'g/G sections'];
+
+  if (view === 'runs') {
+    if (previewOpen) {
+      parts.push('tab pane', '↑/↓ nav/scroll', 'v close');
+    } else {
+      parts.push('↑/↓ navigate', 'enter expand', 'v preview');
+    }
+  }
+
+  if (availableFlowCount > 1) {
+    parts.push('[/] flow');
+  }
+
+  parts.push('r refresh', '? shortcuts', 'q quit');
+  return parts.join(' | ');
+}
+
+function buildHelpOverlayLines(options = {}) {
+  const {
+    view = 'runs',
+    previewOpen = false,
+    paneFocus = 'main',
+    availableFlowCount = 1,
+    showErrorSection = false
+  } = options;
+
+  const lines = [
+    { text: 'Global', color: 'cyan', bold: true },
+    'q or Ctrl+C quit',
+    'r refresh snapshot',
+    '1 runs | 2 overview | 3 health',
+    'g next section | G previous section',
+    'h/? toggle this shortcuts overlay',
+    'esc close overlays (help/preview/fullscreen)',
+    { text: '', color: undefined, bold: false },
+    { text: 'Runs View', color: 'yellow', bold: true },
+    'a current | f files | p pending',
+    'up/down or j/k move selection',
+    'enter expand/collapse pending/completed groups',
+    'v preview selected file',
+    'v twice quickly opens fullscreen preview overlay',
+    'tab switch focus between main and preview panes',
+    'o open selected file in system default app'
+  ];
+
+  if (previewOpen) {
+    lines.push(`preview is open (focus: ${paneFocus})`);
+  }
+
+  if (availableFlowCount > 1) {
+    lines.push('[/] (and m) switch flow');
+  }
+
+  lines.push(
+    { text: '', color: undefined, bold: false },
+    { text: 'Overview View', color: 'green', bold: true },
+    'i intents | c completed | s standards | p project',
+    'when Intents is focused: n next | x completed | left/right toggle filter',
+    { text: '', color: undefined, bold: false },
+    { text: 'Health View', color: 'magenta', bold: true },
+    `t stats | w warnings${showErrorSection ? ' | e errors' : ''}`,
+    { text: '', color: undefined, bold: false },
+    { text: `Current view: ${String(view || 'runs').toUpperCase()}`, color: 'gray', bold: false }
+  );
+
+  return lines;
+}
+
 function colorizeMarkdownLine(line, inCodeBlock) {
   const text = String(line ?? '');
 
@@ -1823,6 +1898,15 @@ function createDashboardApp(deps) {
         return;
       }
 
+      if (key.escape && ui.showHelp) {
+        setUi((previous) => ({ ...previous, showHelp: false }));
+        return;
+      }
+
+      if (ui.showHelp) {
+        return;
+      }
+
       if (input === '1') {
         setUi((previous) => ({ ...previous, view: 'runs' }));
         setPaneFocus('main');
@@ -2240,16 +2324,16 @@ function createDashboardApp(deps) {
     const rows = Number.isFinite(terminalSize.rows) ? terminalSize.rows : (process.stdout.rows || 40);
 
     const fullWidth = Math.max(40, cols - 1);
-    const showHelpLine = ui.showHelp && rows >= 14;
+    const showFooterHelpLine = rows >= 10;
     const showErrorPanel = Boolean(error) && rows >= 18;
     const showErrorInline = Boolean(error) && !showErrorPanel;
     const densePanels = rows <= 28 || cols <= 120;
 
-    const reservedRows = 2 + (showHelpLine ? 1 : 0) + (showErrorPanel ? 5 : 0) + (showErrorInline ? 1 : 0);
+    const reservedRows = 2 + (showFooterHelpLine ? 1 : 0) + (showErrorPanel ? 5 : 0) + (showErrorInline ? 1 : 0);
     const contentRowsBudget = Math.max(4, rows - reservedRows);
     const ultraCompact = rows <= 14;
     const panelTitles = getPanelTitles(activeFlow, snapshot);
-    const splitPreviewLayout = ui.view === 'runs' && previewOpen && !overlayPreviewOpen && cols >= 110 && rows >= 16;
+    const splitPreviewLayout = ui.view === 'runs' && previewOpen && !overlayPreviewOpen && !ui.showHelp && cols >= 110 && rows >= 16;
     const mainPaneWidth = splitPreviewLayout
       ? Math.max(34, Math.floor((fullWidth - 1) * 0.52))
       : fullWidth;
@@ -2280,8 +2364,30 @@ function createDashboardApp(deps) {
       })
       : [];
 
+    const shortcutsOverlayLines = buildHelpOverlayLines({
+      view: ui.view,
+      previewOpen,
+      paneFocus,
+      availableFlowCount: availableFlowIds.length,
+      showErrorSection: showErrorPanel
+    });
+    const quickHelpText = buildQuickHelpText(ui.view, {
+      previewOpen,
+      paneFocus,
+      availableFlowCount: availableFlowIds.length
+    });
+
     let panelCandidates;
-    if (ui.view === 'runs' && previewOpen && overlayPreviewOpen) {
+    if (ui.showHelp) {
+      panelCandidates = [
+        {
+          key: 'shortcuts-overlay',
+          title: 'Keyboard Shortcuts',
+          lines: shortcutsOverlayLines,
+          borderColor: 'cyan'
+        }
+      ];
+    } else if (ui.view === 'runs' && previewOpen && overlayPreviewOpen) {
       panelCandidates = [
         {
           key: 'preview-overlay',
@@ -2382,16 +2488,6 @@ function createDashboardApp(deps) {
     }
 
     const panels = allocateSingleColumnPanels(panelCandidates, contentRowsBudget);
-    const flowSwitchHint = availableFlowIds.length > 1 ? ' | [ or ] switch flow' : '';
-    const sectionHint = ui.view === 'runs'
-      ? ' | a active | f files | p pending'
-      : (ui.view === 'overview' ? ' | i intents | c completed | s standards | p project | n/x intent filter' : ' | t stats | w warnings | e errors');
-    const previewHint = ui.view === 'runs'
-      ? (previewOpen
-        ? ` | tab ${paneFocus === 'preview' ? 'main' : 'preview'} | ↑/↓ ${paneFocus === 'preview' ? 'scroll' : 'navigate'} | v close | vv fullscreen`
-        : ' | ↑/↓ navigate | enter expand | v preview | vv fullscreen | o open')
-      : '';
-    const helpText = `q quit | r refresh | h/? help | 1 runs | 2 overview | 3 health | g/G section${sectionHint}${previewHint}${flowSwitchHint}`;
 
     const renderPanel = (panel, index, width, isFocused) => React.createElement(SectionPanel, {
       key: panel.key,
@@ -2455,9 +2551,11 @@ function createDashboardApp(deps) {
         panel,
         index,
         fullWidth,
-        (panel.key === 'preview' || panel.key === 'preview-overlay')
+        ui.showHelp
+          ? true
+          : ((panel.key === 'preview' || panel.key === 'preview-overlay')
           ? paneFocus === 'preview'
-          : (paneFocus === 'main' && panel.key === focusedSection)
+          : (paneFocus === 'main' && panel.key === focusedSection))
       ));
     }
 
@@ -2486,8 +2584,8 @@ function createDashboardApp(deps) {
       statusLine !== ''
         ? React.createElement(Text, { color: 'yellow' }, truncate(statusLine, fullWidth))
         : null,
-      showHelpLine
-        ? React.createElement(Text, { color: 'gray' }, truncate(helpText, fullWidth))
+      showFooterHelpLine
+        ? React.createElement(Text, { color: 'gray' }, truncate(quickHelpText, fullWidth))
         : null
     );
   }
