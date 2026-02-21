@@ -27,8 +27,6 @@ You can also view this changelog at [specs.md/changelog](https://specs.md/change
 
 ![FIRE dashboard in Codex desktop with no active run](docs.specs.md/images/dashboard/codex-desktop-dashboard1.png)
 
-![FIRE dashboard in Codex desktop showing current run details](docs.specs.md/images/dashboard/codex-desktop-dashboard2.png)
-
 ## [0.1.23] - 2026-02-13
 
 ### Fixed
