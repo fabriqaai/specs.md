@@ -172,12 +172,19 @@ async function runFlowDashboard(options, flow, availableFlows = []) {
   }
 
   const ink = await import('ink');
+  let inkUi = null;
+  try {
+    inkUi = await import('@inkjs/ui');
+  } catch {
+    inkUi = null;
+  }
   const reactNamespace = await import('react');
   const React = reactNamespace.default || reactNamespace;
 
   const App = createDashboardApp({
     React,
     ink,
+    inkUi,
     parseSnapshotForFlow,
     workspacePath,
     flow,

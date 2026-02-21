@@ -124,7 +124,8 @@ function normalizePanelLine(line) {
       text: typeof line.text === 'string' ? line.text : String(line.text ?? ''),
       color: line.color,
       bold: Boolean(line.bold),
-      selected: Boolean(line.selected)
+      selected: Boolean(line.selected),
+      loading: Boolean(line.loading)
     };
   }
 
@@ -132,7 +133,8 @@ function normalizePanelLine(line) {
     text: String(line ?? ''),
     color: undefined,
     bold: false,
-    selected: false
+    selected: false,
+    loading: false
   };
 }
 
@@ -1265,6 +1267,15 @@ function toInfoRows(lines, keyPrefix, emptyLabel = 'No data') {
   });
 }
 
+function toLoadingRows(label, keyPrefix = 'loading') {
+  return [{
+    kind: 'loading',
+    key: `${keyPrefix}:row`,
+    label: typeof label === 'string' && label !== '' ? label : 'Loading...',
+    selectable: false
+  }];
+}
+
 function buildOverviewIntentGroups(snapshot, flow, filter = 'next') {
   const effectiveFlow = getEffectiveFlow(flow, snapshot);
   const normalizedFilter = filter === 'completed' ? 'completed' : 'next';
@@ -1599,6 +1610,16 @@ function buildInteractiveRowsLines(rows, selectedIndex, icons, width, isFocusedS
         color: isSelected ? (isFocusedSection ? 'green' : 'cyan') : 'gray',
         bold: isSelected,
         selected: isSelected
+      };
+    }
+
+    if (row.kind === 'loading') {
+      return {
+        text: truncate(row.label || 'Loading...', width),
+        color: 'cyan',
+        bold: false,
+        selected: false,
+        loading: true
       };
     }
 
@@ -1941,6 +1962,7 @@ function createDashboardApp(deps) {
   const {
     React,
     ink,
+    inkUi,
     parseSnapshot,
     parseSnapshotForFlow,
     workspacePath,
@@ -1956,6 +1978,9 @@ function createDashboardApp(deps) {
 
   const { Box, Text, useApp, useInput, useStdout } = ink;
   const { useState, useEffect, useCallback, useRef } = React;
+  const Spinner = inkUi && typeof inkUi.Spinner === 'function'
+    ? inkUi.Spinner
+    : null;
 
   function SectionPanel(props) {
     const {
@@ -1990,15 +2015,25 @@ function createDashboardApp(deps) {
         { bold: true, color: titleColor, backgroundColor: titleBackground },
         truncate(title, contentWidth)
       ),
-      ...visibleLines.map((line, index) => React.createElement(
-        Text,
-        {
-          key: `${title}-${index}`,
-          color: line.color,
-          bold: line.bold
-        },
-        line.text
-      ))
+      ...visibleLines.map((line, index) => {
+        if (line.loading && Spinner) {
+          return React.createElement(
+            Box,
+            { key: `${title}-${index}` },
+            React.createElement(Spinner, { label: truncate(line.text, contentWidth) })
+          );
+        }
+
+        return React.createElement(
+          Text,
+          {
+            key: `${title}-${index}`,
+            color: line.color,
+            bold: line.bold
+          },
+          line.text
+        );
+      })
     );
   }
 
@@ -2178,42 +2213,42 @@ function createDashboardApp(deps) {
           expandedGroups
         )
       ]
-      : toInfoRows(['Loading intents...'], 'intent-loading');
+      : toLoadingRows('Loading intents...', 'intent-loading');
     const completedRows = shouldHydrateSecondaryTabs
       ? toExpandableRows(
         buildCompletedGroups(snapshot, activeFlow),
         getNoCompletedMessage(effectiveFlow),
         expandedGroups
       )
-      : toInfoRows(['Loading completed items...'], 'completed-loading');
+      : toLoadingRows('Loading completed items...', 'completed-loading');
     const standardsRows = shouldHydrateSecondaryTabs
       ? toExpandableRows(
         buildStandardsGroups(snapshot, activeFlow),
         effectiveFlow === 'simple' ? 'No standards for SIMPLE flow' : 'No standards found',
         expandedGroups
       )
-      : toInfoRows(['Loading standards...'], 'standards-loading');
+      : toLoadingRows('Loading standards...', 'standards-loading');
     const statsRows = shouldHydrateSecondaryTabs
       ? toInfoRows(
         buildStatsLines(snapshot, 200, activeFlow),
         'stats',
         'No stats available'
       )
-      : toInfoRows(['Loading stats...'], 'stats-loading');
+      : toLoadingRows('Loading stats...', 'stats-loading');
     const warningsRows = shouldHydrateSecondaryTabs
       ? toInfoRows(
         buildWarningsLines(snapshot, 200),
         'warnings',
         'No warnings'
       )
-      : toInfoRows(['Loading warnings...'], 'warnings-loading');
+      : toLoadingRows('Loading warnings...', 'warnings-loading');
     const errorDetailsRows = shouldHydrateSecondaryTabs
       ? toInfoRows(
         buildErrorLines(error, 200),
         'error-details',
         'No error details'
       )
-      : toInfoRows(['Loading error details...'], 'error-loading');
+      : toLoadingRows('Loading error details...', 'error-loading');
 
     const rowsBySection = {
       'current-run': currentRunRows,
@@ -2771,7 +2806,8 @@ function createDashboardApp(deps) {
       (showGlobalErrorPanel ? 5 : 0) +
       (showErrorInline ? 1 : 0) +
       (showStatusLine ? 1 : 0);
-    const contentRowsBudget = Math.max(4, rows - reservedRows);
+    const frameSafetyRows = 2;
+    const contentRowsBudget = Math.max(4, rows - reservedRows - frameSafetyRows);
     const ultraCompact = rows <= 14;
     const panelTitles = getPanelTitles(activeFlow, snapshot);
     const splitPreviewLayout = previewOpen && !overlayPreviewOpen && !ui.showHelp && cols >= 110 && rows >= 16;
