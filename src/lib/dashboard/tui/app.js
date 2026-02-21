@@ -906,7 +906,8 @@ function collectSimpleSpecFiles(spec) {
   }));
 }
 
-function getRunFileEntries(snapshot, flow) {
+function getRunFileEntries(snapshot, flow, options = {}) {
+  const includeBacklog = options.includeBacklog !== false;
   const effectiveFlow = getEffectiveFlow(flow, snapshot);
   const entries = [];
   const seenPaths = new Set();
@@ -915,6 +916,10 @@ function getRunFileEntries(snapshot, flow) {
     const bolt = getCurrentBolt(snapshot);
     for (const file of collectAidlcBoltFiles(bolt)) {
       pushFileEntry(entries, seenPaths, { ...file, scope: 'active' });
+    }
+
+    if (!includeBacklog) {
+      return entries;
     }
 
     const pendingBolts = Array.isArray(snapshot?.pendingBolts) ? snapshot.pendingBolts : [];
@@ -963,6 +968,10 @@ function getRunFileEntries(snapshot, flow) {
       pushFileEntry(entries, seenPaths, { ...file, scope: 'active' });
     }
 
+    if (!includeBacklog) {
+      return entries;
+    }
+
     const pendingSpecs = Array.isArray(snapshot?.pendingSpecs) ? snapshot.pendingSpecs : [];
     for (const pendingSpec of pendingSpecs) {
       for (const file of collectSimpleSpecFiles(pendingSpec)) {
@@ -983,6 +992,10 @@ function getRunFileEntries(snapshot, flow) {
   const run = getCurrentRun(snapshot);
   for (const file of collectFireRunFiles(run)) {
     pushFileEntry(entries, seenPaths, { ...file, scope: 'active' });
+  }
+
+  if (!includeBacklog) {
+    return entries;
   }
 
   const pendingItems = Array.isArray(snapshot?.pendingItems) ? snapshot.pendingItems : [];
@@ -1154,10 +1167,10 @@ function getFileEntityLabel(fileEntry, fallbackIndex = 0) {
   return `item-${fallbackIndex + 1}`;
 }
 
-function buildRunFileEntityGroups(snapshot, flow) {
+function buildRunFileEntityGroups(snapshot, flow, options = {}) {
   const order = ['active', 'upcoming', 'completed', 'intent', 'other'];
   const rankByScope = new Map(order.map((scope, index) => [scope, index]));
-  const entries = filterExistingFiles(getRunFileEntries(snapshot, flow));
+  const entries = filterExistingFiles(getRunFileEntries(snapshot, flow, options));
   const groupsByEntity = new Map();
 
   for (let index = 0; index < entries.length; index += 1) {
@@ -2115,7 +2128,9 @@ function createDashboardApp(deps) {
       currentExpandedGroups
     );
     const shouldHydrateSecondaryTabs = deferredTabsReady || ui.view !== 'runs';
-    const runFileGroups = buildRunFileEntityGroups(snapshot, activeFlow);
+    const runFileGroups = buildRunFileEntityGroups(snapshot, activeFlow, {
+      includeBacklog: shouldHydrateSecondaryTabs
+    });
     const runFileExpandedGroups = { ...expandedGroups };
     for (const group of runFileGroups) {
       if (runFileExpandedGroups[group.key] == null) {
@@ -2592,14 +2607,19 @@ function createDashboardApp(deps) {
     }, [activeFlow, rowLengthSignature, snapshot?.generatedAt]);
 
     useEffect(() => {
+      if (ui.view !== 'runs') {
+        setDeferredTabsReady(true);
+        return undefined;
+      }
+
       setDeferredTabsReady(false);
       const timer = setTimeout(() => {
         setDeferredTabsReady(true);
-      }, 0);
+      }, 250);
       return () => {
         clearTimeout(timer);
       };
-    }, [activeFlow, snapshot?.generatedAt]);
+    }, [activeFlow, snapshot?.generatedAt, ui.view]);
 
     useEffect(() => {
       setPaneFocus('main');
