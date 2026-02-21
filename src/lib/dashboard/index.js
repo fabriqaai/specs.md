@@ -15,6 +15,14 @@ function parseRefreshMs(raw) {
   return Math.max(200, Math.min(parsed, 5000));
 }
 
+function clearTerminalOutput(stream = process.stdout) {
+  if (!stream || !stream.isTTY || typeof stream.write !== 'function') {
+    return;
+  }
+
+  stream.write('\u001B[2J\u001B[3J\u001B[H');
+}
+
 const FLOW_CONFIG = {
   fire: {
     markerDir: '.specs-fire',
@@ -97,6 +105,7 @@ async function runFlowDashboard(options, flow) {
   const parseSnapshot = async () => config.parse(workspacePath);
 
   const initialResult = await parseSnapshot();
+  clearTerminalOutput();
 
   if (!watchEnabled) {
     const output = formatStaticFlowText(
@@ -164,5 +173,6 @@ module.exports = {
   run,
   runFlowDashboard,
   parseRefreshMs,
-  formatStaticFlowText
+  formatStaticFlowText,
+  clearTerminalOutput
 };
