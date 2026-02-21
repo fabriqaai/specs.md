@@ -1,8 +1,17 @@
 const fs = require('fs');
 const path = require('path');
 const { spawnSync } = require('child_process');
+const stringWidthModule = require('string-width');
+const sliceAnsiModule = require('slice-ansi');
 const { createWatchRuntime } = require('../runtime/watch-runtime');
 const { createInitialUIState } = require('./store');
+
+const stringWidth = typeof stringWidthModule === 'function'
+  ? stringWidthModule
+  : stringWidthModule.default;
+const sliceAnsi = typeof sliceAnsiModule === 'function'
+  ? sliceAnsiModule
+  : sliceAnsiModule.default;
 
 function toDashboardError(error, defaultCode = 'DASHBOARD_ERROR') {
   if (!error) {
@@ -87,15 +96,26 @@ function resolveIconSet() {
 
 function truncate(value, width) {
   const text = String(value ?? '');
-  if (!Number.isFinite(width) || width <= 0 || text.length <= width) {
+  if (!Number.isFinite(width)) {
     return text;
   }
 
-  if (width <= 3) {
-    return text.slice(0, width);
+  const safeWidth = Math.max(0, Math.floor(width));
+  if (safeWidth === 0) {
+    return '';
   }
 
-  return `${text.slice(0, width - 3)}...`;
+  if (stringWidth(text) <= safeWidth) {
+    return text;
+  }
+
+  if (safeWidth <= 3) {
+    return sliceAnsi(text, 0, safeWidth);
+  }
+
+  const ellipsis = '...';
+  const bodyWidth = Math.max(0, safeWidth - stringWidth(ellipsis));
+  return `${sliceAnsi(text, 0, bodyWidth)}${ellipsis}`;
 }
 
 function normalizePanelLine(line) {
