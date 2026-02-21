@@ -10,6 +10,34 @@ All notable changes to specs.md.
   **Subscribe to updates:** [RSS Feed](/changelog/rss.xml) | [GitHub Releases](https://github.com/fabriqaai/specs.md/releases)
 </Info>
 
+<Update label="February 21, 2026" description="v0.1.26" tags={["FIRE", "CLI", "Codex"]}>
+### Added
+
+- New FIRE CLI dashboard command: `npx specsmd@latest dashboard`
+- Tabbed terminal views: **Runs**, **Overview**, and **Health** (stats + warnings)
+- Keyboard shortcuts for quick navigation: `1/2/3`, `Tab`, `←/→`, and `f`
+- Current Run-first layout with phase track and run files panel
+
+### Changed
+
+- Dashboard UX now targets CLI-first users and Codex desktop app workflows as a practical alternative to the VS Code extension
+- Reduced flicker by limiting unnecessary UI updates and using calmer fallback refresh behavior
+- Compact rendering for smaller terminal windows with tighter spacing and stricter height budgeting
+- Nerd Font icon auto-detection (with override via `SPECSMD_ICON_SET=auto|nerd|ascii`)
+
+<Frame>
+  <img src="/images/dashboard/terminal-dashboard.png" alt="FIRE dashboard in compact terminal mode" />
+</Frame>
+
+<Frame>
+  <img src="/images/dashboard/codex-desktop-dashboard1.png" alt="FIRE dashboard in Codex desktop with no active run" />
+</Frame>
+
+<Frame>
+  <img src="/images/dashboard/codex-desktop-dashboard2.png" alt="FIRE dashboard in Codex desktop showing current run details" />
+</Frame>
+</Update>
+
 <Update label="February 13, 2026" description="v0.1.23" tags={["Codex", "Fix"]}>
 ### Fixed
 
