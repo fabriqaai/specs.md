@@ -96,14 +96,16 @@ function normalizePanelLine(line) {
     return {
       text: typeof line.text === 'string' ? line.text : String(line.text ?? ''),
       color: line.color,
-      bold: Boolean(line.bold)
+      bold: Boolean(line.bold),
+      selected: Boolean(line.selected)
     };
   }
 
   return {
     text: String(line ?? ''),
     color: undefined,
-    bold: false
+    bold: false,
+    selected: false
   };
 }
 
@@ -118,6 +120,15 @@ function fitLines(lines, maxLines, width) {
 
   if (safeLines.length <= maxLines) {
     return safeLines;
+  }
+
+  const selectedIndex = safeLines.findIndex((line) => line.selected);
+  if (selectedIndex >= 0) {
+    const windowSize = Math.max(1, maxLines);
+    let start = selectedIndex - Math.floor(windowSize / 2);
+    start = Math.max(0, start);
+    start = Math.min(start, Math.max(0, safeLines.length - windowSize));
+    return safeLines.slice(start, start + windowSize);
   }
 
   const visible = safeLines.slice(0, Math.max(1, maxLines - 1));
@@ -719,52 +730,208 @@ function getPanelTitles(flow, snapshot) {
   };
 }
 
-function getRunFileEntries(snapshot, flow) {
-  const effectiveFlow = getEffectiveFlow(flow, snapshot);
+function fileExists(filePath) {
+  try {
+    return fs.statSync(filePath).isFile();
+  } catch {
+    return false;
+  }
+}
 
-  if (effectiveFlow === 'aidlc') {
-    const bolt = getCurrentBolt(snapshot);
-    if (!bolt || typeof bolt.path !== 'string') {
-      return [];
-    }
-    const files = Array.isArray(bolt.files) ? bolt.files : [];
-    return files.map((fileName) => ({
-      name: fileName,
-      path: path.join(bolt.path, fileName)
-    }));
+function listMarkdownFiles(dirPath) {
+  try {
+    return fs.readdirSync(dirPath, { withFileTypes: true })
+      .filter((entry) => entry.isFile() && entry.name.endsWith('.md'))
+      .map((entry) => entry.name)
+      .sort((a, b) => a.localeCompare(b));
+  } catch {
+    return [];
+  }
+}
+
+function pushFileEntry(entries, seenPaths, candidate) {
+  if (!candidate || typeof candidate.path !== 'string' || typeof candidate.label !== 'string') {
+    return;
   }
 
-  if (effectiveFlow === 'simple') {
-    const spec = getCurrentSpec(snapshot);
-    if (!spec || typeof spec.path !== 'string') {
-      return [];
-    }
-
-    const files = [];
-    if (spec.hasRequirements) files.push('requirements.md');
-    if (spec.hasDesign) files.push('design.md');
-    if (spec.hasTasks) files.push('tasks.md');
-
-    return files.map((fileName) => ({
-      name: fileName,
-      path: path.join(spec.path, fileName)
-    }));
+  if (!fileExists(candidate.path)) {
+    return;
   }
 
-  const run = getCurrentRun(snapshot);
+  if (seenPaths.has(candidate.path)) {
+    return;
+  }
+
+  seenPaths.add(candidate.path);
+  entries.push({
+    path: candidate.path,
+    label: candidate.label,
+    scope: candidate.scope || 'other'
+  });
+}
+
+function collectFireRunFiles(run) {
   if (!run || typeof run.folderPath !== 'string') {
     return [];
   }
 
-  const files = ['run.md'];
-  if (run.hasPlan) files.push('plan.md');
-  if (run.hasTestReport) files.push('test-report.md');
-  if (run.hasWalkthrough) files.push('walkthrough.md');
+  const names = ['run.md'];
+  if (run.hasPlan) names.push('plan.md');
+  if (run.hasTestReport) names.push('test-report.md');
+  if (run.hasWalkthrough) names.push('walkthrough.md');
 
-  return files.map((fileName) => ({
-    name: fileName,
+  return names.map((fileName) => ({
+    label: `${run.id}/${fileName}`,
     path: path.join(run.folderPath, fileName)
   }));
+}
+
+function collectAidlcBoltFiles(bolt) {
+  if (!bolt || typeof bolt.path !== 'string') {
+    return [];
+  }
+
+  const fileNames = Array.isArray(bolt.files) && bolt.files.length > 0
+    ? bolt.files
+    : listMarkdownFiles(bolt.path);
+
+  return fileNames.map((fileName) => ({
+    label: `${bolt.id}/${fileName}`,
+    path: path.join(bolt.path, fileName)
+  }));
+}
+
+function collectSimpleSpecFiles(spec) {
+  if (!spec || typeof spec.path !== 'string') {
+    return [];
+  }
+
+  const names = [];
+  if (spec.hasRequirements) names.push('requirements.md');
+  if (spec.hasDesign) names.push('design.md');
+  if (spec.hasTasks) names.push('tasks.md');
+
+  return names.map((fileName) => ({
+    label: `${spec.name}/${fileName}`,
+    path: path.join(spec.path, fileName)
+  }));
+}
+
+function getRunFileEntries(snapshot, flow) {
+  const effectiveFlow = getEffectiveFlow(flow, snapshot);
+  const entries = [];
+  const seenPaths = new Set();
+
+  if (effectiveFlow === 'aidlc') {
+    const bolt = getCurrentBolt(snapshot);
+    for (const file of collectAidlcBoltFiles(bolt)) {
+      pushFileEntry(entries, seenPaths, { ...file, scope: 'active' });
+    }
+
+    const pendingBolts = Array.isArray(snapshot?.pendingBolts) ? snapshot.pendingBolts : [];
+    for (const pendingBolt of pendingBolts) {
+      for (const file of collectAidlcBoltFiles(pendingBolt)) {
+        pushFileEntry(entries, seenPaths, { ...file, scope: 'upcoming' });
+      }
+    }
+
+    const completedBolts = Array.isArray(snapshot?.completedBolts) ? snapshot.completedBolts : [];
+    for (const completedBolt of completedBolts) {
+      for (const file of collectAidlcBoltFiles(completedBolt)) {
+        pushFileEntry(entries, seenPaths, { ...file, scope: 'completed' });
+      }
+    }
+
+    const intentIds = new Set([
+      ...pendingBolts.map((item) => item?.intent).filter(Boolean),
+      ...completedBolts.map((item) => item?.intent).filter(Boolean)
+    ]);
+
+    for (const intentId of intentIds) {
+      const intentPath = path.join(snapshot?.rootPath || '', 'intents', intentId);
+      pushFileEntry(entries, seenPaths, {
+        label: `${intentId}/requirements.md`,
+        path: path.join(intentPath, 'requirements.md'),
+        scope: 'intent'
+      });
+      pushFileEntry(entries, seenPaths, {
+        label: `${intentId}/system-context.md`,
+        path: path.join(intentPath, 'system-context.md'),
+        scope: 'intent'
+      });
+      pushFileEntry(entries, seenPaths, {
+        label: `${intentId}/units.md`,
+        path: path.join(intentPath, 'units.md'),
+        scope: 'intent'
+      });
+    }
+    return entries;
+  }
+
+  if (effectiveFlow === 'simple') {
+    const spec = getCurrentSpec(snapshot);
+    for (const file of collectSimpleSpecFiles(spec)) {
+      pushFileEntry(entries, seenPaths, { ...file, scope: 'active' });
+    }
+
+    const pendingSpecs = Array.isArray(snapshot?.pendingSpecs) ? snapshot.pendingSpecs : [];
+    for (const pendingSpec of pendingSpecs) {
+      for (const file of collectSimpleSpecFiles(pendingSpec)) {
+        pushFileEntry(entries, seenPaths, { ...file, scope: 'upcoming' });
+      }
+    }
+
+    const completedSpecs = Array.isArray(snapshot?.completedSpecs) ? snapshot.completedSpecs : [];
+    for (const completedSpec of completedSpecs) {
+      for (const file of collectSimpleSpecFiles(completedSpec)) {
+        pushFileEntry(entries, seenPaths, { ...file, scope: 'completed' });
+      }
+    }
+
+    return entries;
+  }
+
+  const run = getCurrentRun(snapshot);
+  for (const file of collectFireRunFiles(run)) {
+    pushFileEntry(entries, seenPaths, { ...file, scope: 'active' });
+  }
+
+  const pendingItems = Array.isArray(snapshot?.pendingItems) ? snapshot.pendingItems : [];
+  for (const pendingItem of pendingItems) {
+    pushFileEntry(entries, seenPaths, {
+      label: `${pendingItem?.intentId || 'intent'}/${pendingItem?.id || 'work-item'}.md`,
+      path: pendingItem?.filePath,
+      scope: 'upcoming'
+    });
+
+    if (pendingItem?.intentId) {
+      pushFileEntry(entries, seenPaths, {
+        label: `${pendingItem.intentId}/brief.md`,
+        path: path.join(snapshot?.rootPath || '', 'intents', pendingItem.intentId, 'brief.md'),
+        scope: 'intent'
+      });
+    }
+  }
+
+  const completedRuns = Array.isArray(snapshot?.completedRuns) ? snapshot.completedRuns : [];
+  for (const completedRun of completedRuns) {
+    for (const file of collectFireRunFiles(completedRun)) {
+      pushFileEntry(entries, seenPaths, { ...file, scope: 'completed' });
+    }
+  }
+
+  const completedIntents = Array.isArray(snapshot?.intents)
+    ? snapshot.intents.filter((intent) => intent?.status === 'completed')
+    : [];
+  for (const intent of completedIntents) {
+    pushFileEntry(entries, seenPaths, {
+      label: `${intent.id}/brief.md`,
+      path: path.join(snapshot?.rootPath || '', 'intents', intent.id, 'brief.md'),
+      scope: 'intent'
+    });
+  }
+
+  return entries;
 }
 
 function clampIndex(value, length) {
@@ -778,13 +945,15 @@ function clampIndex(value, length) {
 }
 
 function getNoFileMessage(flow) {
-  if (flow === 'aidlc') {
-    return 'No bolt files (no active bolt)';
-  }
-  if (flow === 'simple') {
-    return 'No spec files (no active spec)';
-  }
-  return 'No run files (no active run)';
+  return `No selectable files for ${String(flow || 'flow').toUpperCase()}`;
+}
+
+function formatScope(scope) {
+  if (scope === 'active') return 'ACTIVE';
+  if (scope === 'upcoming') return 'UPNEXT';
+  if (scope === 'completed') return 'DONE';
+  if (scope === 'intent') return 'INTENT';
+  return 'FILE';
 }
 
 function buildSelectableRunFileLines(fileEntries, selectedIndex, icons, width, flow) {
@@ -796,10 +965,12 @@ function buildSelectableRunFileLines(fileEntries, selectedIndex, icons, width, f
   return fileEntries.map((file, index) => {
     const isSelected = index === clampedIndex;
     const prefix = isSelected ? '>' : ' ';
+    const scope = formatScope(file.scope);
     return {
-      text: truncate(`${prefix} ${icons.runFile} ${file.name}`, width),
+      text: truncate(`${prefix} ${icons.runFile} [${scope}] ${file.label}`, width),
       color: isSelected ? 'cyan' : undefined,
-      bold: isSelected
+      bold: isSelected,
+      selected: isSelected
     };
   });
 }
@@ -872,7 +1043,7 @@ function buildPreviewLines(fileEntry, width, scrollOffset) {
     content = fs.readFileSync(fileEntry.path, 'utf8');
   } catch (error) {
     return [{
-      text: truncate(`Unable to read ${fileEntry.name}: ${error.message}`, width),
+      text: truncate(`Unable to read ${fileEntry.label || fileEntry.path}: ${error.message}`, width),
       color: 'red',
       bold: false
     }];
@@ -1439,7 +1610,7 @@ function createDashboardApp(deps) {
         previewOpen
           ? {
             key: 'preview',
-            title: `Preview: ${selectedFile?.name || 'unknown'}`,
+            title: `Preview: ${selectedFile?.label || 'unknown'}`,
             lines: previewLines,
             borderColor: 'magenta'
           }
