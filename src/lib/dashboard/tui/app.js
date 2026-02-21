@@ -689,15 +689,70 @@ function buildOverviewProjectLines(snapshot, width, flow) {
   return buildFireOverviewProjectLines(snapshot, width);
 }
 
-function buildOverviewIntentLines(snapshot, width, flow) {
+function listOverviewIntentEntries(snapshot, flow) {
   const effectiveFlow = getEffectiveFlow(flow, snapshot);
   if (effectiveFlow === 'aidlc') {
-    return buildAidlcOverviewIntentLines(snapshot, width);
+    const intents = Array.isArray(snapshot?.intents) ? snapshot.intents : [];
+    return intents.map((intent) => ({
+      id: intent?.id || 'unknown',
+      status: intent?.status || 'pending',
+      line: `${intent?.id || 'unknown'}: ${intent?.status || 'pending'} (${intent?.completedStories || 0}/${intent?.storyCount || 0} stories, ${intent?.completedUnits || 0}/${intent?.unitCount || 0} units)`
+    }));
   }
   if (effectiveFlow === 'simple') {
-    return buildSimpleOverviewIntentLines(snapshot, width);
+    const specs = Array.isArray(snapshot?.specs) ? snapshot.specs : [];
+    return specs.map((spec) => ({
+      id: spec?.name || 'unknown',
+      status: spec?.state || 'pending',
+      line: `${spec?.name || 'unknown'}: ${spec?.state || 'pending'} (${spec?.tasksCompleted || 0}/${spec?.tasksTotal || 0} tasks)`
+    }));
   }
-  return buildFireOverviewIntentLines(snapshot, width);
+  const intents = Array.isArray(snapshot?.intents) ? snapshot.intents : [];
+  return intents.map((intent) => {
+    const workItems = Array.isArray(intent?.workItems) ? intent.workItems : [];
+    const done = workItems.filter((item) => item.status === 'completed').length;
+    return {
+      id: intent?.id || 'unknown',
+      status: intent?.status || 'pending',
+      line: `${intent?.id || 'unknown'}: ${intent?.status || 'pending'} (${done}/${workItems.length} work items)`
+    };
+  });
+}
+
+function buildOverviewIntentLines(snapshot, width, flow, filter = 'next') {
+  const entries = listOverviewIntentEntries(snapshot, flow);
+  const normalizedFilter = filter === 'completed' ? 'completed' : 'next';
+  const isNextFilter = normalizedFilter === 'next';
+  const nextLabel = isNextFilter ? '[NEXT]' : ' next ';
+  const completedLabel = !isNextFilter ? '[COMPLETED]' : ' completed ';
+
+  const filtered = entries.filter((entry) => {
+    if (normalizedFilter === 'completed') {
+      return entry.status === 'completed';
+    }
+    return entry.status !== 'completed';
+  });
+
+  const lines = [{
+    text: truncate(`filter ${nextLabel} | ${completedLabel}  (←/→ or n/x)`, width),
+    color: 'cyan',
+    bold: true
+  }];
+
+  if (filtered.length === 0) {
+    lines.push({
+      text: truncate(
+        normalizedFilter === 'completed' ? 'No completed intents yet' : 'No upcoming intents',
+        width
+      ),
+      color: 'gray',
+      bold: false
+    });
+    return lines;
+  }
+
+  lines.push(...filtered.map((entry) => truncate(entry.line, width)));
+  return lines;
 }
 
 function buildOverviewStandardsLines(snapshot, width, flow) {
@@ -739,12 +794,12 @@ function getPanelTitles(flow, snapshot) {
 
 function getSectionOrderForView(view) {
   if (view === 'overview') {
-    return ['project', 'intent-status', 'standards'];
+    return ['intent-status', 'completed-runs', 'standards', 'project'];
   }
   if (view === 'health') {
     return ['stats', 'warnings', 'error-details'];
   }
-  return ['current-run', 'run-files', 'pending', 'completed'];
+  return ['current-run', 'run-files', 'pending'];
 }
 
 function cycleSection(view, currentSectionKey, direction = 1, availableSections = null) {
@@ -1638,6 +1693,7 @@ function createDashboardApp(deps) {
     });
     const [expandedGroups, setExpandedGroups] = useState({});
     const [previewTarget, setPreviewTarget] = useState(null);
+    const [overviewIntentFilter, setOverviewIntentFilter] = useState('next');
     const [previewOpen, setPreviewOpen] = useState(false);
     const [paneFocus, setPaneFocus] = useState('main');
     const [overlayPreviewOpen, setOverlayPreviewOpen] = useState(false);
@@ -1807,6 +1863,7 @@ function createDashboardApp(deps) {
           overview: 'project',
           health: 'stats'
         });
+        setOverviewIntentFilter('next');
         setExpandedGroups({});
         setPreviewTarget(null);
         setPreviewOpen(false);
@@ -1838,6 +1895,7 @@ function createDashboardApp(deps) {
           overview: 'project',
           health: 'stats'
         });
+        setOverviewIntentFilter('next');
         setExpandedGroups({});
         setPreviewTarget(null);
         setPreviewOpen(false);
@@ -1857,7 +1915,22 @@ function createDashboardApp(deps) {
         return;
       }
 
-      if (key.rightArrow || input === 'g') {
+      if (ui.view === 'overview' && activeSection === 'intent-status') {
+        if (input === 'n') {
+          setOverviewIntentFilter('next');
+          return;
+        }
+        if (input === 'x') {
+          setOverviewIntentFilter('completed');
+          return;
+        }
+        if (key.rightArrow || key.leftArrow) {
+          setOverviewIntentFilter((previous) => (previous === 'completed' ? 'next' : 'completed'));
+          return;
+        }
+      }
+
+      if (input === 'g' || key.rightArrow) {
         setSectionFocus((previous) => ({
           ...previous,
           [ui.view]: cycleSection(ui.view, activeSection, 1, availableSections)
@@ -1866,7 +1939,7 @@ function createDashboardApp(deps) {
         return;
       }
 
-      if (key.leftArrow || input === 'G') {
+      if (input === 'G' || key.leftArrow) {
         setSectionFocus((previous) => ({
           ...previous,
           [ui.view]: cycleSection(ui.view, activeSection, -1, availableSections)
@@ -1891,11 +1964,6 @@ function createDashboardApp(deps) {
           setPaneFocus('main');
           return;
         }
-        if (input === 'c') {
-          setSectionFocus((previous) => ({ ...previous, runs: 'completed' }));
-          setPaneFocus('main');
-          return;
-        }
       } else if (ui.view === 'overview') {
         if (input === 'p') {
           setSectionFocus((previous) => ({ ...previous, overview: 'project' }));
@@ -1907,6 +1975,10 @@ function createDashboardApp(deps) {
         }
         if (input === 's') {
           setSectionFocus((previous) => ({ ...previous, overview: 'standards' }));
+          return;
+        }
+        if (input === 'c') {
+          setSectionFocus((previous) => ({ ...previous, overview: 'completed-runs' }));
           return;
         }
       } else if (ui.view === 'health') {
@@ -2201,13 +2273,6 @@ function createDashboardApp(deps) {
       mainCompactWidth,
       ui.view === 'runs' && focusedSection === 'pending' && paneFocus === 'main'
     );
-    const completedLines = buildInteractiveRowsLines(
-      completedRows,
-      selectionBySection.completed || 0,
-      icons,
-      mainCompactWidth,
-      ui.view === 'runs' && focusedSection === 'completed' && paneFocus === 'main'
-    );
     const effectivePreviewTarget = previewTarget || selectedFocusedFile;
     const previewLines = previewOpen
       ? buildPreviewLines(effectivePreviewTarget, previewCompactWidth, previewScroll, {
@@ -2228,22 +2293,28 @@ function createDashboardApp(deps) {
     } else if (ui.view === 'overview') {
       panelCandidates = [
         {
-          key: 'project',
-          title: 'Project + Workspace',
-          lines: buildOverviewProjectLines(snapshot, mainCompactWidth, activeFlow),
-          borderColor: 'green'
+          key: 'intent-status',
+          title: 'Intents',
+          lines: buildOverviewIntentLines(snapshot, mainCompactWidth, activeFlow, overviewIntentFilter),
+          borderColor: 'yellow'
         },
         {
-          key: 'intent-status',
-          title: 'Intent Status',
-          lines: buildOverviewIntentLines(snapshot, mainCompactWidth, activeFlow),
-          borderColor: 'yellow'
+          key: 'completed-runs',
+          title: panelTitles.completed,
+          lines: buildCompletedLines(snapshot, mainCompactWidth, activeFlow),
+          borderColor: 'blue'
         },
         {
           key: 'standards',
           title: 'Standards',
           lines: buildOverviewStandardsLines(snapshot, mainCompactWidth, activeFlow),
           borderColor: 'blue'
+        },
+        {
+          key: 'project',
+          title: 'Project + Workspace',
+          lines: buildOverviewProjectLines(snapshot, mainCompactWidth, activeFlow),
+          borderColor: 'green'
         }
       ];
     } else if (ui.view === 'health') {
@@ -2298,12 +2369,6 @@ function createDashboardApp(deps) {
           title: panelTitles.pending,
           lines: pendingLines,
           borderColor: 'yellow'
-        },
-        {
-          key: 'completed',
-          title: panelTitles.completed,
-          lines: completedLines,
-          borderColor: 'blue'
         }
       ];
     }
@@ -2319,8 +2384,8 @@ function createDashboardApp(deps) {
     const panels = allocateSingleColumnPanels(panelCandidates, contentRowsBudget);
     const flowSwitchHint = availableFlowIds.length > 1 ? ' | [ or ] switch flow' : '';
     const sectionHint = ui.view === 'runs'
-      ? ' | a active | f files | p pending | c done'
-      : (ui.view === 'overview' ? ' | p project | i intents | s standards' : ' | t stats | w warnings | e errors');
+      ? ' | a active | f files | p pending'
+      : (ui.view === 'overview' ? ' | i intents | c completed | s standards | p project | n/x intent filter' : ' | t stats | w warnings | e errors');
     const previewHint = ui.view === 'runs'
       ? (previewOpen
         ? ` | tab ${paneFocus === 'preview' ? 'main' : 'preview'} | ↑/↓ ${paneFocus === 'preview' ? 'scroll' : 'navigate'} | v close | vv fullscreen`
