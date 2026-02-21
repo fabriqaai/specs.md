@@ -1,5 +1,5 @@
 const { createWatchRuntime } = require('../runtime/watch-runtime');
-const { createInitialUIState, cycleView, cycleRunFilter } = require('./store');
+const { createInitialUIState, cycleView, cycleViewBackward, cycleRunFilter } = require('./store');
 
 function toDashboardError(error, defaultCode = 'DASHBOARD_ERROR') {
   if (!error) {
@@ -43,6 +43,37 @@ function safeJsonHash(value) {
   } catch {
     return String(value);
   }
+}
+
+function resolveIconSet() {
+  const mode = (process.env.SPECSMD_ICON_SET || 'auto').toLowerCase();
+
+  const ascii = {
+    runs: '[R]',
+    overview: '[O]',
+    health: '[H]',
+    runFile: '*'
+  };
+
+  const nerd = {
+    runs: '󰑮',
+    overview: '󰍉',
+    health: '󰓦',
+    runFile: '󰈔'
+  };
+
+  if (mode === 'ascii') {
+    return ascii;
+  }
+  if (mode === 'nerd') {
+    return nerd;
+  }
+
+  const locale = `${process.env.LC_ALL || ''}${process.env.LC_CTYPE || ''}${process.env.LANG || ''}`;
+  const isUtf8 = /utf-?8/i.test(locale);
+  const looksLikeVsCodeTerminal = (process.env.TERM_PROGRAM || '').toLowerCase().includes('vscode');
+
+  return isUtf8 && looksLikeVsCodeTerminal ? nerd : ascii;
 }
 
 function truncate(value, width) {
@@ -121,28 +152,84 @@ function buildErrorLines(error, width) {
   return lines.map((line) => truncate(line, width));
 }
 
-function buildActiveRunLines(snapshot, runFilter, width) {
-  if (runFilter === 'completed') {
-    return [truncate('Hidden by run filter: completed', width)];
-  }
-
-  const activeRuns = snapshot?.activeRuns || [];
+function getCurrentRun(snapshot) {
+  const activeRuns = Array.isArray(snapshot?.activeRuns) ? [...snapshot.activeRuns] : [];
   if (activeRuns.length === 0) {
-    return [truncate('No active runs', width)];
+    return null;
   }
 
-  const lines = [];
-  for (const run of activeRuns) {
-    const currentItem = run.currentItem || 'n/a';
-    const workItems = Array.isArray(run.workItems) ? run.workItems : [];
-    const completed = workItems.filter((item) => item.status === 'completed').length;
-    const inProgress = workItems.filter((item) => item.status === 'in_progress').length;
+  activeRuns.sort((a, b) => {
+    const aTime = a?.startedAt ? Date.parse(a.startedAt) : 0;
+    const bTime = b?.startedAt ? Date.parse(b.startedAt) : 0;
+    if (bTime !== aTime) {
+      return bTime - aTime;
+    }
+    return String(a?.id || '').localeCompare(String(b?.id || ''));
+  });
 
-    lines.push(`${run.id} [${run.scope}] current: ${currentItem}`);
-    lines.push(`progress: ${completed}/${workItems.length} done, ${inProgress} active`);
+  return activeRuns[0] || null;
+}
+
+function getCurrentPhaseLabel(run, currentWorkItem) {
+  const phase = currentWorkItem?.currentPhase || '';
+  if (typeof phase === 'string' && phase !== '') {
+    return phase.toLowerCase();
   }
+
+  if (run?.hasTestReport) {
+    return 'review';
+  }
+  if (run?.hasPlan) {
+    return 'execute';
+  }
+  return 'plan';
+}
+
+function buildPhaseTrack(currentPhase) {
+  const order = ['plan', 'execute', 'test', 'review'];
+  const labels = ['P', 'E', 'T', 'R'];
+  const currentIndex = Math.max(0, order.indexOf(currentPhase));
+  return labels.map((label, index) => (index === currentIndex ? `[${label}]` : ` ${label} `)).join(' - ');
+}
+
+function buildCurrentRunLines(snapshot, width) {
+  const run = getCurrentRun(snapshot);
+  if (!run) {
+    return [truncate('No active run', width)];
+  }
+
+  const workItems = Array.isArray(run.workItems) ? run.workItems : [];
+  const completed = workItems.filter((item) => item.status === 'completed').length;
+  const currentWorkItem = workItems.find((item) => item.id === run.currentItem) || workItems.find((item) => item.status === 'in_progress') || workItems[0];
+
+  const itemId = currentWorkItem?.id || run.currentItem || 'n/a';
+  const mode = String(currentWorkItem?.mode || 'confirm').toUpperCase();
+  const status = currentWorkItem?.status || 'pending';
+  const currentPhase = getCurrentPhaseLabel(run, currentWorkItem);
+  const phaseTrack = buildPhaseTrack(currentPhase);
+
+  const lines = [
+    `${run.id}  [${run.scope}]  ${completed}/${workItems.length} items done`,
+    `work item: ${itemId}`,
+    `mode: ${mode}  |  status: ${status}`,
+    `phase: ${phaseTrack}`
+  ];
 
   return lines.map((line) => truncate(line, width));
+}
+
+function buildRunFilesLines(snapshot, width, icons) {
+  const run = getCurrentRun(snapshot);
+  if (!run) {
+    return [truncate('No run files (no active run)', width)];
+  }
+
+  const files = ['run.md'];
+  if (run.hasPlan) files.push('plan.md');
+  if (run.hasTestReport) files.push('test-report.md');
+  if (run.hasWalkthrough) files.push('walkthrough.md');
+
+  return files.map((file) => truncate(`${icons.runFile} ${file}`, width));
 }
 
 function buildPendingLines(snapshot, runFilter, width) {
@@ -298,7 +385,8 @@ function createDashboardApp(deps) {
       width,
       maxLines,
       borderColor,
-      marginBottom
+      marginBottom,
+      dense
     } = props;
 
     const contentWidth = Math.max(18, width - 4);
@@ -308,9 +396,9 @@ function createDashboardApp(deps) {
       Box,
       {
         flexDirection: 'column',
-        borderStyle: 'round',
+        borderStyle: dense ? 'single' : 'round',
         borderColor: borderColor || 'gray',
-        paddingX: 1,
+        paddingX: dense ? 0 : 1,
         width,
         marginBottom: marginBottom || 0
       },
@@ -320,11 +408,11 @@ function createDashboardApp(deps) {
   }
 
   function TabsBar(props) {
-    const { view, width } = props;
+    const { view, width, icons } = props;
     const tabs = [
-      { id: 'runs', label: ' 1 RUNS ' },
-      { id: 'overview', label: ' 2 OVERVIEW ' },
-      { id: 'health', label: ' 3 HEALTH ' }
+      { id: 'runs', label: ` 1 ${icons.runs} RUNS ` },
+      { id: 'overview', label: ` 2 ${icons.overview} OVERVIEW ` },
+      { id: 'health', label: ` 3 ${icons.health} HEALTH ` }
     ];
 
     return React.createElement(
@@ -363,6 +451,7 @@ function createDashboardApp(deps) {
       columns: stdout?.columns || process.stdout.columns || 120,
       rows: stdout?.rows || process.stdout.rows || 40
     }));
+    const icons = resolveIconSet();
 
     const refresh = useCallback(async () => {
       const now = new Date().toISOString();
@@ -444,6 +533,16 @@ function createDashboardApp(deps) {
 
       if (key.tab) {
         setUi((previous) => ({ ...previous, view: cycleView(previous.view) }));
+        return;
+      }
+
+      if (key.rightArrow) {
+        setUi((previous) => ({ ...previous, view: cycleView(previous.view) }));
+        return;
+      }
+
+      if (key.leftArrow) {
+        setUi((previous) => ({ ...previous, view: cycleViewBackward(previous.view) }));
         return;
       }
 
@@ -530,6 +629,7 @@ function createDashboardApp(deps) {
     const showHelpLine = ui.showHelp && rows >= 14;
     const showErrorPanel = Boolean(error) && rows >= 18;
     const showErrorInline = Boolean(error) && !showErrorPanel;
+    const densePanels = rows <= 28 || cols <= 120;
 
     const reservedRows = 2 + (showHelpLine ? 1 : 0) + (showErrorPanel ? 5 : 0) + (showErrorInline ? 1 : 0);
     const contentRowsBudget = Math.max(4, rows - reservedRows);
@@ -584,10 +684,16 @@ function createDashboardApp(deps) {
     } else {
       panelCandidates = [
         {
-          key: 'active-runs',
-          title: 'Active Runs',
-          lines: buildActiveRunLines(snapshot, ui.runFilter, compactWidth),
+          key: 'current-run',
+          title: 'Current Run',
+          lines: buildCurrentRunLines(snapshot, compactWidth),
           borderColor: 'green'
+        },
+        {
+          key: 'run-files',
+          title: 'Run Files',
+          lines: buildRunFilesLines(snapshot, compactWidth, icons),
+          borderColor: 'yellow'
         },
         {
           key: 'pending',
@@ -610,13 +716,13 @@ function createDashboardApp(deps) {
 
     const panels = allocateSingleColumnPanels(panelCandidates, contentRowsBudget);
 
-    const helpText = 'q quit | r refresh | h/? help | tab next view | 1 runs | 2 overview | 3 health | f run filter';
+    const helpText = 'q quit | r refresh | h/? help | ←/→ or tab switch views | 1 runs | 2 overview | 3 health | f run filter';
 
     return React.createElement(
       Box,
       { flexDirection: 'column', width: fullWidth },
       React.createElement(Text, { color: 'cyan' }, buildHeaderLine(snapshot, flow, watchEnabled, watchStatus, lastRefreshAt, ui.view, ui.runFilter, fullWidth)),
-      React.createElement(TabsBar, { view: ui.view, width: fullWidth }),
+      React.createElement(TabsBar, { view: ui.view, width: fullWidth, icons }),
       showErrorInline
         ? React.createElement(Text, { color: 'red' }, truncate(buildErrorLines(error, fullWidth)[0] || 'Error', fullWidth))
         : null,
@@ -627,7 +733,8 @@ function createDashboardApp(deps) {
           width: fullWidth,
           maxLines: 2,
           borderColor: 'red',
-          marginBottom: 1
+          marginBottom: densePanels ? 0 : 1,
+          dense: densePanels
         })
         : null,
       ...panels.map((panel, index) => React.createElement(SectionPanel, {
@@ -637,7 +744,8 @@ function createDashboardApp(deps) {
         width: fullWidth,
         maxLines: panel.maxLines,
         borderColor: panel.borderColor,
-        marginBottom: index === panels.length - 1 ? 0 : 1
+        marginBottom: densePanels ? 0 : (index === panels.length - 1 ? 0 : 1),
+        dense: densePanels
       })),
       showHelpLine
         ? React.createElement(Text, { color: 'gray' }, truncate(helpText, fullWidth))
