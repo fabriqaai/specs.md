@@ -793,13 +793,16 @@ function getPanelTitles(flow, snapshot) {
 }
 
 function getSectionOrderForView(view) {
-  if (view === 'overview') {
-    return ['intent-status', 'completed-runs', 'standards', 'project'];
+  if (view === 'intents') {
+    return ['intent-status'];
+  }
+  if (view === 'completed') {
+    return ['completed-runs'];
   }
   if (view === 'health') {
-    return ['stats', 'warnings', 'error-details'];
+    return ['standards', 'stats', 'warnings', 'error-details'];
   }
-  return ['current-run', 'run-files', 'pending'];
+  return ['current-run'];
 }
 
 function cycleSection(view, currentSectionKey, direction = 1, availableSections = null) {
@@ -1054,24 +1057,221 @@ function getNoCompletedMessage(flow) {
   return 'No completed runs yet';
 }
 
-function toRunFileRows(fileEntries, flow) {
-  if (!Array.isArray(fileEntries) || fileEntries.length === 0) {
+function getNoCurrentMessage(flow) {
+  if (flow === 'aidlc') return 'No active bolt';
+  if (flow === 'simple') return 'No active spec';
+  return 'No active run';
+}
+
+function buildCurrentGroups(snapshot, flow) {
+  const effectiveFlow = getEffectiveFlow(flow, snapshot);
+
+  if (effectiveFlow === 'aidlc') {
+    const bolt = getCurrentBolt(snapshot);
+    if (!bolt) {
+      return [];
+    }
+    const stages = Array.isArray(bolt.stages) ? bolt.stages : [];
+    const completedStages = stages.filter((stage) => stage.status === 'completed').length;
+    return [{
+      key: `current:bolt:${bolt.id}`,
+      label: `${bolt.id} [${bolt.type}] ${completedStages}/${stages.length} stages`,
+      files: filterExistingFiles([
+        ...collectAidlcBoltFiles(bolt),
+        ...collectAidlcIntentContextFiles(snapshot, bolt.intent)
+      ])
+    }];
+  }
+
+  if (effectiveFlow === 'simple') {
+    const spec = getCurrentSpec(snapshot);
+    if (!spec) {
+      return [];
+    }
+    return [{
+      key: `current:spec:${spec.name}`,
+      label: `${spec.name} [${spec.state}] ${spec.tasksCompleted}/${spec.tasksTotal} tasks`,
+      files: filterExistingFiles(collectSimpleSpecFiles(spec))
+    }];
+  }
+
+  const run = getCurrentRun(snapshot);
+  if (!run) {
+    return [];
+  }
+  const workItems = Array.isArray(run.workItems) ? run.workItems : [];
+  const completed = workItems.filter((item) => item.status === 'completed').length;
+  return [{
+    key: `current:run:${run.id}`,
+    label: `${run.id} [${run.scope}] ${completed}/${workItems.length} items`,
+    files: filterExistingFiles(collectFireRunFiles(run).map((file) => ({ ...file, scope: 'active' })))
+  }];
+}
+
+function buildRunFileGroups(fileEntries) {
+  const order = ['active', 'upcoming', 'completed', 'intent', 'other'];
+  const buckets = new Map(order.map((scope) => [scope, []]));
+
+  for (const fileEntry of Array.isArray(fileEntries) ? fileEntries : []) {
+    const scope = order.includes(fileEntry?.scope) ? fileEntry.scope : 'other';
+    buckets.get(scope).push(fileEntry);
+  }
+
+  const groups = [];
+  for (const scope of order) {
+    const files = buckets.get(scope) || [];
+    if (files.length === 0) {
+      continue;
+    }
+    groups.push({
+      key: `run-files:scope:${scope}`,
+      label: `${formatScope(scope)} files (${files.length})`,
+      files: filterExistingFiles(files)
+    });
+  }
+  return groups;
+}
+
+function normalizeInfoLine(line) {
+  const normalized = normalizePanelLine(line);
+  return {
+    label: normalized.text,
+    color: normalized.color,
+    bold: normalized.bold
+  };
+}
+
+function toInfoRows(lines, keyPrefix, emptyLabel = 'No data') {
+  const safe = Array.isArray(lines) ? lines : [];
+  if (safe.length === 0) {
     return [{
       kind: 'info',
-      key: 'run-files:empty',
-      label: getNoFileMessage(flow),
+      key: `${keyPrefix}:empty`,
+      label: emptyLabel,
       selectable: false
     }];
   }
 
-  return fileEntries.map((file, index) => ({
-    kind: 'file',
-    key: `run-files:${file.path}:${index}`,
-    label: file.label,
-    path: file.path,
-    scope: file.scope || 'file',
-    selectable: true
-  }));
+  return safe.map((line, index) => {
+    const normalized = normalizeInfoLine(line);
+    return {
+      kind: 'info',
+      key: `${keyPrefix}:${index}`,
+      label: normalized.label,
+      color: normalized.color,
+      bold: normalized.bold,
+      selectable: true
+    };
+  });
+}
+
+function buildOverviewIntentGroups(snapshot, flow, filter = 'next') {
+  const effectiveFlow = getEffectiveFlow(flow, snapshot);
+  const normalizedFilter = filter === 'completed' ? 'completed' : 'next';
+  const isIncluded = (status) => {
+    if (normalizedFilter === 'completed') {
+      return status === 'completed';
+    }
+    return status !== 'completed';
+  };
+
+  if (effectiveFlow === 'aidlc') {
+    const intents = Array.isArray(snapshot?.intents) ? snapshot.intents : [];
+    return intents
+      .filter((intent) => isIncluded(intent?.status || 'pending'))
+      .map((intent, index) => ({
+        key: `overview:intent:${intent?.id || index}`,
+        label: `${intent?.id || 'unknown'}: ${intent?.status || 'pending'} (${intent?.completedStories || 0}/${intent?.storyCount || 0} stories, ${intent?.completedUnits || 0}/${intent?.unitCount || 0} units)`,
+        files: filterExistingFiles(collectAidlcIntentContextFiles(snapshot, intent?.id))
+      }));
+  }
+
+  if (effectiveFlow === 'simple') {
+    const specs = Array.isArray(snapshot?.specs) ? snapshot.specs : [];
+    return specs
+      .filter((spec) => isIncluded(spec?.state || 'pending'))
+      .map((spec, index) => ({
+        key: `overview:spec:${spec?.name || index}`,
+        label: `${spec?.name || 'unknown'}: ${spec?.state || 'pending'} (${spec?.tasksCompleted || 0}/${spec?.tasksTotal || 0} tasks)`,
+        files: filterExistingFiles(collectSimpleSpecFiles(spec))
+      }));
+  }
+
+  const intents = Array.isArray(snapshot?.intents) ? snapshot.intents : [];
+  return intents
+    .filter((intent) => isIncluded(intent?.status || 'pending'))
+    .map((intent, index) => {
+      const workItems = Array.isArray(intent?.workItems) ? intent.workItems : [];
+      const done = workItems.filter((item) => item.status === 'completed').length;
+      const files = [{
+        label: `${intent?.id || 'intent'}/brief.md`,
+        path: intent?.filePath,
+        scope: 'intent'
+      }, ...workItems.map((item) => ({
+        label: `${intent?.id || 'intent'}/${item?.id || 'work-item'}.md`,
+        path: item?.filePath,
+        scope: item?.status === 'completed' ? 'completed' : 'upcoming'
+      }))];
+      return {
+        key: `overview:intent:${intent?.id || index}`,
+        label: `${intent?.id || 'unknown'}: ${intent?.status || 'pending'} (${done}/${workItems.length} work items)`,
+        files: filterExistingFiles(files)
+      };
+    });
+}
+
+function buildStandardsGroups(snapshot, flow) {
+  const effectiveFlow = getEffectiveFlow(flow, snapshot);
+  if (effectiveFlow === 'simple') {
+    return [];
+  }
+
+  const standards = Array.isArray(snapshot?.standards) ? snapshot.standards : [];
+  return standards.map((standard, index) => {
+    const id = standard?.type || standard?.name || String(index);
+    const name = `${standard?.name || standard?.type || 'standard'}.md`;
+    return {
+      key: `standards:${id}`,
+      label: name,
+      files: filterExistingFiles([{
+        label: name,
+        path: standard?.filePath,
+        scope: 'file'
+      }])
+    };
+  });
+}
+
+function buildProjectGroups(snapshot, flow) {
+  const effectiveFlow = getEffectiveFlow(flow, snapshot);
+  const files = [];
+
+  if (effectiveFlow === 'aidlc') {
+    files.push({
+      label: 'memory-bank/project.yaml',
+      path: path.join(snapshot?.rootPath || '', 'project.yaml'),
+      scope: 'file'
+    });
+  } else if (effectiveFlow === 'simple') {
+    files.push({
+      label: 'package.json',
+      path: path.join(snapshot?.workspacePath || '', 'package.json'),
+      scope: 'file'
+    });
+  } else {
+    files.push({
+      label: '.specs-fire/state.yaml',
+      path: path.join(snapshot?.rootPath || '', 'state.yaml'),
+      scope: 'file'
+    });
+  }
+
+  const projectName = snapshot?.project?.name || 'unknown-project';
+  return [{
+    key: `project:${projectName}`,
+    label: `project ${projectName}`,
+    files: filterExistingFiles(files)
+  }];
 }
 
 function collectAidlcIntentContextFiles(snapshot, intentId) {
@@ -1303,10 +1503,10 @@ function buildInteractiveRowsLines(rows, selectedIndex, icons, width, isFocusedS
     }
 
     return {
-      text: truncate(`  ${row.label || ''}`, width),
-      color: 'gray',
-      bold: false,
-      selected: false
+      text: truncate(`${isSelected ? `${cursor} ` : '  '}${row.label || ''}`, width),
+      color: isSelected ? (isFocusedSection ? 'green' : 'cyan') : (row.color || 'gray'),
+      bold: isSelected || Boolean(row.bold),
+      selected: isSelected
     };
   });
 }
@@ -1399,19 +1599,24 @@ function openFileWithDefaultApp(filePath) {
 
 function buildQuickHelpText(view, options = {}) {
   const {
+    flow = 'fire',
     previewOpen = false,
     availableFlowCount = 1
   } = options;
+  const isAidlc = String(flow || '').toLowerCase() === 'aidlc';
+  const isSimple = String(flow || '').toLowerCase() === 'simple';
+  const activeLabel = isAidlc ? 'active bolt' : (isSimple ? 'active spec' : 'active run');
 
-  const parts = ['1/2/3 views', 'g/G sections'];
+  const parts = ['1/2/3/4 tabs', 'g/G sections'];
 
-  if (view === 'runs') {
+  if (view === 'runs' || view === 'intents' || view === 'completed' || view === 'health') {
     if (previewOpen) {
       parts.push('tab pane', '↑/↓ nav/scroll', 'v close');
     } else {
       parts.push('↑/↓ navigate', 'enter expand', 'v preview');
     }
   }
+  parts.push(`tab1 ${activeLabel}`);
 
   if (availableFlowCount > 1) {
     parts.push('[/] flow');
@@ -1424,25 +1629,30 @@ function buildQuickHelpText(view, options = {}) {
 function buildHelpOverlayLines(options = {}) {
   const {
     view = 'runs',
+    flow = 'fire',
     previewOpen = false,
     paneFocus = 'main',
     availableFlowCount = 1,
     showErrorSection = false
   } = options;
+  const isAidlc = String(flow || '').toLowerCase() === 'aidlc';
+  const isSimple = String(flow || '').toLowerCase() === 'simple';
+  const itemLabel = isAidlc ? 'bolt' : (isSimple ? 'spec' : 'run');
+  const itemPlural = isAidlc ? 'bolts' : (isSimple ? 'specs' : 'runs');
 
   const lines = [
     { text: 'Global', color: 'cyan', bold: true },
     'q or Ctrl+C quit',
     'r refresh snapshot',
-    '1 runs | 2 overview | 3 health',
+    `1 active ${itemLabel} | 2 intents | 3 completed ${itemPlural} | 4 standards/health`,
     'g next section | G previous section',
     'h/? toggle this shortcuts overlay',
     'esc close overlays (help/preview/fullscreen)',
     { text: '', color: undefined, bold: false },
-    { text: 'Runs View', color: 'yellow', bold: true },
-    'a current | f files | p pending',
+    { text: 'Tab 1 Active', color: 'yellow', bold: true },
+    `a focus active ${itemLabel}`,
     'up/down or j/k move selection',
-    'enter expand/collapse pending/completed groups',
+    'enter expand/collapse selected folder row',
     'v preview selected file',
     'v twice quickly opens fullscreen preview overlay',
     'tab switch focus between main and preview panes',
@@ -1459,12 +1669,16 @@ function buildHelpOverlayLines(options = {}) {
 
   lines.push(
     { text: '', color: undefined, bold: false },
-    { text: 'Overview View', color: 'green', bold: true },
-    'i intents | c completed | s standards | p project',
-    'when Intents is focused: n next | x completed | left/right toggle filter',
+    { text: 'Tab 2 Intents', color: 'green', bold: true },
+    'i focus intents',
+    'n next intents | x completed intents',
+    'left/right toggles next/completed when intents is focused',
     { text: '', color: undefined, bold: false },
-    { text: 'Health View', color: 'magenta', bold: true },
-    `t stats | w warnings${showErrorSection ? ' | e errors' : ''}`,
+    { text: 'Tab 3 Completed', color: 'blue', bold: true },
+    'c focus completed items',
+    { text: '', color: undefined, bold: false },
+    { text: 'Tab 4 Standards/Health', color: 'magenta', bold: true },
+    `s standards | t stats | w warnings${showErrorSection ? ' | e errors' : ''}`,
     { text: '', color: undefined, bold: false },
     { text: `Current view: ${String(view || 'runs').toUpperCase()}`, color: 'gray', bold: false }
   );
@@ -1685,11 +1899,15 @@ function createDashboardApp(deps) {
   }
 
   function TabsBar(props) {
-    const { view, width, icons } = props;
+    const { view, width, icons, flow: activeFlow } = props;
+    const effectiveFlow = String(activeFlow || '').toLowerCase();
+    const primaryLabel = effectiveFlow === 'aidlc' ? 'BOLTS' : (effectiveFlow === 'simple' ? 'SPECS' : 'RUNS');
+    const completedLabel = effectiveFlow === 'aidlc' ? 'COMPLETED BOLTS' : (effectiveFlow === 'simple' ? 'COMPLETED SPECS' : 'COMPLETED RUNS');
     const tabs = [
-      { id: 'runs', label: ` 1 ${icons.runs} RUNS ` },
-      { id: 'overview', label: ` 2 ${icons.overview} OVERVIEW ` },
-      { id: 'health', label: ` 3 ${icons.health} HEALTH ` }
+      { id: 'runs', label: ` 1 ${icons.runs} ${primaryLabel} ` },
+      { id: 'intents', label: ` 2 ${icons.overview} INTENTS ` },
+      { id: 'completed', label: ` 3 ${icons.runs} ${completedLabel} ` },
+      { id: 'health', label: ` 4 ${icons.health} STANDARDS/HEALTH ` }
     ];
 
     return React.createElement(
@@ -1757,18 +1975,24 @@ function createDashboardApp(deps) {
     const [error, setError] = useState(initialNormalizedError);
     const [ui, setUi] = useState(createInitialUIState());
     const [sectionFocus, setSectionFocus] = useState({
-      runs: 'run-files',
-      overview: 'project',
-      health: 'stats'
+      runs: 'current-run',
+      intents: 'intent-status',
+      completed: 'completed-runs',
+      health: 'standards'
     });
     const [selectionBySection, setSelectionBySection] = useState({
-      'run-files': 0,
-      pending: 0,
-      completed: 0
+      'current-run': 0,
+      'intent-status': 0,
+      'completed-runs': 0,
+      standards: 0,
+      stats: 0,
+      warnings: 0,
+      'error-details': 0
     });
     const [expandedGroups, setExpandedGroups] = useState({});
     const [previewTarget, setPreviewTarget] = useState(null);
     const [overviewIntentFilter, setOverviewIntentFilter] = useState('next');
+    const [deferredTabsReady, setDeferredTabsReady] = useState(false);
     const [previewOpen, setPreviewOpen] = useState(false);
     const [paneFocus, setPaneFocus] = useState('main');
     const [overlayPreviewOpen, setOverlayPreviewOpen] = useState(false);
@@ -1804,24 +2028,86 @@ function createDashboardApp(deps) {
       return base.filter((sectionKey) => sectionKey !== 'error-details' || showErrorPanelForSections);
     }, [showErrorPanelForSections]);
 
-    const runFileEntries = getRunFileEntries(snapshot, activeFlow);
-    const runFileRows = toRunFileRows(runFileEntries, activeFlow);
-    const pendingRows = toExpandableRows(
-      buildPendingGroups(snapshot, activeFlow),
-      getNoPendingMessage(getEffectiveFlow(activeFlow, snapshot)),
-      expandedGroups
+    const effectiveFlow = getEffectiveFlow(activeFlow, snapshot);
+    const currentGroups = buildCurrentGroups(snapshot, activeFlow);
+    const currentExpandedGroups = { ...expandedGroups };
+    for (const group of currentGroups) {
+      if (currentExpandedGroups[group.key] == null) {
+        currentExpandedGroups[group.key] = true;
+      }
+    }
+
+    const currentRunRows = toExpandableRows(
+      currentGroups,
+      getNoCurrentMessage(effectiveFlow),
+      currentExpandedGroups
     );
-    const completedRows = toExpandableRows(
-      buildCompletedGroups(snapshot, activeFlow),
-      getNoCompletedMessage(getEffectiveFlow(activeFlow, snapshot)),
-      expandedGroups
-    );
+    const shouldHydrateSecondaryTabs = deferredTabsReady || ui.view !== 'runs';
+    const intentRows = shouldHydrateSecondaryTabs
+      ? [
+        {
+          kind: 'info',
+          key: 'intent-filter',
+          label: `filter ${overviewIntentFilter === 'completed' ? 'next | [COMPLETED]' : '[NEXT] | completed'}  (n/x)`,
+          color: 'cyan',
+          bold: true,
+          selectable: false
+        },
+        ...toExpandableRows(
+          buildOverviewIntentGroups(snapshot, activeFlow, overviewIntentFilter),
+          overviewIntentFilter === 'completed' ? 'No completed intents yet' : 'No upcoming intents',
+          expandedGroups
+        )
+      ]
+      : toInfoRows(['Loading intents...'], 'intent-loading');
+    const completedRows = shouldHydrateSecondaryTabs
+      ? toExpandableRows(
+        buildCompletedGroups(snapshot, activeFlow),
+        getNoCompletedMessage(effectiveFlow),
+        expandedGroups
+      )
+      : toInfoRows(['Loading completed items...'], 'completed-loading');
+    const standardsRows = shouldHydrateSecondaryTabs
+      ? toExpandableRows(
+        buildStandardsGroups(snapshot, activeFlow),
+        effectiveFlow === 'simple' ? 'No standards for SIMPLE flow' : 'No standards found',
+        expandedGroups
+      )
+      : toInfoRows(['Loading standards...'], 'standards-loading');
+    const statsRows = shouldHydrateSecondaryTabs
+      ? toInfoRows(
+        buildStatsLines(snapshot, 200, activeFlow),
+        'stats',
+        'No stats available'
+      )
+      : toInfoRows(['Loading stats...'], 'stats-loading');
+    const warningsRows = shouldHydrateSecondaryTabs
+      ? toInfoRows(
+        buildWarningsLines(snapshot, 200),
+        'warnings',
+        'No warnings'
+      )
+      : toInfoRows(['Loading warnings...'], 'warnings-loading');
+    const errorDetailsRows = shouldHydrateSecondaryTabs
+      ? toInfoRows(
+        buildErrorLines(error, 200),
+        'error-details',
+        'No error details'
+      )
+      : toInfoRows(['Loading error details...'], 'error-loading');
 
     const rowsBySection = {
-      'run-files': runFileRows,
-      pending: pendingRows,
-      completed: completedRows
+      'current-run': currentRunRows,
+      'intent-status': intentRows,
+      'completed-runs': completedRows,
+      standards: standardsRows,
+      stats: statsRows,
+      warnings: warningsRows,
+      'error-details': errorDetailsRows
     };
+    const rowLengthSignature = Object.entries(rowsBySection)
+      .map(([key, rowsForSection]) => `${key}:${Array.isArray(rowsForSection) ? rowsForSection.length : 0}`)
+      .join('|');
 
     const currentSectionOrder = getAvailableSections(ui.view);
     const focusedSection = currentSectionOrder.includes(sectionFocus[ui.view])
@@ -1914,12 +2200,18 @@ function createDashboardApp(deps) {
       }
 
       if (input === '2') {
-        setUi((previous) => ({ ...previous, view: 'overview' }));
+        setUi((previous) => ({ ...previous, view: 'intents' }));
         setPaneFocus('main');
         return;
       }
 
       if (input === '3') {
+        setUi((previous) => ({ ...previous, view: 'completed' }));
+        setPaneFocus('main');
+        return;
+      }
+
+      if (input === '4') {
         setUi((previous) => ({ ...previous, view: 'health' }));
         setPaneFocus('main');
         return;
@@ -1938,14 +2230,19 @@ function createDashboardApp(deps) {
           return availableFlowIds[nextIndex];
         });
         setSelectionBySection({
-          'run-files': 0,
-          pending: 0,
-          completed: 0
+          'current-run': 0,
+          'intent-status': 0,
+          'completed-runs': 0,
+          standards: 0,
+          stats: 0,
+          warnings: 0,
+          'error-details': 0
         });
         setSectionFocus({
-          runs: 'run-files',
-          overview: 'project',
-          health: 'stats'
+          runs: 'current-run',
+          intents: 'intent-status',
+          completed: 'completed-runs',
+          health: 'standards'
         });
         setOverviewIntentFilter('next');
         setExpandedGroups({});
@@ -1970,14 +2267,19 @@ function createDashboardApp(deps) {
           return availableFlowIds[nextIndex];
         });
         setSelectionBySection({
-          'run-files': 0,
-          pending: 0,
-          completed: 0
+          'current-run': 0,
+          'intent-status': 0,
+          'completed-runs': 0,
+          standards: 0,
+          stats: 0,
+          warnings: 0,
+          'error-details': 0
         });
         setSectionFocus({
-          runs: 'run-files',
-          overview: 'project',
-          health: 'stats'
+          runs: 'current-run',
+          intents: 'intent-status',
+          completed: 'completed-runs',
+          health: 'standards'
         });
         setOverviewIntentFilter('next');
         setExpandedGroups({});
@@ -1994,12 +2296,12 @@ function createDashboardApp(deps) {
         ? sectionFocus[ui.view]
         : (availableSections[0] || 'current-run');
 
-      if (key.tab && ui.view === 'runs' && previewOpen) {
+      if (key.tab && previewOpen) {
         setPaneFocus((previous) => (previous === 'main' ? 'preview' : 'main'));
         return;
       }
 
-      if (ui.view === 'overview' && activeSection === 'intent-status') {
+      if (ui.view === 'intents' && activeSection === 'intent-status') {
         if (input === 'n') {
           setOverviewIntentFilter('next');
           return;
@@ -2038,34 +2340,21 @@ function createDashboardApp(deps) {
           setPaneFocus('main');
           return;
         }
-        if (input === 'f') {
-          setSectionFocus((previous) => ({ ...previous, runs: 'run-files' }));
-          setPaneFocus('main');
-          return;
-        }
-        if (input === 'p') {
-          setSectionFocus((previous) => ({ ...previous, runs: 'pending' }));
-          setPaneFocus('main');
-          return;
-        }
-      } else if (ui.view === 'overview') {
-        if (input === 'p') {
-          setSectionFocus((previous) => ({ ...previous, overview: 'project' }));
-          return;
-        }
+      } else if (ui.view === 'intents') {
         if (input === 'i') {
-          setSectionFocus((previous) => ({ ...previous, overview: 'intent-status' }));
+          setSectionFocus((previous) => ({ ...previous, intents: 'intent-status' }));
           return;
         }
-        if (input === 's') {
-          setSectionFocus((previous) => ({ ...previous, overview: 'standards' }));
-          return;
-        }
+      } else if (ui.view === 'completed') {
         if (input === 'c') {
-          setSectionFocus((previous) => ({ ...previous, overview: 'completed-runs' }));
+          setSectionFocus((previous) => ({ ...previous, completed: 'completed-runs' }));
           return;
         }
       } else if (ui.view === 'health') {
+        if (input === 's') {
+          setSectionFocus((previous) => ({ ...previous, health: 'standards' }));
+          return;
+        }
         if (input === 't') {
           setSectionFocus((previous) => ({ ...previous, health: 'stats' }));
           return;
@@ -2094,7 +2383,7 @@ function createDashboardApp(deps) {
         }
       }
 
-      if (ui.view === 'runs' && (key.upArrow || key.downArrow || input === 'j' || input === 'k')) {
+      if (key.upArrow || key.downArrow || input === 'j' || input === 'k') {
         const moveDown = key.downArrow || input === 'j';
         const moveUp = key.upArrow || input === 'k';
 
@@ -2107,11 +2396,7 @@ function createDashboardApp(deps) {
           return;
         }
 
-        const targetSection = activeSection === 'current-run' ? 'run-files' : activeSection;
-        if (targetSection !== activeSection) {
-          setSectionFocus((previous) => ({ ...previous, runs: targetSection }));
-        }
-
+        const targetSection = activeSection;
         const targetRows = rowsBySection[targetSection] || [];
         if (targetRows.length === 0) {
           return;
@@ -2129,24 +2414,22 @@ function createDashboardApp(deps) {
         return;
       }
 
-      if (ui.view === 'runs' && (key.return || key.enter)) {
-        if (activeSection === 'pending' || activeSection === 'completed') {
-          const rowsForSection = rowsBySection[activeSection] || [];
-          const selectedRow = getSelectedRow(rowsForSection, selectionBySection[activeSection] || 0);
-          if (selectedRow?.kind === 'group' && selectedRow.expandable) {
-            setExpandedGroups((previous) => ({
-              ...previous,
-              [selectedRow.key]: !previous[selectedRow.key]
-            }));
-          }
+      if (key.return || key.enter) {
+        const rowsForSection = rowsBySection[activeSection] || [];
+        const selectedRow = getSelectedRow(rowsForSection, selectionBySection[activeSection] || 0);
+        if (selectedRow?.kind === 'group' && selectedRow.expandable) {
+          setExpandedGroups((previous) => ({
+            ...previous,
+            [selectedRow.key]: !previous[selectedRow.key]
+          }));
         }
         return;
       }
 
-      if (input === 'v' && ui.view === 'runs') {
+      if (input === 'v') {
         const target = selectedFocusedFile || previewTarget;
         if (!target) {
-          setStatusLine('Select a file row first (run files, pending, or completed).');
+          setStatusLine('Select a file row first.');
           return;
         }
 
@@ -2184,7 +2467,7 @@ function createDashboardApp(deps) {
         return;
       }
 
-      if (input === 'o' && ui.view === 'runs') {
+      if (input === 'o') {
         const target = selectedFocusedFile || previewTarget;
         const result = openFileWithDefaultApp(target?.path);
         setStatusLine(result.message);
@@ -2196,21 +2479,38 @@ function createDashboardApp(deps) {
     }, [refresh]);
 
     useEffect(() => {
-      setSelectionBySection((previous) => ({
-        ...previous,
-        'run-files': clampIndex(previous['run-files'] || 0, runFileRows.length),
-        pending: clampIndex(previous.pending || 0, pendingRows.length),
-        completed: clampIndex(previous.completed || 0, completedRows.length)
-      }));
-    }, [activeFlow, runFileRows.length, pendingRows.length, completedRows.length, snapshot?.generatedAt]);
+      setSelectionBySection((previous) => {
+        let changed = false;
+        const next = { ...previous };
+
+        for (const [sectionKey, sectionRows] of Object.entries(rowsBySection)) {
+          const previousValue = Number.isFinite(previous[sectionKey]) ? previous[sectionKey] : 0;
+          const clampedValue = clampIndex(previousValue, sectionRows.length);
+          if (previousValue !== clampedValue) {
+            next[sectionKey] = clampedValue;
+            changed = true;
+          } else if (!(sectionKey in next)) {
+            next[sectionKey] = clampedValue;
+            changed = true;
+          }
+        }
+
+        return changed ? next : previous;
+      });
+    }, [activeFlow, rowLengthSignature, snapshot?.generatedAt]);
 
     useEffect(() => {
-      if (ui.view !== 'runs') {
-        setPreviewOpen(false);
-        setOverlayPreviewOpen(false);
-        setPreviewScroll(0);
-        setPaneFocus('main');
-      }
+      setDeferredTabsReady(false);
+      const timer = setTimeout(() => {
+        setDeferredTabsReady(true);
+      }, 0);
+      return () => {
+        clearTimeout(timer);
+      };
+    }, [activeFlow, snapshot?.generatedAt]);
+
+    useEffect(() => {
+      setPaneFocus('main');
     }, [ui.view]);
 
     useEffect(() => {
@@ -2326,14 +2626,15 @@ function createDashboardApp(deps) {
     const fullWidth = Math.max(40, cols - 1);
     const showFooterHelpLine = rows >= 10;
     const showErrorPanel = Boolean(error) && rows >= 18;
+    const showGlobalErrorPanel = showErrorPanel && ui.view !== 'health' && !ui.showHelp;
     const showErrorInline = Boolean(error) && !showErrorPanel;
     const densePanels = rows <= 28 || cols <= 120;
 
-    const reservedRows = 2 + (showFooterHelpLine ? 1 : 0) + (showErrorPanel ? 5 : 0) + (showErrorInline ? 1 : 0);
+    const reservedRows = 2 + (showFooterHelpLine ? 1 : 0) + (showGlobalErrorPanel ? 5 : 0) + (showErrorInline ? 1 : 0);
     const contentRowsBudget = Math.max(4, rows - reservedRows);
     const ultraCompact = rows <= 14;
     const panelTitles = getPanelTitles(activeFlow, snapshot);
-    const splitPreviewLayout = ui.view === 'runs' && previewOpen && !overlayPreviewOpen && !ui.showHelp && cols >= 110 && rows >= 16;
+    const splitPreviewLayout = previewOpen && !overlayPreviewOpen && !ui.showHelp && cols >= 110 && rows >= 16;
     const mainPaneWidth = splitPreviewLayout
       ? Math.max(34, Math.floor((fullWidth - 1) * 0.52))
       : fullWidth;
@@ -2343,19 +2644,17 @@ function createDashboardApp(deps) {
     const mainCompactWidth = Math.max(18, mainPaneWidth - 4);
     const previewCompactWidth = Math.max(18, previewPaneWidth - 4);
 
-    const runFileLines = buildInteractiveRowsLines(
-      runFileRows,
-      selectionBySection['run-files'] || 0,
-      icons,
-      mainCompactWidth,
-      ui.view === 'runs' && focusedSection === 'run-files' && paneFocus === 'main'
-    );
-    const pendingLines = buildInteractiveRowsLines(
-      pendingRows,
-      selectionBySection.pending || 0,
-      icons,
-      mainCompactWidth,
-      ui.view === 'runs' && focusedSection === 'pending' && paneFocus === 'main'
+    const sectionLines = Object.fromEntries(
+      Object.entries(rowsBySection).map(([sectionKey, sectionRows]) => [
+        sectionKey,
+        buildInteractiveRowsLines(
+          sectionRows,
+          selectionBySection[sectionKey] || 0,
+          icons,
+          mainCompactWidth,
+          paneFocus === 'main' && focusedSection === sectionKey
+        )
+      ])
     );
     const effectivePreviewTarget = previewTarget || selectedFocusedFile;
     const previewLines = previewOpen
@@ -2366,12 +2665,14 @@ function createDashboardApp(deps) {
 
     const shortcutsOverlayLines = buildHelpOverlayLines({
       view: ui.view,
+      flow: activeFlow,
       previewOpen,
       paneFocus,
       availableFlowCount: availableFlowIds.length,
       showErrorSection: showErrorPanel
     });
     const quickHelpText = buildQuickHelpText(ui.view, {
+      flow: activeFlow,
       previewOpen,
       paneFocus,
       availableFlowCount: availableFlowIds.length
@@ -2387,7 +2688,7 @@ function createDashboardApp(deps) {
           borderColor: 'cyan'
         }
       ];
-    } else if (ui.view === 'runs' && previewOpen && overlayPreviewOpen) {
+    } else if (previewOpen && overlayPreviewOpen) {
       panelCandidates = [
         {
           key: 'preview-overlay',
@@ -2396,45 +2697,42 @@ function createDashboardApp(deps) {
           borderColor: 'magenta'
         }
       ];
-    } else if (ui.view === 'overview') {
+    } else if (ui.view === 'intents') {
       panelCandidates = [
         {
           key: 'intent-status',
           title: 'Intents',
-          lines: buildOverviewIntentLines(snapshot, mainCompactWidth, activeFlow, overviewIntentFilter),
+          lines: sectionLines['intent-status'],
           borderColor: 'yellow'
-        },
+        }
+      ];
+    } else if (ui.view === 'completed') {
+      panelCandidates = [
         {
           key: 'completed-runs',
           title: panelTitles.completed,
-          lines: buildCompletedLines(snapshot, mainCompactWidth, activeFlow),
+          lines: sectionLines['completed-runs'],
           borderColor: 'blue'
-        },
-        {
-          key: 'standards',
-          title: 'Standards',
-          lines: buildOverviewStandardsLines(snapshot, mainCompactWidth, activeFlow),
-          borderColor: 'blue'
-        },
-        {
-          key: 'project',
-          title: 'Project + Workspace',
-          lines: buildOverviewProjectLines(snapshot, mainCompactWidth, activeFlow),
-          borderColor: 'green'
         }
       ];
     } else if (ui.view === 'health') {
       panelCandidates = [
         {
+          key: 'standards',
+          title: 'Standards',
+          lines: sectionLines.standards,
+          borderColor: 'blue'
+        },
+        {
           key: 'stats',
           title: 'Stats',
-          lines: buildStatsLines(snapshot, mainCompactWidth, activeFlow),
+          lines: sectionLines.stats,
           borderColor: 'magenta'
         },
         {
           key: 'warnings',
           title: 'Warnings',
-          lines: buildWarningsLines(snapshot, mainCompactWidth),
+          lines: sectionLines.warnings,
           borderColor: 'red'
         }
       ];
@@ -2443,47 +2741,36 @@ function createDashboardApp(deps) {
         panelCandidates.push({
           key: 'error-details',
           title: 'Error Details',
-          lines: buildErrorLines(error, mainCompactWidth),
+          lines: sectionLines['error-details'],
           borderColor: 'red'
         });
       }
     } else {
-      const includeInlinePreviewPanel = previewOpen && !splitPreviewLayout;
       panelCandidates = [
         {
           key: 'current-run',
           title: panelTitles.current,
-          lines: buildCurrentRunLines(snapshot, mainCompactWidth, activeFlow),
+          lines: sectionLines['current-run'],
           borderColor: 'green'
-        },
-        {
-          key: 'run-files',
-          title: panelTitles.files,
-          lines: runFileLines,
-          borderColor: 'yellow'
-        },
-        includeInlinePreviewPanel
-          ? {
-            key: 'preview',
-            title: `Preview: ${effectivePreviewTarget?.label || 'unknown'}`,
-            lines: previewLines,
-            borderColor: 'magenta'
-          }
-          : null,
-        {
-          key: 'pending',
-          title: panelTitles.pending,
-          lines: pendingLines,
-          borderColor: 'yellow'
         }
       ];
     }
 
+    if (!ui.showHelp && previewOpen && !overlayPreviewOpen && !splitPreviewLayout) {
+      panelCandidates.push({
+        key: 'preview',
+        title: `Preview: ${effectivePreviewTarget?.label || 'unknown'}`,
+        lines: previewLines,
+        borderColor: 'magenta'
+      });
+    }
+
     if (ultraCompact && !splitPreviewLayout) {
       if (previewOpen) {
-        panelCandidates = panelCandidates.filter((panel) => panel && (panel.key === 'current-run' || panel.key === 'preview'));
+        panelCandidates = panelCandidates.filter((panel) => panel && (panel.key === focusedSection || panel.key === 'preview'));
       } else {
-        panelCandidates = [panelCandidates[0]];
+        const focusedPanel = panelCandidates.find((panel) => panel?.key === focusedSection);
+        panelCandidates = [focusedPanel || panelCandidates[0]];
       }
     }
 
@@ -2502,7 +2789,7 @@ function createDashboardApp(deps) {
     });
 
     let contentNode;
-    if (splitPreviewLayout && ui.view === 'runs' && !overlayPreviewOpen) {
+    if (splitPreviewLayout && !overlayPreviewOpen) {
       const previewPanel = {
         key: 'preview-split',
         title: `Preview: ${effectivePreviewTarget?.label || 'unknown'}`,
@@ -2564,11 +2851,11 @@ function createDashboardApp(deps) {
       { flexDirection: 'column', width: fullWidth },
       React.createElement(Text, { color: 'cyan' }, buildHeaderLine(snapshot, activeFlow, watchEnabled, watchStatus, lastRefreshAt, ui.view, fullWidth)),
       React.createElement(FlowBar, { activeFlow, width: fullWidth, flowIds: availableFlowIds }),
-      React.createElement(TabsBar, { view: ui.view, width: fullWidth, icons }),
+      React.createElement(TabsBar, { view: ui.view, width: fullWidth, icons, flow: activeFlow }),
       showErrorInline
         ? React.createElement(Text, { color: 'red' }, truncate(buildErrorLines(error, fullWidth)[0] || 'Error', fullWidth))
         : null,
-      showErrorPanel
+      showGlobalErrorPanel
         ? React.createElement(SectionPanel, {
           title: 'Errors',
           lines: buildErrorLines(error, Math.max(18, fullWidth - 4)),

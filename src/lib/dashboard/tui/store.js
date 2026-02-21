@@ -1,15 +1,18 @@
 function createInitialUIState() {
   return {
     view: 'runs',
-    showHelp: true
+    showHelp: false
   };
 }
 
 function cycleView(current) {
   if (current === 'runs') {
-    return 'overview';
+    return 'intents';
   }
-  if (current === 'overview') {
+  if (current === 'intents') {
+    return 'completed';
+  }
+  if (current === 'completed') {
     return 'health';
   }
   return 'runs';
@@ -19,10 +22,13 @@ function cycleViewBackward(current) {
   if (current === 'runs') {
     return 'health';
   }
-  if (current === 'overview') {
+  if (current === 'intents') {
     return 'runs';
   }
-  return 'overview';
+  if (current === 'completed') {
+    return 'intents';
+  }
+  return 'completed';
 }
 
 module.exports = {
