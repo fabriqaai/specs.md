@@ -905,6 +905,46 @@ function buildIntentScopedLabel(snapshot, intentId, filePath, fallbackName = 'fi
   return safeIntentId ? `${safeIntentId}/${safeFallback}` : safeFallback;
 }
 
+function findIntentIdForWorkItem(snapshot, workItemId) {
+  if (typeof workItemId !== 'string' || workItemId.trim() === '') {
+    return '';
+  }
+
+  const intents = Array.isArray(snapshot?.intents) ? snapshot.intents : [];
+  for (const intent of intents) {
+    const items = Array.isArray(intent?.workItems) ? intent.workItems : [];
+    if (items.some((item) => item?.id === workItemId)) {
+      return intent?.id || '';
+    }
+  }
+
+  return '';
+}
+
+function resolveFireWorkItemPath(snapshot, intentId, workItemId, explicitPath) {
+  if (typeof explicitPath === 'string' && explicitPath.trim() !== '') {
+    return explicitPath;
+  }
+
+  if (typeof snapshot?.rootPath !== 'string' || snapshot.rootPath.trim() === '') {
+    return null;
+  }
+
+  if (typeof workItemId !== 'string' || workItemId.trim() === '') {
+    return null;
+  }
+
+  const safeIntentId = typeof intentId === 'string' && intentId.trim() !== ''
+    ? intentId
+    : findIntentIdForWorkItem(snapshot, workItemId);
+
+  if (!safeIntentId) {
+    return null;
+  }
+
+  return path.join(snapshot.rootPath, 'intents', safeIntentId, 'work-items', `${workItemId}.md`);
+}
+
 function collectFireRunFiles(run) {
   if (!run || typeof run.folderPath !== 'string') {
     return [];
@@ -1156,13 +1196,32 @@ function buildFireCurrentRunGroups(snapshot) {
   const status = currentWorkItem?.status || 'pending';
   const statusTag = status === 'in_progress' ? 'current' : status;
 
-  const currentWorkItemFiles = currentWorkItem?.filePath
-    ? [{
-      label: `${currentWorkItem.id || 'work-item'} [${mode}] [${statusTag}] ${phaseTrack}`,
-      path: currentWorkItem.filePath,
-      scope: 'active'
-    }]
-    : [];
+  const runIntentId = typeof run?.intent === 'string' ? run.intent : '';
+  const currentWorkItemFiles = workItems.map((item, index) => {
+    const itemId = typeof item?.id === 'string' && item.id !== '' ? item.id : `work-item-${index + 1}`;
+    const intentId = typeof item?.intent === 'string' && item.intent !== ''
+      ? item.intent
+      : (runIntentId || findIntentIdForWorkItem(snapshot, itemId));
+    const filePath = resolveFireWorkItemPath(snapshot, intentId, itemId, item?.filePath);
+    if (!filePath) {
+      return null;
+    }
+
+    const itemMode = String(item?.mode || 'confirm').toUpperCase();
+    const itemStatus = item?.status || 'pending';
+    const isCurrent = Boolean(currentWorkItem?.id) && itemId === currentWorkItem.id;
+    const itemScope = isCurrent
+      ? 'active'
+      : (itemStatus === 'completed' ? 'completed' : 'upcoming');
+    const itemStatusTag = isCurrent ? 'current' : itemStatus;
+    const labelPath = buildIntentScopedLabel(snapshot, intentId, filePath, `${itemId}.md`);
+
+    return {
+      label: `${labelPath} [${itemMode}] [${itemStatusTag}]`,
+      path: filePath,
+      scope: itemScope
+    };
+  }).filter(Boolean);
 
   const currentRunFiles = collectFireRunFiles(run).map((fileEntry) => ({
     ...fileEntry,
@@ -1178,7 +1237,7 @@ function buildFireCurrentRunGroups(snapshot) {
     },
     {
       key: `current:run:${run.id}:work-items`,
-      label: 'WORK ITEMS',
+      label: `WORK ITEMS (${currentWorkItemFiles.length})`,
       files: filterExistingFiles(currentWorkItemFiles)
     },
     {
@@ -2774,11 +2833,6 @@ function createDashboardApp(deps) {
     }, [activeFlow, rowLengthSignature, snapshot?.generatedAt]);
 
     useEffect(() => {
-      if (ui.view !== 'runs') {
-        setDeferredTabsReady(true);
-        return undefined;
-      }
-
       setDeferredTabsReady(false);
       const timer = setTimeout(() => {
         setDeferredTabsReady(true);
@@ -2786,7 +2840,7 @@ function createDashboardApp(deps) {
       return () => {
         clearTimeout(timer);
       };
-    }, [activeFlow, snapshot?.generatedAt, ui.view]);
+    }, [activeFlow]);
 
     useEffect(() => {
       setPaneFocus('main');
