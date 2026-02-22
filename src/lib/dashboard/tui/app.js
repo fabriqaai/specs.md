@@ -1137,6 +1137,58 @@ function getNoCurrentMessage(flow) {
   return 'No active run';
 }
 
+function buildFireCurrentRunGroups(snapshot) {
+  const run = getCurrentRun(snapshot);
+  if (!run) {
+    return [];
+  }
+
+  const workItems = Array.isArray(run.workItems) ? run.workItems : [];
+  const completed = workItems.filter((item) => item.status === 'completed').length;
+  const currentWorkItem = workItems.find((item) => item.id === run.currentItem)
+    || workItems.find((item) => item.status === 'in_progress')
+    || workItems[0]
+    || null;
+
+  const currentPhase = getCurrentPhaseLabel(run, currentWorkItem);
+  const phaseTrack = buildPhaseTrack(currentPhase);
+  const mode = String(currentWorkItem?.mode || 'confirm').toUpperCase();
+  const status = currentWorkItem?.status || 'pending';
+  const statusTag = status === 'in_progress' ? 'current' : status;
+
+  const currentWorkItemFiles = currentWorkItem?.filePath
+    ? [{
+      label: `${currentWorkItem.id || 'work-item'} [${mode}] [${statusTag}] ${phaseTrack}`,
+      path: currentWorkItem.filePath,
+      scope: 'active'
+    }]
+    : [];
+
+  const currentRunFiles = collectFireRunFiles(run).map((fileEntry) => ({
+    ...fileEntry,
+    label: path.basename(fileEntry.path || fileEntry.label || ''),
+    scope: 'active'
+  }));
+
+  return [
+    {
+      key: `current:run:${run.id}:summary`,
+      label: `${run.id} [${run.scope}] ${completed}/${workItems.length} items`,
+      files: []
+    },
+    {
+      key: `current:run:${run.id}:work-items`,
+      label: 'WORK ITEMS',
+      files: filterExistingFiles(currentWorkItemFiles)
+    },
+    {
+      key: `current:run:${run.id}:run-files`,
+      label: 'RUN FILES',
+      files: filterExistingFiles(currentRunFiles)
+    }
+  ];
+}
+
 function buildCurrentGroups(snapshot, flow) {
   const effectiveFlow = getEffectiveFlow(flow, snapshot);
 
@@ -1169,17 +1221,7 @@ function buildCurrentGroups(snapshot, flow) {
     }];
   }
 
-  const run = getCurrentRun(snapshot);
-  if (!run) {
-    return [];
-  }
-  const workItems = Array.isArray(run.workItems) ? run.workItems : [];
-  const completed = workItems.filter((item) => item.status === 'completed').length;
-  return [{
-    key: `current:run:${run.id}`,
-    label: `${run.id} [${run.scope}] ${completed}/${workItems.length} items`,
-    files: filterExistingFiles(collectFireRunFiles(run).map((file) => ({ ...file, scope: 'active' })))
-  }];
+  return buildFireCurrentRunGroups(snapshot);
 }
 
 function buildRunFileGroups(fileEntries) {
@@ -1375,26 +1417,41 @@ function buildOverviewIntentGroups(snapshot, flow, filter = 'next') {
     });
 }
 
-function buildStandardsGroups(snapshot, flow) {
+function buildStandardsRows(snapshot, flow) {
   const effectiveFlow = getEffectiveFlow(flow, snapshot);
   if (effectiveFlow === 'simple') {
-    return [];
+    return [{
+      kind: 'info',
+      key: 'standards:empty:simple',
+      label: 'No standards for SIMPLE flow',
+      selectable: false
+    }];
   }
 
   const standards = Array.isArray(snapshot?.standards) ? snapshot.standards : [];
-  return standards.map((standard, index) => {
-    const id = standard?.type || standard?.name || String(index);
-    const name = `${standard?.name || standard?.type || 'standard'}.md`;
-    return {
-      key: `standards:${id}`,
-      label: name,
-      files: filterExistingFiles([{
-        label: name,
-        path: standard?.filePath,
-        scope: 'file'
-      }])
-    };
-  });
+  const files = filterExistingFiles(standards.map((standard, index) => ({
+    label: `${standard?.name || standard?.type || `standard-${index}`}.md`,
+    path: standard?.filePath,
+    scope: 'file'
+  })));
+
+  if (files.length === 0) {
+    return [{
+      kind: 'info',
+      key: 'standards:empty',
+      label: 'No standards found',
+      selectable: false
+    }];
+  }
+
+  return files.map((file, index) => ({
+    kind: 'file',
+    key: `standards:file:${file.path}:${index}`,
+    label: file.label,
+    path: file.path,
+    scope: 'file',
+    selectable: true
+  }));
 }
 
 function buildProjectGroups(snapshot, flow) {
@@ -2281,11 +2338,7 @@ function createDashboardApp(deps) {
       )
       : toLoadingRows('Loading completed items...', 'completed-loading');
     const standardsRows = shouldHydrateSecondaryTabs
-      ? toExpandableRows(
-        buildStandardsGroups(snapshot, activeFlow),
-        effectiveFlow === 'simple' ? 'No standards for SIMPLE flow' : 'No standards found',
-        expandedGroups
-      )
+      ? buildStandardsRows(snapshot, activeFlow)
       : toLoadingRows('Loading standards...', 'standards-loading');
     const statsRows = shouldHydrateSecondaryTabs
       ? toInfoRows(
