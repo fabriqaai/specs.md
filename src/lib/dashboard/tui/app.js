@@ -2926,6 +2926,12 @@ function colorizeMarkdownLine(line, inCodeBlock) {
   };
 }
 
+function sanitizeRenderLine(value) {
+  const raw = String(value ?? '');
+  const withoutAnsi = raw.replace(/\u001B\[[0-9;?]*[ -/]*[@-~]/g, '');
+  return withoutAnsi.replace(/[\u0000-\u0008\u000B-\u001A\u001C-\u001F\u007F]/g, '');
+}
+
 function buildPreviewLines(fileEntry, width, scrollOffset, options = {}) {
   const fullDocument = options?.fullDocument === true;
 
@@ -2967,7 +2973,8 @@ function buildPreviewLines(fileEntry, width, scrollOffset, options = {}) {
     bold: true
   };
 
-  const cappedLines = fullDocument ? rawLines : rawLines.slice(0, 300);
+  const normalizedLines = rawLines.map((line) => sanitizeRenderLine(line));
+  const cappedLines = fullDocument ? normalizedLines : normalizedLines.slice(0, 300);
   const hiddenLineCount = fullDocument ? 0 : Math.max(0, rawLines.length - cappedLines.length);
   let inCodeBlock = false;
 
@@ -4071,6 +4078,13 @@ function createDashboardApp(deps) {
     }, [previewOpen, overlayPreviewOpen, paneFocus, selectedFocusedFile?.path, previewTarget?.path]);
 
     useEffect(() => {
+      if (ui.view !== 'git') {
+        return;
+      }
+      setPreviewScroll(0);
+    }, [ui.view, focusedSection, selectedGitFile?.path, selectedGitCommit?.commitHash]);
+
+    useEffect(() => {
       if (statusLine === '') {
         return undefined;
       }
@@ -4235,8 +4249,8 @@ function createDashboardApp(deps) {
       : [];
     const gitInlineDiffTarget = (
       focusedSection === 'git-commits'
-        ? (selectedGitCommit || selectedGitFile || firstGitFile || previewTarget)
-        : (selectedGitFile || firstGitFile || previewTarget)
+        ? (selectedGitCommit || selectedGitFile || firstGitFile)
+        : (selectedGitFile || firstGitFile)
     ) || null;
     const gitInlineDiffLines = ui.view === 'git'
       ? buildPreviewLines(gitInlineDiffTarget, compactWidth, previewOpen && paneFocus === 'preview' ? previewScroll : 0, {
