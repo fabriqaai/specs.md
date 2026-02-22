@@ -217,7 +217,18 @@ function colorizeMarkdownLine(line, inCodeBlock) {
 
 function sanitizeRenderLine(value) {
   const raw = String(value ?? '');
-  const withoutAnsi = raw.replace(/\u001B\[[0-9;?]*[ -/]*[@-~]/g, '');
+  const withoutAnsi = raw
+    // OSC sequences (e.g. hyperlinks / title set): ESC ] ... BEL or ESC \
+    .replace(/\u001B\][^\u0007]*(?:\u0007|\u001B\\)/g, '')
+    // CSI sequences
+    .replace(/\u001B\[[0-?]*[ -/]*[@-~]/g, '')
+    // 7-bit C1 control sequences
+    .replace(/\u001B[@-Z\\-_]/g, '')
+    // Any remaining ESC bytes
+    .replace(/\u001B/g, '')
+    // Carriage return can reposition cursor to column 0 and corrupt frame painting
+    .replace(/\r/g, '');
+
   return withoutAnsi.replace(/[\u0000-\u0008\u000B-\u001A\u001C-\u001F\u007F]/g, '');
 }
 

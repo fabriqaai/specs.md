@@ -1257,9 +1257,10 @@ function createDashboardApp(deps) {
       ])
     );
     const effectivePreviewTarget = previewTarget || selectedFocusedFile;
+    const useFullDocumentPreview = overlayPreviewOpen || (ui.view === 'runs' && previewOpen && !overlayPreviewOpen);
     const previewLines = previewOpen
       ? buildPreviewLines(effectivePreviewTarget, compactWidth, previewScroll, {
-        fullDocument: overlayPreviewOpen
+        fullDocument: useFullDocumentPreview
       })
       : [];
     const gitInlineDiffTarget = (
@@ -1464,6 +1465,14 @@ function createDashboardApp(deps) {
     }
 
     const panels = allocateSingleColumnPanels(panelCandidates, contentRowsBudget);
+    const splitPreviewLayout = ui.view === 'runs'
+      && !ui.showHelp
+      && !worktreeOverlayOpen
+      && previewOpen
+      && !overlayPreviewOpen
+      && !ultraCompact
+      && fullWidth >= 110
+      && panelCandidates.some((panel) => panel?.key === 'preview');
     const gitHierarchyLayout = ui.view === 'git'
       && !ui.showHelp
       && !worktreeOverlayOpen
@@ -1543,6 +1552,56 @@ function createDashboardApp(deps) {
               : (rightPanel.key === 'git-diff'
                 ? true
                 : (paneFocus === 'main' && rightPanel.key === focusedSection))
+          })
+        )
+      );
+    } else if (splitPreviewLayout) {
+      const previewPanelBase = panelCandidates.find((panel) => panel?.key === 'preview');
+      const mainCandidates = panelCandidates.filter((panel) => panel?.key !== 'preview');
+      const mainWidth = Math.max(34, Math.floor(fullWidth * 0.56));
+      const previewWidth = Math.max(30, fullWidth - mainWidth - 1);
+      const mainPanels = allocateSingleColumnPanels(mainCandidates, contentRowsBudget);
+      const previewPanel = {
+        ...previewPanelBase,
+        maxLines: Math.max(4, contentRowsBudget)
+      };
+
+      contentNode = React.createElement(
+        Box,
+        { width: fullWidth, flexDirection: 'row' },
+        React.createElement(
+          Box,
+          { width: mainWidth, flexDirection: 'column' },
+          ...mainPanels.map((panel, index) => React.createElement(SectionPanel, {
+            key: panel.key,
+            title: panel.title,
+            lines: panel.lines,
+            width: mainWidth,
+            maxLines: panel.maxLines,
+            borderColor: panel.borderColor,
+            marginBottom: densePanels ? 0 : (index === mainPanels.length - 1 ? 0 : 1),
+            dense: densePanels,
+            focused: paneFocus === 'main' && panel.key === focusedSection
+          }))
+        ),
+        React.createElement(
+          Box,
+          { width: 1, justifyContent: 'center' },
+          React.createElement(Text, { color: 'gray' }, '│')
+        ),
+        React.createElement(
+          Box,
+          { width: previewWidth, flexDirection: 'column' },
+          React.createElement(SectionPanel, {
+            key: previewPanel.key,
+            title: previewPanel.title,
+            lines: previewPanel.lines,
+            width: previewWidth,
+            maxLines: previewPanel.maxLines,
+            borderColor: previewPanel.borderColor,
+            marginBottom: 0,
+            dense: densePanels,
+            focused: paneFocus === 'preview'
           })
         )
       );
