@@ -11,27 +11,10 @@ All notable changes to specs.md.
 </Info>
 
 <Update label="February 22, 2026" description="v0.1.49" tags={["FIRE", "CLI", "Release"]}>
-### Added
-
-- Added manual `workflow_dispatch` support to the npm package release workflow for fast recovery when a publish run is interrupted
-
 ### Changed
 
 - Runs tab worktree navigation now switches context immediately when moving between rows in the Worktrees section (`↑/↓`, `j/k`)
 - Current Run and related sections now refresh directly from the selected worktree without needing `w` overlay confirmation
-
-### Fixed
-
-- NPM release workflow now avoids non-fast-forward publish failures by using release concurrency plus rebase-and-retry push logic for version bump commits
-- FIRE documentation now consistently uses `run-<worktree>-NNN` examples to avoid run ID conflicts across parallel worktree-based agent sessions
-</Update>
-
-<Update label="February 22, 2026" description="v0.1.27" tags={["FIRE", "CLI", "Worktrees"]}>
-### Changed
-
-- Standardized FIRE run IDs to `run-<worktree>-NNN` (for example, `run-fabriqa-2026-001`)
-- Added per-worktree run numbering semantics to prevent collisions during parallel agent execution on different git worktrees
-- Updated FIRE documentation and skill examples to the new run ID convention while preserving compatibility with historical `run-001` records
 </Update>
 
 <Update label="February 21, 2026" description="v0.1.26" tags={["FIRE", "CLI", "Codex"]}>
