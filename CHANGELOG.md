@@ -11,9 +11,8 @@ You can also view this changelog at [specs.md/changelog](https://specs.md/change
 
 ### Changed
 
-- Dashboard: Added worktree-aware support so you can monitor and switch between git worktrees directly in the CLI
-- Dashboard: In the Runs tab, navigating the Worktrees table with `↑/↓` (or `j/k`) now switches worktree context immediately
-- Dashboard: Current Run and related sections now refresh directly from the selected worktree without requiring `w` overlay confirmation
+- Dashboard: Added worktree support in the CLI so you can monitor and switch between multiple branches/worktrees in one place (useful when parallel feature branches are active and you want to track progress without leaving the dashboard)
+- Dashboard: Added explicit command-log feedback after switching worktrees so the active context change is immediately visible (for example: `Switched to worktree: <name>`)
 
 ## [0.1.26] - 2026-02-21
 

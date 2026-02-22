@@ -13,9 +13,8 @@ All notable changes to specs.md.
 <Update label="February 22, 2026" description="v0.1.49" tags={["FIRE", "CLI", "Worktrees"]}>
 ### Changed
 
-- Added worktree-aware dashboard support so you can monitor and switch between git worktrees directly in the CLI
-- Runs tab worktree navigation now switches context immediately when moving between rows in the Worktrees section (`↑/↓`, `j/k`)
-- Current Run and related sections now refresh directly from the selected worktree without needing `w` overlay confirmation
+- Added CLI worktree support so you can monitor and switch between multiple branches/worktrees in one place (useful when parallel feature branches are active and you want to track progress without leaving the dashboard)
+- Added explicit command-log feedback after switching worktrees so the active context change is immediately visible (for example: `Switched to worktree: <name>`)
 </Update>
 
 <Update label="February 21, 2026" description="v0.1.26" tags={["FIRE", "CLI", "Codex"]}>

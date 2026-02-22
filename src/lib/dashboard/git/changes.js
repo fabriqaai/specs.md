@@ -324,7 +324,39 @@ function loadGitDiffPreview(changeEntry) {
   return result.stdout;
 }
 
+function loadGitCommitPreview(changeEntry) {
+  const repoRoot = typeof changeEntry?.repoRoot === 'string'
+    ? changeEntry.repoRoot
+    : (typeof changeEntry?.workspacePath === 'string' ? findGitRoot(changeEntry.workspacePath) : null);
+  const commitHash = typeof changeEntry?.commitHash === 'string'
+    ? changeEntry.commitHash.trim()
+    : '';
+
+  if (!repoRoot) {
+    return '[git] repository is unavailable for commit preview.';
+  }
+  if (commitHash === '') {
+    return '[git] no commit selected.';
+  }
+
+  const result = runGit(
+    ['-c', 'color.ui=false', '--no-pager', 'show', '--patch', '--stat', '--no-ext-diff', commitHash],
+    repoRoot
+  );
+  if (!result.ok) {
+    return `[git] unable to load commit diff: ${result.error}`;
+  }
+
+  const output = result.stdout.trim();
+  if (output === '') {
+    return '[git] no commit output for this selection.';
+  }
+
+  return result.stdout;
+}
+
 module.exports = {
   listGitChanges,
-  loadGitDiffPreview
+  loadGitDiffPreview,
+  loadGitCommitPreview
 };
