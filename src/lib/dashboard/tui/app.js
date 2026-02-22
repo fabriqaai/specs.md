@@ -2218,28 +2218,58 @@ function createDashboardApp(deps) {
     const primaryLabel = effectiveFlow === 'aidlc' ? 'BOLTS' : (effectiveFlow === 'simple' ? 'SPECS' : 'RUNS');
     const completedLabel = effectiveFlow === 'aidlc' ? 'COMPLETED BOLTS' : (effectiveFlow === 'simple' ? 'COMPLETED SPECS' : 'COMPLETED RUNS');
     const tabs = [
-      { id: 'runs', label: ` 1 ${icons.runs} ${primaryLabel} ` },
-      { id: 'intents', label: ` 2 ${icons.overview} INTENTS ` },
-      { id: 'completed', label: ` 3 ${icons.runs} ${completedLabel} ` },
-      { id: 'health', label: ` 4 ${icons.health} STANDARDS/HEALTH ` }
+      { id: 'runs', label: `1 ${icons.runs} ${primaryLabel}` },
+      { id: 'intents', label: `2 ${icons.overview} INTENTS` },
+      { id: 'completed', label: `3 ${icons.runs} ${completedLabel}` },
+      { id: 'health', label: `4 ${icons.health} STANDARDS/HEALTH` }
     ];
+    const maxWidth = Math.max(8, Math.floor(width));
+    const segments = [];
+    let consumed = 0;
+
+    for (const tab of tabs) {
+      const isActive = tab.id === view;
+      const segmentText = isActive ? `[${tab.label}]` : tab.label;
+      const separator = segments.length > 0 ? ' ' : '';
+      const segmentWidth = stringWidth(separator) + stringWidth(segmentText);
+      if (consumed + segmentWidth > maxWidth) {
+        break;
+      }
+
+      if (separator !== '') {
+        segments.push({
+          key: `${tab.id}:sep`,
+          text: separator,
+          active: false
+        });
+      }
+      segments.push({
+        key: tab.id,
+        text: segmentText,
+        active: isActive
+      });
+      consumed += segmentWidth;
+    }
+
+    if (segments.length === 0) {
+      const fallback = tabs.find((tab) => tab.id === view) || tabs[0];
+      const fallbackText = truncate(`[${fallback.label}]`, maxWidth);
+      return React.createElement(Text, { color: 'white', bold: true }, fallbackText);
+    }
 
     return React.createElement(
       Box,
-      { width, flexWrap: 'nowrap' },
-      ...tabs.map((tab) => {
-        const isActive = tab.id === view;
-        return React.createElement(
-          Text,
-          {
-            key: tab.id,
-            bold: isActive,
-            color: isActive ? 'white' : 'gray',
-            backgroundColor: isActive ? 'blue' : undefined
-          },
-          tab.label
-        );
-      })
+      { width: maxWidth, flexWrap: 'nowrap' },
+      ...segments.map((segment) => React.createElement(
+        Text,
+        {
+          key: segment.key,
+          bold: segment.active,
+          color: segment.active ? 'white' : 'gray',
+          backgroundColor: segment.active ? 'blue' : undefined
+        },
+        segment.text
+      ))
     );
   }
 
@@ -2248,23 +2278,52 @@ function createDashboardApp(deps) {
     if (!Array.isArray(flowIds) || flowIds.length <= 1) {
       return null;
     }
+    const maxWidth = Math.max(8, Math.floor(width));
+    const segments = [];
+    let consumed = 0;
+
+    for (const flowId of flowIds) {
+      const isActive = flowId === activeFlow;
+      const segmentText = isActive ? `[${flowId.toUpperCase()}]` : flowId.toUpperCase();
+      const separator = segments.length > 0 ? ' ' : '';
+      const segmentWidth = stringWidth(separator) + stringWidth(segmentText);
+      if (consumed + segmentWidth > maxWidth) {
+        break;
+      }
+
+      if (separator !== '') {
+        segments.push({
+          key: `${flowId}:sep`,
+          text: separator,
+          active: false
+        });
+      }
+      segments.push({
+        key: flowId,
+        text: segmentText,
+        active: isActive
+      });
+      consumed += segmentWidth;
+    }
+
+    if (segments.length === 0) {
+      const fallback = (activeFlow || flowIds[0] || 'flow').toUpperCase();
+      return React.createElement(Text, { color: 'black', backgroundColor: 'green', bold: true }, truncate(`[${fallback}]`, maxWidth));
+    }
 
     return React.createElement(
       Box,
-      { width, flexWrap: 'nowrap' },
-      ...flowIds.map((flowId) => {
-        const isActive = flowId === activeFlow;
-        return React.createElement(
-          Text,
-          {
-            key: flowId,
-            bold: isActive,
-            color: isActive ? 'black' : 'gray',
-            backgroundColor: isActive ? 'green' : undefined
-          },
-          ` ${flowId.toUpperCase()} `
-        );
-      })
+      { width: maxWidth, flexWrap: 'nowrap' },
+      ...segments.map((segment) => React.createElement(
+        Text,
+        {
+          key: segment.key,
+          bold: segment.active,
+          color: segment.active ? 'black' : 'gray',
+          backgroundColor: segment.active ? 'green' : undefined
+        },
+        segment.text
+      ))
     );
   }
 
@@ -2888,6 +2947,12 @@ function createDashboardApp(deps) {
           columns: stdout.columns || process.stdout.columns || 120,
           rows: stdout.rows || process.stdout.rows || 40
         });
+
+        // Resize in some terminals can leave stale frame rows behind.
+        // Force clear so next render paints from a clean origin.
+        if (typeof stdout.write === 'function' && stdout.isTTY !== false) {
+          stdout.write('\u001B[2J\u001B[3J\u001B[H');
+        }
       };
 
       updateSize();
