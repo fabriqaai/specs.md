@@ -78,6 +78,15 @@ function normalizeTimestamp(value) {
   return String(value);
 }
 
+function normalizeCheckpointState(value) {
+  if (typeof value !== 'string') {
+    return undefined;
+  }
+
+  const normalized = value.toLowerCase().trim().replace(/[\s-]+/g, '_');
+  return normalized === '' ? undefined : normalized;
+}
+
 function parseDependencies(raw) {
   if (Array.isArray(raw)) {
     return raw.filter((item) => typeof item === 'string' && item.trim() !== '');
@@ -97,7 +106,9 @@ function normalizeRunWorkItem(raw, fallbackIntentId = '') {
       intentId: fallbackIntentId,
       mode: 'confirm',
       status: 'pending',
-      currentPhase: undefined
+      currentPhase: undefined,
+      checkpointState: undefined,
+      currentCheckpoint: undefined
     };
   }
 
@@ -107,7 +118,9 @@ function normalizeRunWorkItem(raw, fallbackIntentId = '') {
       intentId: fallbackIntentId,
       mode: 'confirm',
       status: 'pending',
-      currentPhase: undefined
+      currentPhase: undefined,
+      checkpointState: undefined,
+      currentCheckpoint: undefined
     };
   }
 
@@ -121,13 +134,27 @@ function normalizeRunWorkItem(raw, fallbackIntentId = '') {
   const currentPhase = typeof raw.current_phase === 'string'
     ? raw.current_phase
     : (typeof raw.currentPhase === 'string' ? raw.currentPhase : undefined);
+  const checkpointState = typeof raw.checkpoint_state === 'string'
+    ? raw.checkpoint_state
+    : (typeof raw.checkpointState === 'string'
+      ? raw.checkpointState
+      : (typeof raw.approval_state === 'string'
+        ? raw.approval_state
+        : (typeof raw.approvalState === 'string' ? raw.approvalState : undefined)));
+  const currentCheckpoint = typeof raw.current_checkpoint === 'string'
+    ? raw.current_checkpoint
+    : (typeof raw.currentCheckpoint === 'string'
+      ? raw.currentCheckpoint
+      : (typeof raw.checkpoint === 'string' ? raw.checkpoint : undefined));
 
   return {
     id,
     intentId,
     mode,
     status,
-    currentPhase
+    currentPhase,
+    checkpointState,
+    currentCheckpoint
   };
 }
 
@@ -206,7 +233,18 @@ function normalizeState(rawState) {
       currentItem: typeof run.current_item === 'string'
         ? run.current_item
         : (typeof run.currentItem === 'string' ? run.currentItem : ''),
-      started: normalizeTimestamp(run.started) || ''
+      started: normalizeTimestamp(run.started) || '',
+      checkpointState: normalizeCheckpointState(
+        run.checkpoint_state
+        || run.checkpointState
+        || run.approval_state
+        || run.approvalState
+      ),
+      currentCheckpoint: typeof run.current_checkpoint === 'string'
+        ? run.current_checkpoint
+        : (typeof run.currentCheckpoint === 'string'
+          ? run.currentCheckpoint
+          : (typeof run.checkpoint === 'string' ? run.checkpoint : undefined))
     };
   }).filter(Boolean);
 
@@ -221,6 +259,17 @@ function normalizeState(rawState) {
     return {
       id: typeof run.id === 'string' ? run.id : '',
       workItems: workItemsRaw.map((item) => normalizeRunWorkItem(item, fallbackIntentId)).filter((item) => item.id !== ''),
+      checkpointState: normalizeCheckpointState(
+        run.checkpoint_state
+        || run.checkpointState
+        || run.approval_state
+        || run.approvalState
+      ),
+      currentCheckpoint: typeof run.current_checkpoint === 'string'
+        ? run.current_checkpoint
+        : (typeof run.currentCheckpoint === 'string'
+          ? run.currentCheckpoint
+          : (typeof run.checkpoint === 'string' ? run.checkpoint : undefined)),
       completed: normalizeTimestamp(run.completed) || ''
     };
   }).filter(Boolean);

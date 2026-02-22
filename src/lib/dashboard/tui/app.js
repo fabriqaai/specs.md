@@ -310,62 +310,138 @@ function extractFrontmatterValue(frontmatterBlock, key) {
     .trim();
 }
 
-function parseFirePlanApprovalState(run) {
+const FIRE_AWAITING_APPROVAL_STATES = new Set([
+  'awaiting_approval',
+  'waiting',
+  'pending_approval',
+  'approval_needed',
+  'approval_required',
+  'checkpoint_pending'
+]);
+
+const FIRE_APPROVED_STATES = new Set([
+  'approved',
+  'confirmed',
+  'accepted',
+  'resumed',
+  'done',
+  'completed',
+  'cleared',
+  'none',
+  'not_required',
+  'skipped'
+]);
+
+function parseFirePlanCheckpointMetadata(run) {
   if (!run || typeof run.folderPath !== 'string' || run.folderPath.trim() === '') {
-    return { hasPlan: false, approved: false, checkpoint: null };
+    return { hasPlan: false, checkpointState: null, checkpoint: null };
   }
 
   const planPath = path.join(run.folderPath, 'plan.md');
   if (!fileExists(planPath)) {
-    return { hasPlan: false, approved: false, checkpoint: null };
+    return { hasPlan: false, checkpointState: null, checkpoint: null };
   }
 
   const content = readFileTextSafe(planPath);
   const frontmatter = extractFrontmatterBlock(content);
   if (!frontmatter) {
-    return { hasPlan: true, approved: false, checkpoint: null };
+    return { hasPlan: true, checkpointState: null, checkpoint: null };
   }
 
-  const approvedAt = extractFrontmatterValue(frontmatter, 'approved_at');
-  const checkpoint = extractFrontmatterValue(frontmatter, 'checkpoint');
-  const missingTokens = new Set([
-    '',
-    'null',
-    'none',
-    'pending',
-    'unknown',
-    'n/a',
-    'false',
-    'no',
-    'assumed-from-user-n'
-  ]);
-  const normalizedApprovedAt = normalizeToken(approvedAt || '');
+  const checkpointState = normalizeToken(
+    extractFrontmatterValue(frontmatter, 'checkpoint_state')
+    || extractFrontmatterValue(frontmatter, 'checkpointState')
+    || extractFrontmatterValue(frontmatter, 'approval_state')
+    || extractFrontmatterValue(frontmatter, 'approvalState')
+    || ''
+  ) || null;
+  const checkpoint = extractFrontmatterValue(frontmatter, 'current_checkpoint')
+    || extractFrontmatterValue(frontmatter, 'currentCheckpoint')
+    || extractFrontmatterValue(frontmatter, 'checkpoint')
+    || null;
 
   return {
     hasPlan: true,
-    approved: !missingTokens.has(normalizedApprovedAt),
-    checkpoint: checkpoint || null
+    checkpointState,
+    checkpoint
   };
 }
 
-function isFireRunAwaitingApproval(run, currentWorkItem) {
+function resolveFireApprovalState(run, currentWorkItem) {
+  const itemState = normalizeToken(
+    currentWorkItem?.checkpointState
+    || currentWorkItem?.checkpoint_state
+    || currentWorkItem?.approvalState
+    || currentWorkItem?.approval_state
+    || ''
+  );
+  const runState = normalizeToken(
+    run?.checkpointState
+    || run?.checkpoint_state
+    || run?.approvalState
+    || run?.approval_state
+    || ''
+  );
+  const planState = parseFirePlanCheckpointMetadata(run);
+  const state = itemState || runState || planState.checkpointState || null;
+  const checkpoint = currentWorkItem?.currentCheckpoint
+    || currentWorkItem?.current_checkpoint
+    || run?.currentCheckpoint
+    || run?.current_checkpoint
+    || planState.checkpoint
+    || null;
+
+  return {
+    state,
+    checkpoint,
+    source: itemState
+      ? 'item-state'
+      : (runState
+        ? 'run-state'
+        : (planState.checkpointState ? 'plan-frontmatter' : null))
+  };
+}
+
+function getFireRunApprovalGate(run, currentWorkItem) {
   const mode = normalizeToken(currentWorkItem?.mode);
   const status = normalizeToken(currentWorkItem?.status);
   if (!['confirm', 'validate'].includes(mode) || status !== 'in_progress') {
-    return false;
+    return null;
   }
 
   const phase = normalizeToken(getCurrentPhaseLabel(run, currentWorkItem));
   if (phase !== 'plan') {
-    return false;
+    return null;
   }
 
-  const planState = parseFirePlanApprovalState(run);
-  if (!planState.hasPlan) {
-    return false;
+  const resolvedApproval = resolveFireApprovalState(run, currentWorkItem);
+  if (!resolvedApproval.state) {
+    return null;
   }
 
-  return !planState.approved;
+  if (FIRE_APPROVED_STATES.has(resolvedApproval.state)) {
+    return null;
+  }
+
+  if (!FIRE_AWAITING_APPROVAL_STATES.has(resolvedApproval.state)) {
+    return null;
+  }
+
+  const modeLabel = String(currentWorkItem?.mode || 'confirm').toUpperCase();
+  const itemId = String(currentWorkItem?.id || run.currentItem || 'unknown-item');
+  const checkpointLabel = String(resolvedApproval.checkpoint || 'plan').replace(/[_\s]+/g, '-');
+
+  return {
+    flow: 'fire',
+    title: 'Approval Needed',
+    message: `${run.id}: ${itemId} (${modeLabel}) is waiting at ${checkpointLabel} checkpoint`,
+    checkpoint: checkpointLabel,
+    source: resolvedApproval.source
+  };
+}
+
+function isFireRunAwaitingApproval(run, currentWorkItem) {
+  return Boolean(getFireRunApprovalGate(run, currentWorkItem));
 }
 
 function detectFireRunApprovalGate(snapshot) {
@@ -379,17 +455,7 @@ function detectFireRunApprovalGate(snapshot) {
     return null;
   }
 
-  if (!isFireRunAwaitingApproval(run, currentWorkItem)) {
-    return null;
-  }
-
-  const mode = String(currentWorkItem?.mode || 'confirm').toUpperCase();
-  const itemId = String(currentWorkItem?.id || run.currentItem || 'unknown-item');
-  return {
-    flow: 'fire',
-    title: 'Approval Needed',
-    message: `${run.id}: ${itemId} (${mode}) is waiting at plan checkpoint`
-  };
+  return getFireRunApprovalGate(run, currentWorkItem);
 }
 
 function normalizeStageName(stage) {

@@ -305,6 +305,9 @@ function updateRunLog(runLogPath, activeRun, params, completedTime, isFullComple
       intent: item.intent,
       mode: item.mode,
       status: item.status,
+      current_phase: item.current_phase || null,
+      checkpoint_state: item.checkpoint_state || null,
+      current_checkpoint: item.current_checkpoint || null,
     }));
   }
 
@@ -427,6 +430,12 @@ function completeCurrentItem(rootPath, runId, params = {}) {
     if (workItems[i].id === currentItemId) {
       workItems[i].status = 'completed';
       workItems[i].completed_at = completedTime;
+      if (workItems[i].mode === 'confirm' || workItems[i].mode === 'validate') {
+        workItems[i].checkpoint_state = 'approved';
+        workItems[i].current_checkpoint = workItems[i].current_checkpoint || 'plan';
+      } else {
+        workItems[i].checkpoint_state = workItems[i].checkpoint_state || 'not_required';
+      }
       currentItemIndex = i;
       break;
     }
@@ -446,6 +455,10 @@ function completeCurrentItem(rootPath, runId, params = {}) {
     if (workItems[i].status === 'pending') {
       workItems[i].status = 'in_progress';
       workItems[i].current_phase = 'plan';
+      workItems[i].checkpoint_state = 'none';
+      workItems[i].current_checkpoint = (workItems[i].mode === 'confirm' || workItems[i].mode === 'validate')
+        ? 'plan'
+        : null;
       nextItem = workItems[i];
       break;
     }
@@ -542,6 +555,12 @@ function completeRun(rootPath, runId, params = {}) {
     if (item.status !== 'completed') {
       item.status = 'completed';
       item.completed_at = completedTime;
+    }
+    if (item.mode === 'confirm' || item.mode === 'validate') {
+      item.checkpoint_state = 'approved';
+      item.current_checkpoint = item.current_checkpoint || 'plan';
+    } else {
+      item.checkpoint_state = item.checkpoint_state || 'not_required';
     }
   }
 

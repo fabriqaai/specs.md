@@ -21,24 +21,13 @@ describe('dashboard approval gate detection', () => {
   });
 
   it('detects FIRE confirm-mode checkpoint waiting for approval', () => {
-    const runPath = join(workspacePath, '.specs-fire', 'runs', 'run-001');
-    mkdirSync(runPath, { recursive: true });
-    writeFileSync(join(runPath, 'plan.md'), `---
-run: run-001
-work_item: wi-01
-mode: confirm
-checkpoint: confirm-plan
-approved_at: null
----
-`, 'utf8');
-
     const snapshot = {
       flow: 'fire',
       activeRuns: [
         {
           id: 'run-001',
           scope: 'single',
-          folderPath: runPath,
+          folderPath: join(workspacePath, '.specs-fire', 'runs', 'run-001'),
           hasPlan: true,
           hasWalkthrough: false,
           hasTestReport: false,
@@ -48,7 +37,9 @@ approved_at: null
               id: 'wi-01',
               mode: 'confirm',
               status: 'in_progress',
-              currentPhase: 'plan'
+              currentPhase: 'plan',
+              checkpointState: 'awaiting_approval',
+              currentCheckpoint: 'plan'
             }
           ]
         }
@@ -62,7 +53,7 @@ approved_at: null
     expect(gate.message).toContain('waiting at plan checkpoint');
   });
 
-  it('clears FIRE approval gate after plan approval timestamp exists', () => {
+  it('clears FIRE approval gate after explicit checkpoint approval state exists', () => {
     const runPath = join(workspacePath, '.specs-fire', 'runs', 'run-002');
     mkdirSync(runPath, { recursive: true });
     writeFileSync(join(runPath, 'plan.md'), `---
@@ -70,7 +61,7 @@ run: run-002
 work_item: wi-02
 mode: confirm
 checkpoint: confirm-plan
-approved_at: 2026-02-22T03:00:00Z
+approved_at: null
 ---
 `, 'utf8');
 
@@ -88,6 +79,87 @@ approved_at: 2026-02-22T03:00:00Z
           workItems: [
             {
               id: 'wi-02',
+              mode: 'confirm',
+              status: 'in_progress',
+              currentPhase: 'plan',
+              checkpointState: 'approved',
+              currentCheckpoint: 'plan'
+            }
+          ]
+        }
+      ]
+    };
+
+    const gate = detectDashboardApprovalGate(snapshot, 'fire');
+    expect(gate).toBeNull();
+  });
+
+  it('uses explicit plan checkpoint_state as compatibility fallback', () => {
+    const runPath = join(workspacePath, '.specs-fire', 'runs', 'run-003');
+    mkdirSync(runPath, { recursive: true });
+    writeFileSync(join(runPath, 'plan.md'), `---
+run: run-003
+work_item: wi-03
+mode: validate
+checkpoint: plan
+checkpoint_state: awaiting_approval
+---
+`, 'utf8');
+
+    const snapshot = {
+      flow: 'fire',
+      activeRuns: [
+        {
+          id: 'run-003',
+          scope: 'single',
+          folderPath: runPath,
+          hasPlan: true,
+          hasWalkthrough: false,
+          hasTestReport: false,
+          currentItem: 'wi-03',
+          workItems: [
+            {
+              id: 'wi-03',
+              mode: 'validate',
+              status: 'in_progress',
+              currentPhase: 'plan'
+            }
+          ]
+        }
+      ]
+    };
+
+    const gate = detectDashboardApprovalGate(snapshot, 'fire');
+    expect(gate).not.toBeNull();
+    expect(gate.message).toContain('run-003');
+  });
+
+  it('does not infer waiting from approved_at=null without explicit checkpoint state', () => {
+    const runPath = join(workspacePath, '.specs-fire', 'runs', 'run-004');
+    mkdirSync(runPath, { recursive: true });
+    writeFileSync(join(runPath, 'plan.md'), `---
+run: run-004
+work_item: wi-04
+mode: confirm
+checkpoint: plan
+approved_at: null
+---
+`, 'utf8');
+
+    const snapshot = {
+      flow: 'fire',
+      activeRuns: [
+        {
+          id: 'run-004',
+          scope: 'single',
+          folderPath: runPath,
+          hasPlan: true,
+          hasWalkthrough: false,
+          hasTestReport: false,
+          currentItem: 'wi-04',
+          workItems: [
+            {
+              id: 'wi-04',
               mode: 'confirm',
               status: 'in_progress',
               currentPhase: 'plan'

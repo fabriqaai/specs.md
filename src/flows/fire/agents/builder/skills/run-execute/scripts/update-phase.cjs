@@ -171,6 +171,17 @@ function updatePhase(rootPath, runId, phase) {
     if (item.id === currentItemId) {
       previousPhase = item.current_phase || 'plan';
       item.current_phase = phase;
+      const mode = String(item.mode || '').toLowerCase();
+      const isApprovalMode = mode === 'confirm' || mode === 'validate';
+
+      if (isApprovalMode && phase !== 'plan') {
+        item.checkpoint_state = 'approved';
+        if (!item.current_checkpoint) {
+          item.current_checkpoint = 'plan';
+        }
+      } else if (!item.checkpoint_state) {
+        item.checkpoint_state = 'none';
+      }
       updated = true;
       break;
     }

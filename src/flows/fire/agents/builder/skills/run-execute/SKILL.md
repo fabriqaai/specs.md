@@ -204,6 +204,8 @@ Supports both single-item and multi-item (batch/wide) runs.
     <action>Save plan IMMEDIATELY using template: templates/plan.md.hbs</action>
     <action>Write to: .specs-fire/runs/{run-id}/plan.md</action>
     <output>Plan saved to: .specs-fire/runs/{run-id}/plan.md</output>
+    <action>Mark checkpoint as waiting:</action>
+    <code>node scripts/update-checkpoint.cjs {rootPath} {runId} awaiting_approval --checkpoint=plan</code>
 
     <checkpoint>
       <template_output section="plan">
@@ -232,6 +234,8 @@ Supports both single-item and multi-item (batch/wide) runs.
       <action>Update plan.md with changes</action>
       <goto step="3b"/>
     </check>
+    <action>Mark checkpoint approved:</action>
+    <code>node scripts/update-checkpoint.cjs {rootPath} {runId} approved --checkpoint=plan</code>
     <goto step="5"/>
   </step>
 
@@ -242,6 +246,8 @@ Supports both single-item and multi-item (batch/wide) runs.
     <action>Write to: .specs-fire/runs/{run-id}/plan.md</action>
     <action>Include reference to design doc in plan</action>
     <output>Plan saved to: .specs-fire/runs/{run-id}/plan.md</output>
+    <action>Mark checkpoint as waiting:</action>
+    <code>node scripts/update-checkpoint.cjs {rootPath} {runId} awaiting_approval --checkpoint=plan</code>
 
     <checkpoint>
       <template_output section="plan">
@@ -270,6 +276,8 @@ Supports both single-item and multi-item (batch/wide) runs.
       <action>Update plan.md with changes</action>
       <goto step="3c"/>
     </check>
+    <action>Mark checkpoint approved:</action>
+    <code>node scripts/update-checkpoint.cjs {rootPath} {runId} approved --checkpoint=plan</code>
     <goto step="5"/>
   </step>
 
@@ -520,6 +528,7 @@ Supports both single-item and multi-item (batch/wide) runs.
   | Script | Purpose | Usage |
   |--------|---------|-------|
   | `scripts/init-run.cjs` | Initialize run record and folder | Creates run.md with all work items |
+  | `scripts/update-checkpoint.cjs` | Mark approval gate state for active item | `awaiting_approval` / `approved` |
   | `scripts/update-phase.cjs` | Update current work item's phase | `node scripts/update-phase.cjs {rootPath} {runId} {phase}` |
   | `scripts/complete-run.cjs` | Finalize run and update state | `--complete-item` or `--complete-run` |
 

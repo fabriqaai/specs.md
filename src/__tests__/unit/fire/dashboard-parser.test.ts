@@ -67,4 +67,19 @@ describe('fire dashboard parser', () => {
     expect(result.ok).toBe(false);
     expect(result.error.code).toBe('STATE_PARSE_ERROR');
   });
+
+  it('hydrates active run checkpoint state from run.md when state.yaml lacks it', () => {
+    writeFileSync(join(fireRootPath, 'state.yaml'), `project:\n  name: demo\nruns:\n  active:\n    - id: run-001\n      scope: single\n      current_item: WI-002\n      started: 2026-01-19T10:00:00Z\n      work_items:\n        - id: WI-002\n          intent: INT-001\n          mode: validate\n          status: in_progress\n`, 'utf8');
+    writeFileSync(join(fireRootPath, 'intents', 'INT-001', 'brief.md'), '# Intent\n', 'utf8');
+    writeFileSync(join(fireRootPath, 'intents', 'INT-001', 'work-items', 'WI-002.md'), '# Work item\n', 'utf8');
+    writeFileSync(join(fireRootPath, 'runs', 'run-001', 'run.md'), `---\nid: run-001\nscope: single\ncurrent_item: WI-002\ncheckpoint_state: awaiting_approval\ncurrent_checkpoint: plan\nwork_items:\n  - id: WI-002\n    intent: INT-001\n    mode: validate\n    status: in_progress\n    current_phase: plan\n    checkpoint_state: awaiting_approval\n    current_checkpoint: plan\n---\n`, 'utf8');
+
+    const result = parseFireDashboard(workspacePath);
+    expect(result.ok).toBe(true);
+    expect(result.snapshot.activeRuns).toHaveLength(1);
+    expect(result.snapshot.activeRuns[0].checkpointState).toBe('awaiting_approval');
+    expect(result.snapshot.activeRuns[0].currentCheckpoint).toBe('plan');
+    expect(result.snapshot.activeRuns[0].workItems[0].checkpointState).toBe('awaiting_approval');
+    expect(result.snapshot.activeRuns[0].workItems[0].currentCheckpoint).toBe('plan');
+  });
 });

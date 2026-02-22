@@ -233,7 +233,11 @@ function createRunLog(runPath, runId, workItems, scope, startTime) {
   // Format work items for run.md
   const workItemsList = workItems.map((item, index) => {
     const status = index === 0 ? 'in_progress' : 'pending';
-    return `  - id: ${item.id}\n    intent: ${item.intent}\n    mode: ${item.mode}\n    status: ${status}`;
+    const currentPhase = index === 0 ? 'plan' : 'null';
+    const currentCheckpoint = index === 0 && (item.mode === 'confirm' || item.mode === 'validate')
+      ? 'plan'
+      : 'null';
+    return `  - id: ${item.id}\n    intent: ${item.intent}\n    mode: ${item.mode}\n    status: ${status}\n    current_phase: ${currentPhase}\n    checkpoint_state: none\n    current_checkpoint: ${currentCheckpoint}`;
   }).join('\n');
 
   const currentItem = workItems[0];
@@ -346,6 +350,10 @@ function initRun(rootPath, workItems, scope) {
     mode: item.mode,
     status: index === 0 ? 'in_progress' : 'pending',
     current_phase: index === 0 ? 'plan' : null,
+    checkpoint_state: 'none',
+    current_checkpoint: (index === 0 && (item.mode === 'confirm' || item.mode === 'validate'))
+      ? 'plan'
+      : null,
   }));
 
   // Add to active runs list (supports multiple parallel runs)

@@ -65,6 +65,21 @@ function listMarkdownFiles(dirPath) {
   }
 }
 
+function getFirstStringValue(record, keys) {
+  if (!record || typeof record !== 'object') {
+    return undefined;
+  }
+
+  for (const key of keys) {
+    const value = record[key];
+    if (typeof value === 'string' && value.trim() !== '') {
+      return value;
+    }
+  }
+
+  return undefined;
+}
+
 function parseRunLog(runLogPath) {
   const content = readFileSafe(runLogPath);
   if (!content) {
@@ -73,14 +88,39 @@ function parseRunLog(runLogPath) {
       workItems: [],
       currentItem: null,
       startedAt: undefined,
-      completedAt: undefined
+      completedAt: undefined,
+      checkpointState: undefined,
+      currentCheckpoint: undefined
     };
   }
 
   const frontmatter = parseFrontmatter(content);
+  const currentItem = getFirstStringValue(frontmatter, ['current_item', 'currentItem', 'work_item', 'workItem']);
+  const itemMode = getFirstStringValue(frontmatter, ['mode']);
+  const itemStatus = getFirstStringValue(frontmatter, ['status']);
+  const itemPhase = getFirstStringValue(frontmatter, ['current_phase', 'currentPhase']);
+  const itemCheckpointState = getFirstStringValue(frontmatter, [
+    'checkpoint_state',
+    'checkpointState',
+    'approval_state',
+    'approvalState'
+  ]);
+  const itemCheckpoint = getFirstStringValue(frontmatter, ['current_checkpoint', 'currentCheckpoint', 'checkpoint']);
+
   const workItemsRaw = Array.isArray(frontmatter.work_items)
     ? frontmatter.work_items
     : (Array.isArray(frontmatter.workItems) ? frontmatter.workItems : []);
+
+  if (workItemsRaw.length === 0 && typeof currentItem === 'string' && currentItem !== '') {
+    workItemsRaw.push({
+      id: currentItem,
+      mode: itemMode,
+      status: itemStatus,
+      current_phase: itemPhase,
+      checkpoint_state: itemCheckpointState,
+      current_checkpoint: itemCheckpoint
+    });
+  }
 
   const workItems = workItemsRaw
     .map((item) => normalizeRunWorkItem(item))
@@ -89,14 +129,52 @@ function parseRunLog(runLogPath) {
   return {
     scope: normalizeScope(frontmatter.scope),
     workItems,
-    currentItem: typeof frontmatter.current_item === 'string'
-      ? frontmatter.current_item
-      : (typeof frontmatter.currentItem === 'string' ? frontmatter.currentItem : null),
+    currentItem: currentItem || null,
     startedAt: typeof frontmatter.started === 'string' ? frontmatter.started : undefined,
     completedAt: typeof frontmatter.completed === 'string'
       ? frontmatter.completed
-      : undefined
+      : undefined,
+    checkpointState: itemCheckpointState,
+    currentCheckpoint: itemCheckpoint
   };
+}
+
+function mergeRunWorkItems(primaryItems, fallbackItems) {
+  const primary = Array.isArray(primaryItems) ? primaryItems : [];
+  const fallback = Array.isArray(fallbackItems) ? fallbackItems : [];
+
+  if (primary.length === 0) {
+    return fallback;
+  }
+
+  if (fallback.length === 0) {
+    return primary;
+  }
+
+  const fallbackById = new Map(fallback.map((item) => [item.id, item]));
+  const merged = primary.map((item) => {
+    const fallbackItem = fallbackById.get(item.id);
+    if (!fallbackItem) {
+      return item;
+    }
+
+    return {
+      ...fallbackItem,
+      ...item,
+      checkpointState: item.checkpointState || fallbackItem.checkpointState,
+      currentCheckpoint: item.currentCheckpoint || fallbackItem.currentCheckpoint,
+      currentPhase: item.currentPhase || fallbackItem.currentPhase
+    };
+  });
+
+  const knownIds = new Set(merged.map((item) => item.id));
+  for (const fallbackItem of fallback) {
+    if (!knownIds.has(fallbackItem.id)) {
+      merged.push(fallbackItem);
+    }
+  }
+
+  return merged;
 }
 
 function scanWorkItems(intentPath, intentId, stateWorkItems, warnings) {
@@ -202,11 +280,15 @@ function scanRuns(rootPath, normalizedState) {
     const stateActiveRun = stateActiveMap.get(runId);
     const stateCompletedRun = stateCompletedMap.get(runId);
 
-    const workItems = (stateActiveRun?.workItems && stateActiveRun.workItems.length > 0)
+    const stateRunWorkItems = (stateActiveRun?.workItems && stateActiveRun.workItems.length > 0)
       ? stateActiveRun.workItems
       : ((stateCompletedRun?.workItems && stateCompletedRun.workItems.length > 0)
         ? stateCompletedRun.workItems
-        : parsedRunLog.workItems);
+        : []);
+    const workItems = mergeRunWorkItems(
+      stateRunWorkItems.length > 0 ? stateRunWorkItems : parsedRunLog.workItems,
+      parsedRunLog.workItems
+    );
 
     const completedAt = stateCompletedRun?.completed || parsedRunLog.completedAt || undefined;
 
@@ -215,6 +297,8 @@ function scanRuns(rootPath, normalizedState) {
       scope: stateActiveRun?.scope || parsedRunLog.scope || 'single',
       workItems,
       currentItem: stateActiveRun?.currentItem || parsedRunLog.currentItem || null,
+      checkpointState: stateActiveRun?.checkpointState || parsedRunLog.checkpointState,
+      currentCheckpoint: stateActiveRun?.currentCheckpoint || parsedRunLog.currentCheckpoint,
       folderPath,
       startedAt: stateActiveRun?.started || parsedRunLog.startedAt || '',
       completedAt: completedAt === 'null' ? undefined : completedAt,
