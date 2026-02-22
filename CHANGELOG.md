@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 You can also view this changelog at [specs.md/changelog](https://specs.md/changelog).
 
+## [0.1.49] - 2026-02-22
+
+### Added
+
+- Release ops: Added manual `workflow_dispatch` trigger to `NPM Package Release` workflow for recovery/retry publishing
+
+### Changed
+
+- Dashboard: In the Runs tab, navigating the Worktrees table with `↑/↓` (or `j/k`) now switches worktree context immediately
+- Dashboard: Current Run and related sections now refresh directly from the selected worktree without requiring `w` overlay confirmation
+
+### Fixed
+
+- Release pipeline: Prevented npm publish failures caused by concurrent workflow pushes by adding release concurrency plus rebase-and-retry push logic for version bump commits
+- FIRE docs/specs: Standardized run ID references to `run-<worktree>-NNN` to avoid cross-worktree run ID collisions in parallel agent workflows
+
 ## [0.1.27] - 2026-02-22
 
 ### Changed
@@ -221,6 +237,7 @@ The VS Code extension now shows real-time phase progress for each work item in F
 
 ---
 
+[0.1.49]: https://github.com/fabriqaai/specs.md/compare/v0.1.47...v0.1.49
 [0.1.27]: https://github.com/fabriqaai/specs.md/compare/v0.1.26...v0.1.27
 [0.1.26]: https://github.com/fabriqaai/specs.md/compare/v0.1.25...v0.1.26
 [0.1.23]: https://github.com/fabriqaai/specs.md/compare/v0.1.22...v0.1.23

@@ -10,6 +10,22 @@ All notable changes to specs.md.
   **Subscribe to updates:** [RSS Feed](/changelog/rss.xml) | [GitHub Releases](https://github.com/fabriqaai/specs.md/releases)
 </Info>
 
+<Update label="February 22, 2026" description="v0.1.49" tags={["FIRE", "CLI", "Release"]}>
+### Added
+
+- Added manual `workflow_dispatch` support to the npm package release workflow for fast recovery when a publish run is interrupted
+
+### Changed
+
+- Runs tab worktree navigation now switches context immediately when moving between rows in the Worktrees section (`↑/↓`, `j/k`)
+- Current Run and related sections now refresh directly from the selected worktree without needing `w` overlay confirmation
+
+### Fixed
+
+- NPM release workflow now avoids non-fast-forward publish failures by using release concurrency plus rebase-and-retry push logic for version bump commits
+- FIRE documentation now consistently uses `run-<worktree>-NNN` examples to avoid run ID conflicts across parallel worktree-based agent sessions
+</Update>
+
 <Update label="February 22, 2026" description="v0.1.27" tags={["FIRE", "CLI", "Worktrees"]}>
 ### Changed
 
