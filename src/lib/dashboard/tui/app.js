@@ -253,6 +253,247 @@ function getCurrentRun(snapshot) {
   return activeRuns[0] || null;
 }
 
+function normalizeToken(value) {
+  if (typeof value !== 'string') {
+    return '';
+  }
+  return value.toLowerCase().trim().replace(/[\s-]+/g, '_');
+}
+
+function getCurrentFireWorkItem(run) {
+  const workItems = Array.isArray(run?.workItems) ? run.workItems : [];
+  if (workItems.length === 0) {
+    return null;
+  }
+  return workItems.find((item) => item.id === run.currentItem)
+    || workItems.find((item) => normalizeToken(item?.status) === 'in_progress')
+    || workItems[0]
+    || null;
+}
+
+function readFileTextSafe(filePath) {
+  try {
+    return fs.readFileSync(filePath, 'utf8');
+  } catch {
+    return null;
+  }
+}
+
+function extractFrontmatterBlock(content) {
+  if (typeof content !== 'string') {
+    return null;
+  }
+  const match = content.match(/^---\r?\n([\s\S]*?)\r?\n---/);
+  return match ? match[1] : null;
+}
+
+function extractFrontmatterValue(frontmatterBlock, key) {
+  if (typeof frontmatterBlock !== 'string' || typeof key !== 'string' || key === '') {
+    return null;
+  }
+
+  const escapedKey = key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const expression = new RegExp(`^${escapedKey}\\s*:\\s*(.+)$`, 'mi');
+  const match = frontmatterBlock.match(expression);
+  if (!match) {
+    return null;
+  }
+
+  const raw = String(match[1] || '').trim();
+  if (raw === '') {
+    return '';
+  }
+
+  return raw
+    .replace(/^["']/, '')
+    .replace(/["']$/, '')
+    .trim();
+}
+
+function parseFirePlanApprovalState(run) {
+  if (!run || typeof run.folderPath !== 'string' || run.folderPath.trim() === '') {
+    return { hasPlan: false, approved: false, checkpoint: null };
+  }
+
+  const planPath = path.join(run.folderPath, 'plan.md');
+  if (!fileExists(planPath)) {
+    return { hasPlan: false, approved: false, checkpoint: null };
+  }
+
+  const content = readFileTextSafe(planPath);
+  const frontmatter = extractFrontmatterBlock(content);
+  if (!frontmatter) {
+    return { hasPlan: true, approved: false, checkpoint: null };
+  }
+
+  const approvedAt = extractFrontmatterValue(frontmatter, 'approved_at');
+  const checkpoint = extractFrontmatterValue(frontmatter, 'checkpoint');
+  const missingTokens = new Set([
+    '',
+    'null',
+    'none',
+    'pending',
+    'unknown',
+    'n/a',
+    'false',
+    'no',
+    'assumed-from-user-n'
+  ]);
+  const normalizedApprovedAt = normalizeToken(approvedAt || '');
+
+  return {
+    hasPlan: true,
+    approved: !missingTokens.has(normalizedApprovedAt),
+    checkpoint: checkpoint || null
+  };
+}
+
+function isFireRunAwaitingApproval(run, currentWorkItem) {
+  const mode = normalizeToken(currentWorkItem?.mode);
+  const status = normalizeToken(currentWorkItem?.status);
+  if (!['confirm', 'validate'].includes(mode) || status !== 'in_progress') {
+    return false;
+  }
+
+  const phase = normalizeToken(getCurrentPhaseLabel(run, currentWorkItem));
+  if (phase !== 'plan') {
+    return false;
+  }
+
+  const planState = parseFirePlanApprovalState(run);
+  if (!planState.hasPlan) {
+    return false;
+  }
+
+  return !planState.approved;
+}
+
+function detectFireRunApprovalGate(snapshot) {
+  const run = getCurrentRun(snapshot);
+  if (!run) {
+    return null;
+  }
+
+  const currentWorkItem = getCurrentFireWorkItem(run);
+  if (!currentWorkItem) {
+    return null;
+  }
+
+  if (!isFireRunAwaitingApproval(run, currentWorkItem)) {
+    return null;
+  }
+
+  const mode = String(currentWorkItem?.mode || 'confirm').toUpperCase();
+  const itemId = String(currentWorkItem?.id || run.currentItem || 'unknown-item');
+  return {
+    flow: 'fire',
+    title: 'Approval Needed',
+    message: `${run.id}: ${itemId} (${mode}) is waiting at plan checkpoint`
+  };
+}
+
+function normalizeStageName(stage) {
+  return normalizeToken(stage).replace(/_/g, '-');
+}
+
+function getAidlcCheckpointSignalFiles(boltType, stageName) {
+  const normalizedType = normalizeToken(boltType).replace(/_/g, '-');
+  const normalizedStage = normalizeStageName(stageName);
+
+  if (normalizedType === 'simple-construction-bolt') {
+    if (normalizedStage === 'plan') return ['implementation-plan.md'];
+    if (normalizedStage === 'implement') return ['implementation-walkthrough.md'];
+    if (normalizedStage === 'test') return ['test-walkthrough.md'];
+    return [];
+  }
+
+  if (normalizedType === 'ddd-construction-bolt') {
+    if (normalizedStage === 'model') return ['ddd-01-domain-model.md'];
+    if (normalizedStage === 'design') return ['ddd-02-technical-design.md'];
+    if (normalizedStage === 'implement') return ['implementation-walkthrough.md'];
+    if (normalizedStage === 'test') return ['ddd-03-test-report.md'];
+    return [];
+  }
+
+  if (normalizedType === 'spike-bolt') {
+    if (normalizedStage === 'explore') return ['spike-exploration.md'];
+    if (normalizedStage === 'document') return ['spike-report.md'];
+    return [];
+  }
+
+  return [];
+}
+
+function hasAidlcCheckpointSignal(bolt, stageName) {
+  const fileNames = Array.isArray(bolt?.files) ? bolt.files : [];
+  const lowerNames = new Set(fileNames.map((name) => String(name || '').toLowerCase()));
+  const expectedFiles = getAidlcCheckpointSignalFiles(bolt?.type, stageName)
+    .map((name) => String(name).toLowerCase());
+
+  for (const expectedFile of expectedFiles) {
+    if (lowerNames.has(expectedFile)) {
+      return true;
+    }
+  }
+
+  if (normalizeStageName(stageName) === 'adr') {
+    for (const name of lowerNames) {
+      if (/^adr-[\w-]+\.md$/.test(name)) {
+        return true;
+      }
+    }
+  }
+
+  return false;
+}
+
+function isAidlcBoltAwaitingApproval(bolt) {
+  if (!bolt || normalizeToken(bolt.status) !== 'in_progress') {
+    return false;
+  }
+
+  const currentStage = normalizeStageName(bolt.currentStage);
+  if (!currentStage) {
+    return false;
+  }
+
+  const stages = Array.isArray(bolt.stages) ? bolt.stages : [];
+  const stageMeta = stages.find((stage) => normalizeStageName(stage?.name) === currentStage);
+  if (normalizeToken(stageMeta?.status) === 'completed') {
+    return false;
+  }
+
+  return hasAidlcCheckpointSignal(bolt, currentStage);
+}
+
+function detectAidlcBoltApprovalGate(snapshot) {
+  const bolt = getCurrentBolt(snapshot);
+  if (!bolt) {
+    return null;
+  }
+
+  if (!isAidlcBoltAwaitingApproval(bolt)) {
+    return null;
+  }
+
+  return {
+    flow: 'aidlc',
+    title: 'Approval Needed',
+    message: `${bolt.id}: ${bolt.currentStage || 'current'} stage is waiting for confirmation`
+  };
+}
+
+function detectDashboardApprovalGate(snapshot, flow) {
+  const effectiveFlow = getEffectiveFlow(flow, snapshot);
+  if (effectiveFlow === 'fire') {
+    return detectFireRunApprovalGate(snapshot);
+  }
+  if (effectiveFlow === 'aidlc') {
+    return detectAidlcBoltApprovalGate(snapshot);
+  }
+  return null;
+}
+
 function getCurrentPhaseLabel(run, currentWorkItem) {
   const phase = currentWorkItem?.currentPhase || '';
   if (typeof phase === 'string' && phase !== '') {
@@ -1185,10 +1426,8 @@ function buildFireCurrentRunGroups(snapshot) {
 
   const workItems = Array.isArray(run.workItems) ? run.workItems : [];
   const completed = workItems.filter((item) => item.status === 'completed').length;
-  const currentWorkItem = workItems.find((item) => item.id === run.currentItem)
-    || workItems.find((item) => item.status === 'in_progress')
-    || workItems[0]
-    || null;
+  const currentWorkItem = getCurrentFireWorkItem(run);
+  const awaitingApproval = isFireRunAwaitingApproval(run, currentWorkItem);
 
   const currentPhase = getCurrentPhaseLabel(run, currentWorkItem);
   const phaseTrack = buildPhaseTrack(currentPhase);
@@ -1232,7 +1471,7 @@ function buildFireCurrentRunGroups(snapshot) {
   return [
     {
       key: `current:run:${run.id}:summary`,
-      label: `${run.id} [${run.scope}] ${completed}/${workItems.length} items`,
+      label: `${run.id} [${run.scope}] ${completed}/${workItems.length} items${awaitingApproval ? ' [APPROVAL]' : ''}`,
       files: []
     },
     {
@@ -1258,9 +1497,10 @@ function buildCurrentGroups(snapshot, flow) {
     }
     const stages = Array.isArray(bolt.stages) ? bolt.stages : [];
     const completedStages = stages.filter((stage) => stage.status === 'completed').length;
+    const awaitingApproval = isAidlcBoltAwaitingApproval(bolt);
     return [{
       key: `current:bolt:${bolt.id}`,
-      label: `${bolt.id} [${bolt.type}] ${completedStages}/${stages.length} stages`,
+      label: `${bolt.id} [${bolt.type}] ${completedStages}/${stages.length} stages${awaitingApproval ? ' [APPROVAL]' : ''}`,
       files: filterExistingFiles([
         ...collectAidlcBoltFiles(bolt),
         ...collectAidlcIntentContextFiles(snapshot, bolt.intent)
@@ -2403,6 +2643,10 @@ function createDashboardApp(deps) {
     }, [showErrorPanelForSections]);
 
     const effectiveFlow = getEffectiveFlow(activeFlow, snapshot);
+    const approvalGate = detectDashboardApprovalGate(snapshot, activeFlow);
+    const approvalGateLine = approvalGate
+      ? `[APPROVAL NEEDED] ${approvalGate.message}`
+      : '';
     const currentGroups = buildCurrentGroups(snapshot, activeFlow);
     const currentExpandedGroups = { ...expandedGroups };
     for (const group of currentGroups) {
@@ -2411,11 +2655,24 @@ function createDashboardApp(deps) {
       }
     }
 
-    const currentRunRows = toExpandableRows(
+    const currentRunRowsBase = toExpandableRows(
       currentGroups,
       getNoCurrentMessage(effectiveFlow),
       currentExpandedGroups
     );
+    const currentRunRows = approvalGate
+      ? [
+        {
+          kind: 'info',
+          key: 'approval-gate',
+          label: approvalGateLine,
+          color: 'yellow',
+          bold: true,
+          selectable: false
+        },
+        ...currentRunRowsBase
+      ]
+      : currentRunRowsBase;
     const shouldHydrateSecondaryTabs = deferredTabsReady || ui.view !== 'runs';
     const runFileGroups = buildRunFileEntityGroups(snapshot, activeFlow, {
       includeBacklog: shouldHydrateSecondaryTabs
@@ -3027,12 +3284,14 @@ function createDashboardApp(deps) {
     const showErrorPanel = Boolean(error) && rows >= 18;
     const showGlobalErrorPanel = showErrorPanel && ui.view !== 'health' && !ui.showHelp;
     const showErrorInline = Boolean(error) && !showErrorPanel;
+    const showApprovalBanner = approvalGateLine !== '' && !ui.showHelp;
     const showStatusLine = statusLine !== '';
     const densePanels = rows <= 28 || cols <= 120;
 
     const reservedRows =
       2 +
       (showFlowBar ? 1 : 0) +
+      (showApprovalBanner ? 1 : 0) +
       (showFooterHelpLine ? 1 : 0) +
       (showGlobalErrorPanel ? 5 : 0) +
       (showErrorInline ? 1 : 0) +
@@ -3266,6 +3525,13 @@ function createDashboardApp(deps) {
       React.createElement(Text, { color: 'cyan' }, buildHeaderLine(snapshot, activeFlow, watchEnabled, watchStatus, lastRefreshAt, ui.view, fullWidth)),
       React.createElement(FlowBar, { activeFlow, width: fullWidth, flowIds: availableFlowIds }),
       React.createElement(TabsBar, { view: ui.view, width: fullWidth, icons, flow: activeFlow }),
+      showApprovalBanner
+        ? React.createElement(
+          Text,
+          { color: 'black', backgroundColor: 'yellow', bold: true },
+          truncate(approvalGateLine, fullWidth)
+        )
+        : null,
       showErrorInline
         ? React.createElement(Text, { color: 'red' }, truncate(buildErrorLines(error, fullWidth)[0] || 'Error', fullWidth))
         : null,
@@ -3300,5 +3566,8 @@ module.exports = {
   truncate,
   fitLines,
   safeJsonHash,
-  allocateSingleColumnPanels
+  allocateSingleColumnPanels,
+  detectDashboardApprovalGate,
+  detectFireRunApprovalGate,
+  detectAidlcBoltApprovalGate
 };
