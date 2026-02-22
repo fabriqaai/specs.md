@@ -1129,9 +1129,9 @@ function createDashboardApp(deps) {
         });
 
         // Resize in some terminals can leave stale frame rows behind.
-        // Force clear so next render paints from a clean origin.
+        // Keep the clear operation minimal to avoid triggering scrollback churn.
         if (typeof stdout.write === 'function' && stdout.isTTY !== false) {
-          stdout.write('\u001B[2J\u001B[3J\u001B[H');
+          stdout.write('\u001B[H\u001B[J');
         }
       };
 
@@ -1205,16 +1205,6 @@ function createDashboardApp(deps) {
       };
     }, [watchEnabled, refreshMs, refresh, rootPath, workspacePath, resolveRootPathForFlow, resolveRootPathsForFlow, activeFlow, ui.view, worktreeWatchSignature, selectedWorktreeId]);
 
-    useEffect(() => {
-      if (!stdout || typeof stdout.write !== 'function') {
-        return;
-      }
-      if (stdout.isTTY === false) {
-        return;
-      }
-      stdout.write('\u001B[2J\u001B[3J\u001B[H');
-    }, [stdout]);
-
     const cols = Number.isFinite(terminalSize.columns) ? terminalSize.columns : (process.stdout.columns || 120);
     const rows = Number.isFinite(terminalSize.rows) ? terminalSize.rows : (process.stdout.rows || 40);
 
@@ -1228,6 +1218,8 @@ function createDashboardApp(deps) {
     const showApprovalBanner = approvalGateLine !== '' && !ui.showHelp && !worktreeOverlayOpen;
     const showLegacyStatusLine = statusLine !== '' && !showCommandLogLine;
     const densePanels = rows <= 28 || cols <= 120;
+    const panelFrameRows = 3;
+    const resolvePanelBodyRows = (rowBudget) => Math.max(1, Math.floor(Math.max(1, rowBudget) - panelFrameRows));
 
     const reservedRows =
       2 +
@@ -1509,7 +1501,7 @@ function createDashboardApp(deps) {
       const leftPanels = allocateSingleColumnPanels(leftCandidates, contentRowsBudget);
       const rightPanel = {
         ...rightPanelBase,
-        maxLines: Math.max(4, contentRowsBudget)
+        maxLines: resolvePanelBodyRows(contentRowsBudget)
       };
 
       contentNode = React.createElement(
@@ -1563,7 +1555,7 @@ function createDashboardApp(deps) {
       const mainPanels = allocateSingleColumnPanels(mainCandidates, contentRowsBudget);
       const previewPanel = {
         ...previewPanelBase,
-        maxLines: Math.max(4, contentRowsBudget)
+        maxLines: resolvePanelBodyRows(contentRowsBudget)
       };
 
       contentNode = React.createElement(

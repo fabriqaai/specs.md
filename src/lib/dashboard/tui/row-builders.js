@@ -1,6 +1,7 @@
 const path = require('path');
 const { spawnSync } = require('child_process');
 const { truncate, normalizePanelLine, clampIndex, fileExists } = require('./helpers');
+const { sanitizeRenderLine } = require('./overlays');
 const {
   getEffectiveFlow,
   getCurrentRun,
@@ -594,8 +595,9 @@ function buildInteractiveRowsLines(rows, selectedIndex, icons, width, isFocusedS
       const marker = row.expandable
         ? (row.expanded ? (icons.groupExpanded || 'v') : (icons.groupCollapsed || '>'))
         : '-';
+      const safeLabel = sanitizeRenderLine(row.label || '');
       return {
-        text: truncate(`${cursor} ${marker} ${row.label}`, width),
+        text: truncate(`${cursor} ${marker} ${safeLabel}`, width),
         color: isSelected ? (isFocusedSection ? 'green' : 'cyan') : undefined,
         bold: isSelected,
         selected: isSelected
@@ -604,8 +606,9 @@ function buildInteractiveRowsLines(rows, selectedIndex, icons, width, isFocusedS
 
     if (row.kind === 'file' || row.kind === 'git-file' || row.kind === 'git-commit') {
       const scope = row.scope ? `[${formatScope(row.scope)}] ` : '';
+      const safeLabel = sanitizeRenderLine(row.label || '');
       return {
-        text: truncate(`${cursor}   ${icons.runFile} ${scope}${row.label}`, width),
+        text: truncate(`${cursor}   ${icons.runFile} ${scope}${safeLabel}`, width),
         color: isSelected ? (isFocusedSection ? 'green' : 'cyan') : 'gray',
         bold: isSelected,
         selected: isSelected
@@ -623,7 +626,7 @@ function buildInteractiveRowsLines(rows, selectedIndex, icons, width, isFocusedS
     }
 
     return {
-      text: truncate(`${isSelected ? `${cursor} ` : '  '}${row.label || ''}`, width),
+      text: truncate(`${isSelected ? `${cursor} ` : '  '}${sanitizeRenderLine(row.label || '')}`, width),
       color: isSelected ? (isFocusedSection ? 'green' : 'cyan') : (row.color || 'gray'),
       bold: isSelected || Boolean(row.bold),
       selected: isSelected

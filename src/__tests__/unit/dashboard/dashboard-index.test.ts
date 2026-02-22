@@ -12,7 +12,7 @@ describe('dashboard index helpers', () => {
     clearTerminalOutput({ isTTY: true, write });
 
     expect(write).toHaveBeenCalledTimes(1);
-    expect(write).toHaveBeenCalledWith('\u001B[2J\u001B[3J\u001B[H');
+    expect(write).toHaveBeenCalledWith('\u001B[H\u001B[J');
   });
 
   it('does not clear output for non-tty streams', () => {
@@ -27,7 +27,7 @@ describe('dashboard index helpers', () => {
     clearTerminalOutput({ write });
 
     expect(write).toHaveBeenCalledTimes(1);
-    expect(write).toHaveBeenCalledWith('\u001B[2J\u001B[3J\u001B[H');
+    expect(write).toHaveBeenCalledWith('\u001B[H\u001B[J');
   });
 
   it('wraps stdout to force tty mode for ink', () => {

@@ -31,7 +31,8 @@ function clearTerminalOutput(stream = process.stdout) {
   if (typeof console.clear === 'function') {
     console.clear();
   }
-  stream.write('\u001B[2J\u001B[3J\u001B[H');
+  // Avoid wiping scrollback; just clear the current visible frame.
+  stream.write('\u001B[H\u001B[J');
 }
 
 function createInkStdout(stream = process.stdout) {
