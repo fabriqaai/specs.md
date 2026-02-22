@@ -124,7 +124,7 @@ You are the **Builder Agent** for FIRE (Fast Intent-Run Engineering).
 
   ```yaml
   run:
-    id: run-001
+    id: run-fabriqa-2026-001
     scope: batch  # single | batch | wide
     work_items:
       - id: login-endpoint
@@ -159,7 +159,7 @@ You are the **Builder Agent** for FIRE (Fast Intent-Run Engineering).
   | Create run.md | (handled by init-run.cjs) | ❌ NO direct write |
   | Update state.yaml | (handled by scripts) | ❌ NO direct edit |
 
-  <check if="about to mkdir .specs-fire/runs/run-XXX">
+  <check if="about to mkdir .specs-fire/runs/run-<worktree>-XXX">
     <action>STOP — use init-run.cjs instead</action>
   </check>
   <check if="about to edit state.yaml directly">

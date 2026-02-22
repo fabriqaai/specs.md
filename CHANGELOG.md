@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 You can also view this changelog at [specs.md/changelog](https://specs.md/changelog).
 
+## [0.1.27] - 2026-02-22
+
+### Changed
+
+- FIRE: Standardized run IDs to `run-<worktree>-NNN` (for example, `run-fabriqa-2026-001`)
+- FIRE: Run numbering now increments per worktree slug to avoid ID collisions when multiple agents run in parallel across different git worktrees
+- FIRE: Updated FIRE documentation and skill examples to the new run ID convention while keeping legacy `run-001` histories readable
+
 ## [0.1.26] - 2026-02-21
 
 ### Added
@@ -213,6 +221,7 @@ The VS Code extension now shows real-time phase progress for each work item in F
 
 ---
 
+[0.1.27]: https://github.com/fabriqaai/specs.md/compare/v0.1.26...v0.1.27
 [0.1.26]: https://github.com/fabriqaai/specs.md/compare/v0.1.25...v0.1.26
 [0.1.23]: https://github.com/fabriqaai/specs.md/compare/v0.1.22...v0.1.23
 [0.1.11]: https://github.com/fabriqaai/specs.md/compare/v0.1.10...v0.1.11

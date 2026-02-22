@@ -66,7 +66,7 @@ state:
       - active: "List of currently active runs (supports multiple parallel runs)"
       - completed: "List of completed runs with id, work_item, intent, completed timestamp"
     # Each run (active or completed) has:
-    #   - id: "Run ID (e.g., run-001)"
+    #   - id: "Run ID (e.g., run-fabriqa-2026-001)"
     #   - scope: "single | batch | wide"
     #   - work_items: "List of work items in this run"
     #   - current_item: "Work item currently being executed (active runs only)"
@@ -93,9 +93,9 @@ naming:
     note: "Kebab-case, action-oriented name"
 
   runs:
-    format: "run-{NNN}/"
-    example: "run-001/"
-    note: "Sequential 3-digit number, folder per run"
+    format: "run-{worktree}-{NNN}/"
+    example: "run-fabriqa-2026-001/"
+    note: "Sequential 3-digit number per worktree, folder per run"
     contents:
       - "run.md"           # Run log (created by init-run.cjs)
       - "plan.md"          # Implementation plan (ALL modes, created BEFORE implementation)

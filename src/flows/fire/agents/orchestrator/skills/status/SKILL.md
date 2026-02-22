@@ -639,7 +639,7 @@ Detect inconsistencies and offer interactive resolution.
 
   ## Active Runs
 
-  - **Run**: run-002 | **Scope**: single
+  - **Run**: run-fabriqa-2026-002 | **Scope**: single
   - **Current Item**: session-management
   - **Started**: 2026-01-19T10:30:00Z
 
@@ -657,7 +657,7 @@ Detect inconsistencies and offer interactive resolution.
 
   | # | Type | Location | Issue | Suggested Fix |
   |---|------|----------|-------|---------------|
-  | 1 | 🟡 | run-002 | Run started 3 days ago, may be stale | Resume or abandon |
+  | 1 | 🟡 | run-fabriqa-2026-002 | Run started 3 days ago, may be stale | Resume or abandon |
   | 2 | 🔵 | login-endpoint | Frontmatter says 'pending' but state says 'completed' | Sync frontmatter |
   | 3 | 🟡 | analytics-dashboard.md | Work item on disk but not tracked | Add to state.yaml |
 

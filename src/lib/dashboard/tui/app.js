@@ -2308,6 +2308,20 @@ function rowToFileEntry(row) {
   };
 }
 
+function rowToWorktreeId(row) {
+  if (!row || typeof row.key !== 'string') {
+    return null;
+  }
+
+  const prefix = 'worktree:item:';
+  if (!row.key.startsWith(prefix)) {
+    return null;
+  }
+
+  const worktreeId = row.key.slice(prefix.length).trim();
+  return worktreeId === '' ? null : worktreeId;
+}
+
 function moveRowSelection(rows, currentIndex, direction) {
   if (!Array.isArray(rows) || rows.length === 0) {
     return 0;
@@ -3093,12 +3107,15 @@ function createDashboardApp(deps) {
     const selectedFocusedRow = getSelectedRow(focusedRows, focusedIndex);
     const selectedFocusedFile = rowToFileEntry(selectedFocusedRow);
 
-    const refresh = useCallback(async () => {
+    const refresh = useCallback(async (overrideSelectedWorktreeId = null) => {
       const now = new Date().toISOString();
+      const requestedWorktreeId = typeof overrideSelectedWorktreeId === 'string' && overrideSelectedWorktreeId.trim() !== ''
+        ? overrideSelectedWorktreeId.trim()
+        : selectedWorktreeId;
 
       try {
         const result = await parseSnapshotForActiveFlow(activeFlow, {
-          selectedWorktreeId
+          selectedWorktreeId: requestedWorktreeId
         });
 
         if (result?.ok) {
@@ -3149,6 +3166,40 @@ function createDashboardApp(deps) {
       }
     }, [activeFlow, parseSnapshotForActiveFlow, selectedWorktreeId, watchEnabled]);
 
+    const switchToWorktree = useCallback((nextWorktreeId, options = {}) => {
+      const normalizedNextId = typeof nextWorktreeId === 'string' ? nextWorktreeId.trim() : '';
+      if (normalizedNextId === '') {
+        setStatusLine('No worktree selected.');
+        return false;
+      }
+
+      const nextItem = worktreeItems.find((item) => item.id === normalizedNextId);
+      if (!nextItem) {
+        setStatusLine('Selected worktree is no longer available.');
+        return false;
+      }
+
+      if (!nextItem.flowAvailable) {
+        setStatusLine(`Flow is unavailable in worktree: ${getWorktreeDisplayName(nextItem)}`);
+        return false;
+      }
+
+      const changed = normalizedNextId !== selectedWorktreeId;
+      setSelectedWorktreeId(normalizedNextId);
+      setPreviewTarget(null);
+      setPreviewOpen(false);
+      setOverlayPreviewOpen(false);
+      setPreviewScroll(0);
+      setPaneFocus('main');
+
+      if (changed || options.forceRefresh) {
+        setStatusLine(`Switched to worktree: ${getWorktreeDisplayName(nextItem)}`);
+        void refresh(normalizedNextId);
+      }
+
+      return true;
+    }, [refresh, selectedWorktreeId, worktreeItems]);
+
     useInput((input, key) => {
       if ((key.ctrl && input === 'c') || input === 'q') {
         exit();
@@ -3192,20 +3243,8 @@ function createDashboardApp(deps) {
 
         if (key.return || key.enter) {
           const selectedOverlayItem = worktreeItems[clampIndex(worktreeOverlayIndex, worktreeItems.length || 1)];
-          if (!selectedOverlayItem) {
-            setStatusLine('No worktree selected.');
-            setWorktreeOverlayOpen(false);
-            return;
-          }
-          setSelectedWorktreeId(selectedOverlayItem.id);
+          switchToWorktree(selectedOverlayItem?.id || '', { forceRefresh: true });
           setWorktreeOverlayOpen(false);
-          setPreviewTarget(null);
-          setPreviewOpen(false);
-          setOverlayPreviewOpen(false);
-          setPreviewScroll(0);
-          setPaneFocus('main');
-          setStatusLine(`Switched to worktree: ${getWorktreeDisplayName(selectedOverlayItem)}`);
-          void refresh();
           return;
         }
 
@@ -3460,6 +3499,15 @@ function createDashboardApp(deps) {
           ...previous,
           [targetSection]: nextIndex
         }));
+
+        if (targetSection === 'worktrees' && worktreeSectionEnabled) {
+          const nextRow = getSelectedRow(targetRows, nextIndex);
+          const nextWorktreeId = rowToWorktreeId(nextRow);
+          if (nextWorktreeId && nextWorktreeId !== selectedWorktreeId) {
+            switchToWorktree(nextWorktreeId);
+          }
+        }
+
         return;
       }
 
