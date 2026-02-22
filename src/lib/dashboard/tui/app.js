@@ -1457,13 +1457,13 @@ function createDashboardApp(deps) {
     }
 
     const panels = allocateSingleColumnPanels(panelCandidates, contentRowsBudget);
-    const splitPreviewLayout = ui.view === 'runs'
-      && !ui.showHelp
+    const splitPreviewLayout = !ui.showHelp
       && !worktreeOverlayOpen
       && previewOpen
       && !overlayPreviewOpen
       && !ultraCompact
-      && fullWidth >= 110
+      && ui.view !== 'git'
+      && fullWidth >= 96
       && panelCandidates.some((panel) => panel?.key === 'preview');
     const gitHierarchyLayout = ui.view === 'git'
       && !ui.showHelp
