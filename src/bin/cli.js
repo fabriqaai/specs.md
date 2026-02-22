@@ -24,6 +24,7 @@ program
     .description('Live terminal dashboard for flow state (FIRE first)')
     .option('--flow <flow>', 'Flow to inspect (fire|aidlc|simple), default auto-detect')
     .option('--path <dir>', 'Workspace path', process.cwd())
+    .option('--worktree <nameOrPath>', 'Initial git worktree (branch name, worktree name, id, or absolute path)')
     .option('--refresh-ms <n>', 'Fallback refresh interval in milliseconds (default: 1000)', '1000')
     .option('--no-watch', 'Render once and exit')
     .action((options) => dashboard.run(options));

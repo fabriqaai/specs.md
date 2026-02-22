@@ -32,13 +32,19 @@ function createDebouncedTrigger(callback, delayMs) {
 function createWatchRuntime(options) {
   const {
     rootPath,
+    rootPaths,
     onRefresh,
     onError,
     debounceMs = 250
   } = options;
 
-  if (!rootPath || typeof rootPath !== 'string') {
-    throw new Error('rootPath is required for watch runtime');
+  const roots = Array.from(new Set([
+    ...(Array.isArray(rootPaths) ? rootPaths : []),
+    ...(typeof rootPath === 'string' ? [rootPath] : [])
+  ].filter((value) => typeof value === 'string' && value.trim() !== '')));
+
+  if (roots.length === 0) {
+    throw new Error('rootPath or rootPaths is required for watch runtime');
   }
 
   if (typeof onRefresh !== 'function') {
@@ -51,12 +57,14 @@ function createWatchRuntime(options) {
   let started = false;
   const debounced = createDebouncedTrigger(onRefresh, debounceMs);
 
-  const watchTargets = [
-    path.join(rootPath, 'state.yaml'),
-    path.join(rootPath, 'intents'),
-    path.join(rootPath, 'runs'),
-    path.join(rootPath, 'standards')
-  ];
+  const watchTargets = roots.flatMap((baseRoot) => ([
+    path.join(baseRoot, 'state.yaml'),
+    path.join(baseRoot, 'intents'),
+    path.join(baseRoot, 'runs'),
+    path.join(baseRoot, 'standards'),
+    path.join(baseRoot, 'bolts'),
+    path.join(baseRoot, 'specs')
+  ]));
 
   function start() {
     if (started) {
@@ -103,7 +111,8 @@ function createWatchRuntime(options) {
     start,
     close,
     isActive: () => started,
-    hasPendingRefresh: () => debounced.isPending()
+    hasPendingRefresh: () => debounced.isPending(),
+    getRoots: () => [...roots]
   };
 }
 

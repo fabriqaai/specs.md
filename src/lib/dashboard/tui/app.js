@@ -206,11 +206,11 @@ function buildShortStats(snapshot, flow) {
   return `runs ${stats.activeRunsCount || 0}/${stats.completedRuns || 0} | intents ${stats.completedIntents || 0}/${stats.totalIntents || 0} | work ${stats.completedWorkItems || 0}/${stats.totalWorkItems || 0}`;
 }
 
-function buildHeaderLine(snapshot, flow, watchEnabled, watchStatus, lastRefreshAt, view, width) {
+function buildHeaderLine(snapshot, flow, watchEnabled, watchStatus, lastRefreshAt, view, width, worktreeLabel = null) {
   const projectName = snapshot?.project?.name || 'Unnamed project';
   const shortStats = buildShortStats(snapshot, flow);
-
-  const line = `${flow.toUpperCase()} | ${projectName} | ${shortStats} | watch:${watchEnabled ? watchStatus : 'off'} | ${view} | ${formatTime(lastRefreshAt)}`;
+  const worktreeSegment = worktreeLabel ? ` | wt:${worktreeLabel}` : '';
+  const line = `${flow.toUpperCase()} | ${projectName} | ${shortStats} | watch:${watchEnabled ? watchStatus : 'off'}${worktreeSegment} | ${view} | ${formatTime(lastRefreshAt)}`;
 
   return truncate(line, width);
 }
@@ -1102,7 +1102,8 @@ function getPanelTitles(flow, snapshot) {
       current: 'Current Bolt',
       files: 'Bolt Files',
       pending: 'Queued Bolts',
-      completed: 'Recent Completed Bolts'
+      completed: 'Recent Completed Bolts',
+      otherWorktrees: 'Other Worktrees: Active Bolts'
     };
   }
   if (effectiveFlow === 'simple') {
@@ -1110,18 +1111,186 @@ function getPanelTitles(flow, snapshot) {
       current: 'Current Spec',
       files: 'Spec Files',
       pending: 'Pending Specs',
-      completed: 'Recent Completed Specs'
+      completed: 'Recent Completed Specs',
+      otherWorktrees: 'Other Worktrees: Active Specs'
     };
   }
   return {
     current: 'Current Run',
     files: 'Run Files',
     pending: 'Pending Queue',
-    completed: 'Recent Completed Runs'
+    completed: 'Recent Completed Runs',
+    otherWorktrees: 'Other Worktrees: Active Runs'
   };
 }
 
-function getSectionOrderForView(view) {
+function getDashboardWorktreeMeta(snapshot) {
+  if (!snapshot || typeof snapshot !== 'object') {
+    return null;
+  }
+  const meta = snapshot.dashboardWorktrees;
+  if (!meta || typeof meta !== 'object') {
+    return null;
+  }
+  const items = Array.isArray(meta.items) ? meta.items : [];
+  if (items.length === 0) {
+    return null;
+  }
+  return {
+    ...meta,
+    items
+  };
+}
+
+function getWorktreeItems(snapshot) {
+  return getDashboardWorktreeMeta(snapshot)?.items || [];
+}
+
+function getSelectedWorktree(snapshot) {
+  const meta = getDashboardWorktreeMeta(snapshot);
+  if (!meta) {
+    return null;
+  }
+  return meta.items.find((item) => item.id === meta.selectedWorktreeId) || null;
+}
+
+function hasMultipleWorktrees(snapshot) {
+  return getWorktreeItems(snapshot).length > 1;
+}
+
+function isSelectedWorktreeMain(snapshot) {
+  const selected = getSelectedWorktree(snapshot);
+  return Boolean(selected?.isMainBranch);
+}
+
+function getWorktreeDisplayName(worktree) {
+  if (!worktree || typeof worktree !== 'object') {
+    return 'unknown';
+  }
+  if (typeof worktree.displayBranch === 'string' && worktree.displayBranch.trim() !== '') {
+    return worktree.displayBranch;
+  }
+  if (typeof worktree.branch === 'string' && worktree.branch.trim() !== '') {
+    return worktree.branch;
+  }
+  if (typeof worktree.name === 'string' && worktree.name.trim() !== '') {
+    return worktree.name;
+  }
+  return path.basename(worktree.path || '') || 'unknown';
+}
+
+function buildWorktreeRows(snapshot, flow) {
+  const meta = getDashboardWorktreeMeta(snapshot);
+  if (!meta) {
+    return [{
+      kind: 'info',
+      key: 'worktrees:none',
+      label: 'No git worktrees detected',
+      selectable: false
+    }];
+  }
+
+  const effectiveFlow = getEffectiveFlow(flow, snapshot);
+  const entityLabel = effectiveFlow === 'aidlc'
+    ? 'active bolts'
+    : (effectiveFlow === 'simple' ? 'active specs' : 'active runs');
+
+  const rows = [];
+  for (const item of meta.items) {
+    const currentLabel = item.isSelected ? '[CURRENT] ' : '';
+    const mainLabel = item.isMainBranch && !item.detached ? '[MAIN] ' : '';
+    const availabilityLabel = item.flowAvailable ? '' : ' (flow unavailable)';
+    const statusLabel = item.status === 'loading'
+      ? ' loading...'
+      : (item.status === 'error' ? ' error' : ` ${item.activeCount || 0} ${entityLabel}`);
+    const scopeLabel = item.name ? ` (${item.name})` : '';
+
+    rows.push({
+      kind: 'info',
+      key: `worktree:item:${item.id}`,
+      label: `${currentLabel}${mainLabel}${getWorktreeDisplayName(item)}${scopeLabel}${availabilityLabel}${statusLabel}`,
+      color: item.isSelected ? 'green' : (item.flowAvailable ? 'gray' : 'red'),
+      bold: item.isSelected,
+      selectable: true
+    });
+  }
+
+  return rows;
+}
+
+function buildOtherWorktreeActiveGroups(snapshot, flow) {
+  const effectiveFlow = getEffectiveFlow(flow, snapshot);
+  if (effectiveFlow === 'simple') {
+    return [];
+  }
+
+  const meta = getDashboardWorktreeMeta(snapshot);
+  if (!meta) {
+    return [];
+  }
+
+  const selectedWorktree = getSelectedWorktree(snapshot);
+  if (!selectedWorktree || !selectedWorktree.isMainBranch) {
+    return [];
+  }
+
+  const groups = [];
+  const otherItems = meta.items.filter((item) => item.id !== meta.selectedWorktreeId);
+  for (const item of otherItems) {
+    if (!item.flowAvailable || item.status === 'unavailable' || item.status === 'error') {
+      continue;
+    }
+
+    if (effectiveFlow === 'aidlc') {
+      const activeBolts = Array.isArray(item.activity?.activeBolts) ? item.activity.activeBolts : [];
+      for (const bolt of activeBolts) {
+        const stages = Array.isArray(bolt?.stages) ? bolt.stages : [];
+        const completedStages = stages.filter((stage) => stage?.status === 'completed').length;
+        groups.push({
+          key: `other:wt:${item.id}:bolt:${bolt.id}`,
+          label: `[WT ${getWorktreeDisplayName(item)}] ${bolt.id} [${bolt.type || 'bolt'}] ${completedStages}/${stages.length || 0} stages`,
+          files: collectAidlcBoltFiles(bolt).map((file) => ({ ...file, scope: 'active' }))
+        });
+      }
+      continue;
+    }
+
+    const activeRuns = Array.isArray(item.activity?.activeRuns) ? item.activity.activeRuns : [];
+    for (const run of activeRuns) {
+      const workItems = Array.isArray(run?.workItems) ? run.workItems : [];
+      const completed = workItems.filter((workItem) => workItem?.status === 'completed').length;
+      groups.push({
+        key: `other:wt:${item.id}:run:${run.id}`,
+        label: `[WT ${getWorktreeDisplayName(item)}] ${run.id} [${run.scope || 'single'}] ${completed}/${workItems.length} items`,
+        files: collectFireRunFiles(run).map((file) => ({ ...file, scope: 'active' }))
+      });
+    }
+  }
+
+  return groups;
+}
+
+function getOtherWorktreeEmptyMessage(snapshot, flow) {
+  const effectiveFlow = getEffectiveFlow(flow, snapshot);
+  if (!hasMultipleWorktrees(snapshot)) {
+    return 'No additional worktrees';
+  }
+  if (!isSelectedWorktreeMain(snapshot)) {
+    return 'Switch to main worktree to view active items from other worktrees';
+  }
+  if (effectiveFlow === 'aidlc') {
+    return 'No active bolts in other worktrees';
+  }
+  if (effectiveFlow === 'simple') {
+    return 'No active specs in other worktrees';
+  }
+  return 'No active runs in other worktrees';
+}
+
+function getSectionOrderForView(view, options = {}) {
+  const includeWorktrees = options.includeWorktrees === true;
+  const includeOtherWorktrees = options.includeOtherWorktrees === true;
+
   if (view === 'intents') {
     return ['intent-status'];
   }
@@ -1131,7 +1300,15 @@ function getSectionOrderForView(view) {
   if (view === 'health') {
     return ['standards', 'stats', 'warnings', 'error-details'];
   }
-  return ['current-run', 'run-files'];
+  const sections = [];
+  if (includeWorktrees) {
+    sections.push('worktrees');
+  }
+  sections.push('current-run', 'run-files');
+  if (includeOtherWorktrees) {
+    sections.push('other-worktrees-active');
+  }
+  return sections;
 }
 
 function cycleSection(view, currentSectionKey, direction = 1, availableSections = null) {
@@ -2203,7 +2380,8 @@ function buildQuickHelpText(view, options = {}) {
   const {
     flow = 'fire',
     previewOpen = false,
-    availableFlowCount = 1
+    availableFlowCount = 1,
+    hasWorktrees = false
   } = options;
   const isAidlc = String(flow || '').toLowerCase() === 'aidlc';
   const isSimple = String(flow || '').toLowerCase() === 'simple';
@@ -2219,7 +2397,13 @@ function buildQuickHelpText(view, options = {}) {
     }
   }
   if (view === 'runs') {
+    if (hasWorktrees) {
+      parts.push('b worktrees', 'u others');
+    }
     parts.push('a current', 'f files');
+    if (hasWorktrees) {
+      parts.push('w worktree');
+    }
   }
   parts.push(`tab1 ${activeLabel}`);
 
@@ -2238,7 +2422,8 @@ function buildHelpOverlayLines(options = {}) {
     previewOpen = false,
     paneFocus = 'main',
     availableFlowCount = 1,
-    showErrorSection = false
+    showErrorSection = false,
+    hasWorktrees = false
   } = options;
   const isAidlc = String(flow || '').toLowerCase() === 'aidlc';
   const isSimple = String(flow || '').toLowerCase() === 'simple';
@@ -2255,8 +2440,10 @@ function buildHelpOverlayLines(options = {}) {
     'esc close overlays (help/preview/fullscreen)',
     { text: '', color: undefined, bold: false },
     { text: 'Tab 1 Active', color: 'yellow', bold: true },
+    ...(hasWorktrees ? ['b focus worktrees section', 'u focus other-worktrees section'] : []),
     `a focus active ${itemLabel}`,
     `f focus ${itemLabel} files`,
+    ...(hasWorktrees ? ['w open worktree switcher'] : []),
     'up/down or j/k move selection',
     'enter expand/collapse selected folder row',
     'v or space preview selected file',
@@ -2288,6 +2475,53 @@ function buildHelpOverlayLines(options = {}) {
     { text: '', color: undefined, bold: false },
     { text: `Current view: ${String(view || 'runs').toUpperCase()}`, color: 'gray', bold: false }
   );
+
+  return lines;
+}
+
+function buildWorktreeOverlayLines(snapshot, selectedIndex, width) {
+  const meta = getDashboardWorktreeMeta(snapshot);
+  if (!meta) {
+    return [{
+      text: truncate('No worktrees available', width),
+      color: 'gray',
+      bold: false
+    }];
+  }
+
+  const items = Array.isArray(meta.items) ? meta.items : [];
+  const clampedIndex = clampIndex(selectedIndex, items.length || 1);
+  const lines = [{
+    text: truncate('Use ↑/↓ and Enter to switch. Esc closes.', width),
+    color: 'gray',
+    bold: false
+  }];
+
+  for (let index = 0; index < items.length; index += 1) {
+    const item = items[index];
+    const marker = index === clampedIndex ? '>' : ' ';
+    const current = item.isSelected ? '[CURRENT] ' : '';
+    const main = item.isMainBranch && !item.detached ? '[MAIN] ' : '';
+    const status = item.status === 'loading'
+      ? 'loading'
+      : (item.status === 'error'
+        ? 'error'
+        : (item.flowAvailable ? `${item.activeCount || 0} active` : 'flow unavailable'));
+    const pathLabel = item.path ? path.basename(item.path) : 'unknown';
+    lines.push({
+      text: truncate(`${marker} ${current}${main}${getWorktreeDisplayName(item)} (${pathLabel}) | ${status}`, width),
+      color: index === clampedIndex ? 'green' : (item.isSelected ? 'cyan' : 'gray'),
+      bold: index === clampedIndex || item.isSelected
+    });
+  }
+
+  if (meta.hasPendingScans) {
+    lines.push({
+      text: truncate('Background scan in progress for additional worktrees...', width),
+      color: 'yellow',
+      bold: false
+    });
+  }
 
   return lines;
 }
@@ -2451,6 +2685,7 @@ function createDashboardApp(deps) {
     flow,
     availableFlows,
     resolveRootPathForFlow,
+    resolveRootPathsForFlow,
     refreshMs,
     watchEnabled,
     initialSnapshot,
@@ -2660,8 +2895,10 @@ function createDashboardApp(deps) {
       health: 'standards'
     });
     const [selectionBySection, setSelectionBySection] = useState({
+      worktrees: 0,
       'current-run': 0,
       'run-files': 0,
+      'other-worktrees-active': 0,
       'intent-status': 0,
       'completed-runs': 0,
       standards: 0,
@@ -2676,6 +2913,11 @@ function createDashboardApp(deps) {
     const [previewOpen, setPreviewOpen] = useState(false);
     const [paneFocus, setPaneFocus] = useState('main');
     const [overlayPreviewOpen, setOverlayPreviewOpen] = useState(false);
+    const [worktreeOverlayOpen, setWorktreeOverlayOpen] = useState(false);
+    const [worktreeOverlayIndex, setWorktreeOverlayIndex] = useState(0);
+    const [selectedWorktreeId, setSelectedWorktreeId] = useState(
+      initialSnapshot?.dashboardWorktrees?.selectedWorktreeId || null
+    );
     const [previewScroll, setPreviewScroll] = useState(0);
     const [statusLine, setStatusLine] = useState('');
     const [lastRefreshAt, setLastRefreshAt] = useState(new Date().toISOString());
@@ -2685,9 +2927,9 @@ function createDashboardApp(deps) {
       rows: stdout?.rows || process.stdout.rows || 40
     }));
     const icons = resolveIconSet();
-    const parseSnapshotForActiveFlow = useCallback(async (flowId) => {
+    const parseSnapshotForActiveFlow = useCallback(async (flowId, context = {}) => {
       if (typeof parseSnapshotForFlow === 'function') {
-        return parseSnapshotForFlow(flowId);
+        return parseSnapshotForFlow(flowId, context);
       }
       if (typeof parseSnapshot === 'function') {
         return parseSnapshot();
@@ -2703,10 +2945,18 @@ function createDashboardApp(deps) {
 
     const previewVisibleRows = Number.isFinite(terminalSize.rows) ? terminalSize.rows : (process.stdout.rows || 40);
     const showErrorPanelForSections = Boolean(error) && previewVisibleRows >= 18;
+    const worktreeSectionEnabled = hasMultipleWorktrees(snapshot);
+    const otherWorktreesSectionEnabled = worktreeSectionEnabled
+      && isSelectedWorktreeMain(snapshot)
+      && getEffectiveFlow(activeFlow, snapshot) !== 'simple';
+
     const getAvailableSections = useCallback((viewId) => {
-      const base = getSectionOrderForView(viewId);
+      const base = getSectionOrderForView(viewId, {
+        includeWorktrees: worktreeSectionEnabled,
+        includeOtherWorktrees: otherWorktreesSectionEnabled
+      });
       return base.filter((sectionKey) => sectionKey !== 'error-details' || showErrorPanelForSections);
-    }, [showErrorPanelForSections]);
+    }, [showErrorPanelForSections, worktreeSectionEnabled, otherWorktreesSectionEnabled]);
 
     const effectiveFlow = getEffectiveFlow(activeFlow, snapshot);
     const approvalGate = detectDashboardApprovalGate(snapshot, activeFlow);
@@ -2739,6 +2989,8 @@ function createDashboardApp(deps) {
         ...currentRunRowsBase
       ]
       : currentRunRowsBase;
+    const worktreeRows = buildWorktreeRows(snapshot, activeFlow);
+
     const shouldHydrateSecondaryTabs = deferredTabsReady || ui.view !== 'runs';
     const runFileGroups = buildRunFileEntityGroups(snapshot, activeFlow, {
       includeBacklog: shouldHydrateSecondaryTabs
@@ -2753,6 +3005,12 @@ function createDashboardApp(deps) {
       runFileGroups,
       getNoFileMessage(effectiveFlow),
       runFileExpandedGroups
+    );
+    const otherWorktreeGroups = buildOtherWorktreeActiveGroups(snapshot, activeFlow);
+    const otherWorktreeRows = toExpandableRows(
+      otherWorktreeGroups,
+      getOtherWorktreeEmptyMessage(snapshot, activeFlow),
+      expandedGroups
     );
     const intentRows = shouldHydrateSecondaryTabs
       ? [
@@ -2804,8 +3062,10 @@ function createDashboardApp(deps) {
       : toLoadingRows('Loading error details...', 'error-loading');
 
     const rowsBySection = {
+      worktrees: worktreeRows,
       'current-run': currentRunRows,
       'run-files': runFileRows,
+      'other-worktrees-active': otherWorktreeRows,
       'intent-status': intentRows,
       'completed-runs': completedRows,
       standards: standardsRows,
@@ -2813,6 +3073,12 @@ function createDashboardApp(deps) {
       warnings: warningsRows,
       'error-details': errorDetailsRows
     };
+    const worktreeItems = getWorktreeItems(snapshot);
+    const selectedWorktree = getSelectedWorktree(snapshot);
+    const selectedWorktreeLabel = selectedWorktree ? getWorktreeDisplayName(selectedWorktree) : null;
+    const worktreeWatchSignature = `${snapshot?.dashboardWorktrees?.selectedWorktreeId || ''}|${worktreeItems
+      .map((item) => `${item.id}:${item.status}:${item.activeCount}:${item.flowAvailable ? '1' : '0'}`)
+      .join(',')}`;
     const rowLengthSignature = Object.entries(rowsBySection)
       .map(([key, rowsForSection]) => `${key}:${Array.isArray(rowsForSection) ? rowsForSection.length : 0}`)
       .join('|');
@@ -2831,7 +3097,9 @@ function createDashboardApp(deps) {
       const now = new Date().toISOString();
 
       try {
-        const result = await parseSnapshotForActiveFlow(activeFlow);
+        const result = await parseSnapshotForActiveFlow(activeFlow, {
+          selectedWorktreeId
+        });
 
         if (result?.ok) {
           const nextSnapshot = result.snapshot
@@ -2843,6 +3111,11 @@ function createDashboardApp(deps) {
             snapshotHashRef.current = nextSnapshotHash;
             setSnapshot(nextSnapshot);
             setLastRefreshAt(now);
+          }
+
+          const nextSelectedWorktreeId = nextSnapshot?.dashboardWorktrees?.selectedWorktreeId;
+          if (typeof nextSelectedWorktreeId === 'string' && nextSelectedWorktreeId !== '' && nextSelectedWorktreeId !== selectedWorktreeId) {
+            setSelectedWorktreeId(nextSelectedWorktreeId);
           }
 
           if (errorHashRef.current !== null) {
@@ -2874,7 +3147,7 @@ function createDashboardApp(deps) {
           setLastRefreshAt(now);
         }
       }
-    }, [activeFlow, parseSnapshotForActiveFlow, watchEnabled]);
+    }, [activeFlow, parseSnapshotForActiveFlow, selectedWorktreeId, watchEnabled]);
 
     useInput((input, key) => {
       if ((key.ctrl && input === 'c') || input === 'q') {
@@ -2898,6 +3171,44 @@ function createDashboardApp(deps) {
       }
 
       if (ui.showHelp) {
+        return;
+      }
+
+      if (worktreeOverlayOpen) {
+        if (key.escape) {
+          setWorktreeOverlayOpen(false);
+          return;
+        }
+
+        if (key.upArrow || input === 'k') {
+          setWorktreeOverlayIndex((previous) => Math.max(0, previous - 1));
+          return;
+        }
+
+        if (key.downArrow || input === 'j') {
+          setWorktreeOverlayIndex((previous) => Math.min(Math.max(0, worktreeItems.length - 1), previous + 1));
+          return;
+        }
+
+        if (key.return || key.enter) {
+          const selectedOverlayItem = worktreeItems[clampIndex(worktreeOverlayIndex, worktreeItems.length || 1)];
+          if (!selectedOverlayItem) {
+            setStatusLine('No worktree selected.');
+            setWorktreeOverlayOpen(false);
+            return;
+          }
+          setSelectedWorktreeId(selectedOverlayItem.id);
+          setWorktreeOverlayOpen(false);
+          setPreviewTarget(null);
+          setPreviewOpen(false);
+          setOverlayPreviewOpen(false);
+          setPreviewScroll(0);
+          setPaneFocus('main');
+          setStatusLine(`Switched to worktree: ${getWorktreeDisplayName(selectedOverlayItem)}`);
+          void refresh();
+          return;
+        }
+
         return;
       }
 
@@ -2925,6 +3236,13 @@ function createDashboardApp(deps) {
         return;
       }
 
+      if (ui.view === 'runs' && input === 'w' && worktreeSectionEnabled) {
+        setWorktreeOverlayIndex(clampIndex(worktreeItems.findIndex((item) => item.id === selectedWorktreeId), worktreeItems.length || 1));
+        setWorktreeOverlayOpen(true);
+        setPaneFocus('main');
+        return;
+      }
+
       if ((input === ']' || input === 'm') && availableFlowIds.length > 1) {
         snapshotHashRef.current = safeJsonHash(null);
         errorHashRef.current = null;
@@ -2938,8 +3256,10 @@ function createDashboardApp(deps) {
           return availableFlowIds[nextIndex];
         });
         setSelectionBySection({
+          worktrees: 0,
           'current-run': 0,
           'run-files': 0,
+          'other-worktrees-active': 0,
           'intent-status': 0,
           'completed-runs': 0,
           standards: 0,
@@ -2958,6 +3278,7 @@ function createDashboardApp(deps) {
         setPreviewTarget(null);
         setPreviewOpen(false);
         setOverlayPreviewOpen(false);
+        setWorktreeOverlayOpen(false);
         setPreviewScroll(0);
         setPaneFocus('main');
         return;
@@ -2976,8 +3297,10 @@ function createDashboardApp(deps) {
           return availableFlowIds[nextIndex];
         });
         setSelectionBySection({
+          worktrees: 0,
           'current-run': 0,
           'run-files': 0,
+          'other-worktrees-active': 0,
           'intent-status': 0,
           'completed-runs': 0,
           standards: 0,
@@ -2996,6 +3319,7 @@ function createDashboardApp(deps) {
         setPreviewTarget(null);
         setPreviewOpen(false);
         setOverlayPreviewOpen(false);
+        setWorktreeOverlayOpen(false);
         setPreviewScroll(0);
         setPaneFocus('main');
         return;
@@ -3045,6 +3369,11 @@ function createDashboardApp(deps) {
       }
 
       if (ui.view === 'runs') {
+        if (input === 'b' && worktreeSectionEnabled) {
+          setSectionFocus((previous) => ({ ...previous, runs: 'worktrees' }));
+          setPaneFocus('main');
+          return;
+        }
         if (input === 'a') {
           setSectionFocus((previous) => ({ ...previous, runs: 'current-run' }));
           setPaneFocus('main');
@@ -3052,6 +3381,11 @@ function createDashboardApp(deps) {
         }
         if (input === 'f') {
           setSectionFocus((previous) => ({ ...previous, runs: 'run-files' }));
+          setPaneFocus('main');
+          return;
+        }
+        if (input === 'u' && otherWorktreesSectionEnabled) {
+          setSectionFocus((previous) => ({ ...previous, runs: 'other-worktrees-active' }));
           setPaneFocus('main');
           return;
         }
@@ -3194,6 +3528,28 @@ function createDashboardApp(deps) {
     }, [refresh]);
 
     useEffect(() => {
+      const snapshotSelected = snapshot?.dashboardWorktrees?.selectedWorktreeId;
+      if (typeof snapshotSelected !== 'string' || snapshotSelected === '') {
+        return;
+      }
+      if (snapshotSelected !== selectedWorktreeId) {
+        setSelectedWorktreeId(snapshotSelected);
+      }
+    }, [snapshot?.dashboardWorktrees?.selectedWorktreeId, selectedWorktreeId]);
+
+    useEffect(() => {
+      if (!snapshot?.dashboardWorktrees?.hasPendingScans) {
+        return undefined;
+      }
+      const timer = setTimeout(() => {
+        void refresh();
+      }, 350);
+      return () => {
+        clearTimeout(timer);
+      };
+    }, [snapshot?.dashboardWorktrees?.hasPendingScans, snapshot?.generatedAt, refresh]);
+
+    useEffect(() => {
       setSelectionBySection((previous) => {
         let changed = false;
         const next = { ...previous };
@@ -3226,6 +3582,7 @@ function createDashboardApp(deps) {
 
     useEffect(() => {
       setPaneFocus('main');
+      setWorktreeOverlayOpen(false);
     }, [ui.view]);
 
     useEffect(() => {
@@ -3295,12 +3652,17 @@ function createDashboardApp(deps) {
         return undefined;
       }
 
-      const watchRootPath = resolveRootPathForFlow
+      const resolvedRootCandidates = typeof resolveRootPathsForFlow === 'function'
+        ? resolveRootPathsForFlow(activeFlow, snapshot?.dashboardWorktrees, selectedWorktreeId)
+        : null;
+      const candidateRoots = Array.isArray(resolvedRootCandidates) ? resolvedRootCandidates : [];
+      const fallbackRoot = resolveRootPathForFlow
         ? resolveRootPathForFlow(activeFlow)
         : (rootPath || `${workspacePath}/.specs-fire`);
+      const watchRoots = candidateRoots.length > 0 ? candidateRoots : [fallbackRoot];
 
       const runtime = createWatchRuntime({
-        rootPath: watchRootPath,
+        rootPaths: watchRoots,
         debounceMs: 200,
         onRefresh: () => {
           void refresh();
@@ -3329,7 +3691,7 @@ function createDashboardApp(deps) {
         clearInterval(interval);
         void runtime.close();
       };
-    }, [watchEnabled, refreshMs, refresh, rootPath, workspacePath, resolveRootPathForFlow, activeFlow]);
+    }, [watchEnabled, refreshMs, refresh, rootPath, workspacePath, resolveRootPathForFlow, resolveRootPathsForFlow, activeFlow, worktreeWatchSignature, selectedWorktreeId]);
 
     useEffect(() => {
       if (!stdout || typeof stdout.write !== 'function') {
@@ -3348,9 +3710,9 @@ function createDashboardApp(deps) {
     const showFlowBar = availableFlowIds.length > 1;
     const showFooterHelpLine = rows >= 10;
     const showErrorPanel = Boolean(error) && rows >= 18;
-    const showGlobalErrorPanel = showErrorPanel && ui.view !== 'health' && !ui.showHelp;
-    const showErrorInline = Boolean(error) && !showErrorPanel;
-    const showApprovalBanner = approvalGateLine !== '' && !ui.showHelp;
+    const showGlobalErrorPanel = showErrorPanel && ui.view !== 'health' && !ui.showHelp && !worktreeOverlayOpen;
+    const showErrorInline = Boolean(error) && !showErrorPanel && !worktreeOverlayOpen;
+    const showApprovalBanner = approvalGateLine !== '' && !ui.showHelp && !worktreeOverlayOpen;
     const showStatusLine = statusLine !== '';
     const densePanels = rows <= 28 || cols <= 120;
 
@@ -3366,7 +3728,7 @@ function createDashboardApp(deps) {
     const contentRowsBudget = Math.max(4, rows - reservedRows - frameSafetyRows);
     const ultraCompact = rows <= 14;
     const panelTitles = getPanelTitles(activeFlow, snapshot);
-    const splitPreviewLayout = previewOpen && !overlayPreviewOpen && !ui.showHelp && cols >= 110 && rows >= 16;
+    const splitPreviewLayout = previewOpen && !overlayPreviewOpen && !ui.showHelp && !worktreeOverlayOpen && cols >= 110 && rows >= 16;
     const mainPaneWidth = splitPreviewLayout
       ? Math.max(34, Math.floor((fullWidth - 1) * 0.52))
       : fullWidth;
@@ -3401,13 +3763,15 @@ function createDashboardApp(deps) {
       previewOpen,
       paneFocus,
       availableFlowCount: availableFlowIds.length,
-      showErrorSection: showErrorPanel
+      showErrorSection: showErrorPanel,
+      hasWorktrees: worktreeSectionEnabled
     });
     const quickHelpText = buildQuickHelpText(ui.view, {
       flow: activeFlow,
       previewOpen,
       paneFocus,
-      availableFlowCount: availableFlowIds.length
+      availableFlowCount: availableFlowIds.length,
+      hasWorktrees: worktreeSectionEnabled
     });
 
     let panelCandidates;
@@ -3418,6 +3782,15 @@ function createDashboardApp(deps) {
           title: 'Keyboard Shortcuts',
           lines: shortcutsOverlayLines,
           borderColor: 'cyan'
+        }
+      ];
+    } else if (worktreeOverlayOpen) {
+      panelCandidates = [
+        {
+          key: 'worktree-overlay',
+          title: 'Switch Worktree',
+          lines: buildWorktreeOverlayLines(snapshot, worktreeOverlayIndex, Math.max(18, fullWidth - 4)),
+          borderColor: 'yellow'
         }
       ];
     } else if (previewOpen && overlayPreviewOpen) {
@@ -3478,7 +3851,16 @@ function createDashboardApp(deps) {
         });
       }
     } else {
-      panelCandidates = [
+      panelCandidates = [];
+      if (worktreeSectionEnabled) {
+        panelCandidates.push({
+          key: 'worktrees',
+          title: 'Worktrees',
+          lines: sectionLines.worktrees,
+          borderColor: 'magenta'
+        });
+      }
+      panelCandidates.push(
         {
           key: 'current-run',
           title: panelTitles.current,
@@ -3491,7 +3873,15 @@ function createDashboardApp(deps) {
           lines: sectionLines['run-files'],
           borderColor: 'yellow'
         }
-      ];
+      );
+      if (otherWorktreesSectionEnabled) {
+        panelCandidates.push({
+          key: 'other-worktrees-active',
+          title: panelTitles.otherWorktrees,
+          lines: sectionLines['other-worktrees-active'],
+          borderColor: 'blue'
+        });
+      }
     }
 
     if (!ui.showHelp && previewOpen && !overlayPreviewOpen && !splitPreviewLayout) {
@@ -3577,7 +3967,7 @@ function createDashboardApp(deps) {
         panel,
         index,
         fullWidth,
-        ui.showHelp
+        (ui.showHelp || worktreeOverlayOpen)
           ? true
           : ((panel.key === 'preview' || panel.key === 'preview-overlay')
           ? paneFocus === 'preview'
@@ -3588,7 +3978,11 @@ function createDashboardApp(deps) {
     return React.createElement(
       Box,
       { flexDirection: 'column', width: fullWidth },
-      React.createElement(Text, { color: 'cyan' }, buildHeaderLine(snapshot, activeFlow, watchEnabled, watchStatus, lastRefreshAt, ui.view, fullWidth)),
+      React.createElement(
+        Text,
+        { color: 'cyan' },
+        buildHeaderLine(snapshot, activeFlow, watchEnabled, watchStatus, lastRefreshAt, ui.view, fullWidth, selectedWorktreeLabel)
+      ),
       React.createElement(FlowBar, { activeFlow, width: fullWidth, flowIds: availableFlowIds }),
       React.createElement(TabsBar, { view: ui.view, width: fullWidth, icons, flow: activeFlow }),
       showApprovalBanner

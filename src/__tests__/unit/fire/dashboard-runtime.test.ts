@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-const { createDebouncedTrigger } = require('../../../lib/dashboard/runtime/watch-runtime');
+const { createDebouncedTrigger, createWatchRuntime } = require('../../../lib/dashboard/runtime/watch-runtime');
 
 describe('dashboard watch runtime debounce', () => {
   beforeEach(() => {
@@ -41,5 +41,15 @@ describe('dashboard watch runtime debounce', () => {
 
     vi.advanceTimersByTime(200);
     expect(callback).not.toHaveBeenCalled();
+  });
+
+  it('accepts rootPaths and exposes unique roots', async () => {
+    const runtime = createWatchRuntime({
+      rootPaths: ['/tmp/a', '/tmp/a', '/tmp/b'],
+      onRefresh: vi.fn()
+    });
+
+    expect(runtime.getRoots()).toEqual(['/tmp/a', '/tmp/b']);
+    await runtime.close();
   });
 });
