@@ -2415,9 +2415,6 @@ function buildQuickHelpText(view, options = {}) {
       parts.push('b worktrees', 'u others');
     }
     parts.push('a current', 'f files');
-    if (hasWorktrees) {
-      parts.push('w worktree');
-    }
   }
   parts.push(`tab1 ${activeLabel}`);
 
@@ -2457,7 +2454,6 @@ function buildHelpOverlayLines(options = {}) {
     ...(hasWorktrees ? ['b focus worktrees section', 'u focus other-worktrees section'] : []),
     `a focus active ${itemLabel}`,
     `f focus ${itemLabel} files`,
-    ...(hasWorktrees ? ['w open worktree switcher'] : []),
     'up/down or j/k move selection',
     'enter expand/collapse selected folder row',
     'v or space preview selected file',
@@ -2960,9 +2956,7 @@ function createDashboardApp(deps) {
     const previewVisibleRows = Number.isFinite(terminalSize.rows) ? terminalSize.rows : (process.stdout.rows || 40);
     const showErrorPanelForSections = Boolean(error) && previewVisibleRows >= 18;
     const worktreeSectionEnabled = hasMultipleWorktrees(snapshot);
-    const otherWorktreesSectionEnabled = worktreeSectionEnabled
-      && isSelectedWorktreeMain(snapshot)
-      && getEffectiveFlow(activeFlow, snapshot) !== 'simple';
+    const otherWorktreesSectionEnabled = worktreeSectionEnabled;
 
     const getAvailableSections = useCallback((viewId) => {
       const base = getSectionOrderForView(viewId, {
@@ -3271,13 +3265,6 @@ function createDashboardApp(deps) {
 
       if (input === '4') {
         setUi((previous) => ({ ...previous, view: 'health' }));
-        setPaneFocus('main');
-        return;
-      }
-
-      if (ui.view === 'runs' && input === 'w' && worktreeSectionEnabled) {
-        setWorktreeOverlayIndex(clampIndex(worktreeItems.findIndex((item) => item.id === selectedWorktreeId), worktreeItems.length || 1));
-        setWorktreeOverlayOpen(true);
         setPaneFocus('main');
         return;
       }
