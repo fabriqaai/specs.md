@@ -1558,7 +1558,7 @@ function getSectionOrderForView(view, options = {}) {
     return ['standards', 'stats', 'warnings', 'error-details'];
   }
   if (view === 'git') {
-    return ['git-changes'];
+    return ['git-status', 'git-changes', 'git-branches', 'git-commits', 'git-stash', 'git-diff'];
   }
   const sections = [];
   if (includeWorktrees) {
@@ -2752,7 +2752,7 @@ function buildQuickHelpText(view, options = {}) {
     }
     parts.push('a current', 'f files');
   } else if (view === 'git') {
-    parts.push('d changes', 'c/A/p/P git(soon)');
+    parts.push('6 status', '7 files', '8 branches', '9 commits', '0 stash', '- diff');
   }
   parts.push(`tab1 ${activeLabel}`);
 
@@ -2764,7 +2764,7 @@ function buildQuickHelpText(view, options = {}) {
   return parts.join(' | ');
 }
 
-function buildLazyGitCommandStrip(view, options = {}) {
+function buildGitCommandStrip(view, options = {}) {
   const {
     hasWorktrees = false,
     previewOpen = false
@@ -2784,7 +2784,7 @@ function buildLazyGitCommandStrip(view, options = {}) {
   } else if (view === 'health') {
     parts.push('s standards', 't stats', 'w warnings');
   } else if (view === 'git') {
-    parts.push('d changes', 'space preview', 'c commit (soon)', 'A amend (soon)', 'p push (soon)', 'P pull (soon)');
+    parts.push('6 status', '7 files', '8 branches', '9 commits', '0 stash', '- diff', 'space preview');
   }
 
   if (previewOpen) {
@@ -2797,7 +2797,7 @@ function buildLazyGitCommandStrip(view, options = {}) {
   return parts.join(' | ');
 }
 
-function buildLazyGitCommandLogLine(options = {}) {
+function buildGitCommandLogLine(options = {}) {
   const {
     statusLine = '',
     activeFlow = 'fire',
@@ -2874,7 +2874,7 @@ function buildHelpOverlayLines(options = {}) {
     { text: '', color: undefined, bold: false },
     { text: 'Tab 5 Git Changes', color: 'yellow', bold: true },
     'select changed files and preview diffs',
-    'commit/push/pull shortcuts are shown in footer for LazyGit-style hierarchy',
+    '6 status | 7 files | 8 branches | 9 commits | 0 stash | - diff',
     { text: '', color: undefined, bold: false },
     { text: `Current view: ${String(view || 'runs').toUpperCase()}`, color: 'gray', bold: false }
   );
@@ -3897,24 +3897,34 @@ function createDashboardApp(deps) {
           return;
         }
       } else if (ui.view === 'git') {
-        if (input === 'd') {
+        if (input === '6') {
+          setSectionFocus((previous) => ({ ...previous, git: 'git-status' }));
+          setPaneFocus('main');
+          return;
+        }
+        if (input === '7') {
           setSectionFocus((previous) => ({ ...previous, git: 'git-changes' }));
+          setPaneFocus('main');
           return;
         }
-        if (input === 'c') {
-          setStatusLine('Git commit action is not wired yet (footer mirrors LazyGit command hierarchy).');
+        if (input === '8') {
+          setSectionFocus((previous) => ({ ...previous, git: 'git-branches' }));
+          setPaneFocus('main');
           return;
         }
-        if (input === 'A') {
-          setStatusLine('Git amend action is not wired yet (footer mirrors LazyGit command hierarchy).');
+        if (input === '9') {
+          setSectionFocus((previous) => ({ ...previous, git: 'git-commits' }));
+          setPaneFocus('main');
           return;
         }
-        if (input === 'p') {
-          setStatusLine('Git push action is not wired yet (footer mirrors LazyGit command hierarchy).');
+        if (input === '0') {
+          setSectionFocus((previous) => ({ ...previous, git: 'git-stash' }));
+          setPaneFocus('main');
           return;
         }
-        if (input === 'P') {
-          setStatusLine('Git pull action is not wired yet (footer mirrors LazyGit command hierarchy).');
+        if (input === '-') {
+          setSectionFocus((previous) => ({ ...previous, git: 'git-diff' }));
+          setPaneFocus('main');
           return;
         }
       }
@@ -4299,11 +4309,11 @@ function createDashboardApp(deps) {
       availableFlowCount: availableFlowIds.length,
       hasWorktrees: worktreeSectionEnabled
     });
-    const commandStripText = buildLazyGitCommandStrip(ui.view, {
+    const commandStripText = buildGitCommandStrip(ui.view, {
       hasWorktrees: worktreeSectionEnabled,
       previewOpen
     });
-    const commandLogLine = buildLazyGitCommandLogLine({
+    const commandLogLine = buildGitCommandLogLine({
       statusLine,
       activeFlow,
       watchEnabled,
@@ -4391,37 +4401,37 @@ function createDashboardApp(deps) {
       panelCandidates = [
         {
           key: 'git-status',
-          title: '[1]-Status',
+          title: '[6]-Status',
           lines: gitStatusPanelLines,
           borderColor: 'green'
         },
         {
           key: 'git-changes',
-          title: '[2]-Files',
+          title: '[7]-Files',
           lines: sectionLines['git-changes'],
           borderColor: 'yellow'
         },
         {
           key: 'git-branches',
-          title: '[3]-Local branches',
+          title: '[8]-Local branches',
           lines: gitBranchesPanelLines,
           borderColor: 'magenta'
         },
         {
           key: 'git-commits',
-          title: '[4]-Commits',
+          title: '[9]-Commits',
           lines: gitCommitsPanelLines,
           borderColor: 'cyan'
         },
         {
           key: 'git-stash',
-          title: '[5]-Stash',
+          title: '[0]-Stash',
           lines: gitStashPanelLines,
           borderColor: 'blue'
         },
         {
           key: 'git-diff',
-          title: '[0]-Unstaged changes',
+          title: '[-]-Unstaged changes',
           lines: gitInlineDiffLines,
           borderColor: 'yellow'
         }
@@ -4485,7 +4495,7 @@ function createDashboardApp(deps) {
     }
 
     const panels = allocateSingleColumnPanels(panelCandidates, contentRowsBudget);
-    const lazyGitHierarchyLayout = ui.view === 'git'
+    const gitHierarchyLayout = ui.view === 'git'
       && !ui.showHelp
       && !worktreeOverlayOpen
       && !overlayPreviewOpen
@@ -4506,7 +4516,7 @@ function createDashboardApp(deps) {
     });
 
     let contentNode;
-    if (lazyGitHierarchyLayout) {
+    if (gitHierarchyLayout) {
       const preferredRightPanel = panelCandidates.find((panel) => panel?.key === 'git-diff')
         || (previewOpen && !overlayPreviewOpen
           ? panelCandidates.find((panel) => panel?.key === 'preview')

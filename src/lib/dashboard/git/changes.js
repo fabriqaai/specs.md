@@ -273,7 +273,7 @@ function readUntrackedFileDiff(repoRoot, absolutePath) {
   }
 
   const result = runGit(
-    ['-c', 'color.ui=always', '--no-pager', 'diff', '--no-index', '--', '/dev/null', absolutePath],
+    ['-c', 'color.ui=false', '--no-pager', 'diff', '--no-index', '--', '/dev/null', absolutePath],
     repoRoot,
     { acceptedStatuses: [0, 1] }
   );
@@ -305,7 +305,7 @@ function loadGitDiffPreview(changeEntry) {
     }
   }
 
-  const args = ['-c', 'color.ui=always', '--no-pager', 'diff'];
+  const args = ['-c', 'color.ui=false', '--no-pager', 'diff'];
   if (bucket === 'staged') {
     args.push('--cached');
   }
