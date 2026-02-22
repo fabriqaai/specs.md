@@ -5,6 +5,7 @@ const stringWidthModule = require('string-width');
 const sliceAnsiModule = require('slice-ansi');
 const { createWatchRuntime } = require('../runtime/watch-runtime');
 const { createInitialUIState } = require('./store');
+const { loadGitDiffPreview } = require('../git/changes');
 
 const stringWidth = typeof stringWidthModule === 'function'
   ? stringWidthModule
@@ -64,6 +65,7 @@ function resolveIconSet() {
     runs: '[R]',
     overview: '[O]',
     health: '[H]',
+    git: '[G]',
     runFile: '*',
     activeFile: '>',
     groupCollapsed: '>',
@@ -74,6 +76,7 @@ function resolveIconSet() {
     runs: '󰑮',
     overview: '󰍉',
     health: '󰓦',
+    git: '󰊢',
     runFile: '󰈔',
     activeFile: '󰜴',
     groupCollapsed: '󰐕',
@@ -1120,7 +1123,47 @@ function getPanelTitles(flow, snapshot) {
     files: 'Run Files',
     pending: 'Pending Queue',
     completed: 'Recent Completed Runs',
-    otherWorktrees: 'Other Worktrees: Active Runs'
+    otherWorktrees: 'Other Worktrees: Active Runs',
+    git: 'Git Changes'
+  };
+}
+
+function getGitChangesSnapshot(snapshot) {
+  const gitChanges = snapshot?.gitChanges;
+  if (!gitChanges || typeof gitChanges !== 'object') {
+    return {
+      available: false,
+      branch: '(unavailable)',
+      upstream: null,
+      ahead: 0,
+      behind: 0,
+      counts: {
+        total: 0,
+        staged: 0,
+        unstaged: 0,
+        untracked: 0,
+        conflicted: 0
+      },
+      staged: [],
+      unstaged: [],
+      untracked: [],
+      conflicted: [],
+      clean: true
+    };
+  }
+  return {
+    ...gitChanges,
+    counts: gitChanges.counts || {
+      total: 0,
+      staged: 0,
+      unstaged: 0,
+      untracked: 0,
+      conflicted: 0
+    },
+    staged: Array.isArray(gitChanges.staged) ? gitChanges.staged : [],
+    unstaged: Array.isArray(gitChanges.unstaged) ? gitChanges.unstaged : [],
+    untracked: Array.isArray(gitChanges.untracked) ? gitChanges.untracked : [],
+    conflicted: Array.isArray(gitChanges.conflicted) ? gitChanges.conflicted : []
   };
 }
 
@@ -1299,6 +1342,9 @@ function getSectionOrderForView(view, options = {}) {
   }
   if (view === 'health') {
     return ['standards', 'stats', 'warnings', 'error-details'];
+  }
+  if (view === 'git') {
+    return ['git-changes'];
   }
   const sections = [];
   if (includeWorktrees) {
@@ -1640,6 +1686,10 @@ function formatScope(scope) {
   if (scope === 'upcoming') return 'UPNEXT';
   if (scope === 'completed') return 'DONE';
   if (scope === 'intent') return 'INTENT';
+  if (scope === 'staged') return 'STAGED';
+  if (scope === 'unstaged') return 'UNSTAGED';
+  if (scope === 'untracked') return 'UNTRACKED';
+  if (scope === 'conflicted') return 'CONFLICT';
   return 'FILE';
 }
 
@@ -2054,9 +2104,15 @@ function collectAidlcIntentContextFiles(snapshot, intentId) {
 }
 
 function filterExistingFiles(files) {
-  return (Array.isArray(files) ? files : []).filter((file) =>
-    file && typeof file.path === 'string' && typeof file.label === 'string' && fileExists(file.path)
-  );
+  return (Array.isArray(files) ? files : []).filter((file) => {
+    if (!file || typeof file.path !== 'string' || typeof file.label !== 'string') {
+      return false;
+    }
+    if (file.allowMissing === true) {
+      return true;
+    }
+    return fileExists(file.path);
+  });
 }
 
 function buildPendingGroups(snapshot, flow) {
@@ -2191,6 +2247,49 @@ function buildCompletedGroups(snapshot, flow) {
   return groups;
 }
 
+function buildGitChangeGroups(snapshot) {
+  const git = getGitChangesSnapshot(snapshot);
+
+  if (!git.available) {
+    return [];
+  }
+
+  const makeFiles = (items, scope) => items.map((item) => ({
+    label: item.relativePath,
+    path: item.path || path.join(git.rootPath || snapshot?.workspacePath || '', item.relativePath || ''),
+    scope,
+    allowMissing: true,
+    previewType: 'git-diff',
+    repoRoot: git.rootPath || snapshot?.workspacePath || '',
+    relativePath: item.relativePath || '',
+    bucket: item.bucket || scope
+  }));
+
+  const groups = [];
+  groups.push({
+    key: 'git:staged',
+    label: `staged (${git.counts.staged || 0})`,
+    files: makeFiles(git.staged, 'staged')
+  });
+  groups.push({
+    key: 'git:unstaged',
+    label: `unstaged (${git.counts.unstaged || 0})`,
+    files: makeFiles(git.unstaged, 'unstaged')
+  });
+  groups.push({
+    key: 'git:untracked',
+    label: `untracked (${git.counts.untracked || 0})`,
+    files: makeFiles(git.untracked, 'untracked')
+  });
+  groups.push({
+    key: 'git:conflicted',
+    label: `conflicts (${git.counts.conflicted || 0})`,
+    files: makeFiles(git.conflicted, 'conflicted')
+  });
+
+  return groups;
+}
+
 function toExpandableRows(groups, emptyLabel, expandedGroups) {
   if (!Array.isArray(groups) || groups.length === 0) {
     return [{
@@ -2221,12 +2320,16 @@ function toExpandableRows(groups, emptyLabel, expandedGroups) {
       for (let index = 0; index < files.length; index += 1) {
         const file = files[index];
         rows.push({
-          kind: 'file',
+          kind: file.previewType === 'git-diff' ? 'git-file' : 'file',
           key: `${group.key}:file:${file.path}:${index}`,
           label: file.label,
           path: file.path,
           scope: file.scope || 'file',
-          selectable: true
+          selectable: true,
+          previewType: file.previewType,
+          repoRoot: file.repoRoot,
+          relativePath: file.relativePath,
+          bucket: file.bucket
         });
       }
     }
@@ -2261,7 +2364,7 @@ function buildInteractiveRowsLines(rows, selectedIndex, icons, width, isFocusedS
       };
     }
 
-    if (row.kind === 'file') {
+    if (row.kind === 'file' || row.kind === 'git-file') {
       const scope = row.scope ? `[${formatScope(row.scope)}] ` : '';
       return {
         text: truncate(`${cursor}   ${icons.runFile} ${scope}${row.label}`, width),
@@ -2298,13 +2401,17 @@ function getSelectedRow(rows, selectedIndex) {
 }
 
 function rowToFileEntry(row) {
-  if (!row || row.kind !== 'file' || typeof row.path !== 'string') {
+  if (!row || (row.kind !== 'file' && row.kind !== 'git-file') || typeof row.path !== 'string') {
     return null;
   }
   return {
     label: row.label || path.basename(row.path),
     path: row.path,
-    scope: row.scope || 'file'
+    scope: row.scope || 'file',
+    previewType: row.previewType,
+    repoRoot: row.repoRoot,
+    relativePath: row.relativePath,
+    bucket: row.bucket
   };
 }
 
@@ -2401,9 +2508,9 @@ function buildQuickHelpText(view, options = {}) {
   const isSimple = String(flow || '').toLowerCase() === 'simple';
   const activeLabel = isAidlc ? 'active bolt' : (isSimple ? 'active spec' : 'active run');
 
-  const parts = ['1/2/3/4 tabs', 'g/G sections'];
+  const parts = ['1/2/3/4/5 tabs', 'g/G sections'];
 
-  if (view === 'runs' || view === 'intents' || view === 'completed' || view === 'health') {
+  if (view === 'runs' || view === 'intents' || view === 'completed' || view === 'health' || view === 'git') {
     if (previewOpen) {
       parts.push('tab pane', '↑/↓ nav/scroll', 'v/space close');
     } else {
@@ -2445,7 +2552,7 @@ function buildHelpOverlayLines(options = {}) {
     { text: 'Global', color: 'cyan', bold: true },
     'q or Ctrl+C quit',
     'r refresh snapshot',
-    `1 active ${itemLabel} | 2 intents | 3 completed ${itemPlural} | 4 standards/health`,
+    `1 active ${itemLabel} | 2 intents | 3 completed ${itemPlural} | 4 standards/health | 5 git changes`,
     'g next section | G previous section',
     'h/? toggle this shortcuts overlay',
     'esc close overlays (help/preview/fullscreen)',
@@ -2482,6 +2589,9 @@ function buildHelpOverlayLines(options = {}) {
     { text: '', color: undefined, bold: false },
     { text: 'Tab 4 Standards/Health', color: 'magenta', bold: true },
     `s standards | t stats | w warnings${showErrorSection ? ' | e errors' : ''}`,
+    { text: '', color: undefined, bold: false },
+    { text: 'Tab 5 Git Changes', color: 'yellow', bold: true },
+    'select changed files and preview diffs',
     { text: '', color: undefined, bold: false },
     { text: `Current view: ${String(view || 'runs').toUpperCase()}`, color: 'gray', bold: false }
   );
@@ -2601,20 +2711,27 @@ function buildPreviewLines(fileEntry, width, scrollOffset, options = {}) {
     return [{ text: truncate('No file selected', width), color: 'gray', bold: false }];
   }
 
-  let content;
-  try {
-    content = fs.readFileSync(fileEntry.path, 'utf8');
-  } catch (error) {
-    return [{
-      text: truncate(`Unable to read ${fileEntry.label || fileEntry.path}: ${error.message}`, width),
-      color: 'red',
-      bold: false
-    }];
+  const isGitPreview = fileEntry.previewType === 'git-diff';
+  let rawLines = [];
+  if (isGitPreview) {
+    const diffText = loadGitDiffPreview(fileEntry);
+    rawLines = String(diffText || '').split(/\r?\n/);
+  } else {
+    let content;
+    try {
+      content = fs.readFileSync(fileEntry.path, 'utf8');
+    } catch (error) {
+      return [{
+        text: truncate(`Unable to read ${fileEntry.label || fileEntry.path}: ${error.message}`, width),
+        color: 'red',
+        bold: false
+      }];
+    }
+    rawLines = String(content).split(/\r?\n/);
   }
 
-  const rawLines = String(content).split(/\r?\n/);
   const headLine = {
-    text: truncate(`file: ${fileEntry.path}`, width),
+    text: truncate(`${isGitPreview ? 'diff' : 'file'}: ${fileEntry.path}`, width),
     color: 'cyan',
     bold: true
   };
@@ -2625,7 +2742,34 @@ function buildPreviewLines(fileEntry, width, scrollOffset, options = {}) {
 
   const highlighted = cappedLines.map((rawLine, index) => {
     const prefixedLine = `${String(index + 1).padStart(4, ' ')} | ${rawLine}`;
-    const { color, bold, togglesCodeBlock } = colorizeMarkdownLine(rawLine, inCodeBlock);
+    let color;
+    let bold;
+    let togglesCodeBlock = false;
+
+    if (isGitPreview) {
+      if (rawLine.startsWith('+++ ') || rawLine.startsWith('--- ') || rawLine.startsWith('diff --git')) {
+        color = 'cyan';
+        bold = true;
+      } else if (rawLine.startsWith('@@')) {
+        color = 'magenta';
+        bold = true;
+      } else if (rawLine.startsWith('+')) {
+        color = 'green';
+        bold = false;
+      } else if (rawLine.startsWith('-')) {
+        color = 'red';
+        bold = false;
+      } else {
+        color = undefined;
+        bold = false;
+      }
+    } else {
+      const markdownStyle = colorizeMarkdownLine(rawLine, inCodeBlock);
+      color = markdownStyle.color;
+      bold = markdownStyle.bold;
+      togglesCodeBlock = markdownStyle.togglesCodeBlock;
+    }
+
     if (togglesCodeBlock) {
       inCodeBlock = !inCodeBlock;
     }
@@ -2772,7 +2916,8 @@ function createDashboardApp(deps) {
       { id: 'runs', label: `1 ${icons.runs} ${primaryLabel}` },
       { id: 'intents', label: `2 ${icons.overview} INTENTS` },
       { id: 'completed', label: `3 ${icons.runs} ${completedLabel}` },
-      { id: 'health', label: `4 ${icons.health} STANDARDS/HEALTH` }
+      { id: 'health', label: `4 ${icons.health} STANDARDS/HEALTH` },
+      { id: 'git', label: `5 ${icons.git} GIT CHANGES` }
     ];
     const maxWidth = Math.max(8, Math.floor(width));
     const segments = [];
@@ -2902,7 +3047,8 @@ function createDashboardApp(deps) {
       runs: 'current-run',
       intents: 'intent-status',
       completed: 'completed-runs',
-      health: 'standards'
+      health: 'standards',
+      git: 'git-changes'
     });
     const [selectionBySection, setSelectionBySection] = useState({
       worktrees: 0,
@@ -2914,7 +3060,8 @@ function createDashboardApp(deps) {
       standards: 0,
       stats: 0,
       warnings: 0,
-      'error-details': 0
+      'error-details': 0,
+      'git-changes': 0
     });
     const [expandedGroups, setExpandedGroups] = useState({});
     const [previewTarget, setPreviewTarget] = useState(null);
@@ -3068,6 +3215,37 @@ function createDashboardApp(deps) {
         'No error details'
       )
       : toLoadingRows('Loading error details...', 'error-loading');
+    const gitRows = shouldHydrateSecondaryTabs
+      ? (() => {
+        const git = getGitChangesSnapshot(snapshot);
+        const tracking = git.upstream
+          ? `${git.upstream} (${git.ahead > 0 ? `ahead ${git.ahead}` : 'ahead 0'}, ${git.behind > 0 ? `behind ${git.behind}` : 'behind 0'})`
+          : 'no upstream';
+        const headerRows = [{
+          kind: 'info',
+          key: 'git:branch',
+          label: git.available
+            ? `branch ${git.branch}${git.detached ? ' [detached]' : ''} | ${tracking}`
+            : 'git: repository unavailable in selected worktree',
+          color: git.available ? 'cyan' : 'red',
+          bold: true,
+          selectable: false
+        }, {
+          kind: 'info',
+          key: 'git:counts',
+          label: `changes ${git.counts.total || 0} | staged ${git.counts.staged || 0} | unstaged ${git.counts.unstaged || 0} | untracked ${git.counts.untracked || 0} | conflicts ${git.counts.conflicted || 0}`,
+          color: 'gray',
+          bold: false,
+          selectable: false
+        }];
+        const groups = toExpandableRows(
+          buildGitChangeGroups(snapshot),
+          git.available ? 'Working tree clean' : 'No git changes',
+          expandedGroups
+        );
+        return [...headerRows, ...groups];
+      })()
+      : toLoadingRows('Loading git changes...', 'git-loading');
 
     const rowsBySection = {
       worktrees: worktreeRows,
@@ -3079,7 +3257,8 @@ function createDashboardApp(deps) {
       standards: standardsRows,
       stats: statsRows,
       warnings: warningsRows,
-      'error-details': errorDetailsRows
+      'error-details': errorDetailsRows,
+      'git-changes': gitRows
     };
     const worktreeItems = getWorktreeItems(snapshot);
     const selectedWorktree = getSelectedWorktree(snapshot);
@@ -3269,6 +3448,12 @@ function createDashboardApp(deps) {
         return;
       }
 
+      if (input === '5') {
+        setUi((previous) => ({ ...previous, view: 'git' }));
+        setPaneFocus('main');
+        return;
+      }
+
       if ((input === ']' || input === 'm') && availableFlowIds.length > 1) {
         snapshotHashRef.current = safeJsonHash(null);
         errorHashRef.current = null;
@@ -3291,13 +3476,15 @@ function createDashboardApp(deps) {
           standards: 0,
           stats: 0,
           warnings: 0,
-          'error-details': 0
+          'error-details': 0,
+          'git-changes': 0
         });
         setSectionFocus({
           runs: 'current-run',
           intents: 'intent-status',
           completed: 'completed-runs',
-          health: 'standards'
+          health: 'standards',
+          git: 'git-changes'
         });
         setOverviewIntentFilter('next');
         setExpandedGroups({});
@@ -3332,13 +3519,15 @@ function createDashboardApp(deps) {
           standards: 0,
           stats: 0,
           warnings: 0,
-          'error-details': 0
+          'error-details': 0,
+          'git-changes': 0
         });
         setSectionFocus({
           runs: 'current-run',
           intents: 'intent-status',
           completed: 'completed-runs',
-          health: 'standards'
+          health: 'standards',
+          git: 'git-changes'
         });
         setOverviewIntentFilter('next');
         setExpandedGroups({});
@@ -3440,6 +3629,11 @@ function createDashboardApp(deps) {
         }
         if (input === 'e' && showErrorPanelForSections) {
           setSectionFocus((previous) => ({ ...previous, health: 'error-details' }));
+          return;
+        }
+      } else if (ui.view === 'git') {
+        if (input === 'd') {
+          setSectionFocus((previous) => ({ ...previous, git: 'git-changes' }));
           return;
         }
       }
@@ -3717,7 +3911,9 @@ function createDashboardApp(deps) {
       });
 
       runtime.start();
-      const fallbackIntervalMs = Math.max(refreshMs, 5000);
+      const fallbackIntervalMs = ui.view === 'git'
+        ? Math.max(refreshMs, 1000)
+        : Math.max(refreshMs, 5000);
       const interval = setInterval(() => {
         void refresh();
       }, fallbackIntervalMs);
@@ -3726,7 +3922,7 @@ function createDashboardApp(deps) {
         clearInterval(interval);
         void runtime.close();
       };
-    }, [watchEnabled, refreshMs, refresh, rootPath, workspacePath, resolveRootPathForFlow, resolveRootPathsForFlow, activeFlow, worktreeWatchSignature, selectedWorktreeId]);
+    }, [watchEnabled, refreshMs, refresh, rootPath, workspacePath, resolveRootPathForFlow, resolveRootPathsForFlow, activeFlow, ui.view, worktreeWatchSignature, selectedWorktreeId]);
 
     useEffect(() => {
       if (!stdout || typeof stdout.write !== 'function') {
@@ -3885,6 +4081,15 @@ function createDashboardApp(deps) {
           borderColor: 'red'
         });
       }
+    } else if (ui.view === 'git') {
+      panelCandidates = [
+        {
+          key: 'git-changes',
+          title: panelTitles.git || 'Git Changes',
+          lines: sectionLines['git-changes'],
+          borderColor: 'yellow'
+        }
+      ];
     } else {
       panelCandidates = [];
       if (worktreeSectionEnabled) {

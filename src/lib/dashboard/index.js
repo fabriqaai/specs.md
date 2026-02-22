@@ -8,6 +8,7 @@ const { parseSimpleDashboard } = require('./simple/parser');
 const { formatDashboardText } = require('./tui/renderer');
 const { createDashboardApp } = require('./tui/app');
 const { discoverGitWorktrees, pickWorktree, pathExistsAsDirectory } = require('./git/worktrees');
+const { listGitChanges } = require('./git/changes');
 
 function parseRefreshMs(raw) {
   const parsed = Number.parseInt(String(raw || '1000'), 10);
@@ -602,7 +603,8 @@ async function runFlowDashboard(options, flow, availableFlows = []) {
       snapshot: {
         ...selectedResult.snapshot,
         workspacePath: selectedWorktree?.path || selectedResult.snapshot?.workspacePath || workspacePath,
-        dashboardWorktrees: envelope
+        dashboardWorktrees: envelope,
+        gitChanges: listGitChanges(selectedWorktree?.path || workspacePath)
       }
     };
   };

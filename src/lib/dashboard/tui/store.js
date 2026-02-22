@@ -15,12 +15,15 @@ function cycleView(current) {
   if (current === 'completed') {
     return 'health';
   }
+  if (current === 'health') {
+    return 'git';
+  }
   return 'runs';
 }
 
 function cycleViewBackward(current) {
   if (current === 'runs') {
-    return 'health';
+    return 'git';
   }
   if (current === 'intents') {
     return 'runs';
@@ -28,7 +31,10 @@ function cycleViewBackward(current) {
   if (current === 'completed') {
     return 'intents';
   }
-  return 'completed';
+  if (current === 'health') {
+    return 'completed';
+  }
+  return 'health';
 }
 
 module.exports = {
