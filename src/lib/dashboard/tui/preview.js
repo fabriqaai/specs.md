@@ -6,6 +6,73 @@ const {
   loadGitCommitPreview
 } = require('../git/changes');
 
+const MAX_PREVIEW_CACHE_ENTRIES = 64;
+const previewContentCache = new Map();
+
+function getFilePreviewCacheKey(filePath) {
+  if (typeof filePath !== 'string' || filePath.trim() === '') {
+    return null;
+  }
+
+  try {
+    const stat = fs.statSync(filePath);
+    return `file:${filePath}:${stat.size}:${Math.floor(stat.mtimeMs)}`;
+  } catch {
+    return `file:${filePath}:missing`;
+  }
+}
+
+function getGitPreviewCacheKey(fileEntry, isGitCommitPreview) {
+  if (!fileEntry || typeof fileEntry !== 'object') {
+    return null;
+  }
+
+  const repoRoot = typeof fileEntry.repoRoot === 'string' ? fileEntry.repoRoot : '';
+  if (isGitCommitPreview) {
+    const commitHash = typeof fileEntry.commitHash === 'string' ? fileEntry.commitHash : '';
+    return `git-commit:${repoRoot}:${commitHash}`;
+  }
+
+  const bucket = typeof fileEntry.bucket === 'string' ? fileEntry.bucket : '';
+  const relativePath = typeof fileEntry.relativePath === 'string' ? fileEntry.relativePath : '';
+  const pathValue = typeof fileEntry.path === 'string' ? fileEntry.path : '';
+  return `git-diff:${repoRoot}:${bucket}:${relativePath}:${pathValue}`;
+}
+
+function getCachedPreviewContent(cacheKey) {
+  if (!cacheKey || !previewContentCache.has(cacheKey)) {
+    return null;
+  }
+
+  const cached = previewContentCache.get(cacheKey);
+  previewContentCache.delete(cacheKey);
+  previewContentCache.set(cacheKey, cached);
+  return Array.isArray(cached) ? cached : null;
+}
+
+function setCachedPreviewContent(cacheKey, lines) {
+  if (!cacheKey || !Array.isArray(lines)) {
+    return;
+  }
+
+  if (previewContentCache.has(cacheKey)) {
+    previewContentCache.delete(cacheKey);
+  }
+  previewContentCache.set(cacheKey, lines);
+
+  while (previewContentCache.size > MAX_PREVIEW_CACHE_ENTRIES) {
+    const oldest = previewContentCache.keys().next().value;
+    if (!oldest) {
+      break;
+    }
+    previewContentCache.delete(oldest);
+  }
+}
+
+function clearPreviewContentCache() {
+  previewContentCache.clear();
+}
+
 function buildPreviewLines(fileEntry, width, scrollOffset, options = {}) {
   const fullDocument = options?.fullDocument === true;
 
@@ -16,24 +83,31 @@ function buildPreviewLines(fileEntry, width, scrollOffset, options = {}) {
   const isGitFilePreview = fileEntry.previewType === 'git-diff';
   const isGitCommitPreview = fileEntry.previewType === 'git-commit-diff';
   const isGitPreview = isGitFilePreview || isGitCommitPreview;
-  let rawLines = [];
-  if (isGitPreview) {
-    const diffText = isGitCommitPreview
-      ? loadGitCommitPreview(fileEntry)
-      : loadGitDiffPreview(fileEntry);
-    rawLines = String(diffText || '').split(/\r?\n/);
-  } else {
-    let content;
-    try {
-      content = fs.readFileSync(fileEntry.path, 'utf8');
-    } catch (error) {
-      return [{
-        text: truncate(`Unable to read ${fileEntry.label || fileEntry.path}: ${error.message}`, width),
-        color: 'red',
-        bold: false
-      }];
+  const cacheKey = isGitPreview
+    ? getGitPreviewCacheKey(fileEntry, isGitCommitPreview)
+    : getFilePreviewCacheKey(fileEntry.path);
+  let rawLines = getCachedPreviewContent(cacheKey);
+  if (!rawLines) {
+    if (isGitPreview) {
+      const diffText = isGitCommitPreview
+        ? loadGitCommitPreview(fileEntry)
+        : loadGitDiffPreview(fileEntry);
+      rawLines = String(diffText || '').split(/\r?\n/);
+    } else {
+      let content;
+      try {
+        content = fs.readFileSync(fileEntry.path, 'utf8');
+      } catch (error) {
+        return [{
+          text: truncate(`Unable to read ${fileEntry.label || fileEntry.path}: ${error.message}`, width),
+          color: 'red',
+          bold: false
+        }];
+      }
+      rawLines = String(content).split(/\r?\n/);
     }
-    rawLines = String(content).split(/\r?\n/);
+
+    setCachedPreviewContent(cacheKey, rawLines);
   }
 
   const headLine = {
@@ -141,5 +215,6 @@ function allocateSingleColumnPanels(candidates, rowsBudget) {
 
 module.exports = {
   buildPreviewLines,
-  allocateSingleColumnPanels
+  allocateSingleColumnPanels,
+  clearPreviewContentCache
 };

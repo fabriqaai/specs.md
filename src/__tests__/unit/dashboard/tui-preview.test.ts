@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { mkdirSync, writeFileSync, rmSync, existsSync } from 'fs';
 import { join } from 'path';
 import { tmpdir } from 'os';
@@ -6,7 +6,8 @@ import { tmpdir } from 'os';
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const {
   buildPreviewLines,
-  allocateSingleColumnPanels
+  allocateSingleColumnPanels,
+  clearPreviewContentCache
 } = require('../../../lib/dashboard/tui/preview');
 
 describe('buildPreviewLines', () => {
@@ -18,6 +19,8 @@ describe('buildPreviewLines', () => {
   });
 
   afterEach(() => {
+    clearPreviewContentCache();
+    vi.clearAllMocks();
     if (existsSync(tmpPath)) {
       rmSync(tmpPath, { recursive: true, force: true });
     }
@@ -96,6 +99,19 @@ describe('buildPreviewLines', () => {
     const lines = buildPreviewLines({ path: filePath }, 120, 0);
     const lastContent = lines[lines.length - 1];
     expect(lastContent.text).toContain('additional lines hidden');
+  });
+
+  it('caches file preview content across renders for the same file', () => {
+    const filePath = join(tmpPath, 'cached.md');
+    writeFileSync(filePath, '# Cached\n\nLine one\n');
+    const fsModule = require('fs');
+    const readSpy = vi.spyOn(fsModule, 'readFileSync');
+
+    buildPreviewLines({ path: filePath, label: 'cached.md' }, 120, 0);
+    buildPreviewLines({ path: filePath, label: 'cached.md' }, 120, 2);
+
+    expect(readSpy).toHaveBeenCalledTimes(1);
+    readSpy.mockRestore();
   });
 });
 

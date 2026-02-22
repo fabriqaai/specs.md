@@ -1127,12 +1127,6 @@ function createDashboardApp(deps) {
           columns: Math.max(1, stdout.columns || process.stdout.columns || 120),
           rows: Math.max(1, stdout.rows || process.stdout.rows || 40)
         });
-
-        // Resize in some terminals can leave stale frame rows behind.
-        // Keep the clear operation minimal to avoid triggering scrollback churn.
-        if (typeof stdout.write === 'function' && stdout.isTTY !== false) {
-          stdout.write('\u001B[H\u001B[J');
-        }
       };
 
       updateSize();
