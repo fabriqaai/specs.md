@@ -1172,6 +1172,215 @@ function getGitChangesSnapshot(snapshot) {
   };
 }
 
+function readGitCommandLines(repoRoot, args, options = {}) {
+  if (typeof repoRoot !== 'string' || repoRoot.trim() === '' || !Array.isArray(args) || args.length === 0) {
+    return [];
+  }
+
+  const acceptedStatuses = Array.isArray(options.acceptedStatuses) && options.acceptedStatuses.length > 0
+    ? options.acceptedStatuses
+    : [0];
+
+  const result = spawnSync('git', args, {
+    cwd: repoRoot,
+    encoding: 'utf8',
+    maxBuffer: 8 * 1024 * 1024
+  });
+
+  if (result.error) {
+    return [];
+  }
+
+  if (typeof result.status === 'number' && !acceptedStatuses.includes(result.status)) {
+    return [];
+  }
+
+  const lines = String(result.stdout || '')
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean);
+
+  const limit = Number.isFinite(options.limit) ? Math.max(1, Math.floor(options.limit)) : null;
+  if (limit == null || lines.length <= limit) {
+    return lines;
+  }
+  return lines.slice(0, limit);
+}
+
+function buildGitStatusPanelLines(snapshot) {
+  const git = getGitChangesSnapshot(snapshot);
+  if (!git.available) {
+    return [{
+      text: 'Repository unavailable in selected worktree',
+      color: 'red',
+      bold: true
+    }];
+  }
+
+  const tracking = git.upstream
+    ? `${git.upstream} (${git.ahead > 0 ? `ahead ${git.ahead}` : 'ahead 0'}, ${git.behind > 0 ? `behind ${git.behind}` : 'behind 0'})`
+    : 'no upstream';
+
+  return [
+    {
+      text: `branch: ${git.branch}${git.detached ? ' [detached]' : ''}`,
+      color: 'green',
+      bold: true
+    },
+    {
+      text: `tracking: ${tracking}`,
+      color: 'gray',
+      bold: false
+    },
+    {
+      text: `changes: ${git.counts.total || 0} total`,
+      color: 'gray',
+      bold: false
+    },
+    {
+      text: `staged ${git.counts.staged || 0} | unstaged ${git.counts.unstaged || 0}`,
+      color: 'yellow',
+      bold: false
+    },
+    {
+      text: `untracked ${git.counts.untracked || 0} | conflicts ${git.counts.conflicted || 0}`,
+      color: 'yellow',
+      bold: false
+    }
+  ];
+}
+
+function buildGitBranchesPanelLines(snapshot) {
+  const git = getGitChangesSnapshot(snapshot);
+  if (!git.available) {
+    return [{
+      text: 'No branch list (git unavailable)',
+      color: 'gray',
+      bold: false
+    }];
+  }
+
+  const branchLines = readGitCommandLines(git.rootPath, [
+    '-c',
+    'color.ui=false',
+    'for-each-ref',
+    '--sort=-committerdate',
+    '--format=%(if)%(HEAD)%(then)*%(else) %(end) %(refname:short)',
+    'refs/heads'
+  ], { limit: 8 });
+
+  const lines = [{
+    text: 'Local branches · Remotes · Tags',
+    color: 'cyan',
+    bold: true
+  }];
+
+  if (branchLines.length === 0) {
+    lines.push({
+      text: 'No local branches found',
+      color: 'gray',
+      bold: false
+    });
+    return lines;
+  }
+
+  for (const line of branchLines) {
+    const isCurrent = line.startsWith('*');
+    lines.push({
+      text: line,
+      color: isCurrent ? 'green' : 'gray',
+      bold: isCurrent
+    });
+  }
+
+  return lines;
+}
+
+function buildGitCommitsPanelLines(snapshot) {
+  const git = getGitChangesSnapshot(snapshot);
+  if (!git.available) {
+    return [{
+      text: 'No commit log (git unavailable)',
+      color: 'gray',
+      bold: false
+    }];
+  }
+
+  const reflogLines = readGitCommandLines(git.rootPath, [
+    '-c',
+    'color.ui=false',
+    'reflog',
+    '--date=relative',
+    '--pretty=format:%h %gs'
+  ], { limit: 8 });
+
+  const lines = [{
+    text: 'Commits · Reflog',
+    color: 'cyan',
+    bold: true
+  }];
+
+  if (reflogLines.length === 0) {
+    lines.push({
+      text: 'No reflog entries',
+      color: 'gray',
+      bold: false
+    });
+    return lines;
+  }
+
+  lines.push(...reflogLines.map((line) => ({
+    text: line,
+    color: 'gray',
+    bold: false
+  })));
+  return lines;
+}
+
+function buildGitStashPanelLines(snapshot) {
+  const git = getGitChangesSnapshot(snapshot);
+  if (!git.available) {
+    return [{
+      text: 'No stash info (git unavailable)',
+      color: 'gray',
+      bold: false
+    }];
+  }
+
+  const stashLines = readGitCommandLines(git.rootPath, [
+    '-c',
+    'color.ui=false',
+    'stash',
+    'list',
+    '--pretty=format:%gd %s'
+  ], {
+    acceptedStatuses: [0],
+    limit: 4
+  });
+
+  const lines = [{
+    text: 'Stash',
+    color: 'cyan',
+    bold: true
+  }];
+
+  if (stashLines.length === 0) {
+    lines.push({
+      text: 'No stashes',
+      color: 'gray',
+      bold: false
+    });
+    return lines;
+  }
+
+  lines.push(...stashLines.map((line) => ({
+    text: line,
+    color: 'gray',
+    bold: false
+  })));
+  return lines;
+}
+
 function getDashboardWorktreeMeta(snapshot) {
   if (!snapshot || typeof snapshot !== 'object') {
     return null;
@@ -2420,6 +2629,21 @@ function rowToFileEntry(row) {
   };
 }
 
+function firstFileEntryFromRows(rows) {
+  if (!Array.isArray(rows) || rows.length === 0) {
+    return null;
+  }
+
+  for (const row of rows) {
+    const entry = rowToFileEntry(row);
+    if (entry) {
+      return entry;
+    }
+  }
+
+  return null;
+}
+
 function rowToWorktreeId(row) {
   if (!row || typeof row.key !== 'string') {
     return null;
@@ -3277,32 +3501,11 @@ function createDashboardApp(deps) {
     const gitRows = shouldHydrateSecondaryTabs
       ? (() => {
         const git = getGitChangesSnapshot(snapshot);
-        const tracking = git.upstream
-          ? `${git.upstream} (${git.ahead > 0 ? `ahead ${git.ahead}` : 'ahead 0'}, ${git.behind > 0 ? `behind ${git.behind}` : 'behind 0'})`
-          : 'no upstream';
-        const headerRows = [{
-          kind: 'info',
-          key: 'git:branch',
-          label: git.available
-            ? `branch ${git.branch}${git.detached ? ' [detached]' : ''} | ${tracking}`
-            : 'git: repository unavailable in selected worktree',
-          color: git.available ? 'cyan' : 'red',
-          bold: true,
-          selectable: false
-        }, {
-          kind: 'info',
-          key: 'git:counts',
-          label: `changes ${git.counts.total || 0} | staged ${git.counts.staged || 0} | unstaged ${git.counts.unstaged || 0} | untracked ${git.counts.untracked || 0} | conflicts ${git.counts.conflicted || 0}`,
-          color: 'gray',
-          bold: false,
-          selectable: false
-        }];
-        const groups = toExpandableRows(
+        return toExpandableRows(
           buildGitChangeGroups(snapshot),
           git.available ? 'Working tree clean' : 'No git changes',
           expandedGroups
         );
-        return [...headerRows, ...groups];
       })()
       : toLoadingRows('Loading git changes...', 'git-loading');
 
@@ -3338,6 +3541,9 @@ function createDashboardApp(deps) {
     const focusedIndex = selectionBySection[focusedSection] || 0;
     const selectedFocusedRow = getSelectedRow(focusedRows, focusedIndex);
     const selectedFocusedFile = rowToFileEntry(selectedFocusedRow);
+    const selectedGitRow = getSelectedRow(gitRows, selectionBySection['git-changes'] || 0);
+    const selectedGitFile = rowToFileEntry(selectedGitRow);
+    const firstGitFile = firstFileEntryFromRows(gitRows);
 
     const refresh = useCallback(async (overrideSelectedWorktreeId = null) => {
       const now = new Date().toISOString();
@@ -4066,6 +4272,16 @@ function createDashboardApp(deps) {
         fullDocument: overlayPreviewOpen
       })
       : [];
+    const gitInlineDiffTarget = selectedGitFile || firstGitFile || previewTarget || null;
+    const gitInlineDiffLines = ui.view === 'git'
+      ? buildPreviewLines(gitInlineDiffTarget, compactWidth, previewOpen && paneFocus === 'preview' ? previewScroll : 0, {
+        fullDocument: false
+      })
+      : [];
+    const gitStatusPanelLines = ui.view === 'git' ? buildGitStatusPanelLines(snapshot) : [];
+    const gitBranchesPanelLines = ui.view === 'git' ? buildGitBranchesPanelLines(snapshot) : [];
+    const gitCommitsPanelLines = ui.view === 'git' ? buildGitCommitsPanelLines(snapshot) : [];
+    const gitStashPanelLines = ui.view === 'git' ? buildGitStashPanelLines(snapshot) : [];
 
     const shortcutsOverlayLines = buildHelpOverlayLines({
       view: ui.view,
@@ -4174,9 +4390,39 @@ function createDashboardApp(deps) {
     } else if (ui.view === 'git') {
       panelCandidates = [
         {
+          key: 'git-status',
+          title: '[1]-Status',
+          lines: gitStatusPanelLines,
+          borderColor: 'green'
+        },
+        {
           key: 'git-changes',
-          title: panelTitles.git || 'Git Changes',
+          title: '[2]-Files',
           lines: sectionLines['git-changes'],
+          borderColor: 'yellow'
+        },
+        {
+          key: 'git-branches',
+          title: '[3]-Local branches',
+          lines: gitBranchesPanelLines,
+          borderColor: 'magenta'
+        },
+        {
+          key: 'git-commits',
+          title: '[4]-Commits',
+          lines: gitCommitsPanelLines,
+          borderColor: 'cyan'
+        },
+        {
+          key: 'git-stash',
+          title: '[5]-Stash',
+          lines: gitStashPanelLines,
+          borderColor: 'blue'
+        },
+        {
+          key: 'git-diff',
+          title: '[0]-Unstaged changes',
+          lines: gitInlineDiffLines,
           borderColor: 'yellow'
         }
       ];
@@ -4214,7 +4460,7 @@ function createDashboardApp(deps) {
       }
     }
 
-    if (!ui.showHelp && previewOpen && !overlayPreviewOpen) {
+    if (!ui.showHelp && previewOpen && !overlayPreviewOpen && ui.view !== 'git') {
       panelCandidates.push({
         key: 'preview',
         title: `Preview: ${effectivePreviewTarget?.label || 'unknown'}`,
@@ -4225,7 +4471,13 @@ function createDashboardApp(deps) {
 
     if (ultraCompact) {
       if (previewOpen) {
-        panelCandidates = panelCandidates.filter((panel) => panel && (panel.key === focusedSection || panel.key === 'preview'));
+        panelCandidates = panelCandidates.filter((panel) =>
+          panel && (
+            panel.key === focusedSection
+            || panel.key === 'preview'
+            || (ui.view === 'git' && panel.key === 'git-diff')
+          )
+        );
       } else {
         const focusedPanel = panelCandidates.find((panel) => panel?.key === focusedSection);
         panelCandidates = [focusedPanel || panelCandidates[0]];
@@ -4233,7 +4485,8 @@ function createDashboardApp(deps) {
     }
 
     const panels = allocateSingleColumnPanels(panelCandidates, contentRowsBudget);
-    const lazyGitHierarchyLayout = !ui.showHelp
+    const lazyGitHierarchyLayout = ui.view === 'git'
+      && !ui.showHelp
       && !worktreeOverlayOpen
       && !overlayPreviewOpen
       && !ultraCompact
@@ -4254,9 +4507,10 @@ function createDashboardApp(deps) {
 
     let contentNode;
     if (lazyGitHierarchyLayout) {
-      const preferredRightPanel = previewOpen && !overlayPreviewOpen
-        ? panelCandidates.find((panel) => panel?.key === 'preview')
-        : null;
+      const preferredRightPanel = panelCandidates.find((panel) => panel?.key === 'git-diff')
+        || (previewOpen && !overlayPreviewOpen
+          ? panelCandidates.find((panel) => panel?.key === 'preview')
+          : null);
       const focusedPanel = panelCandidates.find((panel) => panel?.key === focusedSection);
       const rightPanelBase = preferredRightPanel
         || focusedPanel
@@ -4307,7 +4561,9 @@ function createDashboardApp(deps) {
             dense: densePanels,
             focused: rightPanel.key === 'preview'
               ? paneFocus === 'preview'
-              : (paneFocus === 'main' && rightPanel.key === focusedSection)
+              : (rightPanel.key === 'git-diff'
+                ? true
+                : (paneFocus === 'main' && rightPanel.key === focusedSection))
           })
         )
       );
