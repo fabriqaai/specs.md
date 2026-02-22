@@ -121,6 +121,11 @@ function truncate(value, width) {
   return `${sliceAnsi(text, 0, bodyWidth)}${ellipsis}`;
 }
 
+function resolveFrameWidth(columns) {
+  const safeColumns = Number.isFinite(columns) ? Math.max(1, Math.floor(columns)) : 120;
+  return safeColumns > 24 ? safeColumns - 1 : safeColumns;
+}
+
 function normalizePanelLine(line) {
   if (line && typeof line === 'object' && !Array.isArray(line)) {
     return {
@@ -2522,6 +2527,8 @@ function buildQuickHelpText(view, options = {}) {
       parts.push('b worktrees', 'u others');
     }
     parts.push('a current', 'f files');
+  } else if (view === 'git') {
+    parts.push('d changes', 'c/A/p/P git(soon)');
   }
   parts.push(`tab1 ${activeLabel}`);
 
@@ -2531,6 +2538,57 @@ function buildQuickHelpText(view, options = {}) {
 
   parts.push('r refresh', '? shortcuts', 'q quit');
   return parts.join(' | ');
+}
+
+function buildLazyGitCommandStrip(view, options = {}) {
+  const {
+    hasWorktrees = false,
+    previewOpen = false
+  } = options;
+
+  const parts = [];
+
+  if (view === 'runs') {
+    if (hasWorktrees) {
+      parts.push('b worktrees');
+    }
+    parts.push('a current', 'f files', 'enter expand');
+  } else if (view === 'intents') {
+    parts.push('n next', 'x completed', 'enter expand');
+  } else if (view === 'completed') {
+    parts.push('c completed', 'enter expand');
+  } else if (view === 'health') {
+    parts.push('s standards', 't stats', 'w warnings');
+  } else if (view === 'git') {
+    parts.push('d changes', 'space preview', 'c commit (soon)', 'A amend (soon)', 'p push (soon)', 'P pull (soon)');
+  }
+
+  if (previewOpen) {
+    parts.push('tab pane', 'j/k scroll');
+  } else {
+    parts.push('v preview');
+  }
+
+  parts.push('1-5 views', 'g/G panels', 'r refresh', '? help', 'q quit');
+  return parts.join(' | ');
+}
+
+function buildLazyGitCommandLogLine(options = {}) {
+  const {
+    statusLine = '',
+    activeFlow = 'fire',
+    watchEnabled = true,
+    watchStatus = 'watching',
+    selectedWorktreeLabel = null
+  } = options;
+
+  if (typeof statusLine === 'string' && statusLine.trim() !== '') {
+    return `Command Log | ${statusLine}`;
+  }
+
+  const watchLabel = watchEnabled ? watchStatus : 'off';
+  const worktreeSegment = selectedWorktreeLabel ? ` | wt:${selectedWorktreeLabel}` : '';
+  return `Command Log | flow:${String(activeFlow || 'fire').toUpperCase()} | watch:${watchLabel}${worktreeSegment} | ready`;
 }
 
 function buildHelpOverlayLines(options = {}) {
@@ -2592,6 +2650,7 @@ function buildHelpOverlayLines(options = {}) {
     { text: '', color: undefined, bold: false },
     { text: 'Tab 5 Git Changes', color: 'yellow', bold: true },
     'select changed files and preview diffs',
+    'commit/push/pull shortcuts are shown in footer for LazyGit-style hierarchy',
     { text: '', color: undefined, bold: false },
     { text: `Current view: ${String(view || 'runs').toUpperCase()}`, color: 'gray', bold: false }
   );
@@ -2864,7 +2923,7 @@ function createDashboardApp(deps) {
       focused
     } = props;
 
-    const contentWidth = Math.max(18, width - 4);
+    const contentWidth = Math.max(1, width - (dense ? 2 : 4));
     const visibleLines = fitLines(lines, maxLines, contentWidth);
     const panelBorderColor = focused ? 'cyan' : (borderColor || 'gray');
     const titleColor = focused ? 'black' : 'cyan';
@@ -3636,6 +3695,22 @@ function createDashboardApp(deps) {
           setSectionFocus((previous) => ({ ...previous, git: 'git-changes' }));
           return;
         }
+        if (input === 'c') {
+          setStatusLine('Git commit action is not wired yet (footer mirrors LazyGit command hierarchy).');
+          return;
+        }
+        if (input === 'A') {
+          setStatusLine('Git amend action is not wired yet (footer mirrors LazyGit command hierarchy).');
+          return;
+        }
+        if (input === 'p') {
+          setStatusLine('Git push action is not wired yet (footer mirrors LazyGit command hierarchy).');
+          return;
+        }
+        if (input === 'P') {
+          setStatusLine('Git pull action is not wired yet (footer mirrors LazyGit command hierarchy).');
+          return;
+        }
       }
 
       if (key.escape) {
@@ -3845,16 +3920,16 @@ function createDashboardApp(deps) {
     useEffect(() => {
       if (!stdout || typeof stdout.on !== 'function') {
         setTerminalSize({
-          columns: process.stdout.columns || 120,
-          rows: process.stdout.rows || 40
+          columns: Math.max(1, process.stdout.columns || 120),
+          rows: Math.max(1, process.stdout.rows || 40)
         });
         return undefined;
       }
 
       const updateSize = () => {
         setTerminalSize({
-          columns: stdout.columns || process.stdout.columns || 120,
-          rows: stdout.rows || process.stdout.rows || 40
+          columns: Math.max(1, stdout.columns || process.stdout.columns || 120),
+          rows: Math.max(1, stdout.rows || process.stdout.rows || 40)
         });
 
         // Resize in some terminals can leave stale frame rows behind.
@@ -3866,12 +3941,22 @@ function createDashboardApp(deps) {
 
       updateSize();
       stdout.on('resize', updateSize);
+      if (process.stdout !== stdout && typeof process.stdout.on === 'function') {
+        process.stdout.on('resize', updateSize);
+      }
 
       return () => {
         if (typeof stdout.off === 'function') {
           stdout.off('resize', updateSize);
         } else if (typeof stdout.removeListener === 'function') {
           stdout.removeListener('resize', updateSize);
+        }
+        if (process.stdout !== stdout) {
+          if (typeof process.stdout.off === 'function') {
+            process.stdout.off('resize', updateSize);
+          } else if (typeof process.stdout.removeListener === 'function') {
+            process.stdout.removeListener('resize', updateSize);
+          }
         }
       };
     }, [stdout]);
@@ -3937,37 +4022,31 @@ function createDashboardApp(deps) {
     const cols = Number.isFinite(terminalSize.columns) ? terminalSize.columns : (process.stdout.columns || 120);
     const rows = Number.isFinite(terminalSize.rows) ? terminalSize.rows : (process.stdout.rows || 40);
 
-    const fullWidth = Math.max(40, cols - 1);
+    const fullWidth = resolveFrameWidth(cols);
     const showFlowBar = availableFlowIds.length > 1;
-    const showFooterHelpLine = rows >= 10;
+    const showCommandLogLine = rows >= 8;
+    const showCommandStrip = rows >= 9;
     const showErrorPanel = Boolean(error) && rows >= 18;
     const showGlobalErrorPanel = showErrorPanel && ui.view !== 'health' && !ui.showHelp && !worktreeOverlayOpen;
     const showErrorInline = Boolean(error) && !showErrorPanel && !worktreeOverlayOpen;
     const showApprovalBanner = approvalGateLine !== '' && !ui.showHelp && !worktreeOverlayOpen;
-    const showStatusLine = statusLine !== '';
+    const showLegacyStatusLine = statusLine !== '' && !showCommandLogLine;
     const densePanels = rows <= 28 || cols <= 120;
 
     const reservedRows =
       2 +
       (showFlowBar ? 1 : 0) +
       (showApprovalBanner ? 1 : 0) +
-      (showFooterHelpLine ? 1 : 0) +
+      (showCommandLogLine ? 1 : 0) +
+      (showCommandStrip ? 1 : 0) +
       (showGlobalErrorPanel ? 5 : 0) +
       (showErrorInline ? 1 : 0) +
-      (showStatusLine ? 1 : 0);
+      (showLegacyStatusLine ? 1 : 0);
     const frameSafetyRows = 2;
     const contentRowsBudget = Math.max(4, rows - reservedRows - frameSafetyRows);
     const ultraCompact = rows <= 14;
     const panelTitles = getPanelTitles(activeFlow, snapshot);
-    const splitPreviewLayout = previewOpen && !overlayPreviewOpen && !ui.showHelp && !worktreeOverlayOpen && cols >= 110 && rows >= 16;
-    const mainPaneWidth = splitPreviewLayout
-      ? Math.max(34, Math.floor((fullWidth - 1) * 0.52))
-      : fullWidth;
-    const previewPaneWidth = splitPreviewLayout
-      ? Math.max(30, fullWidth - mainPaneWidth - 1)
-      : fullWidth;
-    const mainCompactWidth = Math.max(18, mainPaneWidth - 4);
-    const previewCompactWidth = Math.max(18, previewPaneWidth - 4);
+    const compactWidth = Math.max(18, fullWidth - 4);
 
     const sectionLines = Object.fromEntries(
       Object.entries(rowsBySection).map(([sectionKey, sectionRows]) => [
@@ -3976,14 +4055,14 @@ function createDashboardApp(deps) {
           sectionRows,
           selectionBySection[sectionKey] || 0,
           icons,
-          mainCompactWidth,
+          compactWidth,
           paneFocus === 'main' && focusedSection === sectionKey
         )
       ])
     );
     const effectivePreviewTarget = previewTarget || selectedFocusedFile;
     const previewLines = previewOpen
-      ? buildPreviewLines(effectivePreviewTarget, previewCompactWidth, previewScroll, {
+      ? buildPreviewLines(effectivePreviewTarget, compactWidth, previewScroll, {
         fullDocument: overlayPreviewOpen
       })
       : [];
@@ -4003,6 +4082,17 @@ function createDashboardApp(deps) {
       paneFocus,
       availableFlowCount: availableFlowIds.length,
       hasWorktrees: worktreeSectionEnabled
+    });
+    const commandStripText = buildLazyGitCommandStrip(ui.view, {
+      hasWorktrees: worktreeSectionEnabled,
+      previewOpen
+    });
+    const commandLogLine = buildLazyGitCommandLogLine({
+      statusLine,
+      activeFlow,
+      watchEnabled,
+      watchStatus,
+      selectedWorktreeLabel
     });
 
     let panelCandidates;
@@ -4124,7 +4214,7 @@ function createDashboardApp(deps) {
       }
     }
 
-    if (!ui.showHelp && previewOpen && !overlayPreviewOpen && !splitPreviewLayout) {
+    if (!ui.showHelp && previewOpen && !overlayPreviewOpen) {
       panelCandidates.push({
         key: 'preview',
         title: `Preview: ${effectivePreviewTarget?.label || 'unknown'}`,
@@ -4133,7 +4223,7 @@ function createDashboardApp(deps) {
       });
     }
 
-    if (ultraCompact && !splitPreviewLayout) {
+    if (ultraCompact) {
       if (previewOpen) {
         panelCandidates = panelCandidates.filter((panel) => panel && (panel.key === focusedSection || panel.key === 'preview'));
       } else {
@@ -4143,6 +4233,12 @@ function createDashboardApp(deps) {
     }
 
     const panels = allocateSingleColumnPanels(panelCandidates, contentRowsBudget);
+    const lazyGitHierarchyLayout = !ui.showHelp
+      && !worktreeOverlayOpen
+      && !overlayPreviewOpen
+      && !ultraCompact
+      && fullWidth >= 96
+      && panelCandidates.length > 1;
 
     const renderPanel = (panel, index, width, isFocused) => React.createElement(SectionPanel, {
       key: panel.key,
@@ -4157,14 +4253,21 @@ function createDashboardApp(deps) {
     });
 
     let contentNode;
-    if (splitPreviewLayout && !overlayPreviewOpen) {
-      const previewBodyLines = Math.max(1, contentRowsBudget - 3);
-      const previewPanel = {
-        key: 'preview-split',
-        title: `Preview: ${effectivePreviewTarget?.label || 'unknown'}`,
-        lines: previewLines,
-        borderColor: 'magenta',
-        maxLines: previewBodyLines
+    if (lazyGitHierarchyLayout) {
+      const preferredRightPanel = previewOpen && !overlayPreviewOpen
+        ? panelCandidates.find((panel) => panel?.key === 'preview')
+        : null;
+      const focusedPanel = panelCandidates.find((panel) => panel?.key === focusedSection);
+      const rightPanelBase = preferredRightPanel
+        || focusedPanel
+        || panelCandidates[panelCandidates.length - 1];
+      const leftCandidates = panelCandidates.filter((panel) => panel?.key !== rightPanelBase?.key);
+      const leftWidth = Math.max(30, Math.min(Math.floor(fullWidth * 0.38), fullWidth - 36));
+      const rightWidth = Math.max(34, fullWidth - leftWidth - 1);
+      const leftPanels = allocateSingleColumnPanels(leftCandidates, contentRowsBudget);
+      const rightPanel = {
+        ...rightPanelBase,
+        maxLines: Math.max(4, contentRowsBudget)
       };
 
       contentNode = React.createElement(
@@ -4172,33 +4275,39 @@ function createDashboardApp(deps) {
         { width: fullWidth, flexDirection: 'row' },
         React.createElement(
           Box,
-          { width: mainPaneWidth, flexDirection: 'column' },
-          ...panels.map((panel, index) => React.createElement(SectionPanel, {
+          { width: leftWidth, flexDirection: 'column' },
+          ...leftPanels.map((panel, index) => React.createElement(SectionPanel, {
             key: panel.key,
             title: panel.title,
             lines: panel.lines,
-            width: mainPaneWidth,
+            width: leftWidth,
             maxLines: panel.maxLines,
             borderColor: panel.borderColor,
-            marginBottom: densePanels ? 0 : (index === panels.length - 1 ? 0 : 1),
+            marginBottom: densePanels ? 0 : (index === leftPanels.length - 1 ? 0 : 1),
             dense: densePanels,
             focused: paneFocus === 'main' && panel.key === focusedSection
           }))
         ),
-        React.createElement(Box, { width: 1 }, React.createElement(Text, null, ' ')),
         React.createElement(
           Box,
-          { width: previewPaneWidth, flexDirection: 'column' },
+          { width: 1, justifyContent: 'center' },
+          React.createElement(Text, { color: 'gray' }, '│')
+        ),
+        React.createElement(
+          Box,
+          { width: rightWidth, flexDirection: 'column' },
           React.createElement(SectionPanel, {
-            key: previewPanel.key,
-            title: previewPanel.title,
-            lines: previewPanel.lines,
-            width: previewPaneWidth,
-            maxLines: previewPanel.maxLines,
-            borderColor: previewPanel.borderColor,
+            key: rightPanel.key,
+            title: rightPanel.title,
+            lines: rightPanel.lines,
+            width: rightWidth,
+            maxLines: rightPanel.maxLines,
+            borderColor: rightPanel.borderColor,
             marginBottom: 0,
             dense: densePanels,
-            focused: paneFocus === 'preview'
+            focused: rightPanel.key === 'preview'
+              ? paneFocus === 'preview'
+              : (paneFocus === 'main' && rightPanel.key === focusedSection)
           })
         )
       );
@@ -4248,12 +4357,25 @@ function createDashboardApp(deps) {
         })
         : null,
       ...(Array.isArray(contentNode) ? contentNode : [contentNode]),
-      statusLine !== ''
+      showLegacyStatusLine
         ? React.createElement(Text, { color: 'yellow' }, truncate(statusLine, fullWidth))
         : null,
-      showFooterHelpLine
-        ? React.createElement(Text, { color: 'gray' }, truncate(quickHelpText, fullWidth))
-        : null
+      showCommandLogLine
+        ? React.createElement(
+          Text,
+          { color: 'white', backgroundColor: 'gray', bold: true },
+          truncate(commandLogLine, fullWidth)
+        )
+        : null,
+      showCommandStrip
+        ? React.createElement(
+          Text,
+          { color: 'white', backgroundColor: 'blue', bold: true },
+          truncate(commandStripText, fullWidth)
+        )
+        : (rows >= 10
+          ? React.createElement(Text, { color: 'gray' }, truncate(quickHelpText, fullWidth))
+          : null)
     );
   }
 
