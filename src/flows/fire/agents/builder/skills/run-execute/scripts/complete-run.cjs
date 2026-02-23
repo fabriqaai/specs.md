@@ -704,7 +704,7 @@ function printUsage() {
   console.error('');
   console.error('Arguments:');
   console.error('  rootPath  - Project root directory');
-  console.error('  runId     - Run ID to complete (e.g., run-003)');
+  console.error('  runId     - Run ID to complete (e.g., run-fabriqa-2026-003)');
   console.error('');
   console.error('Flags:');
   console.error('  --complete-item  - Complete only the current work item (batch/wide runs)');
@@ -718,8 +718,8 @@ function printUsage() {
   console.error('  --coverage=N           - Coverage percentage');
   console.error('');
   console.error('Examples:');
-  console.error('  node complete-run.cjs /project run-003 --complete-item');
-  console.error('  node complete-run.cjs /project run-003 --complete-run --tests=5 --coverage=85');
+  console.error('  node complete-run.cjs /project run-fabriqa-2026-003 --complete-item');
+  console.error('  node complete-run.cjs /project run-fabriqa-2026-003 --complete-run --tests=5 --coverage=85');
 }
 
 // =============================================================================

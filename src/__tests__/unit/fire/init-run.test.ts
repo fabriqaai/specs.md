@@ -95,6 +95,19 @@ describe('init-run', () => {
     return [{ id, intent, mode }];
   }
 
+  function getWorktreeToken(value: string): string {
+    const baseName = value.split(/[/\\]/).filter(Boolean).pop() || '';
+    const normalized = baseName
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '');
+    return normalized || 'workspace';
+  }
+
+  function runIdFor(sequence: number): string {
+    return `run-${getWorktreeToken(testRoot)}-${String(sequence).padStart(3, '0')}`;
+  }
+
   // ===========================================================================
   // Input Validation Tests
   // ===========================================================================
@@ -170,17 +183,17 @@ describe('init-run', () => {
 
     it('should accept valid mode: autopilot', () => {
       const result: InitRunResult = initRun(testRoot, singleWorkItem('WI-001', 'INT-001', 'autopilot'));
-      expect(result.runId).toBe('run-001');
+      expect(result.runId).toBe(runIdFor(1));
     });
 
     it('should accept valid mode: confirm', () => {
       const result: InitRunResult = initRun(testRoot, singleWorkItem('WI-001', 'INT-001', 'confirm'));
-      expect(result.runId).toBe('run-001');
+      expect(result.runId).toBe(runIdFor(1));
     });
 
     it('should accept valid mode: validate', () => {
       const result: InitRunResult = initRun(testRoot, singleWorkItem('WI-001', 'INT-001', 'validate'));
-      expect(result.runId).toBe('run-001');
+      expect(result.runId).toBe(runIdFor(1));
     });
   });
 
@@ -233,7 +246,7 @@ describe('init-run', () => {
       });
 
       const result: InitRunResult = initRun(testRoot, singleWorkItem());
-      expect(result.runId).toBe('run-002');
+      expect(result.runId).toBe(runIdFor(2));
     });
 
     it('should add new run to active runs list', () => {
@@ -261,7 +274,7 @@ describe('init-run', () => {
 
       expect(state.runs.active).toHaveLength(2);
       expect(state.runs.active[0].id).toBe('run-001');
-      expect(state.runs.active[1].id).toBe('run-002');
+      expect(state.runs.active[1].id).toBe(runIdFor(2));
     });
 
     it('should allow init when runs.active is empty', () => {
@@ -289,9 +302,9 @@ describe('init-run', () => {
       });
     });
 
-    it('should create run-001 for first run', () => {
+    it('should create worktree-prefixed run ID for first run', () => {
       const result: InitRunResult = initRun(testRoot, singleWorkItem());
-      expect(result.runId).toBe('run-001');
+      expect(result.runId).toBe(runIdFor(1));
     });
 
     it('should increment run number based on existing runs', () => {
@@ -300,7 +313,7 @@ describe('init-run', () => {
       mkdirSync(join(runsPath, 'run-002'));
 
       const result: InitRunResult = initRun(testRoot, singleWorkItem());
-      expect(result.runId).toBe('run-003');
+      expect(result.runId).toBe(runIdFor(3));
     });
 
     it('should handle gaps in run numbers (use max + 1)', () => {
@@ -309,7 +322,15 @@ describe('init-run', () => {
       mkdirSync(join(runsPath, 'run-005'));
 
       const result: InitRunResult = initRun(testRoot, singleWorkItem());
-      expect(result.runId).toBe('run-006');
+      expect(result.runId).toBe(runIdFor(6));
+    });
+
+    it('should increment based on existing same-worktree run IDs', () => {
+      mkdirSync(join(runsPath, runIdFor(2)));
+      mkdirSync(join(runsPath, runIdFor(7)));
+
+      const result: InitRunResult = initRun(testRoot, singleWorkItem());
+      expect(result.runId).toBe(runIdFor(8));
     });
 
     it('should create run folder', () => {
@@ -329,7 +350,7 @@ describe('init-run', () => {
       const runLogPath = join(runsPath, result.runId, 'run.md');
       const content = readFileSync(runLogPath, 'utf8');
 
-      expect(content).toContain('id: run-001');
+      expect(content).toContain(`id: ${result.runId}`);
       expect(content).toContain('scope: single');
       expect(content).toContain('id: WI-001');
       expect(content).toContain('intent: INT-001');
@@ -376,8 +397,8 @@ describe('init-run', () => {
       const result: InitRunResult = initRun(testRoot, singleWorkItem());
 
       expect(result.success).toBe(true);
-      expect(result.runId).toBe('run-001');
-      expect(result.runPath).toBe(join(runsPath, 'run-001'));
+      expect(result.runId).toBe(runIdFor(1));
+      expect(result.runPath).toBe(join(runsPath, runIdFor(1)));
       expect(result.scope).toBe('single');
       expect(result.workItems).toHaveLength(1);
       expect(result.currentItem).toBe('WI-001');
@@ -503,8 +524,8 @@ describe('init-run', () => {
       mkdirSync(join(runsPath, 'run-001'));
 
       const result: InitRunResult = initRun(testRoot, singleWorkItem());
-      // Should be run-011 (max from history is 10)
-      expect(result.runId).toBe('run-011');
+      // Should use max from legacy history but emit worktree-prefixed ID
+      expect(result.runId).toBe(runIdFor(11));
     });
 
     it('should use max from file system when higher than history', () => {
@@ -524,8 +545,8 @@ describe('init-run', () => {
       mkdirSync(join(runsPath, 'run-005'));
 
       const result: InitRunResult = initRun(testRoot, singleWorkItem());
-      // Should be run-006 (max from file system is 5)
-      expect(result.runId).toBe('run-006');
+      // Should use max from legacy folders but emit worktree-prefixed ID
+      expect(result.runId).toBe(runIdFor(6));
     });
   });
 

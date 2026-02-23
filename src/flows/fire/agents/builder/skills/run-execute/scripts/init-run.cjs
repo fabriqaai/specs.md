@@ -152,26 +152,61 @@ function writeState(statePath, state) {
 }
 
 // =============================================================================
-// Run ID Generation (CRITICAL - checks both history and file system)
+// Run ID Generation (CRITICAL - checks state and file system)
 // =============================================================================
 
-function generateRunId(runsPath, state) {
+function sanitizeWorktreeToken(value) {
+  const normalized = String(value || '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+  return normalized || 'workspace';
+}
+
+function resolveWorktreeToken(rootPath) {
+  const baseName = path.basename(path.resolve(String(rootPath || '')));
+  return sanitizeWorktreeToken(baseName);
+}
+
+function parseRunSequence(runId, worktreeToken) {
+  if (typeof runId !== 'string' || runId.trim() === '') {
+    return null;
+  }
+
+  const legacyMatch = runId.match(/^run-(\d+)$/);
+  if (legacyMatch) {
+    const parsed = parseInt(legacyMatch[1], 10);
+    return Number.isFinite(parsed) ? parsed : null;
+  }
+
+  const worktreeMatch = runId.match(/^run-([a-z0-9][a-z0-9-]*)-(\d+)$/);
+  if (worktreeMatch && worktreeMatch[1] === worktreeToken) {
+    const parsed = parseInt(worktreeMatch[2], 10);
+    return Number.isFinite(parsed) ? parsed : null;
+  }
+
+  return null;
+}
+
+function generateRunId(rootPath, runsPath, state) {
   // Ensure runs directory exists
   if (!fs.existsSync(runsPath)) {
     fs.mkdirSync(runsPath, { recursive: true });
   }
 
-  // Source 1: Get max from state.yaml runs.completed history
-  let maxFromHistory = 0;
-  if (state.runs && Array.isArray(state.runs.completed)) {
-    for (const run of state.runs.completed) {
-      if (run.id) {
-        const match = run.id.match(/^run-(\d+)$/);
-        if (match) {
-          const num = parseInt(match[1], 10);
-          if (num > maxFromHistory) maxFromHistory = num;
-        }
-      }
+  const worktreeToken = resolveWorktreeToken(rootPath);
+  let maxFromState = 0;
+
+  // Source 1: Get max from state.yaml run history (active + completed)
+  const stateRuns = state?.runs || {};
+  const stateRunRecords = [
+    ...(Array.isArray(stateRuns.active) ? stateRuns.active : []),
+    ...(Array.isArray(stateRuns.completed) ? stateRuns.completed : [])
+  ];
+  for (const run of stateRunRecords) {
+    const num = parseRunSequence(run?.id, worktreeToken);
+    if (num != null && num > maxFromState) {
+      maxFromState = num;
     }
   }
 
@@ -180,9 +215,9 @@ function generateRunId(runsPath, state) {
   try {
     const entries = fs.readdirSync(runsPath);
     for (const entry of entries) {
-      if (/^run-\d{3,}$/.test(entry)) {
-        const num = parseInt(entry.replace('run-', ''), 10);
-        if (num > maxFromFileSystem) maxFromFileSystem = num;
+      const num = parseRunSequence(entry, worktreeToken);
+      if (num != null && num > maxFromFileSystem) {
+        maxFromFileSystem = num;
       }
     }
   } catch (err) {
@@ -194,10 +229,10 @@ function generateRunId(runsPath, state) {
   }
 
   // Use MAX of both to ensure no duplicates
-  const maxNum = Math.max(maxFromHistory, maxFromFileSystem);
+  const maxNum = Math.max(maxFromState, maxFromFileSystem);
   const nextNum = maxNum + 1;
 
-  return `run-${String(nextNum).padStart(3, '0')}`;
+  return `run-${worktreeToken}-${String(nextNum).padStart(3, '0')}`;
 }
 
 // =============================================================================
@@ -333,7 +368,7 @@ function initRun(rootPath, workItems, scope) {
   }
 
   // Generate run ID (checks both history AND file system)
-  const runId = generateRunId(runsPath, state);
+  const runId = generateRunId(rootPath, runsPath, state);
   const runPath = path.join(runsPath, runId);
 
   // Create run folder

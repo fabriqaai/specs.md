@@ -9,8 +9,8 @@
  *   node update-checkpoint.cjs <rootPath> <runId> <checkpointState> [--item=<workItemId>] [--checkpoint=<name>]
  *
  * Examples:
- *   node update-checkpoint.cjs /project run-001 awaiting_approval --checkpoint=plan
- *   node update-checkpoint.cjs /project run-001 approved
+ *   node update-checkpoint.cjs /project run-fabriqa-2026-001 awaiting_approval --checkpoint=plan
+ *   node update-checkpoint.cjs /project run-fabriqa-2026-001 approved
  */
 
 const fs = require('fs');
@@ -223,8 +223,8 @@ function printUsage() {
   console.error(`  ${VALID_STATES.join(', ')}`);
   console.error('');
   console.error('Examples:');
-  console.error('  node update-checkpoint.cjs /project run-001 awaiting_approval --checkpoint=plan');
-  console.error('  node update-checkpoint.cjs /project run-001 approved');
+  console.error('  node update-checkpoint.cjs /project run-fabriqa-2026-001 awaiting_approval --checkpoint=plan');
+  console.error('  node update-checkpoint.cjs /project run-fabriqa-2026-001 approved');
 }
 
 if (require.main === module) {

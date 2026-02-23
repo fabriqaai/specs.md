@@ -10,9 +10,9 @@
  *   node update-phase.cjs <rootPath> <runId> <phase>
  *
  * Examples:
- *   node update-phase.cjs /project run-001 execute
- *   node update-phase.cjs /project run-001 test
- *   node update-phase.cjs /project run-001 review
+ *   node update-phase.cjs /project run-fabriqa-2026-001 execute
+ *   node update-phase.cjs /project run-fabriqa-2026-001 test
+ *   node update-phase.cjs /project run-fabriqa-2026-001 review
  */
 
 const fs = require('fs');
@@ -219,12 +219,12 @@ function printUsage() {
   console.error('');
   console.error('Arguments:');
   console.error('  rootPath  - Project root directory');
-  console.error('  runId     - Run ID (e.g., run-001)');
+  console.error('  runId     - Run ID (e.g., run-fabriqa-2026-001)');
   console.error('  phase     - New phase: plan, execute, test, review');
   console.error('');
   console.error('Examples:');
-  console.error('  node update-phase.cjs /project run-001 execute');
-  console.error('  node update-phase.cjs /project run-001 test');
+  console.error('  node update-phase.cjs /project run-fabriqa-2026-001 execute');
+  console.error('  node update-phase.cjs /project run-fabriqa-2026-001 test');
 }
 
 if (require.main === module) {
