@@ -104,10 +104,11 @@ function collectFireRunFiles(run) {
     return [];
   }
 
-  const names = ['run.md'];
-  if (run.hasPlan) names.push('plan.md');
-  if (run.hasTestReport) names.push('test-report.md');
-  if (run.hasWalkthrough) names.push('walkthrough.md');
+  const names = listMarkdownFiles(run.folderPath).sort((a, b) => {
+    if (a === 'run.md') return -1;
+    if (b === 'run.md') return 1;
+    return a.localeCompare(b);
+  });
 
   return names.map((fileName) => ({
     label: `${run.id}/${fileName}`,

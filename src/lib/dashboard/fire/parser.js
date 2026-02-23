@@ -180,7 +180,6 @@ function mergeRunWorkItems(primaryItems, fallbackItems) {
 function scanWorkItems(intentPath, intentId, stateWorkItems, warnings) {
   const workItemsPath = path.join(intentPath, 'work-items');
   const fileWorkItemIds = listMarkdownFiles(workItemsPath)
-    .filter((file) => !file.endsWith('-design.md'))
     .map((file) => file.replace(/\.md$/, ''));
 
   const stateWorkItemIds = (stateWorkItems || []).map((item) => item.id).filter(Boolean);
