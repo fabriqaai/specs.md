@@ -1,7 +1,7 @@
 {
   "$schema": "https://mintlify.com/docs.json",
   "banner": {
-    "content": "**New from the specs.md team** — [fabriqa](https://fabriqa.ai) orchestrates Claude Code, Codex, Gemini CLI & more in one workflow. [Download free →](https://fabriqa.ai)",
+    "content": "**New from the specs.md team** — [fabriqa](https://fabriqa.ai?utm_source=specsmd) orchestrates Claude Code, Codex, Gemini CLI & more in one workflow. [Download free →](https://fabriqa.ai?utm_source=specsmd)",
     "dismissible": true
   },
   "theme": "mint",
