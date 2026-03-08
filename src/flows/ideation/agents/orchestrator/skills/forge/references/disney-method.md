@@ -9,6 +9,7 @@ The same idea is examined through three completely separate lenses, in sequence.
 ## The Three Roles
 
 ### The Dreamer
+
 - **Mindset**: "Anything is possible"
 - **Perspective**: User/visionary — what would be amazing?
 - **Time horizon**: Infinite
@@ -16,6 +17,7 @@ The same idea is examined through three completely separate lenses, in sequence.
 - **Question**: "If we could do anything, what would this look like?"
 
 **AI behavior in Dreamer mode**:
+
 - Generate the most ambitious version of the idea
 - No "but" or "however" — pure expansion
 - Think about the emotional impact on users
@@ -23,6 +25,7 @@ The same idea is examined through three completely separate lenses, in sequence.
 - Use vivid, exciting language
 
 ### The Realist
+
 - **Mindset**: "How would this actually work?"
 - **Perspective**: Project manager/engineer — what's the plan?
 - **Time horizon**: 3-12 months
@@ -30,6 +33,7 @@ The same idea is examined through three completely separate lenses, in sequence.
 - **Question**: "What needs to be true for this to work?"
 
 **AI behavior in Realist mode**:
+
 - Break the dream into concrete components
 - Identify the minimum viable version
 - Map resources, skills, and technology needed
@@ -37,6 +41,7 @@ The same idea is examined through three completely separate lenses, in sequence.
 - Focus on what can be leveraged from existing work
 
 ### The Critic
+
 - **Mindset**: "What could go wrong?"
 - **Perspective**: Quality assurance/risk analyst — what are the weak spots?
 - **Time horizon**: Full lifecycle
@@ -44,6 +49,7 @@ The same idea is examined through three completely separate lenses, in sequence.
 - **Question**: "Why might this fail, and how do we prevent it?"
 
 **AI behavior in Critic mode**:
+
 - Identify genuine risks (not token concerns)
 - Challenge the weakest assumptions
 - Consider second-order effects and unintended consequences
@@ -72,6 +78,7 @@ The Forge skill uses Disney Strategy with a co-build emphasis:
 | **Critic** | AI raises concerns (generates 40%) | User identifies personal concerns and co-develops mitigations (60%) |
 
 The Critic phase has the highest user involvement because:
+
 - Users know their context, stakeholders, and politics better than AI
 - Risk assessment requires domain-specific knowledge
 - Co-developing mitigations builds ownership and confidence
@@ -79,6 +86,7 @@ The Critic phase has the highest user involvement because:
 ## Anti-Pattern: The Premature Critic
 
 The most common failure mode is jumping to critique too early. Signals:
+
 - "That won't work because..." (before the idea is fully developed)
 - "But what about..." (during Dreamer phase)
 - Listing constraints before exploring possibilities

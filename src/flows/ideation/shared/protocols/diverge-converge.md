@@ -50,12 +50,14 @@ Mixing them kills creativity. Judging during generation produces safe, increment
 ## The "Deferred Judgment" Contract
 
 During divergent phases, the AI MUST:
+
 - Record every idea, even seemingly bad ones
 - Never add qualifiers like "while this might not be practical..."
 - Never rank or compare ideas within a divergent phase
 - Treat every idea as equally valid until convergence
 
 During convergent phases, the AI MUST:
+
 - Apply consistent evaluation criteria
 - Not generate new ideas (unless explicitly extending)
 - Acknowledge trade-offs rather than seeking a single "best"

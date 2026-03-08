@@ -23,6 +23,7 @@ Generation-heavy at start (Spark), increasingly collaborative as ideas become co
 ## Hard Rules
 
 ### The 2-Question Limit
+
 **NEVER more than 2 questions in a row before generating something creative.**
 
 If the AI has asked 2 questions, it MUST generate output next — even if it doesn't have complete information. Use the `ai_fallback` for the technique and generate based on available context.
@@ -39,6 +40,7 @@ If the AI has asked 2 questions, it MUST generate output next — even if it doe
 | (detailed responses, high engagement) | More co-build to leverage engagement |
 
 ### Ratio Tracking
+
 Track the question-to-generation ratio. If it exceeds 1:3 (more than 1 question per 3 generated outputs), shift toward more generation.
 
 ## Technique-Interaction Mapping
@@ -62,19 +64,24 @@ Each technique declares its natural interaction type:
 The AI reads engagement signals and adapts:
 
 ### High Energy Signals
+
 - Long responses, exclamation marks, building on ideas
 - **Response**: Match energy, increase pace, go bolder
 
 ### Medium Energy Signals
+
 - Moderate responses, picking favorites, giving direction
 - **Response**: Steady pace, follow their direction
 
 ### Low Energy Signals
+
 - Short responses ("ok", "sure", "next"), slow replies
 - **Response**: Generate more (don't ask), try a different angle, offer to pause or switch skills
 
 ### Re-energizing Tactics
+
 When energy drops:
+
 1. Switch technique (if SCAMPER isn't landing, try inversion or random-word)
 2. Switch domain (if tech ideas aren't exciting, try nature or games)
 3. Inject a provocation (absurd idea can re-spark interest)

@@ -27,6 +27,7 @@
 ## AI Application Notes
 
 When using random-word internally:
+
 1. Pick concepts from **distant domains** — nature, games, history, architecture, music
 2. The more unrelated the concept, the more novel the connections
 3. Generate at least 5 attribute-connections, then pick the 2-3 most surprising

@@ -14,31 +14,37 @@
 ## Analogy Sources
 
 ### Nature (Biomimicry)
+
 - How does nature solve similar problems?
 - Velcro from burrs, bullet trains from kingfisher beaks, self-healing materials from skin
 - Best for: structural, efficiency, and resilience problems
 
 ### Games & Sports
+
 - How do games create engagement, manage competition, handle fairness?
 - Matchmaking, progression systems, handicaps, spectator modes
 - Best for: engagement, fairness, and motivation problems
 
 ### Architecture & Urban Planning
+
 - How do cities manage flow, density, growth, safety?
 - Zoning, traffic patterns, public spaces, wayfinding
 - Best for: scale, navigation, and organization problems
 
 ### Music & Performance
+
 - How do musicians create tension, resolution, improvisation, collaboration?
 - Call-and-response, crescendo, variations on a theme
 - Best for: experience design, pacing, and collaboration problems
 
 ### History & Civilization
+
 - How did past civilizations solve similar problems?
 - Trade routes, governance, knowledge preservation, cultural transmission
 - Best for: communication, governance, and knowledge problems
 
 ### Medicine & Biology
+
 - How does the body handle similar challenges?
 - Immune system (threats), nervous system (signals), circulatory system (distribution)
 - Best for: security, communication, and distribution problems
@@ -46,6 +52,7 @@
 ## AI Application Notes
 
 When using analogy internally:
+
 1. Abstract the topic to its core challenge (e.g., "reduce onboarding time" → "accelerate knowledge transfer")
 2. Pick 2-3 distant domains from the list above
 3. Find genuine analogies (not surface-level similarities)

@@ -24,16 +24,18 @@ The domain wheel has 12 sectors. Every idea must be tagged with its primary doma
 ## Enforcement Rules
 
 ### Per-Batch (5 ideas)
+
 1. **Minimum 3 different domains** per batch — HARD REQUIREMENT
 2. **Never 2 consecutive ideas from the same domain**
 3. **Track domain usage** across the entire session
 4. **Prioritize underused domains** — if a domain has 0 ideas, it should appear in the next 2 batches
 
 ### Per-Session
-5. **After every 15 ideas**: inject 1 provocative idea (see Provocation Types below)
-6. **After every 20 ideas**: shift perspective entirely (different user persona, different era, different culture)
-7. **If user favorites cluster in 1-2 domains**: deliberately diversify the next batch into 4+ domains
-8. **By session end**: aim for 8+ domains covered
+
+1. **After every 15 ideas**: inject 1 provocative idea (see Provocation Types below)
+2. **After every 20 ideas**: shift perspective entirely (different user persona, different era, different culture)
+3. **If user favorites cluster in 1-2 domains**: deliberately diversify the next batch into 4+ domains
+4. **By session end**: aim for 8+ domains covered
 
 ### Domain Tracking Format
 
@@ -58,6 +60,7 @@ Provocations are deliberately absurd or extreme ideas that break fixation patter
 | **Stakeholder swap** | Different user entirely | "Design this for a 5-year-old. Now for a 90-year-old." |
 
 ### Provocation Rules
+
 - Label provocations internally but present them naturally among other ideas
 - If a provocation resonates with the user, develop it into a real idea
 - Provocations should be surprising but contain a kernel of insight

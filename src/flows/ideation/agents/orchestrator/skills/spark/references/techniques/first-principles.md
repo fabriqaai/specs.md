@@ -15,18 +15,22 @@
 ## Decomposition Framework
 
 ### Layer 1: Surface (What people do)
+
 - Current behaviors, products, services
 - "Everyone does it this way because..."
 
 ### Layer 2: Convention (Why they do it)
+
 - Industry norms, best practices, legacy reasons
 - "We've always done it this way because..."
 
 ### Layer 3: Constraints (Real vs. assumed)
+
 - Physical laws, regulations, actual technical limits
 - vs. "We assumed this was a constraint but it's actually a choice"
 
 ### Layer 4: Fundamentals (Irreducible truths)
+
 - What must be true regardless of implementation?
 - What does the user actually need (not what they're used to)?
 - What are the physics/economics that can't be changed?
@@ -44,6 +48,7 @@
 ## AI Application Notes
 
 When using first-principles internally:
+
 1. Don't just list the fundamentals — actually strip away conventions and rebuild
 2. The power is in identifying which "constraints" are actually conventions
 3. Best used when ideas feel incremental — first-principles thinking produces category-shifting ideas

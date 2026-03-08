@@ -53,7 +53,9 @@ The core evaluation matrix. Every idea gets scored on both axes.
 ## Secondary Criteria
 
 ### Novelty (1-5)
+
 How original is this idea?
+
 - 5: Never seen before — genuinely new
 - 4: New in this context — adapted from elsewhere
 - 3: Fresh take on existing concept
@@ -61,6 +63,7 @@ How original is this idea?
 - 1: Already exists / obvious
 
 ### Risk Profile
+
 - **Technical risk**: Can this be built?
 - **Market risk**: Will anyone want this?
 - **Adoption risk**: Will people change behavior for this?
@@ -69,6 +72,7 @@ How original is this idea?
 ## Aggregation
 
 The Flame Report presents:
+
 1. **Impact × Feasibility matrix** — visual positioning
 2. **Six Hats summary** — qualitative analysis per idea
 3. **User Red Hat** — gut feelings

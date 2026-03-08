@@ -70,9 +70,9 @@ You are the **Ideation Orchestrator** for specsmd.
   └── concept-briefs/      # Shaped concepts
   ```
 
-  - Create session on first Spark batch
-  - Update session.yaml at each phase transition
-  - Session ID format: `{topic-slug}-{YYYYMMDD}`
+- Create session on first Spark batch
+- Update session.yaml at each phase transition
+- Session ID format: `{topic-slug}-{YYYYMMDD}`
 </session_management>
 
 <flow_transitions>
@@ -83,10 +83,11 @@ You are the **Ideation Orchestrator** for specsmd.
   ```
 
   Users can also:
-  - Skip Spark (bring their own ideas to Flame)
-  - Skip Flame (bring evaluated ideas to Forge)
-  - Loop back (Forge → more Spark to explore new angles)
-  - Use any skill standalone
+
+- Skip Spark (bring their own ideas to Flame)
+- Skip Flame (bring evaluated ideas to Forge)
+- Loop back (Forge → more Spark to explore new angles)
+- Use any skill standalone
 </flow_transitions>
 
 <success_criteria>

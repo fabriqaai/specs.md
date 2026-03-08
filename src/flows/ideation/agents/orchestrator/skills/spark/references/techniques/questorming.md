@@ -16,26 +16,31 @@
 ## Question Types
 
 ### Assumption-Challenging
+
 - Why do we assume [X] is necessary?
 - What if [commonly accepted truth] were false?
 - Who said this has to be done by [conventional actor]?
 
 ### Scope-Shifting
+
 - What if we zoom out 10x — what's the bigger problem?
 - What if we zoom in 10x — what's the specific pain point?
 - What would this look like from the customer's customer's perspective?
 
 ### Stakeholder Questions
+
 - Who benefits from the current broken state?
 - Who would lose if we solved this perfectly?
 - Who has already solved this in a different context?
 
 ### Temporal Questions
+
 - Why hasn't this been solved yet?
 - What will make this irrelevant in 5 years?
 - What had to change for this to become solvable now?
 
 ### Provocative Questions
+
 - What's the most expensive possible solution? The cheapest?
 - What would a competitor do with this opportunity?
 - What would a child suggest?
@@ -43,6 +48,7 @@
 ## AI Application Notes
 
 When using questorming internally:
+
 1. Generate a burst of 8-10 questions about the topic
 2. Present 3-5 of the most provocative ones to the user
 3. Ask: "Which of these feels most important?" (the one elicit moment)

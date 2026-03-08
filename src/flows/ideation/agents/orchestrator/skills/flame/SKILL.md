@@ -116,6 +116,7 @@ Evaluate ideas fairly through multiple perspectives. Surface hidden value, ident
 </flow>
 
 <output_artifacts>
+
   | Artifact | Location | Template |
   |----------|----------|----------|
   | Flame Report | `.specs-ideation/sessions/{id}/flame-report.md` | `./templates/flame-report.md.hbs` |

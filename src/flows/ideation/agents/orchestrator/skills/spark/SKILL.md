@@ -135,6 +135,7 @@ Generate genuinely diverse, surprising ideas through rapid batches. AI is the cr
 </flow>
 
 <output_artifacts>
+
   | Artifact | Location | Template |
   |----------|----------|----------|
   | Spark Bank | `.specs-ideation/sessions/{id}/spark-bank.md` | `./templates/spark-bank.md.hbs` |

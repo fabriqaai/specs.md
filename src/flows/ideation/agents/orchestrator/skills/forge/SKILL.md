@@ -137,6 +137,7 @@ Develop shortlisted ideas into polished, actionable concept briefs. AI and user 
 </flow>
 
 <output_artifacts>
+
   | Artifact | Location | Template |
   |----------|----------|----------|
   | Concept Brief | `.specs-ideation/sessions/{id}/concept-briefs/{name}.md` | `./templates/concept-brief.md.hbs` |

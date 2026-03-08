@@ -29,35 +29,41 @@ Execute the same reasoning chain as an internal process. Think through each step
 ## The 6-Step Reasoning Chain
 
 ### Think 1 — Domain Check
+
 - Review domain usage tracking from session state
 - Which domains are underexplored?
 - Select 3+ target domains for this batch
 - If user expressed preferences, balance between preferred and underexplored
 
 ### Think 2 — Raw Concepts
+
 - Generate 1-2 raw ideas per selected domain
 - Use a technique internally: SCAMPER, analogy, inversion, random-word, what-if, first-principles, or questorming
 - Select technique based on: what hasn't been used recently, what fits the user's energy, what the topic needs
 - Aim for 6-8 raw concepts to select 5 from
 
 ### Think 3 — Novelty Filter
+
 - For each raw concept, ask: "Is this genuinely new or a repackaged version of an obvious idea?"
 - Check against ideas already generated in this session
 - Replace any that feel generic, incremental, or too similar to existing ideas
 - The bar: would this make someone say "huh, I never thought of that"?
 
 ### Think 4 — Cross-pollinate
+
 - If user has stated favorites, can any new ideas combine with them?
 - Look for unexpected connections between the raw concepts themselves
 - Create at least one idea that bridges two different domains
 
 ### Think 5 — Provocation
+
 - Check: is a provocation due? (every 15 ideas)
 - If yes: select a provocation type and generate one deliberately absurd idea
 - If no: ensure at least one idea in the batch challenges a core assumption
 - The provocation should be surprising but contain a genuine insight
 
 ### Think 6 — Polish
+
 - For each of the 5 selected ideas:
   - Make it vivid: use concrete details, not abstractions
   - Make it specific: "a quest system where..." not "gamification"
@@ -65,6 +71,7 @@ Execute the same reasoning chain as an internal process. Think through each step
 - Final anti-bias check: do the 5 ideas span 3+ domains? No 2 consecutive from same domain?
 
 ### Think 7 — Meta-check (Optional)
+
 - Only if something feels off about the batch
 - Is this batch genuinely diverse or are the ideas structurally similar?
 - Does this batch feel different from the previous batch?
