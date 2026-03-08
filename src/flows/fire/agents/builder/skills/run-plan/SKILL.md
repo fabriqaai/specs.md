@@ -113,6 +113,18 @@ Plan the scope of a run by discovering available work items and suggesting group
         </action>
       </check>
 
+      <check if="state says completed but item is in runs.active[].work_items with current_phase != review">
+        <output>
+          **Suspect completion**: {work-item-id}
+          - state.yaml status: completed
+          - But current_phase: {current_phase} (not "review")
+          - Item is still in active run {run-id}
+          Resetting to in_progress — item was likely marked complete prematurely.
+        </output>
+        <action>Reset work item status to in_progress in state.yaml</action>
+        <action>Update frontmatter to match</action>
+      </check>
+
       <check if="in state.yaml but file missing">
         <output>Warning: {item} in state but file not found on disk</output>
       </check>

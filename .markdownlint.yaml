@@ -83,9 +83,14 @@ MD033:
     - sup
     # FIRE flow semantic elements
     - action
+    - adaptation
+    - ai_fallback
+    - anti_bias
     - check
     - clarification
     - constraints
+    - criteria
+    - critic
     - exit
     - goto
     - handoff
@@ -117,14 +122,18 @@ MD033:
     - description
     - design_document_flow
     - determine_resume_point
+    - dreamer
     - error
     - example_output
     - example
+    - examples
     - execution_modes
     - file_discovery_logic
     - file_tracking_format
     - file_tracking
     - flow
+    - flow_transitions
+    - format
     - generate_options
     - grouping_algorithm
     - grouping_rules
@@ -136,6 +145,7 @@ MD033:
     - input_context
     - intent_capture_flow
     - invoke_skill
+    - if
     - listen
     - mandate
     - monorepo_detection
@@ -149,7 +159,11 @@ MD033:
     - output
     - prerequisites
     - principle
+    - protocols
     - recommendation_logic
+    - realist
+    - reasoning
+    - references
     - references_index
     - resolution_algorithm
     - return_value
@@ -165,12 +179,15 @@ MD033:
     - scope_types
     - scripts
     - set
+    - session_management
     - skills
+    - scoring
     - state_schema_updates
     - state_schema
     - substep
     - success_criteria
     - timeline
+    - transition
     - triggers
     - version_detection
     - work_item_decomposition_flow

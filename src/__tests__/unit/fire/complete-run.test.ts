@@ -33,6 +33,7 @@ interface WorkItem {
   intent: string;
   mode: string;
   status: string;
+  current_phase?: string;
 }
 
 interface CompleteRunParams {
@@ -113,9 +114,13 @@ describe('complete-run', () => {
     const items = workItems || [{ id: 'WI-001', intent: 'INT-001', mode: 'autopilot', status: 'in_progress' }];
     const scope = items.length === 1 ? 'single' : 'batch';
 
-    const workItemsYaml = items.map(item =>
-      `  - id: ${item.id}\n    intent: ${item.intent}\n    mode: ${item.mode}\n    status: ${item.status}`
-    ).join('\n');
+    const workItemsYaml = items.map(item => {
+      let entry = `  - id: ${item.id}\n    intent: ${item.intent}\n    mode: ${item.mode}\n    status: ${item.status}`;
+      if (item.current_phase) {
+        entry += `\n    current_phase: ${item.current_phase}`;
+      }
+      return entry;
+    }).join('\n');
 
     const workItemsMarkdown = items.map((item, i) =>
       `${i + 1}. **${item.id}** (${item.mode}) — ${item.status}`
@@ -332,11 +337,11 @@ ${currentItem.id} (${currentItem.mode})
         runs: { active: [{
           id: 'run-001',
           scope: 'single',
-          work_items: [{ id: 'WI-001', intent: 'INT-001', mode: 'autopilot', status: 'in_progress' }],
+          work_items: [{ id: 'WI-001', intent: 'INT-001', mode: 'autopilot', status: 'in_progress', current_phase: 'review' }],
           current_item: 'WI-001',
         }], completed: [] },
       });
-      createRunFolder('run-001');
+      createRunFolder('run-001', [{ id: 'WI-001', intent: 'INT-001', mode: 'autopilot', status: 'in_progress', current_phase: 'review' }]);
     });
 
     it('should return success result', () => {
@@ -460,7 +465,7 @@ ${currentItem.id} (${currentItem.mode})
 
   describe('batch run - completeCurrentItem', () => {
     const batchWorkItems: WorkItem[] = [
-      { id: 'WI-001', intent: 'INT-001', mode: 'autopilot', status: 'in_progress' },
+      { id: 'WI-001', intent: 'INT-001', mode: 'autopilot', status: 'in_progress', current_phase: 'review' },
       { id: 'WI-002', intent: 'INT-001', mode: 'confirm', status: 'pending' },
       { id: 'WI-003', intent: 'INT-002', mode: 'validate', status: 'pending' },
     ];
@@ -508,12 +513,12 @@ ${currentItem.id} (${currentItem.mode})
     });
 
     it('should indicate all items completed when finishing last item', () => {
-      // Complete first item
+      // Complete first item (already at review phase)
       completeCurrentItem(testRoot, 'run-001', {});
-      // Complete second item
-      completeCurrentItem(testRoot, 'run-001', {});
+      // Complete second and third items (use force since they start at 'plan' phase)
+      completeCurrentItem(testRoot, 'run-001', {}, { force: true });
       // Complete third (last) item
-      const result: CompleteItemResult = completeCurrentItem(testRoot, 'run-001', {});
+      const result: CompleteItemResult = completeCurrentItem(testRoot, 'run-001', {}, { force: true });
 
       expect(result.allItemsCompleted).toBe(true);
       expect(result.nextItem).toBeNull();
@@ -541,9 +546,9 @@ ${currentItem.id} (${currentItem.mode})
 
   describe('batch run - completeRun', () => {
     const batchWorkItems: WorkItem[] = [
-      { id: 'WI-001', intent: 'INT-001', mode: 'autopilot', status: 'completed' },
-      { id: 'WI-002', intent: 'INT-001', mode: 'confirm', status: 'in_progress' },
-      { id: 'WI-003', intent: 'INT-002', mode: 'validate', status: 'pending' },
+      { id: 'WI-001', intent: 'INT-001', mode: 'autopilot', status: 'completed', current_phase: 'review' },
+      { id: 'WI-002', intent: 'INT-001', mode: 'confirm', status: 'in_progress', current_phase: 'review' },
+      { id: 'WI-003', intent: 'INT-002', mode: 'validate', status: 'pending', current_phase: 'review' },
     ];
 
     beforeEach(() => {
@@ -638,11 +643,11 @@ ${currentItem.id} (${currentItem.mode})
         runs: { active: [{
           id: 'run-001',
           scope: 'single',
-          work_items: [{ id: 'WI-001', intent: 'INT-001', mode: 'autopilot', status: 'in_progress' }],
+          work_items: [{ id: 'WI-001', intent: 'INT-001', mode: 'autopilot', status: 'in_progress', current_phase: 'review' }],
           current_item: 'WI-001',
         }], completed: [] },
       });
-      createRunFolder('run-001');
+      createRunFolder('run-001', [{ id: 'WI-001', intent: 'INT-001', mode: 'autopilot', status: 'in_progress', current_phase: 'review' }]);
     });
 
     it('should handle empty arrays gracefully', () => {
@@ -684,7 +689,7 @@ ${currentItem.id} (${currentItem.mode})
         runs: { active: [{
           id: 'run-001',
           scope: 'single',
-          work_items: [{ id: 'WI-001', intent: 'INT-001', mode: 'autopilot', status: 'in_progress' }],
+          work_items: [{ id: 'WI-001', intent: 'INT-001', mode: 'autopilot', status: 'in_progress', current_phase: 'review' }],
           current_item: 'WI-001',
         }], completed: [] },
         custom_field: 'should be preserved',
@@ -710,7 +715,7 @@ ${currentItem.id} (${currentItem.mode})
           active: [{
             id: 'run-001',
             scope: 'single',
-            work_items: [{ id: 'WI-001', intent: 'INT-001', mode: 'autopilot', status: 'in_progress' }],
+            work_items: [{ id: 'WI-001', intent: 'INT-001', mode: 'autopilot', status: 'in_progress', current_phase: 'review' }],
             current_item: 'WI-001',
           }],
           completed: [
@@ -742,7 +747,7 @@ ${currentItem.id} (${currentItem.mode})
           active: [{
             id: 'run-002',
             scope: 'single',
-            work_items: [{ id: 'WI-001', intent: 'INT-001', mode: 'autopilot', status: 'in_progress' }],
+            work_items: [{ id: 'WI-001', intent: 'INT-001', mode: 'autopilot', status: 'in_progress', current_phase: 'review' }],
             current_item: 'WI-001',
           }],
           completed: [
@@ -762,6 +767,162 @@ ${currentItem.id} (${currentItem.mode})
       expect(state.runs.completed.length).toBe(2);
       expect(state.runs.completed[0].id).toBe('run-001');
       expect(state.runs.completed[1].id).toBe('run-002');
+    });
+  });
+
+  // ===========================================================================
+  // Phase Guard Tests
+  // ===========================================================================
+
+  describe('phase guard - completeCurrentItem', () => {
+    function setupBatchRun(currentPhase: string) {
+      const items: WorkItem[] = [
+        { id: 'WI-001', intent: 'INT-001', mode: 'autopilot', status: 'in_progress', current_phase: currentPhase },
+        { id: 'WI-002', intent: 'INT-001', mode: 'autopilot', status: 'pending' },
+      ];
+      createStateFile({
+        intents: [
+          { id: 'INT-001', work_items: [{ id: 'WI-001', status: 'in_progress' }, { id: 'WI-002', status: 'pending' }] },
+        ],
+        runs: { active: [{
+          id: 'run-001',
+          scope: 'batch',
+          work_items: items,
+          current_item: 'WI-001',
+        }], completed: [] },
+      });
+      createRunFolder('run-001', items);
+    }
+
+    it('should throw COMPLETE_051 when current phase is plan', () => {
+      setupBatchRun('plan');
+
+      expect(() => completeCurrentItem(testRoot, 'run-001', {}))
+        .toThrow('COMPLETE_051');
+    });
+
+    it('should throw COMPLETE_051 when current phase is execute', () => {
+      setupBatchRun('execute');
+
+      expect(() => completeCurrentItem(testRoot, 'run-001', {}))
+        .toThrow('COMPLETE_051');
+    });
+
+    it('should throw COMPLETE_051 when current phase is test', () => {
+      setupBatchRun('test');
+
+      expect(() => completeCurrentItem(testRoot, 'run-001', {}))
+        .toThrow('COMPLETE_051');
+    });
+
+    it('should succeed when current phase is review', () => {
+      setupBatchRun('review');
+
+      const result = completeCurrentItem(testRoot, 'run-001', {});
+
+      expect(result.success).toBe(true);
+      expect(result.completedItem).toBe('WI-001');
+    });
+
+    it('should succeed with --force regardless of phase', () => {
+      setupBatchRun('plan');
+
+      const result = completeCurrentItem(testRoot, 'run-001', {}, { force: true });
+
+      expect(result.success).toBe(true);
+      expect(result.completedItem).toBe('WI-001');
+    });
+  });
+
+  describe('phase guard - completeRun', () => {
+    function setupRunWithPhases(phases: Array<{ id: string; status: string; phase?: string }>) {
+      const items: WorkItem[] = phases.map(p => ({
+        id: p.id,
+        intent: 'INT-001',
+        mode: 'autopilot',
+        status: p.status,
+        ...(p.phase ? { current_phase: p.phase } : {}),
+      }));
+      createStateFile({
+        intents: [
+          { id: 'INT-001', work_items: phases.map(p => ({ id: p.id, status: p.status })) },
+        ],
+        runs: { active: [{
+          id: 'run-001',
+          scope: 'batch',
+          work_items: items,
+          current_item: items.find(i => i.status === 'in_progress')?.id || items[0].id,
+        }], completed: [] },
+      });
+      createRunFolder('run-001', items);
+    }
+
+    it('should throw COMPLETE_060 when non-completed items have not reached review', () => {
+      setupRunWithPhases([
+        { id: 'WI-001', status: 'completed', phase: 'review' },
+        { id: 'WI-002', status: 'in_progress', phase: 'execute' },
+        { id: 'WI-003', status: 'pending', phase: 'plan' },
+      ]);
+
+      expect(() => completeRun(testRoot, 'run-001', validParams()))
+        .toThrow('COMPLETE_060');
+    });
+
+    it('should succeed when all non-completed items are at review phase', () => {
+      setupRunWithPhases([
+        { id: 'WI-001', status: 'completed', phase: 'review' },
+        { id: 'WI-002', status: 'in_progress', phase: 'review' },
+      ]);
+
+      const result = completeRun(testRoot, 'run-001', validParams());
+
+      expect(result.success).toBe(true);
+      expect(result.workItemsCompleted).toBe(2);
+    });
+
+    it('should succeed with --force override', () => {
+      setupRunWithPhases([
+        { id: 'WI-001', status: 'completed', phase: 'review' },
+        { id: 'WI-002', status: 'in_progress', phase: 'execute' },
+      ]);
+
+      const result = completeRun(testRoot, 'run-001', validParams(), { force: true });
+
+      expect(result.success).toBe(true);
+    });
+  });
+
+  describe('phase guard - regression: 3-item batch scenario', () => {
+    it('should refuse completion when item 2 is at plan phase and item 3 is pending', () => {
+      const items: WorkItem[] = [
+        { id: 'WI-001', intent: 'INT-001', mode: 'autopilot', status: 'completed', current_phase: 'review' },
+        { id: 'WI-002', intent: 'INT-001', mode: 'autopilot', status: 'in_progress', current_phase: 'plan' },
+        { id: 'WI-003', intent: 'INT-001', mode: 'autopilot', status: 'pending' },
+      ];
+      createStateFile({
+        intents: [
+          { id: 'INT-001', work_items: [
+            { id: 'WI-001', status: 'completed' },
+            { id: 'WI-002', status: 'in_progress' },
+            { id: 'WI-003', status: 'pending' },
+          ]},
+        ],
+        runs: { active: [{
+          id: 'run-001',
+          scope: 'batch',
+          work_items: items,
+          current_item: 'WI-002',
+        }], completed: [] },
+      });
+      createRunFolder('run-001', items);
+
+      // completeCurrentItem should refuse (WI-002 is at plan, not review)
+      expect(() => completeCurrentItem(testRoot, 'run-001', {}))
+        .toThrow('COMPLETE_051');
+
+      // completeRun should also refuse (WI-002 at plan, WI-003 has no phase)
+      expect(() => completeRun(testRoot, 'run-001', validParams()))
+        .toThrow('COMPLETE_060');
     });
   });
 });
