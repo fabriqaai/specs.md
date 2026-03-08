@@ -248,6 +248,8 @@ Supports both single-item and multi-item (batch/wide) runs.
     <action>Save plan IMMEDIATELY using template: templates/plan.md.hbs</action>
     <action>Write to: .specs-fire/runs/{run-id}/plan.md</action>
     <output>Plan saved to: .specs-fire/runs/{run-id}/plan.md</output>
+    <action>Mark checkpoint as waiting:</action>
+    <code>node scripts/update-checkpoint.cjs {rootPath} {runId} awaiting_approval --checkpoint=plan</code>
 
     <checkpoint>
       <template_output section="plan">
@@ -276,6 +278,8 @@ Supports both single-item and multi-item (batch/wide) runs.
       <action>Update plan.md with changes</action>
       <goto step="3b"/>
     </check>
+    <action>Mark checkpoint approved:</action>
+    <code>node scripts/update-checkpoint.cjs {rootPath} {runId} approved --checkpoint=plan</code>
     <goto step="5"/>
   </step>
 
@@ -286,6 +290,8 @@ Supports both single-item and multi-item (batch/wide) runs.
     <action>Write to: .specs-fire/runs/{run-id}/plan.md</action>
     <action>Include reference to design doc in plan</action>
     <output>Plan saved to: .specs-fire/runs/{run-id}/plan.md</output>
+    <action>Mark checkpoint as waiting:</action>
+    <code>node scripts/update-checkpoint.cjs {rootPath} {runId} awaiting_approval --checkpoint=plan</code>
 
     <checkpoint>
       <template_output section="plan">
@@ -314,6 +320,8 @@ Supports both single-item and multi-item (batch/wide) runs.
       <action>Update plan.md with changes</action>
       <goto step="3c"/>
     </check>
+    <action>Mark checkpoint approved:</action>
+    <code>node scripts/update-checkpoint.cjs {rootPath} {runId} approved --checkpoint=plan</code>
     <goto step="5"/>
   </step>
 
@@ -574,6 +582,7 @@ Supports both single-item and multi-item (batch/wide) runs.
   | Script | Purpose | Usage |
   |--------|---------|-------|
   | `scripts/init-run.cjs` | Initialize run record and folder | Creates run.md with all work items |
+  | `scripts/update-checkpoint.cjs` | Mark approval gate state for active item | `awaiting_approval` / `approved` |
   | `scripts/update-phase.cjs` | Update current work item's phase | `node scripts/update-phase.cjs {rootPath} {runId} {phase}` |
   | `scripts/complete-run.cjs` | Finalize run and update state | `--complete-item` or `--complete-run` |
 
@@ -593,8 +602,8 @@ Supports both single-item and multi-item (batch/wide) runs.
       ```json
       {
         "success": true,
-        "runId": "run-001",
-        "runPath": "/project/.specs-fire/runs/run-001",
+        "runId": "run-fabriqa-2026-001",
+        "runPath": "/project/.specs-fire/runs/run-fabriqa-2026-001",
         "scope": "batch",
         "workItems": [...],
         "currentItem": "wi-1"
@@ -606,10 +615,10 @@ Supports both single-item and multi-item (batch/wide) runs.
   <script name="complete-run.cjs">
     ```bash
     # Complete current item (batch runs - moves to next item)
-    node scripts/complete-run.cjs /project run-001 --complete-item
+    node scripts/complete-run.cjs /project run-fabriqa-2026-001 --complete-item
 
     # Complete entire run (single runs or final item in batch)
-    node scripts/complete-run.cjs /project run-001 --complete-run \
+    node scripts/complete-run.cjs /project run-fabriqa-2026-001 --complete-run \
       --files-created='[{"path":"src/new.ts","purpose":"New feature"}]' \
       --files-modified='[{"path":"src/old.ts","changes":"Added import"}]' \
       --tests=5 --coverage=85
@@ -619,7 +628,7 @@ Supports both single-item and multi-item (batch/wide) runs.
       ```json
       {
         "success": true,
-        "runId": "run-001",
+        "runId": "run-fabriqa-2026-001",
         "completedItem": "wi-1",
         "nextItem": "wi-2",
         "remainingItems": 1,
@@ -632,7 +641,7 @@ Supports both single-item and multi-item (batch/wide) runs.
       ```json
       {
         "success": true,
-        "runId": "run-001",
+        "runId": "run-fabriqa-2026-001",
         "scope": "batch",
         "workItemsCompleted": 2,
         "completedAt": "2026-01-20T..."
@@ -664,7 +673,7 @@ Supports both single-item and multi-item (batch/wide) runs.
   After init-run.cjs creates a run:
 
   ```
-  .specs-fire/runs/run-001/
+  .specs-fire/runs/run-fabriqa-2026-001/
   ├── run.md           # Created by init-run.cjs, updated by complete-run.cjs
   ├── plan.md          # Created BEFORE implementation (ALL modes - required)
   ├── test-report.md   # Created AFTER tests pass (required)

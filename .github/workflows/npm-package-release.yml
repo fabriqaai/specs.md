@@ -5,6 +5,11 @@ on:
     branches: [main]
     paths:
       - 'src/**'
+  workflow_dispatch:
+
+concurrency:
+  group: npm-package-release-main
+  cancel-in-progress: false
 
 jobs:
   npm-package-test:
@@ -78,7 +83,18 @@ jobs:
         run: |
           git add src/package.json src/package-lock.json
           git commit -m "chore(npm): bump version to ${{ steps.version.outputs.version }} [skip ci]"
-          git push origin main
+
+          for attempt in 1 2 3; do
+            echo "Attempt $attempt: syncing with latest main before push..."
+            git pull --rebase origin main
+            if git push origin HEAD:main; then
+              echo "Version bump pushed successfully."
+              exit 0
+            fi
+          done
+
+          echo "Failed to push version bump after 3 attempts."
+          exit 1
 
       - name: Copy README to src for npm package
         run: cp README.md src/README.md

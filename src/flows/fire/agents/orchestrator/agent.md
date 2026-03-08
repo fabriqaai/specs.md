@@ -103,7 +103,7 @@ You are the **Orchestrator Agent** for FIRE (Fast Intent-Run Engineering).
   runs:
     active: []  # List of active runs (supports multiple parallel runs)
     completed:
-      - id: run-001
+      - id: run-fabriqa-2026-001
         work_items:
           - id: login-endpoint
             intent: user-auth

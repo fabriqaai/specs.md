@@ -58,7 +58,7 @@ Display current run status and progress.
 <example_output>
 
   ```
-  ## Run Status: run-003
+  ## Run Status: run-fabriqa-2026-003
 
   **Work Item**: Add session management
   **Intent**: User Authentication

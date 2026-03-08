@@ -71,6 +71,21 @@ The installer detects your AI coding tools (Claude Code, Cursor, GitHub Copilot)
 - Memory bank structure for context persistence
 - Slash commands for easy agent invocation
 
+### Live Dashboard (FIRE)
+
+Track FIRE state continuously from terminal:
+
+```bash
+npx specsmd@latest dashboard
+```
+
+Options:
+
+```bash
+npx specsmd@latest dashboard --flow fire --path . --refresh-ms 1000
+npx specsmd@latest dashboard --no-watch
+```
+
 ### Initialize Your Project
 
 ```bash
@@ -319,4 +334,3 @@ MIT License - see [LICENSE](LICENSE) for details.
 <p align="center">
   Built with AWS' AI-DLC methodology by the <a href="https://specs.md">specs.md</a> team.
 </p>
-

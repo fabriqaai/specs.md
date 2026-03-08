@@ -7,6 +7,40 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 You can also view this changelog at [specs.md/changelog](https://specs.md/changelog).
 
+## [0.1.49] - 2026-02-22
+
+### Changed
+
+- Dashboard: Added worktree support in the CLI so you can monitor and switch between multiple branches/worktrees in one place (useful when parallel feature branches are active and you want to track progress without leaving the dashboard)
+- Dashboard: Added explicit command-log feedback after switching worktrees so the active context change is immediately visible (for example: `Switched to worktree: <name>`)
+
+## [0.1.26] - 2026-02-21
+
+### Added
+
+- FIRE CLI dashboard: `npx specsmd@latest dashboard` for terminal-native workflow tracking
+- Tabbed terminal views (Runs, Overview, Health) designed for small embedded terminal panels
+- Keyboard navigation for tabs and filters (`1/2/3`, `Tab`, `←/→`, `f`)
+- Current Run-first layout with run status, phase track, and run files section
+
+### Changed
+
+- Dashboard is now optimized for CLI-first and Codex desktop app users as an alternative to the VS Code extension
+- Reduced dashboard flicker by avoiding unnecessary re-renders and using calmer fallback refresh behavior
+- Improved compact rendering with denser borders/spacing and strict height budgeting for small windows
+- Added Nerd Font icon auto-detection with manual override via `SPECSMD_ICON_SET=auto|nerd|ascii`
+
+![FIRE dashboard in compact terminal mode](docs.specs.md/images/dashboard/terminal-dashboard.png)
+
+![FIRE dashboard in Codex desktop with no active run](docs.specs.md/images/dashboard/codex-desktop-dashboard1.png)
+
+## [0.1.23] - 2026-02-13
+
+### Fixed
+
+- Codex installer now creates proper skills instead of flat `.md` files that Codex cannot read
+- Commands are transformed into `.codex/skills/<name>/SKILL.md` with proper YAML frontmatter
+
 ## [0.1.11] - 2026-01-25
 
 ### Per-Work-Item Phase Tracking
@@ -186,6 +220,9 @@ The VS Code extension now shows real-time phase progress for each work item in F
 
 ---
 
+[0.1.49]: https://github.com/fabriqaai/specs.md/compare/v0.1.47...v0.1.49
+[0.1.26]: https://github.com/fabriqaai/specs.md/compare/v0.1.25...v0.1.26
+[0.1.23]: https://github.com/fabriqaai/specs.md/compare/v0.1.22...v0.1.23
 [0.1.11]: https://github.com/fabriqaai/specs.md/compare/v0.1.10...v0.1.11
 [0.1.10]: https://github.com/fabriqaai/specs.md/compare/v0.1.9...v0.1.10
 [0.1.9]: https://github.com/fabriqaai/specs.md/compare/v0.1.8...v0.1.9

@@ -1,5 +1,9 @@
 {
   "$schema": "https://mintlify.com/docs.json",
+  "banner": {
+    "content": "**New from the specs.md team** — [fabriqa](https://fabriqa.ai?utm_source=specsmd) orchestrates Claude Code, Codex, Gemini CLI & more in one workflow. [Download free →](https://fabriqa.ai?utm_source=specsmd)",
+    "dismissible": true
+  },
   "theme": "mint",
   "name": "specs.md",
   "description": "AI-native software development framework with pluggable flows. Choose Simple for specs, FIRE for rapid execution, or AI-DLC for full methodology. Works with Claude Code, Cursor, and GitHub Copilot.",
@@ -62,6 +66,7 @@
               "index",
               "getting-started/installation",
               "getting-started/ide-extension",
+              "getting-started/cli-dashboard",
               "getting-started/quick-start",
               "deepwiki"
             ]
@@ -165,7 +170,9 @@
               "learn/index",
               "learn/fire-flow-intro",
               "learn/fire-flow-resume-run",
-              "learn/aidlc-bolt-execution"
+              "learn/aidlc-bolt-execution",
+              "learn/cli-dashboard-codex",
+              "learn/specsmd-in-fabriqa"
             ]
           }
         ]

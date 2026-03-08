@@ -306,6 +306,9 @@ function updateRunLog(runLogPath, activeRun, params, completedTime, isFullComple
       intent: item.intent,
       mode: item.mode,
       status: item.status,
+      current_phase: item.current_phase || null,
+      checkpoint_state: item.checkpoint_state || null,
+      current_checkpoint: item.current_checkpoint || null,
     }));
   }
 
@@ -429,6 +432,12 @@ function completeCurrentItem(rootPath, runId, params = {}, options = {}) {
     if (workItems[i].id === currentItemId) {
       workItems[i].status = 'completed';
       workItems[i].completed_at = completedTime;
+      if (workItems[i].mode === 'confirm' || workItems[i].mode === 'validate') {
+        workItems[i].checkpoint_state = 'approved';
+        workItems[i].current_checkpoint = workItems[i].current_checkpoint || 'plan';
+      } else {
+        workItems[i].checkpoint_state = workItems[i].checkpoint_state || 'not_required';
+      }
       currentItemIndex = i;
       break;
     }
@@ -458,6 +467,10 @@ function completeCurrentItem(rootPath, runId, params = {}, options = {}) {
     if (workItems[i].status === 'pending') {
       workItems[i].status = 'in_progress';
       workItems[i].current_phase = 'plan';
+      workItems[i].checkpoint_state = 'none';
+      workItems[i].current_checkpoint = (workItems[i].mode === 'confirm' || workItems[i].mode === 'validate')
+        ? 'plan'
+        : null;
       nextItem = workItems[i];
       break;
     }
@@ -570,6 +583,12 @@ function completeRun(rootPath, runId, params = {}, options = {}) {
     if (item.status !== 'completed') {
       item.status = 'completed';
       item.completed_at = completedTime;
+    }
+    if (item.mode === 'confirm' || item.mode === 'validate') {
+      item.checkpoint_state = 'approved';
+      item.current_checkpoint = item.current_checkpoint || 'plan';
+    } else {
+      item.checkpoint_state = item.checkpoint_state || 'not_required';
     }
   }
 
@@ -716,7 +735,7 @@ function printUsage() {
   console.error('');
   console.error('Arguments:');
   console.error('  rootPath  - Project root directory');
-  console.error('  runId     - Run ID to complete (e.g., run-003)');
+  console.error('  runId     - Run ID to complete (e.g., run-fabriqa-2026-003)');
   console.error('');
   console.error('Flags:');
   console.error('  --complete-item  - Complete only the current work item (batch/wide runs)');
@@ -731,8 +750,8 @@ function printUsage() {
   console.error('  --coverage=N           - Coverage percentage');
   console.error('');
   console.error('Examples:');
-  console.error('  node complete-run.cjs /project run-003 --complete-item');
-  console.error('  node complete-run.cjs /project run-003 --complete-run --tests=5 --coverage=85');
+  console.error('  node complete-run.cjs /project run-fabriqa-2026-003 --complete-item');
+  console.error('  node complete-run.cjs /project run-fabriqa-2026-003 --complete-run --tests=5 --coverage=85');
 }
 
 // =============================================================================
