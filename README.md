@@ -1,4 +1,4 @@
-# specs.md
+# specs.md - by fabriqa
 
 <p align="center">
   <img src="images/specs_md_pixel_logo.png" alt="specs.md logo" width="400" />
