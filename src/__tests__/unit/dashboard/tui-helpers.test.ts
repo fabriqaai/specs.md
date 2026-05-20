@@ -283,3 +283,13 @@ describe('normalizePanelLine', () => {
     expect(result.text).toBe('');
   });
 });
+
+describe('dashboard terminal dependency contract', () => {
+  it('declares CommonJS-compatible width helpers for Node 20 installs', () => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const packageJson = require('../../../package.json');
+
+    expect(packageJson.dependencies['string-width']).toMatch(/^\^?4\./);
+    expect(packageJson.dependencies['slice-ansi']).toMatch(/^\^?4\./);
+  });
+});
