@@ -6,7 +6,7 @@
   },
   "theme": "mint",
   "name": "specs.md",
-  "description": "AI-native software development framework with pluggable flows. Choose Simple for specs, FIRE for rapid execution, or AI-DLC for full methodology. Works with Claude Code, Cursor, and GitHub Copilot.",
+  "description": "AI-native software development framework with pluggable flows. Choose Ideation for brainstorming, Simple for specs, FIRE for rapid execution, or AI-DLC for full methodology. Works with Claude Code, Cursor, and GitHub Copilot.",
   "metadata": {
     "og:site_name": "specs.md",
     "og:type": "website",
@@ -15,7 +15,7 @@
     "twitter:card": "summary_large_image",
     "twitter:site": "@specsmd",
     "twitter:image": "/images/logo.png",
-    "keywords": "AI-native development, FIRE flow, AI-DLC, Simple flow, spec-driven development, multi-agent orchestration, Claude Code, Cursor, GitHub Copilot, brownfield development, monorepo"
+    "keywords": "AI-native development, Ideation flow, FIRE flow, AI-DLC, Simple flow, spec-driven development, multi-agent orchestration, Claude Code, Cursor, GitHub Copilot, brownfield development, monorepo, brainstorming, creative ideation"
   },
   "seo": {
     "indexHiddenPages": true
@@ -76,6 +76,14 @@
             "pages": [
               "architecture/flows",
               "architecture/choose-flow"
+            ]
+          },
+          {
+            "group": "Ideation Flow",
+            "pages": [
+              "ideation-flow/overview",
+              "ideation-flow/quick-start",
+              "ideation-flow/skills"
             ]
           },
           {

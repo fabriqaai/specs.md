@@ -6,7 +6,7 @@
 
 **AI-native development framework with pluggable flows for every use case.**
 
-Choose the flow that matches your project needs: **Simple** for quick specs, **FIRE** for adaptive execution, or **AI-DLC** for full methodology with DDD.
+Choose the flow that matches your project needs: **Ideation** for creative brainstorming, **Simple** for quick specs, **FIRE** for adaptive execution, or **AI-DLC** for full methodology with DDD.
 
 [![npm version](https://img.shields.io/npm/v/specsmd)](https://www.npmjs.com/package/specsmd)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -50,15 +50,16 @@ Track your progress with our sidebar extension for VS Code and compatible IDEs.
 
 ---
 
-## Three Flows, Every Use Case
+## Four Flows, Every Use Case
 
 | Flow | Optimized For | Agents | Checkpoints |
 |------|---------------|--------|-------------|
+| **[Ideation](#ideation-flow)** | Creative brainstorming, concept shaping, product discovery | 1 | 0 (non-blocking) |
 | **[Simple](#simple-flow)** | Spec generation, prototypes | 1 | 3 (phase gates) |
 | **[FIRE](#fire-flow)** | Adaptive execution, brownfield, monorepos | 3 | Adaptive (0-2) |
 | **[AI-DLC](#ai-dlc-flow)** | Full traceability, DDD, regulated environments | 4 | Comprehensive |
 
-> **Not sure which flow?** If you want quick specs without execution tracking, use **Simple**. If you want adaptive execution that right-sizes rigor, use **FIRE**. If you need comprehensive documentation and DDD, use **AI-DLC**.
+> **Not sure which flow?** If you want to explore ideas before committing to a feature, use **Ideation**. If you want quick specs without execution tracking, use **Simple**. If you want adaptive execution that right-sizes rigor, use **FIRE**. If you need comprehensive documentation and DDD, use **AI-DLC**.
 
 ---
 
@@ -82,6 +83,7 @@ During installation, select your flow:
 
 ```
 ? Select a development flow:
+  Ideation - Creative ideation: Spark → Flame → Forge idea generation and shaping
   Simple - Spec generation only (requirements, design, tasks)
 ❯ FIRE - Adaptive execution, brownfield & monorepo ready
   AI-DLC - Full methodology with DDD (comprehensive checkpoints)
@@ -117,10 +119,45 @@ Track your progress visually with our sidebar extension:
 cat .specsmd/manifest.yaml
 
 # List installed agents (adjust path for your flow)
-ls .specsmd/fire/agents/     # FIRE flow
-ls .specsmd/simple/agents/   # Simple flow
-ls .specsmd/aidlc/agents/    # AI-DLC flow
+ls .specsmd/ideation/agents/  # Ideation flow
+ls .specsmd/fire/agents/      # FIRE flow
+ls .specsmd/simple/agents/    # Simple flow
+ls .specsmd/aidlc/agents/     # AI-DLC flow
 ```
+
+---
+
+## Ideation Flow
+
+**Creative ideation.** Spark → Flame → Forge. Give it a topic and get genuinely diverse ideas in 30 seconds — no setup, no technique selection, no friction.
+
+```
+/specsmd-ideation   # Full guided flow (orchestrator)
+/specsmd-spark      # Direct idea generation
+/specsmd-flame      # Direct idea evaluation
+/specsmd-forge      # Direct concept shaping
+```
+
+**Three Skills:**
+1. **Spark** → `spark-bank.md` - Rapid idea generation with anti-bias domain wheel (12 domains, deep thinking per batch)
+2. **Flame** → `flame-report.md` - Multi-perspective evaluation with Six Hats + impact/feasibility scoring + shortlist
+3. **Forge** → `concept-brief.md` - Concept development using Disney Creative Strategy (Dreamer → Realist → Critic)
+
+**Best for:** Product discovery, finding novel angles before committing to a feature, brainstorming sessions, early-stage thinking.
+
+**Output structure:**
+```
+.specs-ideation/
+└── sessions/
+    └── {topic-slug}-{YYYYMMDD}/
+        ├── session.yaml         # Session state (resumable)
+        ├── spark-bank.md        # Ideas generated
+        ├── flame-report.md      # Evaluation results
+        └── concept-briefs/      # Shaped concepts
+            └── {concept-name}.md
+```
+
+[Ideation Flow Documentation →](https://specs.md/ideation/overview)
 
 ---
 
@@ -221,8 +258,8 @@ memory-bank/
 
 ## Why specs.md?
 
-### Three Flows for Every Use Case
-From quick specs (Simple) to adaptive execution (FIRE) to full methodology (AI-DLC). Choose the flow that matches your project needs.
+### Four Flows for Every Use Case
+From creative brainstorming (Ideation) to quick specs (Simple) to adaptive execution (FIRE) to full methodology (AI-DLC). Choose the flow that matches your project needs.
 
 ### Adaptive Checkpoints (FIRE)
 Right-sizes the rigor. Simple bug fixes burn through fast. Critical changes get design review. You configure your autonomy preference.
@@ -269,9 +306,10 @@ specs.md is **IDE and AI-agnostic**—your specs and agents are portable markdow
 Ensure specs.md is installed correctly:
 ```bash
 # Check for your flow
-ls .specsmd/fire/agents/     # FIRE
-ls .specsmd/simple/agents/   # Simple
-ls .specsmd/aidlc/agents/    # AI-DLC
+ls .specsmd/ideation/agents/  # Ideation
+ls .specsmd/fire/agents/      # FIRE
+ls .specsmd/simple/agents/    # Simple
+ls .specsmd/aidlc/agents/     # AI-DLC
 ```
 
 If the directory is empty or missing, reinstall:
@@ -285,9 +323,10 @@ npx specsmd@latest install
 
 Check if the artifacts directory exists for your flow:
 ```bash
-ls .specs-fire/    # FIRE flow
-ls specs/          # Simple flow
-ls memory-bank/    # AI-DLC flow
+ls .specs-ideation/  # Ideation flow
+ls .specs-fire/      # FIRE flow
+ls specs/            # Simple flow
+ls memory-bank/      # AI-DLC flow
 ```
 
 If missing, initialize your project using the appropriate agent.
@@ -297,6 +336,7 @@ If missing, initialize your project using the appropriate agent.
 <summary><strong>Standards not being followed in generated code</strong></summary>
 
 Ensure standards are defined in your flow's standards directory:
+- Ideation: `.specs-ideation/standards/` (optional — used for context-aware ideation)
 - FIRE: `.specs-fire/standards/`
 - AI-DLC: `memory-bank/standards/`
 
@@ -309,6 +349,7 @@ Run project initialization if missing.
 <summary><h2>FAQ</h2></summary>
 
 **Q: Which flow should I choose?**
+- **Ideation**: Creative brainstorming and concept shaping before you start building
 - **Simple**: Spec generation only, no execution tracking
 - **FIRE**: Adaptive execution, brownfield/monorepo support
 - **AI-DLC**: Full methodology with DDD and comprehensive traceability
@@ -321,6 +362,7 @@ Each agent invocation starts fresh. Agents read context from artifacts at startu
 
 **Q: How do I reset project state?**
 Delete the artifacts directory for your flow:
+- Ideation: `.specs-ideation/`
 - FIRE: `.specs-fire/`
 - Simple: `specs/`
 - AI-DLC: `memory-bank/`
