@@ -66,7 +66,7 @@
               "index",
               "getting-started/installation",
               "getting-started/ide-extension",
-              "getting-started/cli-dashboard",
+              "getting-started/specs-md-dashboard",
               "getting-started/quick-start",
               "deepwiki"
             ]
@@ -195,6 +195,10 @@
     {
       "source": "/getting-started/vscode-extension",
       "destination": "/getting-started/ide-extension"
+    },
+    {
+      "source": "/getting-started/cli-dashboard",
+      "destination": "/getting-started/specs-md-dashboard"
     }
   ],
   "contextual": {
