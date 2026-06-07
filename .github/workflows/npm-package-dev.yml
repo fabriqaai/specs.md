@@ -26,9 +26,19 @@ jobs:
         working-directory: src
         run: npm ci
 
+      - name: Install VS Code extension dependencies
+        working-directory: vs-code-extension
+        run: npm ci
+
       - name: Run tests
         working-directory: src
         run: npm test
+
+      - name: Build and sync dashboard webview bundle
+        run: |
+          npm --prefix vs-code-extension run compile:webview
+          npm --prefix src run sync:webview-bundle
+          npm --prefix src run check:webview-bundle
 
       - name: Set incremental dev version
         working-directory: src
