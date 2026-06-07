@@ -103,6 +103,10 @@ function hasValidCommandToken(req, token) {
 }
 
 function isAllowedCommandRequest(req, host, port, token) {
+  if (!hasValidCommandToken(req, token)) {
+    return false;
+  }
+
   const origin = req.headers.origin;
   if (!origin) {
     return true;
@@ -113,8 +117,7 @@ function isAllowedCommandRequest(req, host, port, token) {
     const expectedPort = String(port);
     const requestHost = req.headers.host || `${host}:${expectedPort}`;
     return parsed.protocol === 'http:'
-      && parsed.host === requestHost
-      && hasValidCommandToken(req, token);
+      && parsed.host === requestHost;
   } catch {
     return false;
   }

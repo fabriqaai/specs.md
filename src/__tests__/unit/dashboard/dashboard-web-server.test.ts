@@ -106,6 +106,52 @@ describe('dashboard web server', () => {
     }
   });
 
+  test('rejects tokenless dashboard command posts without an origin header', async () => {
+    const workspace = createAidlcWorkspace();
+    const handle = await startDashboardWeb({
+      path: workspace,
+      host: '127.0.0.1',
+      port: '0',
+      watch: false
+    });
+
+    try {
+      const response = await fetch(`${handle.url}api/message`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ type: 'ready' })
+      });
+      const body = await response.json();
+
+      expect(response.status).toBe(403);
+      expect(body.ok).toBe(false);
+      expect(body.error.code).toBe('FORBIDDEN_ORIGIN');
+    } finally {
+      await handle.close();
+    }
+  });
+
+  test('rejects tokenless dashboard event streams without an origin header', async () => {
+    const workspace = createAidlcWorkspace();
+    const handle = await startDashboardWeb({
+      path: workspace,
+      host: '127.0.0.1',
+      port: '0',
+      watch: false
+    });
+
+    try {
+      const response = await fetch(`${handle.url}events`);
+      const body = await response.json();
+
+      expect(response.status).toBe(403);
+      expect(body.ok).toBe(false);
+      expect(body.error.code).toBe('FORBIDDEN_ORIGIN');
+    } finally {
+      await handle.close();
+    }
+  });
+
   test('accepts same-origin dashboard command posts with page token', async () => {
     const workspace = createAidlcWorkspace();
     const handle = await startDashboardWeb({
@@ -153,9 +199,15 @@ describe('dashboard web server', () => {
     });
 
     try {
+      const pageResponse = await fetch(handle.url);
+      const cookie = pageResponse.headers.get('set-cookie')?.split(';')[0];
       const response = await fetch(`${handle.url}api/message`, {
         method: 'POST',
-        headers: { 'content-type': 'application/json' },
+        headers: {
+          'content-type': 'application/json',
+          origin: handle.url.replace(/\/$/, ''),
+          cookie: cookie || ''
+        },
         body: JSON.stringify({ type: 'openArtifact', path: linkPath })
       });
       const body = await response.json();
