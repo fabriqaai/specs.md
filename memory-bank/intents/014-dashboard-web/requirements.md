@@ -1,9 +1,9 @@
 ---
 intent: 014-dashboard-web
 phase: inception
-status: draft
-created: 2026-06-07T10:16:53Z
-updated: 2026-06-07T10:16:53Z
+status: complete
+created: 2026-06-07T10:16:53.000Z
+updated: 2026-06-07T10:16:53.000Z
 ---
 
 # Requirements: Dashboard Web

@@ -1,14 +1,14 @@
 ---
-title: CLI Dashboard
-description: Live terminal dashboard for tracking development progress across all specsmd flows
+title: Dashboard
+description: Local web and terminal dashboards for tracking development progress across all specsmd flows
 ---
 
 ## Overview
 
-The CLI Dashboard is an interactive terminal UI for monitoring your development progress in real-time. It works with all three flows (FIRE, AI-DLC, Simple) and provides live updates as your project state changes.
+The default Dashboard is a local web app for monitoring your development progress in real-time. It works with all three flows (FIRE, AI-DLC, Simple) and provides live updates as your project state changes.
 
 <Info>
-  The CLI Dashboard is the terminal counterpart to the [IDE Extension](/getting-started/ide-extension). Use it when working with terminal-based AI tools like Claude Code or OpenAI Codex.
+  The web dashboard is the browser counterpart to the [IDE Extension](/getting-started/ide-extension). Use `dashboard-cli` when you specifically want the interactive terminal UI.
 </Info>
 
 ## Quick Start
@@ -17,7 +17,19 @@ The CLI Dashboard is an interactive terminal UI for monitoring your development 
 npx specsmd@latest dashboard
 ```
 
-The dashboard auto-detects your flow and starts watching for changes. Press `q` to quit.
+The dashboard auto-detects your flow, starts a local web server, and watches for changes. Press `Ctrl+C` in the terminal to stop it.
+
+```bash
+npx specsmd@latest dashboard --no-open
+```
+
+## Terminal Dashboard
+
+```bash
+npx specsmd@latest dashboard-cli
+```
+
+The terminal dashboard auto-detects your flow and starts watching for changes. Press `q` to quit.
 
 ## Dashboard Screenshots
 
@@ -106,10 +118,25 @@ The dashboard auto-discovers git worktrees and shows activity across branches.
 - **Cross-worktree view** — the "Other worktrees" section shows active runs/bolts in other branches
 - **Auto-selection** — picks the current worktree by default, falling back to main
 
-## CLI Options
+## Web Dashboard Options
 
 ```bash
 npx specsmd@latest dashboard [options]
+```
+
+| Option | Default | Description |
+|--------|---------|-------------|
+| `--flow <flow>` | auto-detect | Flow to inspect: `fire`, `aidlc`, or `simple` |
+| `--path <dir>` | current directory | Workspace path |
+| `--host <host>` | `127.0.0.1` | Host to bind |
+| `--port <n>` | random available port | Port to bind |
+| `--no-open` | `false` | Print the URL without opening a browser |
+| `--no-watch` | `false` | Disable live file watching |
+
+## Terminal Dashboard Options
+
+```bash
+npx specsmd@latest dashboard-cli [options]
 ```
 
 | Option | Default | Description |
@@ -129,11 +156,14 @@ npx specsmd@latest dashboard
 # Specific flow
 npx specsmd@latest dashboard --flow fire
 
+# Terminal UI
+npx specsmd@latest dashboard-cli
+
 # Start on a feature branch worktree
-npx specsmd@latest dashboard --worktree feature-auth
+npx specsmd@latest dashboard-cli --worktree feature-auth
 
 # One-time snapshot (CI/non-TTY)
-npx specsmd@latest dashboard --no-watch
+npx specsmd@latest dashboard-cli --no-watch
 ```
 
 ## Icon Sets
@@ -147,7 +177,7 @@ Configure icons via the `SPECSMD_ICON_SET` environment variable:
 | `nerd` | Nerd Font icons (requires a [Nerd Font](https://www.nerdfonts.com)) |
 
 ```bash
-SPECSMD_ICON_SET=nerd npx specsmd@latest dashboard
+SPECSMD_ICON_SET=nerd npx specsmd@latest dashboard-cli
 ```
 
 ## Video Walkthrough

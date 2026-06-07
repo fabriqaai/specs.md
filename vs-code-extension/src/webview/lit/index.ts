@@ -2,11 +2,9 @@
  * Lit webview entry point.
  *
  * This is the browser entry point for the Lit-based webview.
- * It imports the VS Code API (which acquires it) and registers all Lit components.
+ * It registers all Lit components. The host API module now falls back safely
+ * when the same bundle is loaded outside VS Code.
  */
-
-// Import the vscode API module first (this acquires the API)
-import '../vscode-api.js';
 
 // Import shared components (for future reuse)
 import '../components/shared/empty-state.js';

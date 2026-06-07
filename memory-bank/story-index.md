@@ -134,6 +134,24 @@ Global index of all stories across intents and units.
 
 ---
 
+## 014-dashboard-web
+
+| Unit | Stories | Status |
+|------|---------|--------|
+| 001-dashboard-web-host | 5 stories | ✅ Complete |
+
+### 001-dashboard-web-host
+
+| Story | Title | Priority | Status |
+|-------|-------|----------|--------|
+| 001-extract-dashboard-host-transport.md | Extract dashboard host transport | Must | ✅ Complete |
+| 002-serve-dashboard-web-from-cli.md | Serve dashboard web from CLI | Must | ✅ Complete |
+| 003-feed-browser-dashboard-snapshots.md | Feed browser dashboard snapshots | Must | ✅ Complete |
+| 004-preserve-terminal-dashboard-cli.md | Preserve terminal dashboard CLI | Should | ✅ Complete |
+| 005-verify-and-document-dashboard-web.md | Verify and document dashboard web | Must | ✅ Complete |
+
+---
+
 ## Summary
 
 | Intent | Units | Stories | Status |
@@ -148,6 +166,7 @@ Global index of all stories across intents and units.
 | 008-terminal-dashboard | 0 | 0 | Pending |
 | 009-versioning-strategy | 0 | 0 | Pending |
 | 010-smart-unit-decomposition | 0 | 0 | Pending |
+| 014-dashboard-web | 1 | 5 | ✅ Complete |
 
 ---
 
