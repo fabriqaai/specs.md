@@ -22,6 +22,7 @@ export interface IntentWorkItemData {
     mode: ExecutionMode;
     complexity: Complexity;
     filePath: string;
+    createdAt?: string;
 }
 
 /**
@@ -33,6 +34,7 @@ export interface FireIntentData {
     status: FireStatus;
     filePath: string;
     description?: string;
+    createdAt?: string;
     workItems: IntentWorkItemData[];
 }
 

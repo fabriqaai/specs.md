@@ -80,6 +80,8 @@ export interface Intent {
     status: ArtifactStatus;
     /** Child units */
     units: Unit[];
+    /** When intent was created (ISO 8601) */
+    createdAt?: Date;
 }
 
 /**

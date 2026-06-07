@@ -6644,6 +6644,15 @@
     connectEvents();
     return {
       postMessage(message) {
+        if (isStandaloneStartRunMessage(message)) {
+          window.dispatchEvent(new CustomEvent("specsmd-dashboard-command", {
+            detail: {
+              command: buildFireStartRunCommand(message.workItemIds),
+              workItemIds: message.workItemIds
+            }
+          }));
+          return;
+        }
         fetch("/api/message", {
           method: "POST",
           headers: { "content-type": "application/json" },
@@ -6664,6 +6673,13 @@
         }
       }
     };
+  }
+  function isStandaloneStartRunMessage(message) {
+    return typeof message === "object" && message !== null && message.type === "startRun" && Array.isArray(message.workItemIds);
+  }
+  function buildFireStartRunCommand(workItemIds) {
+    const ids = workItemIds.map((id) => String(id).trim()).filter(Boolean);
+    return ["/specsmd-fire-builder", ...ids].join(" ");
   }
   var vscode = typeof acquireVsCodeApi === "function" ? acquireVsCodeApi() : createStandaloneApi();
 
@@ -7105,6 +7121,15 @@
       }
     }
     _handleFireFilterChange(e7) {
+      if (this._fireData) {
+        this._fireData = {
+          ...this._fireData,
+          intentsData: {
+            ...this._fireData.intentsData,
+            filter: e7.detail.filter
+          }
+        };
+      }
       vscode.postMessage({ type: "fireIntentsFilter", filter: e7.detail.filter });
     }
     _handleFireToggleExpand(e7) {

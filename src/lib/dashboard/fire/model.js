@@ -350,7 +350,8 @@ function buildPendingItems(intents) {
         mode: item.mode,
         complexity: item.complexity,
         dependencies: item.dependencies || [],
-        filePath: item.filePath
+        filePath: item.filePath,
+        createdAt: item.createdAt
       });
     }
   }
@@ -359,6 +360,19 @@ function buildPendingItems(intents) {
     const depDiff = (a.dependencies?.length || 0) - (b.dependencies?.length || 0);
     if (depDiff !== 0) {
       return depDiff;
+    }
+    const aTime = a.createdAt ? Date.parse(a.createdAt) : NaN;
+    const bTime = b.createdAt ? Date.parse(b.createdAt) : NaN;
+    const aHasTime = !Number.isNaN(aTime);
+    const bHasTime = !Number.isNaN(bTime);
+    if (aHasTime && bHasTime && aTime !== bTime) {
+      return aTime - bTime;
+    }
+    if (aHasTime && !bHasTime) {
+      return -1;
+    }
+    if (!aHasTime && bHasTime) {
+      return 1;
     }
     return a.id.localeCompare(b.id);
   });

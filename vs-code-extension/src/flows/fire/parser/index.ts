@@ -242,7 +242,7 @@ export class FireParser implements FlowParser<FireArtifacts> {
                     const parsed = this._parseFrontmatter(briefContent);
                     title = (parsed.title as string) || intentId;
                     description = parsed.description as string | undefined;
-                    createdAt = parsed.created as string | undefined;
+                    createdAt = this._normalizeTimestamp(parsed.created);
                 }
 
                 // Scan work items
@@ -265,7 +265,7 @@ export class FireParser implements FlowParser<FireArtifacts> {
             console.error('Error scanning intents:', error);
         }
 
-        return intents;
+        return intents.sort(this._compareByCreatedAtThenId);
     }
 
     /**
@@ -309,7 +309,7 @@ export class FireParser implements FlowParser<FireArtifacts> {
                     filePath,
                     description: parsed.description as string | undefined,
                     dependencies: deps,
-                    createdAt: parsed.created as string | undefined
+                    createdAt: this._normalizeTimestamp(parsed.created)
                 });
             }
         } catch (error) {
@@ -394,7 +394,58 @@ export class FireParser implements FlowParser<FireArtifacts> {
             console.error('Error scanning runs:', error);
         }
 
-        return runs;
+        return runs.sort((a, b) => this._compareRunDatesDesc(a, b));
+    }
+
+    private _compareByCreatedAtThenId(a: { createdAt?: string; id: string }, b: { createdAt?: string; id: string }): number {
+        const aTime = a.createdAt ? Date.parse(a.createdAt) : NaN;
+        const bTime = b.createdAt ? Date.parse(b.createdAt) : NaN;
+        const aHasTime = !Number.isNaN(aTime);
+        const bHasTime = !Number.isNaN(bTime);
+
+        if (aHasTime && bHasTime && aTime !== bTime) {
+            return aTime - bTime;
+        }
+        if (aHasTime && !bHasTime) {
+            return -1;
+        }
+        if (!aHasTime && bHasTime) {
+            return 1;
+        }
+        return a.id.localeCompare(b.id);
+    }
+
+    private _normalizeTimestamp(value: unknown): string | undefined {
+        if (value == null) {
+            return undefined;
+        }
+        if (value instanceof Date) {
+            return Number.isNaN(value.getTime()) ? undefined : value.toISOString();
+        }
+        if (typeof value === 'string') {
+            return value.trim() === '' ? undefined : value;
+        }
+        return String(value);
+    }
+
+    private _compareRunDatesDesc(a: FireRun, b: FireRun): number {
+        const aDate = a.completedAt || a.startedAt;
+        const bDate = b.completedAt || b.startedAt;
+        const aTime = aDate ? Date.parse(aDate) : NaN;
+        const bTime = bDate ? Date.parse(bDate) : NaN;
+        const aHasTime = !Number.isNaN(aTime);
+        const bHasTime = !Number.isNaN(bTime);
+
+        if (aHasTime && bHasTime && aTime !== bTime) {
+            return bTime - aTime;
+        }
+        if (aHasTime && !bHasTime) {
+            return -1;
+        }
+        if (!aHasTime && bHasTime) {
+            return 1;
+        }
+        return b.id.localeCompare(a.id);
     }
 
     /**

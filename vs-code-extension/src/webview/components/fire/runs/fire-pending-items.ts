@@ -28,6 +28,7 @@ export interface PendingWorkItemData {
     complexity: Complexity;
     filePath: string;
     dependencies?: string[];
+    createdAt?: string;
 }
 
 /**

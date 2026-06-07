@@ -58,6 +58,16 @@ function createStandaloneApi(): VsCodeApi {
 
     return {
         postMessage(message: unknown): void {
+            if (isStandaloneStartRunMessage(message)) {
+                window.dispatchEvent(new CustomEvent('specsmd-dashboard-command', {
+                    detail: {
+                        command: buildFireStartRunCommand(message.workItemIds),
+                        workItemIds: message.workItemIds
+                    }
+                }));
+                return;
+            }
+
             fetch('/api/message', {
                 method: 'POST',
                 headers: { 'content-type': 'application/json' },
@@ -80,6 +90,21 @@ function createStandaloneApi(): VsCodeApi {
             }
         }
     };
+}
+
+function isStandaloneStartRunMessage(message: unknown): message is { type: 'startRun'; workItemIds: string[] } {
+    return typeof message === 'object' &&
+        message !== null &&
+        (message as { type?: unknown }).type === 'startRun' &&
+        Array.isArray((message as { workItemIds?: unknown }).workItemIds);
+}
+
+function buildFireStartRunCommand(workItemIds: string[]): string {
+    const ids = workItemIds
+        .map(id => String(id).trim())
+        .filter(Boolean);
+
+    return ['/specsmd-fire-builder', ...ids].join(' ');
 }
 
 export const vscode: VsCodeApi = typeof acquireVsCodeApi === 'function'

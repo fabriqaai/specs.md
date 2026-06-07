@@ -248,7 +248,8 @@ function buildSpecsData(snapshot) {
       path: intent.path,
       storiesComplete: units.reduce((sum, unit) => sum + unit.storiesComplete, 0),
       storiesTotal: units.reduce((sum, unit) => sum + unit.storiesTotal, 0),
-      units
+      units,
+      createdAt: intent.createdAt
     };
   });
 
@@ -400,7 +401,8 @@ function buildFireViewData(snapshot) {
     mode: normalizeFireMode(item.mode),
     complexity: normalizeFireComplexity(item.complexity),
     filePath: item.filePath,
-    dependencies: item.dependencies || []
+    dependencies: item.dependencies || [],
+    createdAt: item.createdAt
   }));
 
   const completedRuns = (snapshot.completedRuns || []).map((run) => ({
@@ -418,13 +420,15 @@ function buildFireViewData(snapshot) {
     status: normalizeFireStatus(intent.status),
     filePath: intent.filePath,
     description: intent.description,
+    createdAt: intent.createdAt,
     workItems: (intent.workItems || []).map((item) => ({
       id: item.id,
       title: item.title || item.id,
       status: normalizeFireStatus(item.status),
       mode: normalizeFireMode(item.mode),
       complexity: normalizeFireComplexity(item.complexity),
-      filePath: item.filePath
+      filePath: item.filePath,
+      createdAt: item.createdAt
     }))
   }));
 

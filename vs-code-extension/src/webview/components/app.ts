@@ -1262,6 +1262,15 @@ export class SpecsmdApp extends BaseElement {
     }
 
     private _handleFireFilterChange(e: CustomEvent<{ filter: string }>): void {
+        if (this._fireData) {
+            this._fireData = {
+                ...this._fireData,
+                intentsData: {
+                    ...this._fireData.intentsData,
+                    filter: e.detail.filter as typeof this._fireData.intentsData.filter
+                }
+            };
+        }
         vscode.postMessage({ type: 'fireIntentsFilter', filter: e.detail.filter });
     }
 

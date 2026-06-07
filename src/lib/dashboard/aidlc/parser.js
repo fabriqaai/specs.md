@@ -114,6 +114,25 @@ function normalizeTimestamp(value) {
   return parsed.toISOString();
 }
 
+function compareByCreatedAtThenId(a, b) {
+  const aTime = a?.createdAt ? Date.parse(a.createdAt) : NaN;
+  const bTime = b?.createdAt ? Date.parse(b.createdAt) : NaN;
+  const aHasTime = !Number.isNaN(aTime);
+  const bHasTime = !Number.isNaN(bTime);
+
+  if (aHasTime && bHasTime && aTime !== bTime) {
+    return aTime - bTime;
+  }
+  if (aHasTime && !bHasTime) {
+    return -1;
+  }
+  if (!aHasTime && bHasTime) {
+    return 1;
+  }
+
+  return String(a?.id || '').localeCompare(String(b?.id || ''));
+}
+
 function parseIntentFolderName(folderName) {
   const match = String(folderName).match(/^(\d{3})-(.+)$/);
   if (!match) {
@@ -272,7 +291,8 @@ function parseIntent(intentPath, warnings) {
     completedStories: storyStats.completed,
     inProgressStories: storyStats.inProgress,
     pendingStories: storyStats.pending,
-    blockedStories: storyStats.blocked
+    blockedStories: storyStats.blocked,
+    createdAt: normalizeTimestamp(requirementsFrontmatter.created)
   };
 }
 
@@ -486,7 +506,7 @@ function parseAidlcDashboard(workspacePath) {
   const intents = intentFolders
     .map((intentFolder) => parseIntent(path.join(intentsPath, intentFolder), warnings))
     .filter(Boolean)
-    .sort((a, b) => a.id.localeCompare(b.id));
+    .sort(compareByCreatedAtThenId);
 
   if (intentFolders.length === 0) {
     warnings.push('No intents found under memory-bank/intents.');
