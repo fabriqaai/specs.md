@@ -171,7 +171,7 @@
               "learn/fire-flow-intro",
               "learn/fire-flow-resume-run",
               "learn/aidlc-bolt-execution",
-              "learn/cli-dashboard-codex",
+              "learn/specs-md-dashboard",
               "learn/specsmd-in-fabriqa"
             ]
           }
@@ -199,6 +199,10 @@
     {
       "source": "/getting-started/cli-dashboard",
       "destination": "/getting-started/specs-md-dashboard"
+    },
+    {
+      "source": "/learn/cli-dashboard-codex",
+      "destination": "/learn/specs-md-dashboard"
     }
   ],
   "contextual": {
