@@ -396,6 +396,7 @@ function buildFireViewData(snapshot) {
     intentId: item.intentId,
     intentTitle: item.intentTitle,
     intentFilePath: (snapshot.intents || []).find((intent) => intent.id === item.intentId)?.filePath,
+    intentCreatedAt: item.intentCreatedAt,
     title: item.title || item.id,
     status: normalizeFireStatus(item.status),
     mode: normalizeFireMode(item.mode),

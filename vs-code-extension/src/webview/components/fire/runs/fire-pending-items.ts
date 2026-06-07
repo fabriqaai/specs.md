@@ -29,6 +29,7 @@ export interface PendingWorkItemData {
     filePath: string;
     dependencies?: string[];
     createdAt?: string;
+    intentCreatedAt?: string;
 }
 
 /**

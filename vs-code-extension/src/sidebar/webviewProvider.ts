@@ -496,7 +496,8 @@ export class SpecsmdWebviewProvider implements vscode.WebviewViewProvider {
                     complexity: w.complexity as 'low' | 'medium' | 'high',
                     filePath: w.filePath,
                     dependencies: w.dependencies,
-                    createdAt: w.createdAt
+                    createdAt: w.createdAt,
+                    intentCreatedAt: intent.createdAt
                 }))
         ).sort((a, b) => this._comparePendingItems(a, b));
 
@@ -1111,9 +1112,23 @@ export class SpecsmdWebviewProvider implements vscode.WebviewViewProvider {
     }
 
     private _comparePendingItems(
-        a: { dependencies?: string[]; createdAt?: string; id: string },
-        b: { dependencies?: string[]; createdAt?: string; id: string }
+        a: { dependencies?: string[]; createdAt?: string; intentCreatedAt?: string; id: string },
+        b: { dependencies?: string[]; createdAt?: string; intentCreatedAt?: string; id: string }
     ): number {
+        const aIntentTime = a.intentCreatedAt ? Date.parse(a.intentCreatedAt) : NaN;
+        const bIntentTime = b.intentCreatedAt ? Date.parse(b.intentCreatedAt) : NaN;
+        const aHasIntentTime = !Number.isNaN(aIntentTime);
+        const bHasIntentTime = !Number.isNaN(bIntentTime);
+        if (aHasIntentTime && bHasIntentTime && aIntentTime !== bIntentTime) {
+            return bIntentTime - aIntentTime;
+        }
+        if (aHasIntentTime && !bHasIntentTime) {
+            return -1;
+        }
+        if (!aHasIntentTime && bHasIntentTime) {
+            return 1;
+        }
+
         const depDiff = (a.dependencies?.length || 0) - (b.dependencies?.length || 0);
         if (depDiff !== 0) {
             return depDiff;
@@ -1132,7 +1147,7 @@ export class SpecsmdWebviewProvider implements vscode.WebviewViewProvider {
         const aHasTime = !Number.isNaN(aTime);
         const bHasTime = !Number.isNaN(bTime);
         if (aHasTime && bHasTime && aTime !== bTime) {
-            return aTime - bTime;
+            return bTime - aTime;
         }
         if (aHasTime && !bHasTime) {
             return -1;

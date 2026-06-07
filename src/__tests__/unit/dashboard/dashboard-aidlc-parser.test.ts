@@ -68,7 +68,7 @@ describe('aidlc dashboard parser', () => {
     expect(result.snapshot.warnings).toHaveLength(0);
   });
 
-  it('orders intents by created metadata before folder id', () => {
+  it('orders intents by newest created metadata before folder id', () => {
     mkdirSync(join(memoryBankPath, 'intents', '002-newer', 'units'), { recursive: true });
 
     writeFileSync(join(memoryBankPath, 'intents', '001-auth', 'requirements.md'), `---\nstatus: draft\ncreated: 2026-02-02T00:00:00Z\n---\n`, 'utf8');
@@ -78,8 +78,8 @@ describe('aidlc dashboard parser', () => {
 
     expect(result.ok).toBe(true);
     expect(result.snapshot.intents.map((intent: { id: string }) => intent.id)).toEqual([
-      '002-newer',
-      '001-auth'
+      '001-auth',
+      '002-newer'
     ]);
   });
 

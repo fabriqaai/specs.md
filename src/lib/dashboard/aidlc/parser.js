@@ -121,7 +121,7 @@ function compareByCreatedAtThenId(a, b) {
   const bHasTime = !Number.isNaN(bTime);
 
   if (aHasTime && bHasTime && aTime !== bTime) {
-    return aTime - bTime;
+    return bTime - aTime;
   }
   if (aHasTime && !bHasTime) {
     return -1;

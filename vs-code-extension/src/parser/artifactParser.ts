@@ -465,7 +465,7 @@ export async function scanMemoryBank(workspacePath: string): Promise<MemoryBankM
         const aTime = a.createdAt?.getTime();
         const bTime = b.createdAt?.getTime();
         if (aTime !== undefined && bTime !== undefined && aTime !== bTime) {
-            return aTime - bTime;
+            return bTime - aTime;
         }
         if (aTime !== undefined && bTime === undefined) {
             return -1;
