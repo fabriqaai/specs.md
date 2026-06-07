@@ -6176,42 +6176,42 @@
                             </div>
                         </div>
                         <div class="fabriqa-copy">
-                            Use Fabriqa.AI with your existing AI subscription to design, run, and reuse agentic workflows around your specs. It is free to try.
+                            Use Fabriqa.AI with your existing AI subscription to design and reuse agentic workflows around your specs. Free to try.
                         </div>
                         <div class="fabriqa-actions">
                             <div class="fabriqa-link" @click=${() => this._openExternal("https://fabriqa.ai")}>Explore Fabriqa.AI</div>
                             <div class="fabriqa-link secondary" @click=${() => this._openExternal("https://specs.md")}>Open specs.md</div>
                         </div>
-                    </div>
-                    <div class="dashboard-tip">
-                        <div class="dashboard-tip-title">Did you know?</div>
-                        <div class="dashboard-tip-copy">
-                            You can use the specs.md dashboard outside VS Code and VS Code variants. Run <code>npx specsmd@latest dashboard</code> from your project folder.
+                        <div class="dashboard-tip">
+                            <div class="dashboard-tip-title">Did you know?</div>
+                            <div class="dashboard-tip-copy">
+                                Use the dashboard outside VS Code with <code>npx specsmd@latest dashboard</code>.
+                                <span class="feedback-link" @click=${() => this._openExternal("https://specs.md/getting-started/cli-dashboard")}>Docs</span>
+                            </div>
                         </div>
-                        <div class="fabriqa-actions">
-                            <div class="fabriqa-link secondary" @click=${() => this._openExternal("https://specs.md/getting-started/cli-dashboard")}>Dashboard docs</div>
+                        <div class="footer-row">
+                            <div class="resources-links">
+                                <div class="resource-link" @click=${() => this._openExternal("https://specs.md")} title="Website">
+                                    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/>
+                                    </svg>
+                                </div>
+                                <div class="resource-link" @click=${() => this._openExternal("https://discord.specs.md")} title="Discord">
+                                    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/>
+                                    </svg>
+                                </div>
+                                <div class="resource-link" @click=${() => this._openExternal("https://x.com/specsmd")} title="X (Twitter)">
+                                    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                                    </svg>
+                                </div>
+                            </div>
+                            <div class="footer-feedback">
+                                <span class="feedback-message">Help improve specs.md</span>
+                                <span class="feedback-link" @click=${() => this._openExternal("https://specs.md/feedback")}>Feedback</span>
+                            </div>
                         </div>
-                    </div>
-                    <div class="resources-title">Links</div>
-                    <div class="resources-links">
-                        <div class="resource-link" @click=${() => this._openExternal("https://specs.md")} title="Website">
-                            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/>
-                            </svg>
-                        </div>
-                        <div class="resource-link" @click=${() => this._openExternal("https://discord.specs.md")} title="Discord">
-                            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/>
-                            </svg>
-                        </div>
-                        <div class="resource-link" @click=${() => this._openExternal("https://x.com/specsmd")} title="X (Twitter)">
-                            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
-                            </svg>
-                        </div>
-                    </div>
-                    <div class="feedback-message">
-                        We're new! Help us improve — <span class="feedback-link" @click=${() => this._openExternal("https://specs.md/feedback")}>share your feedback</span>
                     </div>
                 </div>
             </div>
@@ -6453,37 +6453,22 @@
 
             /* Resources Footer */
             .resources-footer {
-                position: sticky;
-                bottom: 0;
-                background: var(--background);
-                border-top: 1px solid var(--border-color);
-                padding: 12px;
-                margin-top: auto;
-            }
-
-            .resources-title {
-                font-size: 9px;
-                font-weight: 600;
-                text-transform: uppercase;
-                color: var(--description-foreground);
-                letter-spacing: 0.5px;
-                margin-bottom: 8px;
-                text-align: center;
+                margin-top: 14px;
             }
 
             .resources-links {
-                display: flex;
-                gap: 12px;
-                justify-content: center;
+                display: inline-flex;
+                flex-wrap: wrap;
+                gap: 6px;
             }
 
             .resource-link {
-                display: flex;
+                display: inline-flex;
                 align-items: center;
                 justify-content: center;
-                width: 36px;
-                height: 36px;
-                border-radius: 8px;
+                width: 28px;
+                height: 28px;
+                border-radius: 6px;
                 background: var(--editor-background);
                 border: 1px solid var(--border-color);
                 cursor: pointer;
@@ -6498,19 +6483,15 @@
             }
 
             .resource-link svg {
-                width: 18px;
-                height: 18px;
+                width: 14px;
+                height: 14px;
                 fill: currentColor;
             }
 
             .feedback-message {
-                text-align: center;
+                display: inline;
                 font-size: 11px;
                 color: var(--description-foreground);
-                margin-top: 12px;
-                padding: 8px 12px;
-                background: var(--editor-background);
-                border-radius: 6px;
             }
 
             .feedback-link {
@@ -6524,30 +6505,29 @@
             }
 
             .fabriqa-card {
-                padding: 12px;
-                margin-bottom: 12px;
+                padding: 10px;
                 border: 1px solid rgba(249, 115, 22, 0.35);
                 border-radius: 6px;
-                background: linear-gradient(135deg, rgba(249, 115, 22, 0.12), rgba(34, 197, 94, 0.08));
+                background: linear-gradient(135deg, rgba(249, 115, 22, 0.08), rgba(34, 197, 94, 0.05));
             }
 
             .fabriqa-brand {
                 display: flex;
                 align-items: center;
-                gap: 10px;
-                margin-bottom: 8px;
+                gap: 8px;
+                margin-bottom: 6px;
             }
 
             .fabriqa-mark {
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                flex: 0 0 30px;
-                height: 30px;
+                flex: 0 0 26px;
+                height: 26px;
                 border-radius: 6px;
                 background: var(--status-active);
                 color: #ffffff;
-                font-size: 11px;
+                font-size: 10px;
                 font-weight: 700;
             }
 
@@ -6566,7 +6546,7 @@
             }
 
             .fabriqa-copy {
-                margin-bottom: 10px;
+                margin-bottom: 8px;
             }
 
             .fabriqa-actions {
@@ -6579,7 +6559,8 @@
                 display: inline-flex;
                 align-items: center;
                 justify-content: center;
-                padding: 6px 9px;
+                min-height: 26px;
+                padding: 0 8px;
                 border-radius: 5px;
                 background: var(--status-active);
                 color: #ffffff;
@@ -6599,11 +6580,9 @@
             }
 
             .dashboard-tip {
-                padding: 10px;
-                margin-bottom: 12px;
-                border: 1px solid var(--border-color);
-                border-radius: 6px;
-                background: var(--editor-background);
+                padding-top: 8px;
+                margin-top: 8px;
+                border-top: 1px solid var(--border-color);
             }
 
             .dashboard-tip-title {
@@ -6619,6 +6598,24 @@
                 background: var(--background);
                 color: var(--foreground);
                 font-family: var(--font-family);
+            }
+
+            .footer-row {
+                display: flex;
+                flex-wrap: wrap;
+                align-items: center;
+                justify-content: space-between;
+                gap: 8px;
+                padding-top: 8px;
+                margin-top: 8px;
+                border-top: 1px solid var(--border-color);
+            }
+
+            .footer-feedback {
+                display: flex;
+                flex-wrap: wrap;
+                align-items: center;
+                gap: 6px;
             }
         `
   ];
@@ -7895,36 +7892,33 @@
 
             /* ==================== OVERVIEW RESOURCES FOOTER ==================== */
             .overview-resources-footer {
-                margin-top: 20px;
-                padding-top: 16px;
-                border-top: 1px solid var(--border-color);
+                margin-top: 14px;
             }
 
             .overview-fabriqa-card {
-                margin-bottom: 14px;
-                padding: 14px;
+                padding: 10px;
                 border: 1px solid var(--border-color);
-                border-radius: 8px;
+                border-radius: 6px;
                 background: var(--editor-background);
             }
 
             .overview-fabriqa-brand {
                 display: flex;
                 align-items: center;
-                gap: 10px;
-                margin-bottom: 10px;
+                gap: 8px;
+                margin-bottom: 6px;
             }
 
             .overview-fabriqa-mark {
-                width: 34px;
-                height: 34px;
-                border-radius: 8px;
+                width: 26px;
+                height: 26px;
+                border-radius: 6px;
                 display: inline-flex;
                 align-items: center;
                 justify-content: center;
                 background: var(--accent-primary);
                 color: #ffffff;
-                font-size: 12px;
+                font-size: 10px;
                 font-weight: 700;
                 flex-shrink: 0;
             }
@@ -7945,7 +7939,7 @@
             }
 
             .overview-fabriqa-copy {
-                margin-bottom: 12px;
+                margin-bottom: 8px;
             }
 
             .overview-fabriqa-actions {
@@ -7958,9 +7952,9 @@
                 display: inline-flex;
                 align-items: center;
                 justify-content: center;
-                min-height: 30px;
-                padding: 0 10px;
-                border-radius: 6px;
+                min-height: 26px;
+                padding: 0 8px;
+                border-radius: 5px;
                 background: var(--accent-primary);
                 color: #ffffff;
                 font-size: 11px;
@@ -7979,15 +7973,9 @@
             }
 
             .overview-dashboard-tip {
-                display: flex;
-                align-items: flex-start;
-                justify-content: space-between;
-                gap: 12px;
-                margin-bottom: 14px;
-                padding: 12px;
-                border: 1px solid var(--border-color);
-                border-radius: 8px;
-                background: var(--vscode-input-background);
+                padding-top: 8px;
+                margin-top: 8px;
+                border-top: 1px solid var(--border-color);
             }
 
             .overview-dashboard-title {
@@ -7998,39 +7986,25 @@
             }
 
             .overview-dashboard-tip code {
-                display: inline-block;
-                margin-top: 8px;
-                padding: 5px 7px;
+                padding: 1px 4px;
                 border-radius: 4px;
                 background: var(--editor-background);
                 color: var(--foreground);
-                font-size: 10px;
-                white-space: nowrap;
-            }
-
-            .overview-resources-title {
-                font-size: 9px;
-                font-weight: 600;
-                text-transform: uppercase;
-                color: var(--description-foreground);
-                letter-spacing: 0.5px;
-                margin-bottom: 8px;
-                text-align: center;
             }
 
             .overview-resources-links {
-                display: flex;
-                gap: 12px;
-                justify-content: center;
+                display: inline-flex;
+                flex-wrap: wrap;
+                gap: 6px;
             }
 
             .overview-resource-link {
-                display: flex;
+                display: inline-flex;
                 align-items: center;
                 justify-content: center;
-                width: 36px;
-                height: 36px;
-                border-radius: 8px;
+                width: 28px;
+                height: 28px;
+                border-radius: 6px;
                 background: var(--editor-background);
                 border: 1px solid var(--border-color);
                 cursor: pointer;
@@ -8045,18 +8019,14 @@
             }
 
             .overview-resource-link svg {
-                width: 18px;
-                height: 18px;
+                width: 14px;
+                height: 14px;
             }
 
             .overview-feedback-message {
-                text-align: center;
+                display: inline;
                 font-size: 11px;
                 color: var(--description-foreground);
-                margin-top: 12px;
-                padding: 8px 12px;
-                background: var(--editor-background);
-                border-radius: 6px;
             }
 
             .overview-feedback-link {
@@ -8067,6 +8037,24 @@
 
             .overview-feedback-link:hover {
                 opacity: 0.8;
+            }
+
+            .overview-footer-row {
+                display: flex;
+                flex-wrap: wrap;
+                align-items: center;
+                justify-content: space-between;
+                gap: 8px;
+                padding-top: 8px;
+                margin-top: 8px;
+                border-top: 1px solid var(--border-color);
+            }
+
+            .overview-footer-feedback {
+                display: flex;
+                flex-wrap: wrap;
+                align-items: center;
+                gap: 6px;
             }
 
             /* ==================== EMPTY STATE ==================== */

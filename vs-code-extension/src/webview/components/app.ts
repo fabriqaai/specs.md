@@ -675,36 +675,33 @@ export class SpecsmdApp extends BaseElement {
 
             /* ==================== OVERVIEW RESOURCES FOOTER ==================== */
             .overview-resources-footer {
-                margin-top: 20px;
-                padding-top: 16px;
-                border-top: 1px solid var(--border-color);
+                margin-top: 14px;
             }
 
             .overview-fabriqa-card {
-                margin-bottom: 14px;
-                padding: 14px;
+                padding: 10px;
                 border: 1px solid var(--border-color);
-                border-radius: 8px;
+                border-radius: 6px;
                 background: var(--editor-background);
             }
 
             .overview-fabriqa-brand {
                 display: flex;
                 align-items: center;
-                gap: 10px;
-                margin-bottom: 10px;
+                gap: 8px;
+                margin-bottom: 6px;
             }
 
             .overview-fabriqa-mark {
-                width: 34px;
-                height: 34px;
-                border-radius: 8px;
+                width: 26px;
+                height: 26px;
+                border-radius: 6px;
                 display: inline-flex;
                 align-items: center;
                 justify-content: center;
                 background: var(--accent-primary);
                 color: #ffffff;
-                font-size: 12px;
+                font-size: 10px;
                 font-weight: 700;
                 flex-shrink: 0;
             }
@@ -725,7 +722,7 @@ export class SpecsmdApp extends BaseElement {
             }
 
             .overview-fabriqa-copy {
-                margin-bottom: 12px;
+                margin-bottom: 8px;
             }
 
             .overview-fabriqa-actions {
@@ -738,9 +735,9 @@ export class SpecsmdApp extends BaseElement {
                 display: inline-flex;
                 align-items: center;
                 justify-content: center;
-                min-height: 30px;
-                padding: 0 10px;
-                border-radius: 6px;
+                min-height: 26px;
+                padding: 0 8px;
+                border-radius: 5px;
                 background: var(--accent-primary);
                 color: #ffffff;
                 font-size: 11px;
@@ -759,15 +756,9 @@ export class SpecsmdApp extends BaseElement {
             }
 
             .overview-dashboard-tip {
-                display: flex;
-                align-items: flex-start;
-                justify-content: space-between;
-                gap: 12px;
-                margin-bottom: 14px;
-                padding: 12px;
-                border: 1px solid var(--border-color);
-                border-radius: 8px;
-                background: var(--vscode-input-background);
+                padding-top: 8px;
+                margin-top: 8px;
+                border-top: 1px solid var(--border-color);
             }
 
             .overview-dashboard-title {
@@ -778,39 +769,25 @@ export class SpecsmdApp extends BaseElement {
             }
 
             .overview-dashboard-tip code {
-                display: inline-block;
-                margin-top: 8px;
-                padding: 5px 7px;
+                padding: 1px 4px;
                 border-radius: 4px;
                 background: var(--editor-background);
                 color: var(--foreground);
-                font-size: 10px;
-                white-space: nowrap;
-            }
-
-            .overview-resources-title {
-                font-size: 9px;
-                font-weight: 600;
-                text-transform: uppercase;
-                color: var(--description-foreground);
-                letter-spacing: 0.5px;
-                margin-bottom: 8px;
-                text-align: center;
             }
 
             .overview-resources-links {
-                display: flex;
-                gap: 12px;
-                justify-content: center;
+                display: inline-flex;
+                flex-wrap: wrap;
+                gap: 6px;
             }
 
             .overview-resource-link {
-                display: flex;
+                display: inline-flex;
                 align-items: center;
                 justify-content: center;
-                width: 36px;
-                height: 36px;
-                border-radius: 8px;
+                width: 28px;
+                height: 28px;
+                border-radius: 6px;
                 background: var(--editor-background);
                 border: 1px solid var(--border-color);
                 cursor: pointer;
@@ -825,18 +802,14 @@ export class SpecsmdApp extends BaseElement {
             }
 
             .overview-resource-link svg {
-                width: 18px;
-                height: 18px;
+                width: 14px;
+                height: 14px;
             }
 
             .overview-feedback-message {
-                text-align: center;
+                display: inline;
                 font-size: 11px;
                 color: var(--description-foreground);
-                margin-top: 12px;
-                padding: 8px 12px;
-                background: var(--editor-background);
-                border-radius: 6px;
             }
 
             .overview-feedback-link {
@@ -847,6 +820,24 @@ export class SpecsmdApp extends BaseElement {
 
             .overview-feedback-link:hover {
                 opacity: 0.8;
+            }
+
+            .overview-footer-row {
+                display: flex;
+                flex-wrap: wrap;
+                align-items: center;
+                justify-content: space-between;
+                gap: 8px;
+                padding-top: 8px;
+                margin-top: 8px;
+                border-top: 1px solid var(--border-color);
+            }
+
+            .overview-footer-feedback {
+                display: flex;
+                flex-wrap: wrap;
+                align-items: center;
+                gap: 6px;
             }
 
             /* ==================== EMPTY STATE ==================== */
