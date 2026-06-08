@@ -1,6 +1,6 @@
 {
   "name": "specsmd",
-  "version": "0.1.66",
+  "version": "0.1.74",
   "description": "Multi-agent orchestration system for AI-native software development. Delivers AI-DLC, Agile, and custom SDLC flows as markdown-based agent systems.",
   "main": "lib/installer.js",
   "bin": {
@@ -12,7 +12,10 @@
     "test:schema": "vitest run __tests__/unit/schema-validation/",
     "lint:md": "markdownlint 'flows/**/*.md' --config ../.markdownlint.yaml",
     "lint:md:fix": "markdownlint 'flows/**/*.md' --config ../.markdownlint.yaml --fix",
-    "validate:all": "npm run test && npm run lint:md"
+    "sync:webview-bundle": "node scripts/sync-webview-bundle.cjs",
+    "check:webview-bundle": "node scripts/check-webview-bundle-sync.cjs",
+    "prepack": "npm run check:webview-bundle",
+    "validate:all": "npm run test && npm run lint:md && npm run check:webview-bundle"
   },
   "keywords": [
     "ai-dlc",

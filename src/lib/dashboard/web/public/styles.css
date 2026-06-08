@@ -1,0 +1,140 @@
+:root {
+  color-scheme: var(--specsmd-color-scheme, dark);
+}
+
+:root[data-theme="dark"] {
+  --vscode-font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --vscode-font-size: 13px;
+  --vscode-foreground: #cccccc;
+  --vscode-descriptionForeground: #8b8b8b;
+  --vscode-sideBar-background: #252526;
+  --vscode-editor-background: #1e1e1e;
+  --vscode-sideBarSectionHeader-background: #2d2d30;
+  --vscode-sideBarSectionHeader-border: #454545;
+  --vscode-input-background: #3c3c3c;
+  --vscode-input-border: #3f3f46;
+  --vscode-list-hoverBackground: #2a2d2e;
+  --vscode-list-activeSelectionBackground: #094771;
+  --vscode-badge-background: #4d4d4d;
+  --vscode-badge-foreground: #ffffff;
+  --vscode-button-background: #0e639c;
+  --vscode-button-foreground: #ffffff;
+  --vscode-scrollbarSlider-background: #686868;
+  --specsmd-color-scheme: dark;
+}
+
+:root[data-theme="light"] {
+  --vscode-font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --vscode-font-size: 13px;
+  --vscode-foreground: #1f2328;
+  --vscode-descriptionForeground: #57606a;
+  --vscode-sideBar-background: #f6f8fa;
+  --vscode-editor-background: #ffffff;
+  --vscode-sideBarSectionHeader-background: #eef2f7;
+  --vscode-sideBarSectionHeader-border: #d0d7de;
+  --vscode-input-background: #ffffff;
+  --vscode-input-border: #d0d7de;
+  --vscode-list-hoverBackground: #eef2f7;
+  --vscode-list-activeSelectionBackground: #dbeafe;
+  --vscode-badge-background: #d0d7de;
+  --vscode-badge-foreground: #24292f;
+  --vscode-button-background: #0e639c;
+  --vscode-button-foreground: #ffffff;
+  --vscode-scrollbarSlider-background: #b6c2cf;
+  --specsmd-color-scheme: light;
+}
+
+html,
+body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+  background: var(--vscode-sideBar-background);
+}
+
+body {
+  font-family: var(--vscode-font-family);
+  font-size: var(--vscode-font-size);
+  color: var(--vscode-foreground);
+}
+
+specsmd-app {
+  display: block;
+  width: 100vw;
+  height: 100vh;
+}
+
+.specsmd-command-dialog {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(0, 0, 0, 0.45);
+}
+
+.specsmd-command-dialog-panel {
+  width: min(520px, 100%);
+  padding: 16px;
+  border: 1px solid var(--vscode-sideBarSectionHeader-border);
+  border-radius: 8px;
+  background: var(--vscode-sideBar-background);
+  color: var(--vscode-foreground);
+  box-shadow: 0 18px 56px rgba(0, 0, 0, 0.28);
+}
+
+.specsmd-command-dialog-title {
+  font-size: 15px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.specsmd-command-dialog-description {
+  margin-bottom: 12px;
+  color: var(--vscode-descriptionForeground);
+  font-size: 12px;
+}
+
+.specsmd-command-dialog-command {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 58px;
+  resize: vertical;
+  padding: 10px;
+  border: 1px solid var(--vscode-input-border);
+  border-radius: 6px;
+  background: var(--vscode-input-background);
+  color: var(--vscode-foreground);
+  font: 12px ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+.specsmd-command-dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.specsmd-command-dialog-actions button {
+  min-width: 88px;
+  padding: 7px 10px;
+  border: 1px solid var(--vscode-input-border);
+  border-radius: 6px;
+  color: var(--vscode-foreground);
+  background: transparent;
+  font: inherit;
+  cursor: pointer;
+}
+
+.specsmd-command-dialog-actions button:hover {
+  background: var(--vscode-list-hoverBackground);
+}
+
+.specsmd-command-dialog-copy {
+  border-color: var(--vscode-button-background) !important;
+  background: var(--vscode-button-background) !important;
+  color: var(--vscode-button-foreground) !important;
+}

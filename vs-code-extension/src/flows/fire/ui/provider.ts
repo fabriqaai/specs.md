@@ -206,9 +206,11 @@ export class FireUIProvider implements FlowUIProvider {
                     mode: w.mode,
                     complexity: w.complexity,
                     filePath: w.filePath,
-                    dependencies: w.dependencies
+                    dependencies: w.dependencies,
+                    createdAt: w.createdAt,
+                    intentCreatedAt: intent.createdAt
                 }))
-        );
+        ).sort((a, b) => this._comparePendingItems(a, b));
 
         return {
             activeRuns: state.activeRuns.map(r => this._transformRun(r, workItemLookup)),
@@ -218,6 +220,46 @@ export class FireUIProvider implements FlowUIProvider {
             stats: state.stats,
             ui: state.ui
         };
+    }
+
+    private _comparePendingItems(
+        a: { dependencies?: string[]; createdAt?: string; intentCreatedAt?: string; id: string },
+        b: { dependencies?: string[]; createdAt?: string; intentCreatedAt?: string; id: string }
+    ): number {
+        const aIntentTime = a.intentCreatedAt ? Date.parse(a.intentCreatedAt) : NaN;
+        const bIntentTime = b.intentCreatedAt ? Date.parse(b.intentCreatedAt) : NaN;
+        const aHasIntentTime = !Number.isNaN(aIntentTime);
+        const bHasIntentTime = !Number.isNaN(bIntentTime);
+        if (aHasIntentTime && bHasIntentTime && aIntentTime !== bIntentTime) {
+            return bIntentTime - aIntentTime;
+        }
+        if (aHasIntentTime && !bHasIntentTime) {
+            return -1;
+        }
+        if (!aHasIntentTime && bHasIntentTime) {
+            return 1;
+        }
+
+        const depDiff = (a.dependencies?.length || 0) - (b.dependencies?.length || 0);
+        if (depDiff !== 0) {
+            return depDiff;
+        }
+
+        const aTime = a.createdAt ? Date.parse(a.createdAt) : NaN;
+        const bTime = b.createdAt ? Date.parse(b.createdAt) : NaN;
+        const aHasTime = !Number.isNaN(aTime);
+        const bHasTime = !Number.isNaN(bTime);
+        if (aHasTime && bHasTime && aTime !== bTime) {
+            return bTime - aTime;
+        }
+        if (aHasTime && !bHasTime) {
+            return -1;
+        }
+        if (!aHasTime && bHasTime) {
+            return 1;
+        }
+
+        return a.id.localeCompare(b.id);
     }
 
     /**

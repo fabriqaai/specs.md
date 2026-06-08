@@ -1162,25 +1162,119 @@ export function getStyles(): string {
 
     /* ==================== OVERVIEW RESOURCES FOOTER ==================== */
     .overview-resources-footer {
-        margin-top: 20px;
-        padding-top: 16px;
+        margin-top: 14px;
+    }
+
+    .overview-fabriqa-card {
+        padding: 10px;
+        border: 1px solid var(--vscode-sideBarSectionHeader-border);
+        border-radius: 6px;
+        background: var(--vscode-editor-background);
+    }
+
+    .overview-fabriqa-brand {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 6px;
+    }
+
+    .overview-fabriqa-mark {
+        width: 26px;
+        height: 26px;
+        border-radius: 6px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--status-active);
+        color: #ffffff;
+        font-size: 10px;
+        font-weight: 700;
+        flex-shrink: 0;
+    }
+
+    .overview-fabriqa-title {
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--vscode-foreground);
+        line-height: 1.25;
+    }
+
+    .overview-fabriqa-subtitle,
+    .overview-fabriqa-copy,
+    .overview-dashboard-copy {
+        color: var(--vscode-descriptionForeground);
+        font-size: 11px;
+        line-height: 1.45;
+    }
+
+    .overview-fabriqa-copy {
+        margin-bottom: 8px;
+    }
+
+    .overview-fabriqa-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .overview-fabriqa-link {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 26px;
+        padding: 0 8px;
+        border-radius: 5px;
+        background: var(--status-active);
+        color: #ffffff;
+        font-size: 11px;
+        font-weight: 700;
+        cursor: pointer;
+    }
+
+    .overview-fabriqa-link.secondary {
+        background: var(--vscode-input-background);
+        color: var(--vscode-foreground);
+        border: 1px solid var(--vscode-sideBarSectionHeader-border);
+    }
+
+    .overview-fabriqa-link:hover {
+        opacity: 0.88;
+    }
+
+    .overview-dashboard-tip {
+        padding-top: 8px;
+        margin-top: 8px;
         border-top: 1px solid var(--vscode-sideBarSectionHeader-border);
     }
 
+    .overview-dashboard-title {
+        margin-bottom: 4px;
+        color: var(--vscode-foreground);
+        font-size: 12px;
+        font-weight: 700;
+    }
+
+    .overview-dashboard-tip code {
+        padding: 1px 4px;
+        border-radius: 4px;
+        background: var(--vscode-editor-background);
+        color: var(--vscode-foreground);
+    }
+
     .overview-resources-links {
-        display: flex;
-        gap: 12px;
-        justify-content: center;
-        margin-top: 8px;
+        display: inline-flex;
+        flex-wrap: wrap;
+        gap: 6px;
     }
 
     .overview-resource-link {
-        display: flex;
+        display: inline-flex;
         align-items: center;
         justify-content: center;
-        width: 36px;
-        height: 36px;
-        border-radius: 8px;
+        width: 28px;
+        height: 28px;
+        border-radius: 6px;
         background: var(--vscode-editor-background);
         border: 1px solid var(--vscode-sideBarSectionHeader-border);
         cursor: pointer;
@@ -1195,18 +1289,14 @@ export function getStyles(): string {
     }
 
     .overview-resource-link svg {
-        width: 18px;
-        height: 18px;
+        width: 14px;
+        height: 14px;
     }
 
     .overview-feedback-message {
-        text-align: center;
+        display: inline;
         font-size: 11px;
         color: var(--vscode-descriptionForeground);
-        margin-bottom: 12px;
-        padding: 8px 12px;
-        background: var(--vscode-editor-background);
-        border-radius: 6px;
     }
 
     .overview-feedback-link {
@@ -1217,6 +1307,24 @@ export function getStyles(): string {
 
     .overview-feedback-link:hover {
         opacity: 0.8;
+    }
+
+    .overview-footer-row {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        padding-top: 8px;
+        margin-top: 8px;
+        border-top: 1px solid var(--vscode-sideBarSectionHeader-border);
+    }
+
+    .overview-footer-feedback {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 6px;
     }
 
     /* ==================== EMPTY STATE ==================== */

@@ -68,6 +68,21 @@ describe('aidlc dashboard parser', () => {
     expect(result.snapshot.warnings).toHaveLength(0);
   });
 
+  it('orders intents by newest created metadata before folder id', () => {
+    mkdirSync(join(memoryBankPath, 'intents', '002-newer', 'units'), { recursive: true });
+
+    writeFileSync(join(memoryBankPath, 'intents', '001-auth', 'requirements.md'), `---\nstatus: draft\ncreated: 2026-02-02T00:00:00Z\n---\n`, 'utf8');
+    writeFileSync(join(memoryBankPath, 'intents', '002-newer', 'requirements.md'), `---\nstatus: draft\ncreated: 2026-02-01T00:00:00Z\n---\n`, 'utf8');
+
+    const result = parseAidlcDashboard(workspacePath);
+
+    expect(result.ok).toBe(true);
+    expect(result.snapshot.intents.map((intent: { id: string }) => intent.id)).toEqual([
+      '001-auth',
+      '002-newer'
+    ]);
+  });
+
   it('returns a not-found error when memory-bank folder is missing', () => {
     rmSync(memoryBankPath, { recursive: true, force: true });
     const result = parseAidlcDashboard(workspacePath);

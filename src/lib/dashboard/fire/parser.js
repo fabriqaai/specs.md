@@ -12,7 +12,8 @@ const {
   calculateStats,
   parseDependencies,
   buildPendingItems,
-  normalizeRunWorkItem
+  normalizeRunWorkItem,
+  normalizeTimestamp
 } = require('./model');
 
 const STANDARD_TYPES = [
@@ -78,6 +79,46 @@ function getFirstStringValue(record, keys) {
   }
 
   return undefined;
+}
+
+function compareByCreatedAtThenId(a, b) {
+  const aTime = a?.createdAt ? Date.parse(a.createdAt) : NaN;
+  const bTime = b?.createdAt ? Date.parse(b.createdAt) : NaN;
+  const aHasTime = !Number.isNaN(aTime);
+  const bHasTime = !Number.isNaN(bTime);
+
+  if (aHasTime && bHasTime && aTime !== bTime) {
+    return bTime - aTime;
+  }
+  if (aHasTime && !bHasTime) {
+    return -1;
+  }
+  if (!aHasTime && bHasTime) {
+    return 1;
+  }
+
+  return String(a?.id || '').localeCompare(String(b?.id || ''));
+}
+
+function compareRunDatesDesc(a, b) {
+  const aDate = a?.completedAt || a?.startedAt;
+  const bDate = b?.completedAt || b?.startedAt;
+  const aTime = aDate ? Date.parse(aDate) : NaN;
+  const bTime = bDate ? Date.parse(bDate) : NaN;
+  const aHasTime = !Number.isNaN(aTime);
+  const bHasTime = !Number.isNaN(bTime);
+
+  if (aHasTime && bHasTime && aTime !== bTime) {
+    return bTime - aTime;
+  }
+  if (aHasTime && !bHasTime) {
+    return -1;
+  }
+  if (!aHasTime && bHasTime) {
+    return 1;
+  }
+
+  return String(b?.id || '').localeCompare(String(a?.id || ''));
 }
 
 function parseRunLog(runLogPath) {
@@ -210,8 +251,8 @@ function scanWorkItems(intentPath, intentId, stateWorkItems, warnings) {
       filePath,
       description: typeof frontmatter.description === 'string' ? frontmatter.description : undefined,
       dependencies,
-      createdAt: typeof frontmatter.created === 'string' ? frontmatter.created : undefined,
-      completedAt: typeof frontmatter.completed_at === 'string' ? frontmatter.completed_at : undefined
+      createdAt: normalizeTimestamp(frontmatter.created),
+      completedAt: normalizeTimestamp(frontmatter.completed_at)
     };
   });
 }
@@ -252,8 +293,8 @@ function scanIntents(rootPath, normalizedState, warnings) {
       filePath: briefPath,
       description: typeof frontmatter.description === 'string' ? frontmatter.description : undefined,
       workItems,
-      createdAt: typeof frontmatter.created === 'string' ? frontmatter.created : undefined,
-      completedAt: typeof frontmatter.completed_at === 'string' ? frontmatter.completed_at : undefined
+      createdAt: normalizeTimestamp(frontmatter.created),
+      completedAt: normalizeTimestamp(frontmatter.completed_at)
     };
   });
 }
@@ -325,7 +366,8 @@ function buildActiveRuns(runs, normalizedState) {
 
   return (normalizedState.runs?.active || [])
     .map((active) => byId.get(active.id) || null)
-    .filter(Boolean);
+    .filter(Boolean)
+    .sort(compareRunDatesDesc);
 }
 
 function buildCompletedRuns(runs) {
@@ -430,8 +472,8 @@ function parseFireDashboard(workspacePath) {
 
   const warnings = [];
   const normalizedState = normalizeState(rawState);
-  const intents = scanIntents(rootPath, normalizedState, warnings);
-  const runs = scanRuns(rootPath, normalizedState);
+  const intents = scanIntents(rootPath, normalizedState, warnings).sort(compareByCreatedAtThenId);
+  const runs = scanRuns(rootPath, normalizedState).sort(compareRunDatesDesc);
   const activeRuns = buildActiveRuns(runs, normalizedState);
   const completedRuns = buildCompletedRuns(runs);
   const standards = scanStandards(rootPath);

@@ -51,6 +51,14 @@ export class WelcomeViewProvider implements vscode.WebviewViewProvider {
                         trackWelcomeWebsiteClicked();
                         vscode.env.openExternal(vscode.Uri.parse('https://specs.md'));
                         break;
+                    case 'openFabriqa':
+                        trackWelcomeWebsiteClicked();
+                        vscode.env.openExternal(vscode.Uri.parse('https://fabriqa.ai'));
+                        break;
+                    case 'openDashboardDocs':
+                        trackWelcomeWebsiteClicked();
+                        vscode.env.openExternal(vscode.Uri.parse('https://specs.md/getting-started/cli-dashboard'));
+                        break;
                     case 'copyCommand':
                         trackWelcomeCopyCommandClicked();
                         await vscode.env.clipboard.writeText('npx specsmd@latest install');
@@ -205,6 +213,113 @@ export class WelcomeViewProvider implements vscode.WebviewViewProvider {
             margin: 16px 0;
         }
 
+        .fabriqa-card {
+            border: 1px solid var(--vscode-panel-border);
+            border-radius: 8px;
+            padding: 12px;
+            margin: 18px 0 16px;
+            background: color-mix(in srgb, var(--vscode-editor-background) 84%, var(--vscode-button-background));
+        }
+
+        .fabriqa-kicker {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+            color: var(--vscode-foreground);
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .fabriqa-mark {
+            width: 24px;
+            height: 24px;
+            border-radius: 6px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--vscode-button-foreground);
+            background: var(--vscode-button-background);
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0;
+        }
+
+        .fabriqa-title {
+            margin: 0 0 6px;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--vscode-foreground);
+        }
+
+        .fabriqa-copy {
+            margin: 0 0 12px;
+            font-size: 12px;
+            line-height: 1.5;
+        }
+
+        .fabriqa-button {
+            width: 100%;
+            padding: 9px 12px;
+            border-radius: 6px;
+            border: 1px solid var(--vscode-button-background);
+            background: transparent;
+            color: var(--vscode-textLink-foreground);
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .fabriqa-button:hover {
+            background: var(--vscode-list-hoverBackground);
+        }
+
+        .dashboard-tip {
+            border: 1px solid var(--vscode-panel-border);
+            border-radius: 8px;
+            padding: 12px;
+            margin: 0 0 16px;
+            background: var(--vscode-input-background);
+        }
+
+        .dashboard-tip-title {
+            margin: 0 0 6px;
+            color: var(--vscode-foreground);
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .dashboard-tip-copy {
+            margin: 0 0 10px;
+            font-size: 12px;
+            line-height: 1.45;
+        }
+
+        .dashboard-tip code {
+            display: block;
+            padding: 7px 8px;
+            margin-bottom: 10px;
+            border-radius: 4px;
+            background: var(--vscode-editor-background);
+            color: var(--vscode-input-foreground);
+            font-family: var(--vscode-editor-font-family);
+            font-size: 11px;
+            white-space: nowrap;
+            overflow-x: auto;
+        }
+
+        .dashboard-link {
+            color: var(--vscode-textLink-foreground);
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            text-decoration: none;
+        }
+
+        .dashboard-link:hover {
+            text-decoration: underline;
+        }
+
         .footer {
             text-align: center;
             font-size: 11px;
@@ -248,6 +363,29 @@ export class WelcomeViewProvider implements vscode.WebviewViewProvider {
         Install specsmd
     </button>
 
+    <div class="fabriqa-card">
+        <div class="fabriqa-kicker">
+            <span class="fabriqa-mark">FA</span>
+            <span>From the founder of specs.md</span>
+        </div>
+        <h3 class="fabriqa-title">Try Fabriqa.AI</h3>
+        <p class="fabriqa-copy">
+            Fabriqa.AI is a spec-native agentic development environment that works with your existing AI subscription. It is free to try and pairs naturally with spec-driven workflows.
+        </p>
+        <button class="fabriqa-button" id="fabriqaLink">
+            Explore Fabriqa.AI
+        </button>
+    </div>
+
+    <div class="dashboard-tip">
+        <div class="dashboard-tip-title">Did you know?</div>
+        <p class="dashboard-tip-copy">
+            You can use the specsmd dashboard outside VS Code and VS Code variants. Run this from your project folder:
+        </p>
+        <code>npx specsmd@latest dashboard</code>
+        <a href="#" class="dashboard-link" id="dashboardDocsLink">Open dashboard docs</a>
+    </div>
+
     <div class="divider"></div>
 
     <div class="footer">
@@ -270,8 +408,19 @@ export class WelcomeViewProvider implements vscode.WebviewViewProvider {
             vscode.postMessage({ command: 'install' });
         }
 
+        function openFabriqa() {
+            vscode.postMessage({ command: 'openFabriqa' });
+        }
+
+        function openDashboardDocs(e) {
+            if (e) e.preventDefault();
+            vscode.postMessage({ command: 'openDashboardDocs' });
+        }
+
         // Set up event listeners after DOM is ready
         document.getElementById('learnMoreLink').addEventListener('click', openWebsite);
+        document.getElementById('fabriqaLink').addEventListener('click', openFabriqa);
+        document.getElementById('dashboardDocsLink').addEventListener('click', openDashboardDocs);
         document.querySelector('.logo-container').addEventListener('click', openWebsite);
         document.querySelector('.copy-button').addEventListener('click', copyCommand);
         document.querySelector('.install-button').addEventListener('click', install);

@@ -191,6 +191,7 @@ export interface IntentData {
     storiesComplete: number;
     storiesTotal: number;
     units: UnitData[];
+    createdAt?: string;
 }
 
 /**

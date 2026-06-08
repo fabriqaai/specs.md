@@ -262,12 +262,17 @@ export async function parseIntent(intentPath: string): Promise<Intent | null> {
         ? normalizeStatus(requirementsFrontmatter.status as string)
         : calculateAggregateStatus(units.map(u => u.status));
 
+    const createdAt = requirementsFrontmatter?.created
+        ? parseTimestamp(requirementsFrontmatter.created as string)
+        : undefined;
+
     return {
         name: parsed.name,
         number: parsed.number,
         path: intentPath,
         status,
-        units
+        units,
+        createdAt
     };
 }
 
@@ -455,8 +460,21 @@ export async function scanMemoryBank(workspacePath: string): Promise<MemoryBankM
         }
     }
 
-    // Sort intents by number
-    intents.sort((a, b) => a.number.localeCompare(b.number));
+    // Sort intents by creation time when available, with folder number fallback.
+    intents.sort((a, b) => {
+        const aTime = a.createdAt?.getTime();
+        const bTime = b.createdAt?.getTime();
+        if (aTime !== undefined && bTime !== undefined && aTime !== bTime) {
+            return bTime - aTime;
+        }
+        if (aTime !== undefined && bTime === undefined) {
+            return -1;
+        }
+        if (aTime === undefined && bTime !== undefined) {
+            return 1;
+        }
+        return a.number.localeCompare(b.number);
+    });
 
     // Parse bolts (pass workspacePath for dynamic bolt type loading)
     const boltsPath = schema.getBoltsPath();

@@ -73,13 +73,17 @@ export class FireStateManager implements FlowStateManager<FireWebviewSnapshot> {
         }
 
         const stats = calculateFireStats(artifacts);
-        const completedRuns = artifacts.runs.filter(r => r.completedAt != null);
+        const completedRuns = artifacts.runs
+            .filter(r => r.completedAt != null)
+            .sort((a, b) => this._compareRunDatesDesc(a.completedAt, b.completedAt, a.id, b.id));
+        const activeRuns = [...artifacts.activeRuns]
+            .sort((a, b) => this._compareRunDatesDesc(a.startedAt, b.startedAt, a.id, b.id));
 
         return {
             project: artifacts.project,
             workspace: artifacts.workspace,
             intents: artifacts.intents,
-            activeRuns: artifacts.activeRuns,
+            activeRuns,
             completedRuns,
             standards: artifacts.standards,
             stats,
@@ -93,6 +97,24 @@ export class FireStateManager implements FlowStateManager<FireWebviewSnapshot> {
     loadFromArtifacts(artifacts: FireArtifacts): void {
         this._state.artifacts = artifacts;
         this._notify();
+    }
+
+    private _compareRunDatesDesc(aDate: string | undefined, bDate: string | undefined, aId: string, bId: string): number {
+        const aTime = aDate ? Date.parse(aDate) : NaN;
+        const bTime = bDate ? Date.parse(bDate) : NaN;
+        const aHasTime = !Number.isNaN(aTime);
+        const bHasTime = !Number.isNaN(bTime);
+
+        if (aHasTime && bHasTime && aTime !== bTime) {
+            return bTime - aTime;
+        }
+        if (aHasTime && !bHasTime) {
+            return -1;
+        }
+        if (!aHasTime && bHasTime) {
+            return 1;
+        }
+        return bId.localeCompare(aId);
     }
 
     /**

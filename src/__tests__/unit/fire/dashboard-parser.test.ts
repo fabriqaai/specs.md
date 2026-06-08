@@ -51,6 +51,44 @@ describe('fire dashboard parser', () => {
     expect(result.snapshot.stats.activeRunsCount).toBe(1);
   });
 
+  it('orders intents by newest creation date and completed runs by completion date', () => {
+    mkdirSync(join(fireRootPath, 'intents', 'INT-002', 'work-items'), { recursive: true });
+    mkdirSync(join(fireRootPath, 'runs', 'run-002'), { recursive: true });
+
+    writeFileSync(join(fireRootPath, 'state.yaml'), `project:\n  name: demo\nintents:\n  - id: INT-001\n    status: pending\n  - id: INT-002\n    status: pending\nruns:\n  completed:\n    - id: run-001\n      completed: 2026-01-19T09:00:00Z\n    - id: run-002\n      completed: 2026-01-19T11:00:00Z\n`, 'utf8');
+
+    writeFileSync(join(fireRootPath, 'intents', 'INT-001', 'brief.md'), `---\ntitle: First\ncreated: 2026-01-02T00:00:00Z\n---\n`, 'utf8');
+    writeFileSync(join(fireRootPath, 'intents', 'INT-002', 'brief.md'), `---\ntitle: Second\ncreated: 2026-01-01T00:00:00Z\n---\n`, 'utf8');
+    writeFileSync(join(fireRootPath, 'runs', 'run-001', 'run.md'), `---\nid: run-001\ncompleted: 2026-01-19T09:00:00Z\n---\n`, 'utf8');
+    writeFileSync(join(fireRootPath, 'runs', 'run-002', 'run.md'), `---\nid: run-002\ncompleted: 2026-01-19T11:00:00Z\n---\n`, 'utf8');
+
+    const result = parseFireDashboard(workspacePath);
+
+    expect(result.ok).toBe(true);
+    expect(result.snapshot.intents.map((intent: { id: string }) => intent.id)).toEqual(['INT-001', 'INT-002']);
+    expect(result.snapshot.completedRuns.map((run: { id: string }) => run.id)).toEqual(['run-002', 'run-001']);
+  });
+
+  it('orders pending work by newest parent intent before dependency count', () => {
+    mkdirSync(join(fireRootPath, 'intents', 'INT-002', 'work-items'), { recursive: true });
+
+    writeFileSync(join(fireRootPath, 'state.yaml'), `project:\n  name: demo\nintents:\n  - id: INT-001\n    status: pending\n  - id: INT-002\n    status: pending\n`, 'utf8');
+
+    writeFileSync(join(fireRootPath, 'intents', 'INT-001', 'brief.md'), `---\ntitle: Older\ncreated: 2026-01-01T00:00:00Z\n---\n`, 'utf8');
+    writeFileSync(join(fireRootPath, 'intents', 'INT-001', 'work-items', 'WI-OLD.md'), `---\ntitle: Old root item\nstatus: pending\ncreated: 2026-01-01T01:00:00Z\n---\n`, 'utf8');
+
+    writeFileSync(join(fireRootPath, 'intents', 'INT-002', 'brief.md'), `---\ntitle: Newer\ncreated: 2026-01-02T00:00:00Z\n---\n`, 'utf8');
+    writeFileSync(join(fireRootPath, 'intents', 'INT-002', 'work-items', 'WI-NEW-BLOCKED.md'), `---\ntitle: New dependent item\nstatus: pending\ncreated: 2026-01-02T01:00:00Z\ndepends_on:\n  - WI-NEW-ROOT\n---\n`, 'utf8');
+
+    const result = parseFireDashboard(workspacePath);
+
+    expect(result.ok).toBe(true);
+    expect(result.snapshot.pendingItems.map((item: { id: string }) => item.id)).toEqual([
+      'WI-NEW-BLOCKED',
+      'WI-OLD'
+    ]);
+  });
+
   it('returns uninitialized snapshot when state.yaml is missing', () => {
     const result = parseFireDashboard(workspacePath);
 

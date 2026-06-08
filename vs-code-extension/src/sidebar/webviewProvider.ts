@@ -442,7 +442,9 @@ export class SpecsmdWebviewProvider implements vscode.WebviewViewProvider {
                 complexity: string;
                 filePath: string;
                 dependencies?: string[];
+                createdAt?: string;
             }>;
+            createdAt?: string;
         }>;
         activeRuns: Array<{
             id: string;
@@ -493,9 +495,11 @@ export class SpecsmdWebviewProvider implements vscode.WebviewViewProvider {
                     mode: w.mode as 'autopilot' | 'confirm' | 'validate',
                     complexity: w.complexity as 'low' | 'medium' | 'high',
                     filePath: w.filePath,
-                    dependencies: w.dependencies
+                    dependencies: w.dependencies,
+                    createdAt: w.createdAt,
+                    intentCreatedAt: intent.createdAt
                 }))
-        );
+        ).sort((a, b) => this._comparePendingItems(a, b));
 
         // Build completed runs data with files
         const completedRunsData = state.completedRuns.map(run => ({
@@ -536,13 +540,15 @@ export class SpecsmdWebviewProvider implements vscode.WebviewViewProvider {
             status: intent.status as 'pending' | 'in_progress' | 'completed' | 'blocked',
             filePath: intent.filePath,
             description: intent.description,
+            createdAt: intent.createdAt,
             workItems: intent.workItems.map(w => ({
                 id: w.id,
                 title: w.title,
                 status: w.status as 'pending' | 'in_progress' | 'completed' | 'blocked',
                 mode: w.mode as 'autopilot' | 'confirm' | 'validate',
                 complexity: w.complexity as 'low' | 'medium' | 'high',
-                filePath: w.filePath
+                filePath: w.filePath,
+                createdAt: w.createdAt
             }))
         }));
 
@@ -1087,9 +1093,10 @@ export class SpecsmdWebviewProvider implements vscode.WebviewViewProvider {
                 path: intent.path,
                 storiesComplete,
                 storiesTotal,
-                units
+                units,
+                createdAt: intent.createdAt?.toISOString()
             };
-        });
+        }).sort((a, b) => this._compareByCreatedAtThenKey(a, b, a.number, b.number));
 
         // Apply specs filter based on UNIT raw statuses
         // If any unit within an intent matches the filter, show that intent with ALL its units
@@ -1102,6 +1109,53 @@ export class SpecsmdWebviewProvider implements vscode.WebviewViewProvider {
         const availableStatuses = Array.from(statusSet).sort();
 
         return { intents: filteredIntents, availableStatuses };
+    }
+
+    private _comparePendingItems(
+        a: { dependencies?: string[]; createdAt?: string; intentCreatedAt?: string; id: string },
+        b: { dependencies?: string[]; createdAt?: string; intentCreatedAt?: string; id: string }
+    ): number {
+        const aIntentTime = a.intentCreatedAt ? Date.parse(a.intentCreatedAt) : NaN;
+        const bIntentTime = b.intentCreatedAt ? Date.parse(b.intentCreatedAt) : NaN;
+        const aHasIntentTime = !Number.isNaN(aIntentTime);
+        const bHasIntentTime = !Number.isNaN(bIntentTime);
+        if (aHasIntentTime && bHasIntentTime && aIntentTime !== bIntentTime) {
+            return bIntentTime - aIntentTime;
+        }
+        if (aHasIntentTime && !bHasIntentTime) {
+            return -1;
+        }
+        if (!aHasIntentTime && bHasIntentTime) {
+            return 1;
+        }
+
+        const depDiff = (a.dependencies?.length || 0) - (b.dependencies?.length || 0);
+        if (depDiff !== 0) {
+            return depDiff;
+        }
+        return this._compareByCreatedAtThenKey(a, b, a.id, b.id);
+    }
+
+    private _compareByCreatedAtThenKey(
+        a: { createdAt?: string },
+        b: { createdAt?: string },
+        aKey: string,
+        bKey: string
+    ): number {
+        const aTime = a.createdAt ? Date.parse(a.createdAt) : NaN;
+        const bTime = b.createdAt ? Date.parse(b.createdAt) : NaN;
+        const aHasTime = !Number.isNaN(aTime);
+        const bHasTime = !Number.isNaN(bTime);
+        if (aHasTime && bHasTime && aTime !== bTime) {
+            return bTime - aTime;
+        }
+        if (aHasTime && !bHasTime) {
+            return -1;
+        }
+        if (!aHasTime && bHasTime) {
+            return 1;
+        }
+        return aKey.localeCompare(bKey);
     }
 
     /**

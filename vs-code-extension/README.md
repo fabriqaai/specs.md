@@ -2,7 +2,7 @@
 
 **See what AI is building. Track every run, intent, and change.**
 
-[![VS Code](https://img.shields.io/visual-studio-marketplace/v/fabriqaai.specsmd?label=VS%20Code&color=007ACC)](https://marketplace.visualstudio.com/items?itemName=fabriqaai.specsmd)
+[![VS Code Marketplace](https://img.shields.io/badge/VS%20Code%20Marketplace-Install-007ACC?logo=visualstudiocode&logoColor=white)](https://marketplace.visualstudio.com/items?itemName=fabriqaai.specsmd)
 [![Open VSX](https://img.shields.io/open-vsx/v/fabriqaai/specsmd?label=Open%20VSX&color=a855f7)](https://open-vsx.org/extension/fabriqaai/specsmd)
 [![License](https://img.shields.io/badge/license-MIT-green)](https://opensource.org/licenses/MIT)
 

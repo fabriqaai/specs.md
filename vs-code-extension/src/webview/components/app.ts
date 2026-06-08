@@ -10,7 +10,7 @@
  * Specs and Overview views use server-rendered HTML (hybrid approach).
  */
 
-import { html, css } from 'lit';
+import { html, css, svg } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import { unsafeHTML } from 'lit/directives/unsafe-html.js';
 import { BaseElement } from './shared/base-element.js';
@@ -25,6 +25,7 @@ import type { ActivityFilter } from './bolts/activity-feed.js';
 import type { FlowInfo } from './shared/flow-switcher.js';
 import type { FireViewData } from './fire/fire-view.js';
 import type { FireTabId } from './fire/fire-view-tabs.js';
+import { applyTheme, getInitialTheme, persistTheme, type ThemeMode } from '../styles/theme.js';
 import { vscode } from '../vscode-api.js';
 
 /**
@@ -107,6 +108,12 @@ export class SpecsmdApp extends BaseElement {
     private _fireActiveTab: FireTabId = 'runs';
 
     /**
+     * Current UI theme.
+     */
+    @state()
+    private _theme: ThemeMode = 'dark';
+
+    /**
      * Version counter for specs HTML to track when handlers need reattachment.
      * Incremented each time _specsHtml changes.
      */
@@ -121,15 +128,126 @@ export class SpecsmdApp extends BaseElement {
         ...BaseElement.baseStyles,
         css`
             :host {
-                display: flex;
-                flex-direction: column;
+                display: block;
                 height: 100vh;
                 overflow: hidden;
+                position: relative;
                 background: var(--background);
+            }
+
+            .shell {
+                display: flex;
+                flex-direction: column;
+                position: absolute;
+                inset: 0;
+                width: 100%;
+                height: 100%;
+                min-height: 0;
+                overflow: hidden;
+            }
+
+            .shell-chrome {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 12px;
+                padding: 10px 12px;
+                background: linear-gradient(180deg, var(--editor-background) 0%, var(--vscode-sideBarSectionHeader-background) 100%);
+                border-bottom: 1px solid var(--border-color);
+            }
+
+            .shell-brand {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                min-width: 0;
+            }
+
+            .shell-mark {
+                width: 24px;
+                height: 24px;
+                border-radius: 6px;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                background: var(--accent-primary);
+                color: #ffffff;
+                font-size: 13px;
+                flex-shrink: 0;
+            }
+
+            .shell-brand-copy {
+                min-width: 0;
+            }
+
+            .shell-title {
+                font-size: 12px;
+                font-weight: 600;
+                line-height: 1.2;
+            }
+
+            .shell-subtitle {
+                font-size: 10px;
+                color: var(--description-foreground);
+                line-height: 1.2;
+            }
+
+            .shell-actions {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                flex-shrink: 0;
+            }
+
+            .theme-toggle {
+                display: inline-flex;
+                align-items: center;
+                gap: 6px;
+                padding: 6px 10px;
+                border-radius: 6px;
+                border: 1px solid var(--border-color);
+                background: var(--vscode-input-background);
+                color: var(--foreground);
+                font-size: 11px;
+                font-weight: 500;
+                transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+            }
+
+            .theme-toggle:hover {
+                background: var(--vscode-list-hoverBackground);
+                border-color: var(--accent-primary);
+            }
+
+            .theme-toggle-icon {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                width: 14px;
+                height: 14px;
+                flex-shrink: 0;
+            }
+
+            .theme-toggle-icon svg {
+                width: 14px;
+                height: 14px;
+                fill: currentColor;
+            }
+
+            .theme-toggle-text {
+                min-width: 0;
+            }
+
+            .app-body {
+                display: flex;
+                flex-direction: column;
+                flex: 1;
+                min-height: 0;
+                overflow: hidden;
             }
 
             .view-container {
                 flex: 1;
+                min-height: 0;
                 overflow-y: auto;
                 display: none;
             }
@@ -137,6 +255,7 @@ export class SpecsmdApp extends BaseElement {
             .view-container.active {
                 display: flex;
                 flex-direction: column;
+                min-height: 0;
             }
 
             bolts-view {
@@ -556,34 +675,119 @@ export class SpecsmdApp extends BaseElement {
 
             /* ==================== OVERVIEW RESOURCES FOOTER ==================== */
             .overview-resources-footer {
-                margin-top: 20px;
-                padding-top: 16px;
+                margin-top: 14px;
+            }
+
+            .overview-fabriqa-card {
+                padding: 10px;
+                border: 1px solid var(--border-color);
+                border-radius: 6px;
+                background: var(--editor-background);
+            }
+
+            .overview-fabriqa-brand {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                margin-bottom: 6px;
+            }
+
+            .overview-fabriqa-mark {
+                width: 26px;
+                height: 26px;
+                border-radius: 6px;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                background: var(--accent-primary);
+                color: #ffffff;
+                font-size: 10px;
+                font-weight: 700;
+                flex-shrink: 0;
+            }
+
+            .overview-fabriqa-title {
+                font-size: 13px;
+                font-weight: 700;
+                color: var(--foreground);
+                line-height: 1.25;
+            }
+
+            .overview-fabriqa-subtitle,
+            .overview-fabriqa-copy,
+            .overview-dashboard-copy {
+                color: var(--description-foreground);
+                font-size: 11px;
+                line-height: 1.45;
+            }
+
+            .overview-fabriqa-copy {
+                margin-bottom: 8px;
+            }
+
+            .overview-fabriqa-actions {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 8px;
+            }
+
+            .overview-fabriqa-link {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                min-height: 26px;
+                padding: 0 8px;
+                border-radius: 5px;
+                background: var(--accent-primary);
+                color: #ffffff;
+                font-size: 11px;
+                font-weight: 700;
+                cursor: pointer;
+            }
+
+            .overview-fabriqa-link.secondary {
+                background: var(--vscode-input-background);
+                color: var(--foreground);
+                border: 1px solid var(--border-color);
+            }
+
+            .overview-fabriqa-link:hover {
+                opacity: 0.88;
+            }
+
+            .overview-dashboard-tip {
+                padding-top: 8px;
+                margin-top: 8px;
                 border-top: 1px solid var(--border-color);
             }
 
-            .overview-resources-title {
-                font-size: 9px;
-                font-weight: 600;
-                text-transform: uppercase;
-                color: var(--description-foreground);
-                letter-spacing: 0.5px;
-                margin-bottom: 8px;
-                text-align: center;
+            .overview-dashboard-title {
+                margin-bottom: 4px;
+                color: var(--foreground);
+                font-size: 12px;
+                font-weight: 700;
+            }
+
+            .overview-dashboard-tip code {
+                padding: 1px 4px;
+                border-radius: 4px;
+                background: var(--editor-background);
+                color: var(--foreground);
             }
 
             .overview-resources-links {
-                display: flex;
-                gap: 12px;
-                justify-content: center;
+                display: inline-flex;
+                flex-wrap: wrap;
+                gap: 6px;
             }
 
             .overview-resource-link {
-                display: flex;
+                display: inline-flex;
                 align-items: center;
                 justify-content: center;
-                width: 36px;
-                height: 36px;
-                border-radius: 8px;
+                width: 28px;
+                height: 28px;
+                border-radius: 6px;
                 background: var(--editor-background);
                 border: 1px solid var(--border-color);
                 cursor: pointer;
@@ -598,18 +802,14 @@ export class SpecsmdApp extends BaseElement {
             }
 
             .overview-resource-link svg {
-                width: 18px;
-                height: 18px;
+                width: 14px;
+                height: 14px;
             }
 
             .overview-feedback-message {
-                text-align: center;
+                display: inline;
                 font-size: 11px;
                 color: var(--description-foreground);
-                margin-top: 12px;
-                padding: 8px 12px;
-                background: var(--editor-background);
-                border-radius: 6px;
             }
 
             .overview-feedback-link {
@@ -620,6 +820,24 @@ export class SpecsmdApp extends BaseElement {
 
             .overview-feedback-link:hover {
                 opacity: 0.8;
+            }
+
+            .overview-footer-row {
+                display: flex;
+                flex-wrap: wrap;
+                align-items: center;
+                justify-content: space-between;
+                gap: 8px;
+                padding-top: 8px;
+                margin-top: 8px;
+                border-top: 1px solid var(--border-color);
+            }
+
+            .overview-footer-feedback {
+                display: flex;
+                flex-wrap: wrap;
+                align-items: center;
+                gap: 6px;
             }
 
             /* ==================== EMPTY STATE ==================== */
@@ -642,6 +860,10 @@ export class SpecsmdApp extends BaseElement {
 
     connectedCallback(): void {
         super.connectedCallback();
+
+        this._theme = getInitialTheme(vscode.getState());
+        this._applyTheme(this._theme);
+        vscode.setState(this._theme);
 
         // Listen for messages from the extension
         window.addEventListener('message', this._handleMessage);
@@ -788,8 +1010,8 @@ export class SpecsmdApp extends BaseElement {
             });
         });
 
-        // Resource links (website, discord, twitter)
-        overviewView.querySelectorAll('.overview-resource-link').forEach(link => {
+        // Resource links (website, Fabriqa, docs, discord, twitter)
+        overviewView.querySelectorAll('.overview-resource-link, .overview-fabriqa-link').forEach(link => {
             const htmlLink = link as HTMLElement;
             link.addEventListener('click', () => {
                 const url = htmlLink.dataset.url;
@@ -833,14 +1055,47 @@ export class SpecsmdApp extends BaseElement {
 
     render() {
         if (!this._loaded) {
-            return html`<div class="loading">Loading...</div>`;
+            return html`
+                <div class="shell">
+                    <div class="shell-chrome">
+                        <div class="shell-brand">
+                            <span class="shell-mark">⚡</span>
+                            <div class="shell-brand-copy">
+                                <div class="shell-title">SpecsMD</div>
+                                <div class="shell-subtitle">Loading dashboard</div>
+                            </div>
+                        </div>
+                        <div class="shell-actions">
+                            ${this._renderThemeToggle()}
+                        </div>
+                    </div>
+                    <div class="loading">Loading...</div>
+                </div>
+            `;
         }
 
         // Render completely different apps based on active flow
         const isFireFlow = this._activeFlow?.id === 'fire';
 
         return html`
-            ${isFireFlow ? this._renderFireApp() : this._renderAidlcApp()}
+            <div class="shell">
+                <div class="shell-chrome">
+                    <div class="shell-brand">
+                        <span class="shell-mark">⚡</span>
+                        <div class="shell-brand-copy">
+                            <div class="shell-title">SpecsMD</div>
+                            <div class="shell-subtitle">${isFireFlow ? 'FIRE dashboard' : 'AI-DLC dashboard'}</div>
+                        </div>
+                    </div>
+                    <div class="shell-actions">
+                        ${this._renderThemeToggle()}
+                    </div>
+                </div>
+
+                <div class="app-body">
+                    ${isFireFlow ? this._renderFireApp() : this._renderAidlcApp()}
+                </div>
+            </div>
         `;
     }
 
@@ -937,6 +1192,32 @@ export class SpecsmdApp extends BaseElement {
         `;
     }
 
+    /**
+     * Render the theme toggle control.
+     */
+    private _renderThemeToggle() {
+        const isDark = this._theme === 'dark';
+        const nextTheme = isDark ? 'light' : 'dark';
+        const label = isDark ? 'Light' : 'Dark';
+        const title = `Switch to ${nextTheme} mode`;
+        const icon = isDark
+            ? svg`<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 8.25A3.75 3.75 0 1 0 12 15.75 3.75 3.75 0 0 0 12 8.25Zm0-6a1 1 0 0 1 1 1.06l-.05 1.94a1 1 0 1 1-2 0l-.05-1.94A1 1 0 0 1 12 2.25Zm0 16.5a1 1 0 0 1 1 1.06l-.05 1.94a1 1 0 1 1-2 0l-.05-1.94a1 1 0 0 1 1.05-1.06Zm10.5-6a1 1 0 0 1-1.06 1l-1.94-.05a1 1 0 1 1 0-2l1.94-.05a1 1 0 0 1 1.06 1.1ZM4.5 12a1 1 0 0 1-1.06 1l-1.94-.05a1 1 0 1 1 0-2l1.94-.05A1 1 0 0 1 4.5 12Zm14.45-7.95a1 1 0 0 1 .04 1.41l-1.37 1.37a1 1 0 1 1-1.41-1.41l1.37-1.37a1 1 0 0 1 1.37 0Zm-11.14 11.1a1 1 0 0 1 .04 1.41l-1.37 1.37a1 1 0 1 1-1.41-1.41l1.37-1.37a1 1 0 0 1 1.37 0Zm11.14 2.78a1 1 0 0 1-1.41.04l-1.37-1.37a1 1 0 1 1 1.41-1.41l1.37 1.37a1 1 0 0 1 0 1.37ZM7.81 7.81a1 1 0 0 1-1.41.04L5.03 6.48a1 1 0 1 1 1.41-1.41l1.37 1.37a1 1 0 0 1 0 1.37Z"/></svg>`
+            : svg`<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21.75 14.2A9.7 9.7 0 0 1 9.8 2.25a1 1 0 0 0-1.16 1.16 8.5 8.5 0 1 0 12.95 11.95 1 1 0 0 0 .16-1.16Z"/></svg>`;
+
+        return html`
+            <button
+                class="theme-toggle"
+                type="button"
+                title=${title}
+                aria-label=${title}
+                @click=${this._toggleTheme}
+            >
+                <span class="theme-toggle-icon">${icon}</span>
+                <span class="theme-toggle-text">${label}</span>
+            </button>
+        `;
+    }
+
     // ==================== FIRE Event Handlers ====================
 
     private _handleFireTabChange(e: CustomEvent<{ tab: FireTabId }>): void {
@@ -972,6 +1253,15 @@ export class SpecsmdApp extends BaseElement {
     }
 
     private _handleFireFilterChange(e: CustomEvent<{ filter: string }>): void {
+        if (this._fireData) {
+            this._fireData = {
+                ...this._fireData,
+                intentsData: {
+                    ...this._fireData.intentsData,
+                    filter: e.detail.filter as typeof this._fireData.intentsData.filter
+                }
+            };
+        }
         vscode.postMessage({ type: 'fireIntentsFilter', filter: e.detail.filter });
     }
 
@@ -985,6 +1275,23 @@ export class SpecsmdApp extends BaseElement {
 
     private _handleFlowSwitch(e: CustomEvent): void {
         vscode.postMessage({ type: 'switchFlow' });
+    }
+
+    /**
+     * Toggle the dashboard theme and persist it locally.
+     */
+    private _toggleTheme(): void {
+        this._theme = this._theme === 'dark' ? 'light' : 'dark';
+        this._applyTheme(this._theme);
+        vscode.setState(this._theme);
+        persistTheme(this._theme);
+    }
+
+    /**
+     * Apply the selected theme to the document root.
+     */
+    private _applyTheme(theme: ThemeMode): void {
+        applyTheme(theme, document.documentElement);
     }
 
     /**
