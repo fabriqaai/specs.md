@@ -1,6 +1,6 @@
 ---
 title: Introduction
-description: AI-native development framework with three flows for every use case
+description: AI-native development framework with four flows for every use case
 ---
 
 
@@ -25,7 +25,14 @@ description: AI-native development framework with three flows for every use case
 
 **specs.md** is an AI-native development framework with pluggable flows for every use case. Choose the flow that matches your project needs:
 
-<CardGroup cols={3}>
+<CardGroup cols={2}>
+  <Card
+    title="Ideation Flow"
+    icon="lightbulb"
+    href="/ideation-flow/overview"
+  >
+    **Creative brainstorming**. Spark → Flame → Forge ideas into concept briefs.
+  </Card>
   <Card
     title="Simple Flow"
     icon="feather"
@@ -80,6 +87,7 @@ specs.md is built as a **pluggable framework** where development methodologies a
 specs.md (Framework)
 ├── Core (Standards, Agents, State)
 └── Flows/
+    ├── ideation/   ← Creative brainstorming (Spark → Flame → Forge)
     ├── simple/     ← Spec generation only
     ├── fire/       ← Rapid execution (0-2 checkpoints)
     └── aidlc/      ← Full methodology with DDD
@@ -88,8 +96,11 @@ specs.md (Framework)
 ## Key Features
 
 <AccordionGroup>
-  <Accordion title="Three Flows for Every Use Case">
-    **Simple** for quick specs, **FIRE** for rapid execution, **AI-DLC** for full methodology. Choose based on your project needs.
+  <Accordion title="Four Flows for Every Use Case">
+    **Ideation** for creative brainstorming, **Simple** for quick specs, **FIRE** for rapid execution, **AI-DLC** for full methodology. Choose based on your project needs.
+  </Accordion>
+  <Accordion title="Creative Ideation (Ideation Flow)">
+    Spark → Flame → Forge. AI generates diverse ideas using 12 domains, evaluates them through multiple lenses, then shapes top picks into polished concept briefs—before you commit to writing specs.
   </Accordion>
   <Accordion title="Adaptive Checkpoints (FIRE)">
     FIRE flow adapts oversight to complexity: 0 checkpoints for simple tasks, 1 for standard features, 2 for critical changes.
@@ -113,14 +124,14 @@ specs.md (Framework)
 
 ## Flow Comparison
 
-| Aspect | Simple | FIRE | AI-DLC |
-|--------|--------|------|--------|
-| **Optimized For** | Spec generation | Adaptive execution | Full traceability |
-| **Checkpoints** | 3 (phase gates) | Adaptive (complexity + config) | Comprehensive |
-| **Agents** | 1 | 3 | 4 |
-| **Execution Tracking** | No | Yes | Yes |
-| **Design Docs** | Basic | When complexity warrants | DDD or Simple bolt |
-| **Monorepo** | No | First-class | Limited |
+| Aspect | Ideation | Simple | FIRE | AI-DLC |
+|--------|----------|--------|------|--------|
+| **Optimized For** | Creative exploration | Spec generation | Adaptive execution | Full traceability |
+| **Checkpoints** | 0 (non-blocking) | 3 (phase gates) | Adaptive (complexity + config) | Comprehensive |
+| **Agents** | 1 | 1 | 3 | 4 |
+| **Execution Tracking** | No | No | Yes | Yes |
+| **Design Docs** | Concept briefs | Basic | When complexity warrants | DDD or Simple bolt |
+| **Monorepo** | No | No | First-class | Limited |
 
 ## Supported Tools
 
@@ -175,7 +186,7 @@ Unlike tools that lock you into a specific paid IDE, specs.md works with **any A
     ```
   </Step>
   <Step title="Select your flow">
-    Choose **Simple**, **FIRE**, or **AI-DLC** based on your project needs
+    Choose **Ideation**, **Simple**, **FIRE**, or **AI-DLC** based on your project needs
   </Step>
   <Step title="Start building">
     Invoke your flow's agent and describe what you want to build
@@ -186,7 +197,8 @@ Unlike tools that lock you into a specific paid IDE, specs.md works with **any A
 
 Traditional development methods were built for human-driven, long-running processes. **specs.md reimagines the development lifecycle** with AI as a central collaborator:
 
-- **Choose your overhead**: From no execution tracking (Simple) to full methodology (AI-DLC)
+- **Choose your overhead**: From creative brainstorming (Ideation) and no execution tracking (Simple) to full methodology (AI-DLC)
+- **Start before specs**: Ideation explores the solution space and produces concept briefs—before you commit to writing requirements
 - **Adaptive checkpoints**: FIRE adapts oversight to complexity—skip ceremony for simple tasks
 - **Brownfield-first**: FIRE auto-detects existing patterns and conventions
 - **Persistent context**: AI can reference across sessions with structured artifacts

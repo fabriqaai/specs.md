@@ -1,13 +1,18 @@
 ---
 title: Choose Your Flow
-description: Compare Simple, FIRE, and AI-DLC flows to find the right fit for your project
+description: Compare Ideation, Simple, FIRE, and AI-DLC flows to find the right fit for your project
 ---
 
-## Three Flows, Every Use Case
+## Four Flows, Every Use Case
 
-specs.md offers three development flows, each designed for different project needs and team sizes. Choose the one that matches your context.
+specs.md offers four flows, each designed for a different stage and context. Choose the one that matches your current need.
 
-<CardGroup cols={3}>
+<CardGroup cols={2}>
+  <Card title="Ideation Flow" icon="lightbulb" href="/ideation-flow/overview">
+    **Creative brainstorming**
+
+    Spark → Flame → Forge. Diverse ideas to polished concept briefs before you commit to building.
+  </Card>
   <Card title="Simple Flow" icon="feather" href="/simple-flow/overview">
     **Spec generation only**
 
@@ -28,9 +33,13 @@ specs.md offers three development flows, each designed for different project nee
 ## Quick Decision Guide
 
 <Steps>
+  <Step title="Do you have a clear feature idea yet?">
+    - **No, I'm still exploring** → Use **Ideation Flow** (brainstorm → evaluate → shape a concept brief)
+    - **Yes, I know what I want to build** → Continue to Step 2
+  </Step>
   <Step title="Do you need execution tracking?">
     - **No** → Use **Simple Flow** (spec generation only, like Kiro)
-    - **Yes** → Continue to Step 2
+    - **Yes** → Continue to Step 3
   </Step>
   <Step title="Do you want adaptive or fixed ceremony?">
     - **Adaptive** (right-size rigor based on task complexity) → **FIRE Flow**
@@ -44,21 +53,35 @@ specs.md offers three development flows, each designed for different project nee
 
 ## Detailed Comparison
 
-| Aspect | Simple | FIRE | AI-DLC |
-|--------|--------|------|--------|
-| **Optimized For** | Spec generation, prototypes | Teams who hate friction | Full traceability needs |
-| **Execution Planning** | N/A | Dynamic (recommends next run) | Pre-planned (bolts) |
-| **Requirement Changes** | N/A | Just update specs | May need bolt re-planning |
-| **Checkpoints** | 3 (phase gates) | Adaptive (complexity + config) | Comprehensive (fixed) |
-| **Agents** | 1 | 3 | 4 |
-| **Execution Tracking** | No | Yes (runs, walkthroughs) | Yes (bolts, stages) |
-| **Design Docs** | Basic | When complexity warrants | Always (DDD integral) |
-| **Monorepo Support** | No | First-class | Limited |
-| **Brownfield Support** | Basic | First-class | Alpha |
-| **Output Structure** | `specs/{feature}/` | `.specs-fire/` | `memory-bank/` |
-| **Ceremony Style** | Minimal | Adaptive | Comprehensive |
+| Aspect | Ideation | Simple | FIRE | AI-DLC |
+|--------|----------|--------|------|--------|
+| **Optimized For** | Creative exploration | Spec generation, prototypes | Teams who hate friction | Full traceability needs |
+| **Output** | Concept briefs | Specs (req/design/tasks) | Working code + walkthroughs | Working code + full artifacts |
+| **Execution Planning** | N/A | N/A | Dynamic (recommends next run) | Pre-planned (bolts) |
+| **Checkpoints** | 0 (non-blocking) | 3 (phase gates) | Adaptive (complexity + config) | Comprehensive (fixed) |
+| **Agents** | 1 | 1 | 3 | 4 |
+| **Execution Tracking** | No | No | Yes (runs, walkthroughs) | Yes (bolts, stages) |
+| **Design Docs** | Concept briefs | Basic specs | When complexity warrants | Always (DDD integral) |
+| **Monorepo Support** | No | No | First-class | Limited |
+| **Brownfield Support** | No | Basic | First-class | Alpha |
+| **Output Structure** | `.specs-ideation/` | `specs/{feature}/` | `.specs-fire/` | `memory-bank/` |
+| **Ceremony Style** | Zero friction | Minimal | Adaptive | Comprehensive |
 
 ## When to Use Each Flow
+
+### Ideation Flow
+
+<Info>
+  **Choose Ideation when**: You haven't committed to a specific feature yet—or you want to stress-test your current idea against alternatives you haven't considered.
+</Info>
+
+- Early-stage product discovery
+- Finding novel angles before writing a spec
+- Brainstorming sessions (solo or team)
+- Evaluating multiple feature directions before committing resources
+- When your first idea might not be the best idea
+
+**Output**: `spark-bank.md` (ideas), `flame-report.md` (evaluations), `concept-brief.md` (shaped concepts)
 
 ### Simple Flow
 
@@ -118,12 +141,14 @@ FIRE is **Adaptive Spec-Driven Development**—it analyzes work complexity and y
 
 ```mermaid actions={false}
 flowchart TD
-    subgraph "Complexity vs Overhead"
+    subgraph "Phase vs Complexity"
+        I(Ideation Flow):::check
         S(Simple Flow):::plan
         F(FIRE Flow):::warn
         A(AI-DLC Flow):::design
     end
 
+    I -->|"Pre-feature"| Explore(Creative Exploration):::done
     S -->|"Low complexity"| Quick(Quick Specs):::done
     F -->|"Medium complexity"| Rapid(Rapid Execution):::done
     A -->|"High complexity"| Complete(Complete Lifecycle):::done
@@ -131,6 +156,7 @@ flowchart TD
     classDef plan fill:#fff,stroke:#6366F1,color:#4338CA,stroke-width:1.5px,rx:8,ry:8
     classDef warn fill:#fff,stroke:#F59E0B,color:#B45309,stroke-width:1.5px,rx:8,ry:8
     classDef done fill:#fff,stroke:#10B981,color:#047857,stroke-width:1.5px,rx:8,ry:8
+    classDef check fill:#fff,stroke:#EC4899,color:#BE185D,stroke-width:2px,rx:8,ry:8
 ```
 
 ## Switching Between Flows
@@ -148,7 +174,10 @@ However, you can:
 
 ## Getting Started
 
-<CardGroup cols={3}>
+<CardGroup cols={2}>
+  <Card title="Start with Ideation" icon="play" href="/ideation-flow/quick-start">
+    Generate ideas and shape a concept brief
+  </Card>
   <Card title="Start with Simple" icon="play" href="/simple-flow/quick-start">
     Generate specs in minutes
   </Card>
