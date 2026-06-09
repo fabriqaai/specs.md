@@ -22,6 +22,9 @@ export interface CompletedBoltData {
     id: string;
     name: string;
     type: string;
+    intent: string;
+    intentNumber: string;
+    intentName: string;
     completedAt: string;
     relativeTime: string;
     path: string;
