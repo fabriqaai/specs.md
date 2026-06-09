@@ -110,6 +110,18 @@ export interface WebviewData {
 
     /** Available unit statuses discovered from parsed data */
     availableStatuses: string[];
+
+    /**
+     * Per-intent bolt statistics. Keys include the intent number, name, and
+     * combined `${number}-${name}` form so lookups work regardless of which
+     * identifier the webview holds.
+     */
+    intentStats: Record<string, {
+        active: number;
+        queued: number;
+        done: number;
+        blocked: number;
+    }>;
 }
 
 /**
@@ -119,6 +131,12 @@ export interface ActiveBoltData {
     id: string;
     name: string;
     type: string;
+    /** Raw bolt.intent value (may be number or name). */
+    intent: string;
+    /** Resolved intent number, e.g., "001". */
+    intentNumber: string;
+    /** Resolved intent display name. */
+    intentName: string;
     currentStage: string | null;
     stagesComplete: number;
     stagesTotal: number;
@@ -152,6 +170,12 @@ export interface QueuedBoltData {
     isBlocked: boolean;
     blockedBy: string[];
     unblocksCount: number;
+    /** Raw intent identifier on the bolt (may be the intent number or name). */
+    intent: string;
+    /** Resolved intent number prefix, e.g., "001". */
+    intentNumber: string;
+    /** Resolved intent display name, e.g., "platform-foundations". */
+    intentName: string;
     stages: {
         name: string;
         status: 'complete' | 'active' | 'pending';
@@ -240,6 +264,12 @@ export interface CompletedBoltData {
     id: string;
     name: string;
     type: string;
+    /** Raw bolt.intent value (may be number or name). */
+    intent: string;
+    /** Resolved intent number, e.g., "001". */
+    intentNumber: string;
+    /** Resolved intent display name. */
+    intentName: string;
     completedAt: string;
     relativeTime: string;
     path: string;

@@ -24,7 +24,6 @@ export type ActivityFilter = 'all' | 'stages' | 'bolts';
  * <activity-feed
  *   .events=${events}
  *   filter="all"
- *   height="200"
  * ></activity-feed>
  * ```
  */
@@ -42,45 +41,14 @@ export class ActivityFeed extends BaseElement {
     @property({ type: String })
     filter: ActivityFilter = 'all';
 
-    /**
-     * Section height in pixels.
-     */
-    @property({ type: Number })
-    height = 200;
-
     static styles = [
         ...BaseElement.baseStyles,
         css`
             :host {
-                display: block;
-                border-top: 1px solid var(--vscode-input-border, #3c3c3c);
-                position: relative;
-            }
-
-            .resize-handle {
-                position: absolute;
-                top: 0;
-                left: 50%;
-                transform: translateX(-50%);
-                width: 48px;
-                height: 6px;
-                cursor: ns-resize;
                 display: flex;
-                align-items: center;
-                justify-content: center;
-                margin-top: -3px;
-            }
-
-            .resize-handle::after {
-                content: '';
-                width: 32px;
-                height: 4px;
-                background: var(--vscode-input-border, #3c3c3c);
-                border-radius: 2px;
-            }
-
-            .resize-handle:hover::after {
-                background: #f97316;
+                flex-direction: column;
+                height: 100%;
+                min-height: 0;
             }
 
             .header {
@@ -134,6 +102,7 @@ export class ActivityFeed extends BaseElement {
             }
 
             .list {
+                flex: 1;
                 overflow-y: auto;
             }
 
@@ -150,10 +119,8 @@ export class ActivityFeed extends BaseElement {
 
     render() {
         const filtered = this._filterEvents();
-        const listHeight = this.height - 52; // Account for header
 
         return html`
-            <div class="resize-handle" @mousedown=${this._startResize}></div>
             <div class="header">
                 <div class="title">
                     <span class="title-icon">🕐</span>
@@ -169,7 +136,7 @@ export class ActivityFeed extends BaseElement {
                     `)}
                 </div>
             </div>
-            <div class="list" style="height: ${listHeight}px;">
+            <div class="list">
                 ${filtered.length > 0
                     ? filtered.slice(0, 10).map(event => html`
                         <activity-item .event=${event}></activity-item>
@@ -198,30 +165,6 @@ export class ActivityFeed extends BaseElement {
             bubbles: true,
             composed: true
         }));
-    }
-
-    private _startResize(e: MouseEvent): void {
-        e.preventDefault();
-        const startY = e.clientY;
-        const startHeight = this.height;
-
-        const onMouseMove = (moveEvent: MouseEvent) => {
-            const delta = startY - moveEvent.clientY;
-            const newHeight = Math.max(120, Math.min(500, startHeight + delta));
-            this.dispatchEvent(new CustomEvent('resize', {
-                detail: { height: newHeight },
-                bubbles: true,
-                composed: true
-            }));
-        };
-
-        const onMouseUp = () => {
-            window.removeEventListener('mousemove', onMouseMove);
-            window.removeEventListener('mouseup', onMouseUp);
-        };
-
-        window.addEventListener('mousemove', onMouseMove);
-        window.addEventListener('mouseup', onMouseUp);
     }
 }
 

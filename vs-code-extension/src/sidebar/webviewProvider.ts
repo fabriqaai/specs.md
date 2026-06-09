@@ -702,7 +702,9 @@ export class SpecsmdWebviewProvider implements vscode.WebviewViewProvider {
             focusCardExpanded: data.focusCardExpanded,
             activityFilter: data.activityFilter,
             activityHeight: data.activityHeight,
-            specsFilter: data.specsFilter
+            specsFilter: data.specsFilter,
+            boltIntents: data.intents.map(i => ({ number: i.number, name: i.name })),
+            intentStats: data.intentStats
         };
 
         // Generate HTML for specs/overview views (hybrid approach)
@@ -770,7 +772,8 @@ export class SpecsmdWebviewProvider implements vscode.WebviewViewProvider {
                 activityFilter: state.ui.activityFilter,
                 activityHeight: state.ui.activitySectionHeight,
                 specsFilter: state.ui.specsFilter,
-                availableStatuses: []
+                availableStatuses: [],
+                intentStats: {}
             };
         }
 
@@ -788,13 +791,61 @@ export class SpecsmdWebviewProvider implements vscode.WebviewViewProvider {
         // Transform pending bolts to queue (send all, filtering done client-side)
         const upNextQueue = pendingBolts.map(bolt => this._transformQueuedBolt(bolt));
 
-        // Transform completed bolts (last 10, sorted by completion time)
+        // Transform completed bolts (all of them, sorted by completion time).
+        // The webview filters by selected intent and caps the visible count;
+        // sending the full list lets the picker show accurate per-intent results.
         const now = new Date();
         const completedBoltsData = completedBolts
             .filter(b => b.completedAt)
             .sort((a, b) => (b.completedAt?.getTime() ?? 0) - (a.completedAt?.getTime() ?? 0))
-            .slice(0, 10)
             .map(bolt => this._transformCompletedBolt(bolt, now));
+
+        // Per-intent bolt stats. Computed from the full (untruncated) bolt
+        // lists so the picker's progress bar can show accurate per-intent
+        // numbers even when completed bolts have been clipped for display.
+        type IntentBoltStats = { active: number; queued: number; done: number; blocked: number };
+        const intentStats: Record<string, IntentBoltStats> = {};
+        const ensureStats = (key: string): IntentBoltStats => {
+            if (!intentStats[key]) {
+                intentStats[key] = { active: 0, queued: 0, done: 0, blocked: 0 };
+            }
+            return intentStats[key];
+        };
+        const intentKeysFor = (bolt: Bolt): string[] => {
+            const intent = Array.from(state.intents.values()).find(
+                i => i.number === bolt.intent
+                    || i.name === bolt.intent
+                    || `${i.number}-${i.name}` === bolt.intent
+                    || path.basename(i.path) === bolt.intent
+            );
+            const keys = new Set<string>();
+            if (intent) {
+                keys.add(intent.number);
+                keys.add(intent.name);
+                keys.add(`${intent.number}-${intent.name}`);
+            }
+            keys.add(bolt.intent);
+            return Array.from(keys);
+        };
+        for (const bolt of activeBolts) {
+            for (const k of intentKeysFor(bolt)) {
+                ensureStats(k).active += 1;
+            }
+        }
+        for (const bolt of pendingBolts) {
+            for (const k of intentKeysFor(bolt)) {
+                if (bolt.isBlocked) {
+                    ensureStats(k).blocked += 1;
+                } else {
+                    ensureStats(k).queued += 1;
+                }
+            }
+        }
+        for (const bolt of completedBolts) {
+            for (const k of intentKeysFor(bolt)) {
+                ensureStats(k).done += 1;
+            }
+        }
 
         // Transform activity events
         const activityEvents: ActivityEventData[] = activityFeed.slice(0, 10).map(event => {
@@ -846,7 +897,8 @@ export class SpecsmdWebviewProvider implements vscode.WebviewViewProvider {
             activityFilter: state.ui.activityFilter,
             activityHeight: state.ui.activitySectionHeight,
             specsFilter: state.ui.specsFilter,
-            availableStatuses
+            availableStatuses,
+            intentStats
         };
     }
 
@@ -857,11 +909,20 @@ export class SpecsmdWebviewProvider implements vscode.WebviewViewProvider {
         const state = this._store.getState();
         const stagesComplete = bolt.stages.filter(s => s.status === ArtifactStatus.Complete).length;
         const files = this._scanBoltArtifactFiles(bolt.path);
+        const intent = Array.from(state.intents.values()).find(
+            i => i.number === bolt.intent
+                || i.name === bolt.intent
+                || `${i.number}-${i.name}` === bolt.intent
+                || path.basename(i.path) === bolt.intent
+        );
 
         return {
             id: bolt.id,
             name: bolt.id,
             type: this._formatBoltType(bolt.type),
+            intent: bolt.intent,
+            intentNumber: intent?.number ?? bolt.intent,
+            intentName: intent?.name ?? bolt.intent,
             currentStage: bolt.currentStage,
             stagesComplete,
             stagesTotal: bolt.stages.length,
@@ -905,11 +966,21 @@ export class SpecsmdWebviewProvider implements vscode.WebviewViewProvider {
      * Transforms a Bolt to CompletedBoltData.
      */
     private _transformCompletedBolt(bolt: Bolt, now: Date): CompletedBoltData {
+        const state = this._store.getState();
         const files = this._scanBoltArtifactFiles(bolt.path);
+        const intent = Array.from(state.intents.values()).find(
+            i => i.number === bolt.intent
+                || i.name === bolt.intent
+                || `${i.number}-${i.name}` === bolt.intent
+                || path.basename(i.path) === bolt.intent
+        );
         return {
             id: bolt.id,
             name: bolt.id,
             type: this._formatBoltType(bolt.type),
+            intent: bolt.intent,
+            intentNumber: intent?.number ?? bolt.intent,
+            intentName: intent?.name ?? bolt.intent,
             completedAt: bolt.completedAt?.toISOString() ?? '',
             relativeTime: bolt.completedAt ? formatRelativeTime(bolt.completedAt, now) : 'unknown',
             path: bolt.path,
@@ -984,6 +1055,12 @@ export class SpecsmdWebviewProvider implements vscode.WebviewViewProvider {
      */
     private _transformQueuedBolt(bolt: Bolt): QueuedBoltData {
         const state = this._store.getState();
+        const intent = Array.from(state.intents.values()).find(
+            i => i.number === bolt.intent
+                || i.name === bolt.intent
+                || `${i.number}-${i.name}` === bolt.intent
+                || path.basename(i.path) === bolt.intent
+        );
 
         return {
             id: bolt.id,
@@ -993,6 +1070,9 @@ export class SpecsmdWebviewProvider implements vscode.WebviewViewProvider {
             isBlocked: bolt.isBlocked,
             blockedBy: bolt.blockedBy,
             unblocksCount: bolt.unblocksCount,
+            intent: bolt.intent,
+            intentNumber: intent?.number ?? bolt.intent,
+            intentName: intent?.name ?? bolt.intent,
             stages: bolt.stages.map(s => ({
                 name: s.name,
                 status: this._mapStatus(s.status)

@@ -16,12 +16,25 @@ import { unsafeHTML } from 'lit/directives/unsafe-html.js';
 import { BaseElement } from './shared/base-element.js';
 import './tabs/view-tabs.js';
 import './bolts/bolts-view.js';
+import './bolts/activity-feed.js';
 import './shared/flow-switcher.js';
 // FIRE flow components
 import './fire/fire-view.js';
 import type { TabId, TabChangeDetail } from './tabs/view-tabs.js';
 import type { BoltsViewData } from './bolts/bolts-view.js';
 import type { ActivityFilter } from './bolts/activity-feed.js';
+import type { ActivityEventData } from './bolts/activity-item.js';
+
+/**
+ * Runtime shape of the bolts payload from the extension. The extension still
+ * sends the legacy activity fields inside this payload; we split them off into
+ * dedicated state for the Activity tab.
+ */
+interface IncomingBoltsPayload extends BoltsViewData {
+    activityEvents?: ActivityEventData[];
+    activityFilter?: ActivityFilter;
+    activityHeight?: number;
+}
 import type { FlowInfo } from './shared/flow-switcher.js';
 import type { FireViewData } from './fire/fire-view.js';
 import type { FireTabId } from './fire/fire-view-tabs.js';
@@ -38,7 +51,7 @@ interface ExtensionMessage {
     specsHtml?: string;
     overviewHtml?: string;
     // Lit components approach (bolts)
-    boltsData?: BoltsViewData;
+    boltsData?: IncomingBoltsPayload;
     // Legacy support
     boltsHtml?: string;
     // Multi-flow support
@@ -67,6 +80,18 @@ export class SpecsmdApp extends BaseElement {
      */
     @state()
     private _boltsData: BoltsViewData | null = null;
+
+    /**
+     * Recent activity events (rendered in the Activity tab).
+     */
+    @state()
+    private _activityEvents: ActivityEventData[] = [];
+
+    /**
+     * Active filter for the Activity tab.
+     */
+    @state()
+    private _activityFilter: ActivityFilter = 'all';
 
     /**
      * HTML content for specs/overview views (server-rendered).
@@ -1115,14 +1140,21 @@ export class SpecsmdApp extends BaseElement {
                 @tab-change=${this._handleTabChange}
             ></view-tabs>
 
+            <div class="view-container ${this._activeTab === 'activity' ? 'active' : ''}" id="activity-view">
+                <activity-feed
+                    .events=${this._activityEvents}
+                    .filter=${this._activityFilter}
+                    @filter-change=${this._handleFilterChange}
+                    @open-file=${this._handleOpenFile}>
+                </activity-feed>
+            </div>
+
             <div class="view-container ${this._activeTab === 'bolts' ? 'active' : ''}" id="bolts-view">
                 ${this._boltsData
                     ? html`
                         <bolts-view
                             .data=${this._boltsData}
                             @toggle-focus=${this._handleToggleFocus}
-                            @filter-change=${this._handleFilterChange}
-                            @resize=${this._handleResize}
                             @start-bolt=${this._handleStartBolt}
                             @continue-bolt=${this._handleContinueBolt}
                             @view-files=${this._handleViewFiles}
@@ -1295,6 +1327,20 @@ export class SpecsmdApp extends BaseElement {
     }
 
     /**
+     * Split an incoming bolts payload into bolts state and activity-tab state.
+     */
+    private _applyBoltsPayload(payload: IncomingBoltsPayload): void {
+        const { activityEvents, activityFilter, ...bolts } = payload;
+        this._boltsData = bolts;
+        if (activityEvents !== undefined) {
+            this._activityEvents = activityEvents;
+        }
+        if (activityFilter !== undefined) {
+            this._activityFilter = activityFilter;
+        }
+    }
+
+    /**
      * Handle messages from the extension.
      */
     private _handleMessage = (event: MessageEvent<ExtensionMessage>): void => {
@@ -1306,7 +1352,7 @@ export class SpecsmdApp extends BaseElement {
                     this._activeTab = message.activeTab;
                 }
                 if (message.boltsData !== undefined) {
-                    this._boltsData = message.boltsData;
+                    this._applyBoltsPayload(message.boltsData);
                 }
                 if (message.specsHtml !== undefined) {
                     this._specsHtml = message.specsHtml;
@@ -1338,7 +1384,7 @@ export class SpecsmdApp extends BaseElement {
 
             case 'setBoltsData':
                 if (message.boltsData !== undefined) {
-                    this._boltsData = message.boltsData;
+                    this._applyBoltsPayload(message.boltsData);
                 }
                 break;
 
@@ -1364,7 +1410,7 @@ export class SpecsmdApp extends BaseElement {
                 }
                 // Reset view data when switching flows
                 if (message.boltsData !== undefined) {
-                    this._boltsData = message.boltsData;
+                    this._applyBoltsPayload(message.boltsData);
                 }
                 if (message.specsHtml !== undefined) {
                     this._specsHtml = message.specsHtml;
@@ -1422,21 +1468,7 @@ export class SpecsmdApp extends BaseElement {
      */
     private _handleFilterChange(e: CustomEvent<{ filter: ActivityFilter }>): void {
         vscode.postMessage({ type: 'activityFilter', filter: e.detail.filter });
-        // Optimistically update local state
-        if (this._boltsData) {
-            this._boltsData = { ...this._boltsData, activityFilter: e.detail.filter };
-        }
-    }
-
-    /**
-     * Handle activity section resize.
-     */
-    private _handleResize(e: CustomEvent<{ height: number }>): void {
-        vscode.postMessage({ type: 'activityResize', height: e.detail.height });
-        // Optimistically update local state
-        if (this._boltsData) {
-            this._boltsData = { ...this._boltsData, activityHeight: e.detail.height };
-        }
+        this._activityFilter = e.detail.filter;
     }
 
     /**

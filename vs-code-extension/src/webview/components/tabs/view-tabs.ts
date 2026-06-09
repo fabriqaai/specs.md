@@ -9,7 +9,7 @@ import { BaseElement } from '../shared/base-element.js';
 /**
  * Valid tab identifiers.
  */
-export type TabId = 'bolts' | 'specs' | 'overview';
+export type TabId = 'activity' | 'bolts' | 'specs' | 'overview';
 
 /**
  * Tab definition with icon and label.
@@ -24,6 +24,7 @@ interface TabDef {
  * Available tabs configuration.
  */
 const TABS: TabDef[] = [
+    { id: 'activity', icon: '\uD83D\uDD52', label: 'Activity' },  // Clock
     { id: 'bolts', icon: '\u26A1', label: 'Bolts' },     // Lightning bolt
     { id: 'specs', icon: '\uD83D\uDCCB', label: 'Specs' },  // Clipboard
     { id: 'overview', icon: '\uD83D\uDCCA', label: 'Overview' }  // Chart

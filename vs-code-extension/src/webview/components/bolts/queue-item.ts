@@ -29,6 +29,12 @@ export interface QueuedBoltData {
     isBlocked: boolean;
     blockedBy: string[];
     unblocksCount: number;
+    /** Raw bolt.intent value (may be number or name). */
+    intent: string;
+    /** Resolved intent number, e.g., "001". */
+    intentNumber: string;
+    /** Resolved intent display name. */
+    intentName: string;
     stages: StageData[];
     stories: QueueStoryData[];
 }

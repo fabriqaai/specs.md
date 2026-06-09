@@ -27,6 +27,9 @@ export interface ActiveBoltData {
     id: string;
     name: string;
     type: string;
+    intent: string;
+    intentNumber: string;
+    intentName: string;
     currentStage: string | null;
     stagesComplete: number;
     stagesTotal: number;

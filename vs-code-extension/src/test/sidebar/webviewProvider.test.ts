@@ -42,6 +42,9 @@ suite('Webview Provider Test Suite', () => {
                 id: 'bolt-test-1',
                 name: 'Test Bolt',
                 type: 'DDD',
+                intent: 'test-intent',
+                intentNumber: '001',
+                intentName: 'test-intent',
                 currentStage: 'implement',
                 stagesComplete: 2,
                 stagesTotal: 5,
@@ -80,6 +83,9 @@ suite('Webview Provider Test Suite', () => {
                 id: 'bolt-blocked',
                 name: 'Blocked Bolt',
                 type: 'Simple',
+                intent: 'test-intent',
+                intentNumber: '001',
+                intentName: 'test-intent',
                 storiesCount: 2,
                 isBlocked: true,
                 blockedBy: ['bolt-dep-1', 'bolt-dep-2'],
@@ -95,6 +101,9 @@ suite('Webview Provider Test Suite', () => {
                 id: 'bolt-ready',
                 name: 'Ready Bolt',
                 type: 'DDD',
+                intent: 'test-intent',
+                intentNumber: '001',
+                intentName: 'test-intent',
                 storiesCount: 3,
                 isBlocked: false,
                 blockedBy: [],
@@ -112,9 +121,9 @@ suite('Webview Provider Test Suite', () => {
          */
         test('queue should prioritize unblocked bolts', () => {
             const queue: QueuedBoltData[] = [
-                { id: 'b1', name: 'B1', type: 'DDD', storiesCount: 1, isBlocked: true, blockedBy: ['dep'], unblocksCount: 0, stages: [], stories: [] },
-                { id: 'b2', name: 'B2', type: 'DDD', storiesCount: 1, isBlocked: false, blockedBy: [], unblocksCount: 3, stages: [], stories: [] },
-                { id: 'b3', name: 'B3', type: 'DDD', storiesCount: 1, isBlocked: false, blockedBy: [], unblocksCount: 1, stages: [], stories: [] }
+                { id: 'b1', name: 'B1', type: 'DDD', intent: 'test', intentNumber: '001', intentName: 'test', storiesCount: 1, isBlocked: true, blockedBy: ['dep'], unblocksCount: 0, stages: [], stories: [] },
+                { id: 'b2', name: 'B2', type: 'DDD', intent: 'test', intentNumber: '001', intentName: 'test', storiesCount: 1, isBlocked: false, blockedBy: [], unblocksCount: 3, stages: [], stories: [] },
+                { id: 'b3', name: 'B3', type: 'DDD', intent: 'test', intentNumber: '001', intentName: 'test', storiesCount: 1, isBlocked: false, blockedBy: [], unblocksCount: 1, stages: [], stories: [] }
             ];
 
             // Sort: unblocked first, then by unblocksCount descending
@@ -167,7 +176,8 @@ suite('Webview Provider Test Suite', () => {
                 activityFilter: 'all',
                 activityHeight: 200,
                 specsFilter: 'all',
-                availableStatuses: []
+                availableStatuses: [],
+                intentStats: {}
             };
 
             assert.strictEqual(emptyData.currentIntent, null);
@@ -270,6 +280,9 @@ suite('Webview Provider Test Suite', () => {
                 id: 'bolt-test-1',
                 name: 'Test Bolt',
                 type: 'DDD',
+                intent: 'test-intent',
+                intentNumber: '001',
+                intentName: 'test-intent',
                 currentStage: 'implement',
                 stagesComplete: 2,
                 stagesTotal: 5,
