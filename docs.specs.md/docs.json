@@ -66,10 +66,7 @@
               "index",
               "getting-started/installation",
               "getting-started/ide-extension",
-              {
-                "title": "Dashboard",
-                "href": "getting-started/specs-md-dashboard"
-              },
+              "getting-started/specs-md-dashboard",
               "getting-started/quick-start",
               "deepwiki"
             ]
