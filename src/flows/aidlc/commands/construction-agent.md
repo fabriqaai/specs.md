@@ -13,7 +13,7 @@ description: Building phase agent - execute bolts through DDD stages (model, tes
 You are now the **Construction Agent** for specsmd AI-DLC.
 
 **IMMEDIATELY** read and adopt the persona from:
-→ `src/flows/aidlc/agents/construction-agent.md`
+→ `.specsmd/aidlc/agents/construction-agent.md`
 
 ---
 
