@@ -11,6 +11,7 @@ specs.md is built as a **pluggable framework** where development methodologies a
 flowchart TB
     subgraph Framework[specs.md Framework]
         subgraph Flows[Available Flows]
+            Ideation(Ideation Flow):::done
             Simple(Simple Flow):::plan
             FIRE(FIRE Flow):::warn
             AIDLC(AI-DLC Flow):::design
@@ -19,6 +20,7 @@ flowchart TB
     classDef design fill:#fff,stroke:#A855F7,color:#7E22CE,stroke-width:1.5px,rx:8,ry:8
     classDef plan fill:#fff,stroke:#6366F1,color:#4338CA,stroke-width:1.5px,rx:8,ry:8
     classDef warn fill:#fff,stroke:#F59E0B,color:#B45309,stroke-width:1.5px,rx:8,ry:8
+    classDef done fill:#fff,stroke:#10B981,color:#047857,stroke-width:1.5px,rx:8,ry:8
 ```
 
 ## What is a Flow?
@@ -44,6 +46,7 @@ A **flow** is a complete development methodology implementation that includes:
 
 | Flow | Checkpoints | Agents | Optimized For |
 |------|-------------|--------|---------------|
+| **[Ideation](/ideation-flow/overview)** | 0 (non-blocking) | 1 | Creative brainstorming, concept shaping |
 | **[Simple](/simple-flow/overview)** | 3 (phase gates) | 1 | Spec generation only |
 | **[FIRE](/fire-flow/overview)** | Adaptive | 3 | Adaptive execution, brownfield |
 | **[AI-DLC](/core-concepts/intents)** | Comprehensive | 4 | Full traceability |
@@ -51,6 +54,30 @@ A **flow** is a complete development methodology implementation that includes:
 <Info>
   **Not sure which flow?** Check out our [Choose Your Flow](/architecture/choose-flow) guide.
 </Info>
+
+## Ideation Flow
+
+**Ideation Flow** transforms AI into a creative partner through three sequential skills: Spark (generate), Flame (evaluate), Forge (shape). Research-backed methods run invisibly—you get diverse ideas, not methodology labels.
+
+```mermaid actions={false}
+flowchart LR
+    T(Topic):::plan --> S(Spark):::warn --> F(Flame):::check --> G(Forge):::done
+    classDef plan fill:#fff,stroke:#6366F1,color:#4338CA,stroke-width:1.5px,rx:8,ry:8
+    classDef warn fill:#fff,stroke:#F59E0B,color:#B45309,stroke-width:1.5px,rx:8,ry:8
+    classDef check fill:#fff,stroke:#EC4899,color:#BE185D,stroke-width:2px,rx:8,ry:8
+    classDef done fill:#fff,stroke:#10B981,color:#047857,stroke-width:1.5px,rx:8,ry:8
+```
+
+| Aspect | Details |
+|--------|---------|
+| **Agent** | 1 (orchestrator with 3 skills) |
+| **Output** | `spark-bank.md`, `flame-report.md`, `concept-brief.md` |
+| **Skills** | Spark → Flame → Forge |
+| **Best For** | Product discovery, pre-feature brainstorming, concept development |
+
+<Card title="Ideation Flow Documentation" icon="lightbulb" href="/ideation-flow/overview">
+  Learn more about Ideation Flow
+</Card>
 
 ## Simple Flow
 
