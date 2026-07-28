@@ -1,5 +1,5 @@
 /**
- * CurrentIntent - Current intent with progress bar and statistics.
+ * CurrentIntent - Intent picker with progress bar for the selected intent.
  */
 
 import { html, css } from 'lit';
@@ -30,32 +30,61 @@ export interface BoltStats {
 export type IntentContext = 'active' | 'queued' | 'none';
 
 /**
- * Current intent component with progress bar.
+ * Intent picker option.
+ */
+export interface IntentOption {
+    number: string;
+    name: string;
+}
+
+/**
+ * Intent picker component. Lets the user choose which intent to focus on and
+ * displays a progress bar + breakdown for just that intent.
+ *
+ * @fires intent-select - Dispatched when the picker selection changes.
+ *   detail: { number: string }
  *
  * @example
  * ```html
- * <current-intent .intent=${intent} .stats=${stats}></current-intent>
+ * <current-intent
+ *   .intents=${intents}
+ *   .selected=${selected}
+ *   .stats=${perIntentStats}>
+ * </current-intent>
  * ```
  */
 @customElement('current-intent')
 export class CurrentIntent extends BaseElement {
     /**
-     * Current intent info.
+     * Available intents for the picker.
      */
-    @property({ type: Object })
-    intent: IntentInfo | null = null;
+    @property({ type: Array })
+    intents: IntentOption[] = [];
 
     /**
-     * Context for how the intent was selected.
+     * Currently selected intent number (or null for none).
      */
     @property({ type: String })
-    context: IntentContext = 'none';
+    selected: string | null = null;
 
     /**
-     * Bolt statistics.
+     * Bolt statistics for the *selected* intent.
      */
     @property({ type: Object })
     stats: BoltStats = { active: 0, queued: 0, done: 0, blocked: 0 };
+
+    /**
+     * Intent number that the backend considers active/queued (for the
+     * "(current)" marker in the dropdown).
+     */
+    @property({ type: String })
+    currentIntentNumber: string | null = null;
+
+    /**
+     * Context for how the backend-selected intent was determined.
+     */
+    @property({ type: String })
+    context: IntentContext = 'none';
 
     static styles = [
         ...BaseElement.baseStyles,
@@ -64,7 +93,10 @@ export class CurrentIntent extends BaseElement {
                 display: block;
                 padding: 16px 16px 20px 16px;
                 background: linear-gradient(135deg, var(--vscode-sideBar-background, #252526) 0%, rgba(249, 115, 22, 0.05) 100%);
-                border-top: 3px solid #f97316;
+            }
+
+            .container {
+                padding: 4px;
             }
 
             .label {
@@ -76,12 +108,31 @@ export class CurrentIntent extends BaseElement {
                 margin-bottom: 6px;
             }
 
-            .title {
+            .picker {
+                display: block;
+                width: 100%;
+                font-size: 12px;
+                font-weight: 600;
+                color: var(--foreground, #cccccc);
+                background: var(--vscode-input-background, #3c3c3c);
+                border: 1px solid var(--vscode-input-border, #3c3c3c);
+                border-radius: 4px;
+                padding: 6px 8px;
+                margin: 4px 0 20px;
+                cursor: pointer;
+            }
+
+            .picker:focus {
+                outline: 1px solid #f97316;
+                outline-offset: -1px;
+            }
+
+            .empty-title {
                 font-size: 17px;
                 font-weight: 700;
                 color: var(--foreground, #cccccc);
                 margin-bottom: 16px;
-                line-height: 1.2;
+                opacity: 0.6;
             }
 
             .progress-container {
@@ -106,10 +157,6 @@ export class CurrentIntent extends BaseElement {
             .progress-text {
                 font-size: 13px;
                 color: var(--foreground, #cccccc);
-            }
-
-            .progress-text strong {
-                font-weight: 600;
             }
 
             .progress-text .percent {
@@ -151,13 +198,12 @@ export class CurrentIntent extends BaseElement {
     ];
 
     render() {
-        // Determine label based on context
-        const label = this.context === 'queued' ? 'Next Intent' : 'Current Intent';
-
-        if (!this.intent) {
+        if (this.intents.length === 0) {
             return html`
-                <div class="label">${label}</div>
-                <div class="title" style="opacity: 0.6;">No active work</div>
+                <div class="container">
+                    <div class="label">Intent</div>
+                    <div class="empty-title">No intents detected</div>
+                </div>
             `;
         }
 
@@ -165,29 +211,50 @@ export class CurrentIntent extends BaseElement {
         const percent = total > 0 ? Math.round((this.stats.done / total) * 100) : 0;
 
         return html`
-            <div class="label">${label}</div>
-            <div class="title">${this.intent.number}-${this.intent.name}</div>
-            <div class="progress-container">
-                <div class="progress-bar">
-                    <div class="progress-fill" style="width: ${percent}%"></div>
+            <div class="container">
+                <div class="label">Intent</div>
+                <select class="picker" .value=${this.selected ?? ''} @change=${this._handleChange}>
+                    ${this.intents.map(intent => {
+                        const isCurrent = intent.number === this.currentIntentNumber;
+                        const label = `${intent.number}-${intent.name}${isCurrent ? ' (current)' : ''}`;
+                        return html`
+                            <option value=${intent.number} ?selected=${intent.number === this.selected}>
+                                ${label}
+                            </option>
+                        `;
+                    })}
+                </select>
+                <div class="progress-container">
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: ${percent}%"></div>
+                    </div>
+                    <div class="progress-text">
+                        <span class="percent">${percent}%</span> complete
+                        <span>(${this.stats.done} of ${total} bolts)</span>
+                    </div>
                 </div>
-                <div class="progress-text">
-                    <span class="percent">${percent}%</span> complete
-                    <span>(${this.stats.done} of ${total} bolts)</span>
+                <div class="breakdown">
+                    ${this.stats.active > 0 ? html`
+                        <span class="breakdown-item active">${this.stats.active} in progress</span>
+                    ` : ''}
+                    ${this.stats.queued > 0 ? html`
+                        <span class="breakdown-item">${this.stats.queued} queued</span>
+                    ` : ''}
+                    ${this.stats.blocked > 0 ? html`
+                        <span class="breakdown-item blocked">${this.stats.blocked} blocked</span>
+                    ` : ''}
                 </div>
-            </div>
-            <div class="breakdown">
-                ${this.stats.active > 0 ? html`
-                    <span class="breakdown-item active">${this.stats.active} in progress</span>
-                ` : ''}
-                ${this.stats.queued > 0 ? html`
-                    <span class="breakdown-item">${this.stats.queued} queued</span>
-                ` : ''}
-                ${this.stats.blocked > 0 ? html`
-                    <span class="breakdown-item blocked">${this.stats.blocked} blocked</span>
-                ` : ''}
             </div>
         `;
+    }
+
+    private _handleChange(e: Event): void {
+        const target = e.target as HTMLSelectElement;
+        this.dispatchEvent(new CustomEvent<{ number: string }>('intent-select', {
+            detail: { number: target.value },
+            bubbles: true,
+            composed: true
+        }));
     }
 }
 

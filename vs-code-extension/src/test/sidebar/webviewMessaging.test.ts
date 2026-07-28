@@ -112,7 +112,8 @@ suite('Webview Messaging Test Suite', () => {
                 activityFilter: 'all',
                 activityHeight: 200,
                 specsFilter: 'all',
-                availableStatuses: []
+                availableStatuses: [],
+                intentStats: {}
             };
 
             assert.strictEqual(data.currentIntent, null);
@@ -140,7 +141,8 @@ suite('Webview Messaging Test Suite', () => {
                 activityFilter: 'stages',
                 activityHeight: 350,
                 specsFilter: 'active',
-                availableStatuses: ['draft', 'in-progress', 'complete']
+                availableStatuses: ['draft', 'in-progress', 'complete'],
+                intentStats: {}
             };
 
             assert.strictEqual(data.focusCardExpanded, true);
@@ -157,6 +159,9 @@ suite('Webview Messaging Test Suite', () => {
                     id: 'bolt-1',
                     name: 'Test Bolt',
                     type: 'DDD',
+                    intent: 'test-intent',
+                    intentNumber: '001',
+                    intentName: 'test-intent',
                     currentStage: 'implement',
                     stagesComplete: 2,
                     stagesTotal: 5,
@@ -177,6 +182,9 @@ suite('Webview Messaging Test Suite', () => {
                         id: 'bolt-2',
                         name: 'Next Bolt',
                         type: 'Simple',
+                        intent: 'test-intent',
+                        intentNumber: '001',
+                        intentName: 'test-intent',
                         storiesCount: 2,
                         isBlocked: false,
                         blockedBy: [],
@@ -215,7 +223,8 @@ suite('Webview Messaging Test Suite', () => {
                 activityFilter: 'bolts',
                 activityHeight: 300,
                 specsFilter: 'complete',
-                availableStatuses: ['complete', 'in-progress']
+                availableStatuses: ['complete', 'in-progress'],
+                intentStats: {}
             };
 
             assert.strictEqual(data.currentIntent?.name, 'Test Intent');
@@ -233,6 +242,9 @@ suite('Webview Messaging Test Suite', () => {
                 id: 'bolt-test',
                 name: 'Test Bolt',
                 type: 'DDD',
+                intent: 'test-intent',
+                intentNumber: '001',
+                intentName: 'test-intent',
                 currentStage: 'implement',
                 stagesComplete: 2,
                 stagesTotal: 5,
@@ -263,6 +275,9 @@ suite('Webview Messaging Test Suite', () => {
                 id: 'bolt-test',
                 name: 'Test Bolt',
                 type: 'Simple',
+                intent: 'test-intent',
+                intentNumber: '001',
+                intentName: 'test-intent',
                 currentStage: null,
                 stagesComplete: 0,
                 stagesTotal: 3,
@@ -285,6 +300,9 @@ suite('Webview Messaging Test Suite', () => {
                 id: 'bolt-blocked',
                 name: 'Blocked Bolt',
                 type: 'DDD',
+                intent: 'test-intent',
+                intentNumber: '001',
+                intentName: 'test-intent',
                 storiesCount: 3,
                 isBlocked: true,
                 blockedBy: ['bolt-dep-1', 'bolt-dep-2'],
@@ -303,6 +321,9 @@ suite('Webview Messaging Test Suite', () => {
                 id: 'bolt-key',
                 name: 'Key Bolt',
                 type: 'Simple',
+                intent: 'test-intent',
+                intentNumber: '001',
+                intentName: 'test-intent',
                 storiesCount: 1,
                 isBlocked: false,
                 blockedBy: [],

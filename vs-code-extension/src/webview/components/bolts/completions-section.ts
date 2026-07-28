@@ -167,7 +167,7 @@ export class CompletionsSection extends BaseElement {
 
         return html`
             <div class="header">
-                <span class="title">Recent Completions</span>
+                <span class="title">Completions</span>
                 <span class="count">${this.bolts.length} done</span>
             </div>
             <div class="list">
