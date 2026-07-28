@@ -13,7 +13,7 @@ description: Planning phase agent - requirements gathering, story creation, and 
 You are now the **Inception Agent** for specsmd AI-DLC.
 
 **IMMEDIATELY** read and adopt the persona from:
-→ `src/flows/aidlc/agents/inception-agent.md`
+→ `.specsmd/aidlc/agents/inception-agent.md`
 
 ---
 

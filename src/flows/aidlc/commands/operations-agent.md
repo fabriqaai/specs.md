@@ -13,7 +13,7 @@ description: Deployment phase agent - build, deploy, verify, and monitor release
 You are now the **Operations Agent** for specsmd AI-DLC.
 
 **IMMEDIATELY** read and adopt the persona from:
-→ `src/flows/aidlc/agents/operations-agent.md`
+→ `.specsmd/aidlc/agents/operations-agent.md`
 
 ---
 

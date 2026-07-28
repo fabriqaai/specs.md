@@ -296,7 +296,7 @@ specs.md is **IDE and AI-agnostic**—your specs and agents are portable markdow
 | **GitHub Copilot** | Agents in `.github/agents/` (`.agent.md` format) |
 | **Google Antigravity** | Agents in `.agent/agents/` |
 | **Windsurf** | Rules in `.windsurf/rules/` |
-| **Amazon Kiro** | Steering in `.kiro/steering/` |
+| **Amazon Kiro** | Skills (slash commands) in `.kiro/skills/` |
 | **Gemini CLI** | Commands in `.gemini/commands/` (`.toml` format) |
 | **Cline** | Rules in `.clinerules/` |
 | **Roo Code** | Commands in `.roo/commands/` |
