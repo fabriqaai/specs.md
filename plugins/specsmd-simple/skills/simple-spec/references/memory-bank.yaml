@@ -1,0 +1,66 @@
+# Memory Bank Configuration for Simple Flow
+# Spec-driven development flow
+# Defines the directory structure for spec artifacts
+
+# Structure created at project initialization
+structure:
+  - path: specs/
+    description: "Feature specifications (requirements, design, tasks)"
+
+# Dynamic structure (created per feature)
+# - specs/{feature-name}/requirements.md   → Phase 1: Requirements
+# - specs/{feature-name}/design.md         → Phase 2: Design
+# - specs/{feature-name}/tasks.md          → Phase 3: Tasks
+
+# Naming Conventions
+naming:
+  features:
+    format: "{feature-name}"
+    example: "todo-app"
+    note: "kebab-case derived from feature idea"
+    rules:
+      - "Lowercase only"
+      - "Spaces become hyphens"
+      - "Remove special characters except hyphens"
+      - "No consecutive hyphens"
+      - "2-4 words maximum"
+
+# Schema Definition (Source of Truth for Agent)
+schema:
+  specs: "specs/{feature-name}/"
+  requirements: "specs/{feature-name}/requirements.md"
+  design: "specs/{feature-name}/design.md"
+  tasks: "specs/{feature-name}/tasks.md"
+
+# Workflow Configuration
+workflow:
+  phases:
+    - name: requirements
+      file: requirements.md
+      next: design
+      approval_prompt: "Do the requirements look good? If so, we can move on to the design."
+    - name: design
+      file: design.md
+      next: tasks
+      approval_prompt: "Does the design look good? If so, we can move on to the implementation plan."
+    - name: tasks
+      file: tasks.md
+      next: null
+      approval_prompt: "Do the tasks look good?"
+
+  # State detection rules
+  state_detection:
+    NEW: "No spec directory exists"
+    REQUIREMENTS_PENDING: "Directory exists but no requirements.md"
+    DESIGN_PENDING: "requirements.md exists but no design.md"
+    TASKS_PENDING: "design.md exists but no tasks.md"
+    COMPLETE: "All three files exist"
+    EXECUTE: "All files exist and user requests task execution"
+
+# Agent Ownership
+ownership:
+  spec-agent:
+    - specs
+    - requirements
+    - design
+    - tasks

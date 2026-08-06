@@ -1,0 +1,7 @@
+{
+  "name": "specsmd-core",
+  "version": "1.0.0",
+  "description": "specsmd shared core: session bootstrap, project status navigator, and always-on engineering principles for spec-driven development",
+  "author": { "name": "specsmd" },
+  "skills": "./skills/"
+}

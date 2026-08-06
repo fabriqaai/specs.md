@@ -1,0 +1,7 @@
+{
+  "name": "specsmd-ideation",
+  "version": "1.0.0",
+  "description": "Ideation flow as skills: Spark idea generation, Flame evaluation, and Forge concept shaping",
+  "author": { "name": "specsmd" },
+  "skills": "skills/"
+}

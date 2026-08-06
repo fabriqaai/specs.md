@@ -1,0 +1,40 @@
+---
+id: {{id}}
+title: {{title}}
+intent: {{intent}}
+complexity: {{complexity}}
+mode: {{mode}}
+status: {{status}}
+depends_on: [{{#each depends_on}}{{this}}{{#unless @last}}, {{/unless}}{{/each}}]
+created: {{created}}
+---
+
+# Work Item: {{title}}
+
+## Description
+
+{{description}}
+
+## Acceptance Criteria
+
+{{#each acceptance_criteria}}
+- [ ] {{this}}
+{{/each}}
+
+## Technical Notes
+
+{{#if technical_notes}}
+{{technical_notes}}
+{{else}}
+(none)
+{{/if}}
+
+## Dependencies
+
+{{#if depends_on}}
+{{#each depends_on}}
+- {{this}}
+{{/each}}
+{{else}}
+(none)
+{{/if}}

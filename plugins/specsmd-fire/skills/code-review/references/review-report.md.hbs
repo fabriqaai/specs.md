@@ -1,0 +1,120 @@
+# Code Review Report
+
+**Run**: {{run_id}}
+**Intent**: {{intent_id}}
+**Reviewed**: {{timestamp}}
+**Files Reviewed**: {{files_count}}
+
+---
+
+## Summary
+
+| Category | Auto-Fixed | Applied | Skipped |
+|----------|------------|---------|---------|
+| Code Quality | {{quality.auto_fixed}} | {{quality.applied}} | {{quality.skipped}} |
+| Security | {{security.auto_fixed}} | {{security.applied}} | {{security.skipped}} |
+| Architecture | {{architecture.auto_fixed}} | {{architecture.applied}} | {{architecture.skipped}} |
+| Testing | {{testing.auto_fixed}} | {{testing.applied}} | {{testing.skipped}} |
+| **Total** | **{{totals.auto_fixed}}** | **{{totals.applied}}** | **{{totals.skipped}}** |
+
+**Tests Status**: {{#if tests_passing}}Passing{{else}}Failed{{/if}}
+
+---
+
+## Files Reviewed
+
+{{#each files_reviewed}}
+- `{{path}}` ({{type}})
+{{/each}}
+
+---
+
+## Auto-Fixed Issues
+
+{{#if auto_fixed}}
+These issues were automatically fixed (mechanical, non-semantic changes):
+
+{{#each auto_fixed}}
+### {{add @index 1}}. [{{category}}] {{title}}
+
+- **File**: `{{file}}:{{line}}`
+- **Description**: {{description}}
+- **Diff**:
+
+```diff
+{{diff}}
+```
+
+{{/each}}
+{{else}}
+No auto-fixes applied.
+{{/if}}
+
+---
+
+## Applied Suggestions
+
+{{#if applied}}
+These suggestions were approved and applied:
+
+{{#each applied}}
+### {{add @index 1}}. [{{category}}] {{title}}
+
+- **File**: `{{file}}:{{line}}`
+- **Description**: {{description}}
+- **Rationale**: {{rationale}}
+- **Risk Level**: {{risk}}
+- **Approved**: {{approved_at}}
+- **Diff**:
+
+```diff
+{{diff}}
+```
+
+{{/each}}
+{{else}}
+No suggestions were applied.
+{{/if}}
+
+---
+
+## Skipped Suggestions
+
+{{#if skipped}}
+These suggestions were identified but not applied:
+
+{{#each skipped}}
+### {{add @index 1}}. [{{category}}] {{title}}
+
+- **File**: `{{file}}:{{line}}`
+- **Description**: {{description}}
+- **Rationale**: {{rationale}}
+- **Risk Level**: {{risk}}
+- **Reason Skipped**: {{skip_reason}}
+
+{{/each}}
+{{else}}
+No suggestions were skipped.
+{{/if}}
+
+---
+
+## Project Tooling Used
+
+{{#if linters_used}}
+The following project linters were detected and used:
+
+{{#each linters_used}}
+- **{{name}}**: {{config_file}}
+{{/each}}
+{{else}}
+No project linters detected. Used built-in review rules.
+{{/if}}
+
+---
+
+## Standards Referenced
+
+{{#each standards_loaded}}
+- `{{path}}`
+{{/each}}

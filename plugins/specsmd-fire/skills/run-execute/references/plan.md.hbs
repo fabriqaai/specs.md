@@ -1,0 +1,61 @@
+---
+run: {{run_id}}
+work_item: {{work_item_id}}
+intent: {{intent_id}}
+mode: {{mode}}
+checkpoint: {{checkpoint_type}}
+approved_at: {{approved_at}}
+---
+
+# Implementation Plan: {{title}}
+
+## Approach
+
+{{approach}}
+
+## Files to Create
+
+| File | Purpose |
+|------|---------|
+{{#each files_to_create}}
+| `{{this.path}}` | {{this.purpose}} |
+{{/each}}
+{{#unless files_to_create}}
+| (none) | |
+{{/unless}}
+
+## Files to Modify
+
+| File | Changes |
+|------|---------|
+{{#each files_to_modify}}
+| `{{this.path}}` | {{this.changes}} |
+{{/each}}
+{{#unless files_to_modify}}
+| (none) | |
+{{/unless}}
+
+{{#if tests}}
+## Tests
+
+| Test File | Coverage |
+|-----------|----------|
+{{#each tests}}
+| `{{this.path}}` | {{this.coverage}} |
+{{/each}}
+{{/if}}
+
+{{#if technical_details}}
+## Technical Details
+
+{{technical_details}}
+{{/if}}
+
+{{#if design_doc}}
+## Based on Design Doc
+
+Reference: `{{design_doc}}`
+{{/if}}
+
+---
+*Plan approved at checkpoint. Execution follows.*

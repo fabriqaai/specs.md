@@ -1,0 +1,177 @@
+# Ideation Flow Configuration
+# Spark → Flame → Forge — Creative ideation for AI-native thinkers
+
+# Flow Version
+version: "1.0.0"
+
+# Artifact folder (created at project initialization)
+artifact_root: ".specs-ideation"
+
+# Structure created at project initialization
+structure:
+  - path: sessions/
+    description: "Ideation sessions with spark banks, flame reports, and concept briefs"
+  - path: standards/
+    description: "Project standards (optional, for context-aware ideation)"
+
+# ─────────────────────────────────────────────────────────────────────────────────
+# SESSION MANAGEMENT
+# ─────────────────────────────────────────────────────────────────────────────────
+
+sessions:
+  output_dir: ".specs-ideation/sessions"
+  naming:
+    format: "{topic-slug}-{YYYYMMDD}"
+    example: "ai-onboarding-20260208"
+    note: "Kebab-case topic slug + date"
+
+# ─────────────────────────────────────────────────────────────────────────────────
+# SCHEMA DEFINITION (Source of Truth for Agents)
+# ─────────────────────────────────────────────────────────────────────────────────
+
+schema:
+  # Session Artifacts
+  sessions: ".specs-ideation/sessions/"
+  session_folder: ".specs-ideation/sessions/{session-id}/"
+  session_state: ".specs-ideation/sessions/{session-id}/session.yaml"
+  spark_bank: ".specs-ideation/sessions/{session-id}/spark-bank.md"
+  flame_report: ".specs-ideation/sessions/{session-id}/flame-report.md"
+  concept_briefs: ".specs-ideation/sessions/{session-id}/concept-briefs/"
+  concept_brief: ".specs-ideation/sessions/{session-id}/concept-briefs/{concept-name}.md"
+
+  # Standards (optional)
+  standards: ".specs-ideation/standards/"
+
+# ─────────────────────────────────────────────────────────────────────────────────
+# SESSION STATE (session.yaml)
+# ─────────────────────────────────────────────────────────────────────────────────
+
+session_state:
+  fields:
+    session:
+      - id: "Session identifier (topic-slug-date)"
+      - topic: "The ideation topic"
+      - created: "ISO 8601 timestamp"
+      - updated: "ISO 8601 timestamp"
+      - phase: "spark | flame | forge | complete"
+    spark:
+      - batches_generated: "Number of idea batches generated"
+      - total_ideas: "Total ideas generated"
+      - favorites: "List of favorited idea IDs"
+      - domains_used: "List of domain sectors used"
+      - domains_remaining: "List of domain sectors not yet used"
+      - techniques_used: "List of techniques applied"
+    flame:
+      - ideas_evaluated: "Number of ideas evaluated"
+      - shortlist: "List of shortlisted idea IDs"
+      - scoring_method: "Scoring method used (six-hats, impact-feasibility, etc.)"
+    forge:
+      - concepts_shaped: "Number of concepts shaped"
+      - briefs_generated: "List of concept brief filenames"
+
+# ─────────────────────────────────────────────────────────────────────────────────
+# DATA CONVENTIONS
+# ─────────────────────────────────────────────────────────────────────────────────
+
+conventions:
+  timestamps:
+    format: "ISO 8601 with time and timezone"
+    pattern: "YYYY-MM-DDTHH:MM:SSZ"
+    example: "2026-02-08T10:30:00Z"
+
+naming:
+  sessions:
+    format: "{topic-slug}-{YYYYMMDD}"
+    example: "ai-onboarding-20260208"
+    note: "Kebab-case topic slug + date"
+
+  ideas:
+    format: "S{batch}-{number}"
+    example: "S1-3"
+    note: "Spark batch number + idea number within batch"
+
+  concepts:
+    format: "{concept-name}"
+    example: "gamified-onboarding"
+    note: "Kebab-case concept name"
+
+# ─────────────────────────────────────────────────────────────────────────────────
+# SPARK CONFIGURATION
+# ─────────────────────────────────────────────────────────────────────────────────
+
+spark:
+  batch_size: 5                    # Ideas per batch
+  target_count: 50                 # Min ideas before suggesting convergence
+  max_batches: 20                  # Safety limit
+
+# ─────────────────────────────────────────────────────────────────────────────────
+# DEEP THINKING
+# ─────────────────────────────────────────────────────────────────────────────────
+
+deep_thinking:
+  prefer_mcp: true                 # Use sequential-thinking MCP if available
+  fallback: built-in               # Use built-in protocol if MCP unavailable
+  steps_per_batch: 6               # Reasoning steps per idea batch
+  visibility: collapsed            # visible | collapsed | hidden
+
+# ─────────────────────────────────────────────────────────────────────────────────
+# ANTI-BIAS ENGINE
+# ─────────────────────────────────────────────────────────────────────────────────
+
+anti_bias:
+  domain_diversity_min: 3          # Min different domains per batch of 5
+  provocation_frequency: 15        # Every N ideas, inject a provocation
+  perspective_shift_frequency: 20  # Every N ideas, shift perspective
+  domains:
+    - Technology/Engineering
+    - Human Psychology/Behavior
+    - Business/Economics
+    - Nature/Biology
+    - Art/Design/Aesthetics
+    - Games/Play
+    - Social/Community
+    - Physical Space/Architecture
+    - Time/Temporal
+    - Extreme/Edge Cases
+    - Inversion/Opposite
+    - Random Cross-Pollination
+
+# ─────────────────────────────────────────────────────────────────────────────────
+# FLAME CONFIGURATION
+# ─────────────────────────────────────────────────────────────────────────────────
+
+flame:
+  default_method: six-hats-rapid
+  shortlist_size: 5                # Top ideas to carry forward
+
+# ─────────────────────────────────────────────────────────────────────────────────
+# FORGE CONFIGURATION
+# ─────────────────────────────────────────────────────────────────────────────────
+
+forge:
+  default_method: disney-strategy
+  include_pitch: true
+  include_risks: true
+
+# ─────────────────────────────────────────────────────────────────────────────────
+# INTERACTION ADAPTATION
+# ─────────────────────────────────────────────────────────────────────────────────
+#
+# The technique determines interaction mode — not a user toggle.
+# Phase ratios (generate / elicit / co-build):
+#   Spark:  80% / 5%  / 15%
+#   Flame:  60% / 15% / 25%
+#   Forge:  40% / 20% / 40%
+#
+# Rules:
+#   - Never more than 2 questions in a row before generating something
+#   - "you decide" → more generation
+#   - "ask me" → more elicitation
+#   - Every elicitative technique has an ai_fallback so flow never stalls
+
+# ─────────────────────────────────────────────────────────────────────────────────
+# AGENT OWNERSHIP
+# ─────────────────────────────────────────────────────────────────────────────────
+
+ownership:
+  orchestrator: [sessions, standards]

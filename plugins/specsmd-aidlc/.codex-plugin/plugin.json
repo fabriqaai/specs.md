@@ -1,0 +1,6 @@
+{
+  "name": "specsmd-aidlc",
+  "version": "1.0.0",
+  "description": "AI-DLC methodology as skills: Inception, Construction, and Operations phases with intents, units, stories, and bolts in memory-bank/",
+  "skills": "./skills/"
+}

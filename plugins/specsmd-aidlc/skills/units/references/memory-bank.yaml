@@ -1,0 +1,105 @@
+# Memory Bank Configuration for AI-DLC Flow
+# Defines the directory structure and required folders for project context
+
+# Structure created at project initialization
+# Note: units/ and stories/ are NOT created at init - they are created
+# dynamically when intents are elaborated during Inception phase
+structure:
+  - path: intents/
+    description: "Intents (Features/Capabilities) - units created per intent"
+  - path: bolts/
+    description: "Execution Instances (Bolt Sessions)"
+  - path: standards/
+    description: "Project Standards (Architecture, Tech Stack)"
+  - path: operations/
+    description: "Operations Context (Deployment, Monitoring)"
+
+# Project configuration file (created during project-init)
+project_config:
+  path: "memory-bank/project.yaml"
+  description: "Project type and initialization metadata"
+  fields:
+    - project_type: "full-stack-web | backend-api | frontend-app | cli-tool | library"
+    - initialized_at: "ISO 8601 timestamp"
+
+# Dynamic structure (created by agents, not at init)
+# - intents/{NNN}-{intent-name}/           → Created by Inception when intent is created
+# - intents/{NNN}-{intent-name}/units/     → Created by Inception when units are defined
+# - intents/{NNN}-{intent-name}/units/{unit-name}/stories/ → Created when stories are added
+
+# Data Conventions (CRITICAL - Agents MUST follow these)
+conventions:
+  timestamps:
+    format: "ISO 8601 with time and timezone"
+    pattern: "YYYY-MM-DDTHH:MM:SSZ"
+    example: "2024-12-05T10:30:00Z"
+    note: "ALL timestamps in memory-bank artifacts MUST include time, not just date"
+    applies_to:
+      - "created, started, completed fields in bolt files"
+      - "stages_completed entries"
+      - "construction-log entries"
+      - "inception-log entries"
+      - "any date/time field in frontmatter"
+
+# Naming Conventions (CRITICAL - Agents MUST follow these)
+# All names are derived from folder/file names - NO frontmatter prefixes needed
+naming:
+  intents:
+    format: "{NNN}-{intent-name}"
+    example: "001-user-authentication"
+    note: "3-digit prefix indicates order, kebab-case name"
+
+  units:
+    format: "{UUU}-{unit-name}"
+    example: "001-auth-service"
+    note: "3-digit prefix within intent, kebab-case name"
+
+  stories:
+    format: "{SSS}-{title-slug}.md"
+    example: "001-user-signup.md"
+    note: "3-digit story number + kebab-case story title"
+    full_path_example: "memory-bank/intents/001-user-authentication/units/001-auth-service/stories/001-user-signup.md"
+
+  bolts:
+    format: "{BBB}-{unit-name}/"
+    example: "001-auth-service/"
+    note: "Global 3-digit sequence, unit name for context"
+    contents:
+      - "bolt.md"                      # Bolt instance metadata
+      - "ddd-01-domain-model.md"       # Stage 1 artifact (DDD bolt)
+      - "ddd-02-technical-design.md"   # Stage 2 artifact (DDD bolt)
+      - "ddd-03-test-report.md"        # Stage 4 artifact (DDD bolt)
+
+# Schema Definition (Source of Truth for Agents)
+schema:
+  intents: "memory-bank/intents/{intent-name}/"
+  units: "memory-bank/intents/{intent-name}/units/{unit-name}/"
+  stories: "memory-bank/intents/{intent-name}/units/{unit-name}/stories/"
+  bolts: "memory-bank/bolts/{bolt-id}/"
+  bolt-artifacts: "memory-bank/bolts/{bolt-id}/"
+  standards: "memory-bank/standards/"
+  story-index: "memory-bank/story-index.md"
+  inception-log: "memory-bank/intents/{intent-name}/inception-log.md"
+  construction-log: "memory-bank/intents/{intent-name}/units/{unit-name}/construction-log.md"
+  decision-index: "memory-bank/standards/decision-index.md"
+
+  # Agent Ownership
+  # Note: Both Inception and Construction can plan/create bolts
+  # Inception: initial planning, Construction: replanning during execution
+  ownership:
+    inception: [intents, units, stories, story-index, bolts]  # Plans bolts initially
+    construction: [units, bolts, decision-index]               # Executes, can replan bolts, maintains decision index
+    operations: [operations]
+
+# Global Story Index Options
+# Choose ONE approach for project-wide story tracking
+story-index:
+  enabled: true
+  # Options:
+  #   1. single-file: One story-index.md at memory-bank root (recommended for small projects)
+  #   2. per-intent: One story-index.md per intent folder (recommended for large projects)
+  #   3. aggregate: Auto-generated from unit-level stories (computed, not stored)
+  mode: "single-file"
+  path: "memory-bank/story-index.md"
+
+

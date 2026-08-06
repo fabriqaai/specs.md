@@ -1,0 +1,7 @@
+{
+  "name": "specsmd-fire",
+  "version": "1.0.0",
+  "description": "FIRE flow as skills: fast intent-to-run spec-driven development with autonomy modes (autopilot, confirm, validate) and central state",
+  "author": { "name": "specsmd" },
+  "skills": "skills/"
+}

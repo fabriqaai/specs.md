@@ -1,0 +1,6 @@
+{
+  "name": "specsmd-simple",
+  "version": "1.0.0",
+  "description": "Simple spec flow as skills: requirements, design, tasks, and execute for lightweight spec-driven development",
+  "skills": "./skills/"
+}
