@@ -1,0 +1,33 @@
+session:
+  id: skills-port-20260806
+  topic: "Porting specsmd from agent-based to skill-based system (Agent Skills / SKILL.md) installable via plugins across Claude Code, Codex, Cursor, Copilot, Gemini and others"
+  created: 2026-08-06T14:00:00Z
+  updated: 2026-08-06T14:30:00Z
+  phase: complete
+
+spark:
+  batches_generated: 3
+  total_ideas: 15
+  favorites: []
+  domains_used:
+    - "Architecture (agent→skill mapping)"
+    - "Packaging & distribution"
+    - "Migration strategy"
+    - "Developer experience"
+    - "Quality & testing"
+    - "Prior art (skills-library patterns)"
+  domains_remaining: []
+  techniques_used:
+    - inversion
+    - analogy
+    - first-principles
+    - scamper-substitute
+
+flame:
+  ideas_evaluated: 15
+  shortlist: [S2-4, S1-1, S1-2, S1-4, S1-5, S2-1, S2-2, S2-3, S3-3, S3-4]
+  scoring_method: "six-hats-rapid + impact-feasibility"
+
+forge:
+  concepts_shaped: 1
+  briefs_generated: [skills-native-plugin-suite.md]
