@@ -50,9 +50,16 @@ Key mechanisms:
 - Full suite: **429/429 passing** (`cd src && npm run test`).
 - All `.cjs` scripts pass `node --check`; SessionStart hook smoke-tested (emits correct hookSpecificOutput JSON).
 
+## Follow-ups completed in the second pass (2026-08-07 morning)
+
+- **Codex overlays**: `agents/openai.yaml` (`allow_implicit_invocation: false`) generated for all 38 verb skills.
+- **Agent Plugins spec conformance**: root `plugin.json` files now carry the required `$schema` and only spec fields (validated by test). Known deviation documented: `disable-model-invocation` frontmatter is outside the Agent Skills six-field core — strict clients may skip verb skills; publish-time strip overlay remains a follow-up.
+- **`specsmd skills` CLI**: new bootstrapper subcommand (`npx specsmd skills aidlc|fire|ideation|simple|--all`) installing core + flow skills into `.agents/skills/`, symlinking `.claude/skills`, and creating/appending `AGENTS.md` from the core fragment. Plugins ship with the npm package via a `sync:plugins` prepack step (`src/plugins/` generated, gitignored). 6 new tests; legacy `install` path untouched.
+- **Docs site**: `getting-started/plugins.mdx` added and wired into navigation.
+
 ## What was deliberately NOT done (follow-ups)
 
-1. **npm installer rewrite** — untouched by design (backward-compat guarantee). Follow-up: add a skills-emitting bootstrapper mode.
+1. **npm installer rewrite** — untouched by design (backward-compat guarantee). ~~Follow-up: add a skills-emitting bootstrapper mode.~~ Done: `specsmd skills` (see above).
 2. **VS Code extension / dashboard changes** — memory-bank/ layout unchanged so they keep working; adding plugin-path awareness is M3 follow-up.
 3. **AI-DLC × FIRE unification (Option B)** — awaiting user decision; plugin boundaries are Option-B-compatible.
 4. **Codex `agents/openai.yaml` overlays** (per-skill implicit-invocation policy) — v1.1 candidate.

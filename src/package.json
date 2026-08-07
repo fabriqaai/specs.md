@@ -14,8 +14,9 @@
     "lint:md:fix": "markdownlint 'flows/**/*.md' --config ../.markdownlint.yaml --fix",
     "sync:webview-bundle": "node scripts/sync-webview-bundle.cjs",
     "check:webview-bundle": "node scripts/check-webview-bundle-sync.cjs",
-    "prepack": "npm run check:webview-bundle",
-    "validate:all": "npm run test && npm run lint:md && npm run check:webview-bundle"
+    "prepack": "npm run check:webview-bundle && npm run sync:plugins",
+    "validate:all": "npm run test && npm run lint:md && npm run check:webview-bundle",
+    "sync:plugins": "node scripts/sync-plugins.cjs"
   },
   "keywords": [
     "ai-dlc",
@@ -40,7 +41,8 @@
     "flows/",
     "lib/",
     "scripts/",
-    "README.md"
+    "README.md",
+    "plugins/"
   ],
   "dependencies": {
     "@inkjs/ui": "^2.0.0",

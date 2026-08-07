@@ -1,7 +1,18 @@
 {
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "specsmd-ideation",
   "version": "1.0.0",
   "description": "Ideation flow as skills: Spark idea generation, Flame evaluation, and Forge concept shaping",
-  "author": { "name": "specsmd" },
-  "skills": "skills/"
+  "author": {
+    "name": "specsmd"
+  },
+  "homepage": "https://specs.md",
+  "repository": "https://github.com/fabriqaai/specs.md",
+  "license": "MIT",
+  "keywords": [
+    "specsmd",
+    "spec-driven-development",
+    "skills",
+    "ai-dlc"
+  ]
 }

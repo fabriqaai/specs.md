@@ -1,7 +1,7 @@
 {
   "$schema": "https://mintlify.com/docs.json",
   "banner": {
-    "content": "**New from the specs.md team** — [fabriqa](https://fabriqa.ai/?utm_source=specsmd&utm_medium=referral&utm_campaign=specsmd_crosslink) orchestrates Claude Code, Codex, Gemini CLI & more in one workflow. [Download free →](https://fabriqa.ai/?utm_source=specsmd&utm_medium=referral&utm_campaign=specsmd_crosslink)",
+    "content": "**New from the specs.md team** \u2014 [fabriqa](https://fabriqa.ai/?utm_source=specsmd&utm_medium=referral&utm_campaign=specsmd_crosslink) orchestrates Claude Code, Codex, Gemini CLI & more in one workflow. [Download free \u2192](https://fabriqa.ai/?utm_source=specsmd&utm_medium=referral&utm_campaign=specsmd_crosslink)",
     "dismissible": true
   },
   "theme": "mint",
@@ -65,6 +65,7 @@
             "pages": [
               "index",
               "getting-started/installation",
+              "getting-started/plugins",
               "getting-started/ide-extension",
               "getting-started/specs-md-dashboard",
               "getting-started/quick-start",

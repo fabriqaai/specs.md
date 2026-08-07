@@ -2,6 +2,8 @@
 
 specsmd's spec-driven development flows, delivered as [Agent Skills](https://agentskills.io) plugins. One skills tree per flow, thin per-tool manifests, installable from this repo's marketplace.
 
+Each plugin's root `plugin.json` conforms to the vendor-neutral [Agent Plugins spec](https://github.com/agentplugins/agent-plugins-spec) v1.0.0 (`$schema` declared, closed manifest, fixed `skills/` discovery). Known deviation: verb skills carry the `disable-model-invocation` frontmatter field — a Claude Code / Cursor / Copilot extension outside the Agent Skills six-field core — so a strictly conformant client may skip those skills; a publish-time overlay that strips the field for strict channels is a planned follow-up. Codex gets the equivalent policy via each verb skill's `agents/openai.yaml` (`allow_implicit_invocation: false`).
+
 | Plugin | What it gives you |
 |---|---|
 | `specsmd-core` | Session bootstrap (`using-specsmd`), project navigator (`specsmd-status`), always-on principles fragment. Install this with any flow. |

@@ -1,7 +1,18 @@
 {
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "specsmd-fire",
   "version": "1.0.0",
   "description": "FIRE flow as skills: fast intent-to-run spec-driven development with autonomy modes (autopilot, confirm, validate) and central state",
-  "author": { "name": "specsmd" },
-  "skills": "skills/"
+  "author": {
+    "name": "specsmd"
+  },
+  "homepage": "https://specs.md",
+  "repository": "https://github.com/fabriqaai/specs.md",
+  "license": "MIT",
+  "keywords": [
+    "specsmd",
+    "spec-driven-development",
+    "skills",
+    "ai-dlc"
+  ]
 }

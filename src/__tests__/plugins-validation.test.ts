@@ -187,6 +187,23 @@ describe('plugins: manifests and marketplace', () => {
     }
   });
 
+  it('root plugin.json conforms to the Agent Plugins spec (closed schema, $schema required)', () => {
+    const allowed = new Set([
+      '$schema', 'name', 'version', 'description', 'author',
+      'homepage', 'repository', 'license', 'keywords', 'extensions',
+    ]);
+    for (const plugin of PLUGIN_NAMES) {
+      const json = JSON.parse(fs.readFileSync(path.join(PLUGINS_ROOT, plugin, 'plugin.json'), 'utf8'));
+      expect(json.$schema, `${plugin}: $schema required by Agent Plugins spec`).toBe(
+        'https://agent-plugins.org/schemas/1.0.0/plugin.schema.json'
+      );
+      const extra = Object.keys(json).filter((k) => !allowed.has(k));
+      expect(extra, `${plugin}: non-spec fields in root plugin.json: ${extra.join(', ')}`).toEqual([]);
+      const authorKeys = Object.keys(json.author ?? {}).filter((k) => !['name', 'email', 'url'].includes(k));
+      expect(authorKeys, `${plugin}: invalid author fields`).toEqual([]);
+    }
+  });
+
   it('all four manifests exist per plugin, parse, and agree on name + version', () => {
     for (const plugin of PLUGIN_NAMES) {
       const versions = new Set<string>();

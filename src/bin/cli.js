@@ -21,6 +21,19 @@ program
     .action(installer.uninstall);
 
 program
+    .command('skills [flows...]')
+    .description('Install flow skills into .agents/skills (read by Codex, Cursor, Copilot, Gemini, Zed, and more; Claude Code via symlink)')
+    .option('--all', 'Install every flow')
+    .action((flows, options) => {
+        const skillsInstaller = require('../lib/skills-installer');
+        const selected = options.all ? Object.keys(skillsInstaller.FLOW_PLUGINS) : flows;
+        const result = skillsInstaller.installSkills({ flows: selected });
+        console.log(`Installed ${result.skills.length} skills into ${result.target}`);
+        console.log(`.claude/skills symlink: ${result.claudeSymlink}`);
+        console.log(`AGENTS.md: ${result.agentsMd}`);
+    });
+
+program
     .command('dashboard')
     .description('Local web dashboard for flow state')
     .option('--flow <flow>', 'Flow to inspect (fire|aidlc|simple), default auto-detect')

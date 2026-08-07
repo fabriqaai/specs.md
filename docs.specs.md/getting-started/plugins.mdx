@@ -1,0 +1,50 @@
+---
+title: Plugins & Skills
+description: Install specsmd flows as Agent Skills plugins in Claude Code, Codex, Cursor, Copilot, Gemini, Zed, and more
+---
+
+specsmd flows are available as **Agent Skills plugins** — the native skills format read by modern AI coding tools. One install gives you the flow's phase skills (which the model engages automatically) and its verb commands (which you invoke by name), with no per-tool file copying.
+
+| Plugin | Contents |
+|---|---|
+| `specsmd-core` | Session bootstrap, `specsmd-status` navigator, always-on principles. Install with any flow. |
+| `specsmd-aidlc` | AI-DLC: `inception` → `construction` → `operations` + all verb skills (`intent-create`, `bolt-start`, …) |
+| `specsmd-fire` | FIRE: `fire` entry skill + planner/builder verbs with autonomy modes |
+| `specsmd-ideation` | Ideation: `ideation` + `spark` / `flame` / `forge` |
+| `specsmd-simple` | Simple: `simple-spec` + `spec-requirements` / `spec-design` / `spec-tasks` / `spec-execute` |
+
+## Claude Code
+
+```bash
+/plugin marketplace add fabriqaai/specs.md
+/plugin install specsmd-core@specsmd
+/plugin install specsmd-aidlc@specsmd
+```
+
+Swap `specsmd-aidlc` for `specsmd-fire`, `specsmd-ideation`, or `specsmd-simple` to install a different flow.
+
+## Codex CLI
+
+```bash
+codex plugin marketplace add fabriqaai/specs.md
+```
+
+## Any tool that reads `.agents/skills/`
+
+Cursor, Copilot, Gemini CLI, Zed, OpenCode, Goose, Amp, Windsurf, Cline, Factory, and Kilo Code all read the neutral `.agents/skills/` project location. Install into it with one command:
+
+```bash
+npx specsmd@latest skills aidlc        # or: fire, ideation, simple, --all
+```
+
+This copies the core + flow skills into `<project>/.agents/skills/`, adds a `.claude/skills` symlink for Claude Code, and writes the specsmd principles into your project's `AGENTS.md` (creating or appending, never overwriting your content).
+
+## How skills relate to the classic installer
+
+`npx specsmd install` (the classic per-tool installer) keeps working unchanged. Both channels drive the same project artifacts — `memory-bank/` for AI-DLC, `.specs-fire/` for FIRE — so a project started with one continues seamlessly with the other, and the dashboard and VS Code extension work with both.
+
+## Format compatibility
+
+- Skills follow the [Agent Skills specification](https://agentskills.io) (`SKILL.md` + frontmatter, `references/`, `scripts/`).
+- Each plugin's root `plugin.json` conforms to the vendor-neutral [Agent Plugins spec](https://github.com/agentplugins/agent-plugins-spec) v1.0.0.
+- Verb skills use the `disable-model-invocation` extension (recognized by Claude Code, Cursor, and Copilot) plus a per-skill `agents/openai.yaml` policy for Codex, so commands never crowd the model's context.
