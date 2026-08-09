@@ -1,0 +1,54 @@
+session:
+  id: aidlc-fire-unification-20260809
+  topic: "Merging AI-DLC and FIRE into one skills-native flow — FIRE's dynamic runs preferred over upfront bolt planning; skills must not force steps"
+  created: 2026-08-09T00:00:00Z
+  updated: 2026-08-09T00:00:00Z
+  phase: forge
+
+# Context carried in from prior work:
+#   - Predecessor session: skills-port-20260806 (complete)
+#   - Study: memory-bank/research/aidlc-fire-unification-study.md (recommended Option B: symmetric profiles)
+#   - New user signal (2026-08-09):
+#       * FIRE was conceived as "lite-aidlc" — more generic by design
+#       * User prefers FIRE's dynamic run grouping (decide containers at execution time)
+#         over AI-DLC's upfront bolt planning during Inception
+#       * With skills replacing agents, sequences should not be forced —
+#         skills should be a composable toolbox, not a pipeline
+
+decisions:
+  - "Recommend, don't enforce: dynamic bolt/run creation at any stage is AI-DLC-compatible; skills never force inception/construction sequences"
+  - "New single artifact root for unified flow: docs/specsmd/ (visible docs folder, not dotfolder)"
+  - "Container name: bolt (brand word retained, redefined as dynamic container; run stays a plain verb)"
+  - "State model: markdown frontmatter AI-DLC style, no central state.yaml; scripts remain sole writers"
+  - "CLAUDE.md rewritten 2026-08-09: strict fidelity rescoped to frozen legacy flow"
+  - "Plugin name: specsmd (default install = unified flow = AI-DLC v2); companion flows as specsmd-* plugins; legacy specsmd-aidlc/-fire frozen"
+  - "Branching: v1 immutable forever on its own branch + current npm package; all v2/skills work on new main-v2 branch"
+  - "Website: existing URLs never break (SEO); v2 docs under /v2 on same site; site deploys from main-v2 carrying both doc sets"
+
+spark:
+  batches_generated: 2
+  total_ideas: 10
+  favorites: []
+  domains_used:
+    - "Core architecture (asymmetric core/overlay)"
+    - "Execution model (runtime recipes)"
+    - "Interaction design (affordances vs pipelines)"
+    - "Governance (unified ceremony dial)"
+    - "Product/brand/migration"
+  domains_remaining:
+    - "Testing/evals"
+    - "Dashboard/tooling convergence"
+    - "Inversion/edge cases"
+  techniques_used:
+    - inversion
+    - first-principles
+    - scamper-combine
+
+flame:
+  ideas_evaluated: 10
+  shortlist: [S1-1, S1-2, S1-3, S1-4, S1-5, S2-1, S2-2, S2-3, S2-4, S2-5]
+  scoring_method: "composability check + risk scan (ideas compose into one architecture)"
+
+forge:
+  concepts_shaped: 1
+  briefs_generated: [unified-bolt-flow.md]

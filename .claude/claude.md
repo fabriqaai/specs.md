@@ -1,285 +1,140 @@
 # Claude Instructions for specsmd Development
 
-## Primary Directive: Strict AI-DLC Adherence
+## Product Direction: The Unified Bolt Flow
 
-**Core Principle**: We are implementing AI-DLC as defined by AWS, not creating our own version of it.
+**Decision (2026-08-09)**: AI-DLC and FIRE are being unified into a single skills-native flow — the **Unified Bolt Flow**. The legacy `aidlc` and `fire` flows are **frozen** for existing users; new development targets the unified flow.
 
----
+**Branching**: v1 is immutable forever on its own branch and the current npm package. All v2/skills work happens on the **`main-v2`** branch. The website deploys from `main-v2` and carries both doc sets — legacy docs at their existing URLs (never break them; SEO), unified-flow docs under `/v2`.
 
-## 1. **Required Reading Before Any AI-DLC Changes**
+Full concept: `.specs-ideation/sessions/aidlc-fire-unification-20260809/concept-briefs/unified-bolt-flow.md`
+Background study: `memory-bank/research/aidlc-fire-unification-study.md`
 
-When working on AI-DLC flow implementation or documentation, you MUST read these files **IN ORDER**:
+### Unified flow principles (locked user decisions)
 
-### Primary Source (ALWAYS FIRST)
-1. **AI-DLC Specification**
-   - PDF: `/resources/aidlc.pdf` (original AWS specification)
-   - Text: `/resources/ai-dlc-specification.md` (readable version)
-   - This is the authoritative source for AI-DLC concepts
-   - If something is not in the official spec, it's not AI-DLC
+1. **FIRE-shaped core, AI-DLC vocabulary**: hierarchy is Intent → Work Item; the execution container is a **bolt** — created dynamically at any time, grouping one or more work items. Upfront bolt planning is available as optional *draft bolts*, never required.
+2. **Recipes, not bolt types**: stage catalogs (`default`, `ddd`, `spike`, `simple`) are data files chosen at bolt creation, not at planning time.
+3. **Recommend, don't enforce**: skills never force sequences. Recommendation lives in exactly three places — navigator/status skill, skill descriptions, templates. Scripts gate on state prerequisites only (e.g., no bolt completion without a test report), never on phase or order.
+4. **Ceremony dial**: gates come from complexity × autonomy bias (autopilot / confirm / validate). "AI plans, human validates" is the controlled end of the dial.
+5. **Phases are lenses, not modes**: Inception/Construction/Operations survive as status *views* (shaping / building / shipping), not as gated modes.
+6. **State in frontmatter, not state.yaml**: no central state file. State lives in artifact YAML frontmatter (AI-DLC style) — `bolt.md` carries status, recipe, current_stage, stages_completed, checkpoint_state; work items and intent briefs carry their own status. Scripts are the only writers; the cascade (bolt → work items → intent) and an integrity validator reconcile drift.
+7. **Artifact root is `docs/specsmd/`**: a visible docs folder (intents/, bolts/, recipes/, standards/, decisions/) — specs are browsable project documentation, not hidden tool state.
+8. **Delivery is skills-native**: Agent Skills plugins (see `plugins/`); verb skills carry `disable-model-invocation: true`; minimal model-invocable descriptions.
+9. **Plugin naming**: the unified flow ships as the **`specsmd`** plugin (the default install — it IS the AI-DLC v2 implementation). Companion flows are separate `specsmd-*` plugins (`specsmd-simple`, `specsmd-ideation`, …). Existing `specsmd-aidlc` / `specsmd-fire` plugins stay published and frozen as legacy v1 channels.
 
-### Implementation Files (READ SECOND)
-2. **`/src/flows/aidlc/agents/`** - Agent implementations
-   - Contains: Master, Inception, Construction, Operations agents
-3. **`/src/flows/aidlc/`** - Memory bank configuration and skills
-   - Contains: memory-bank.yaml, context-config.yaml, skills, templates
+### Forbidden in unified-flow work
 
-### Specifications (Reference)
-4. **`/memory-bank/`** - Project specifications
-   - Contains: PRFAQ, glossary, term-mappings, intents, standards
-   - Structure follows AI-DLC: intents → units → stories
-
----
-
-## 2. **AI-DLC Immutable Principles**
-
-The following are FROM THE PDF and CANNOT be changed:
-
-1. **Three Phases Only**: Inception → Construction → Operations
-2. **Mob Rituals**: Mob Elaboration (Inception), Mob Construction (Construction)
-3. **Bolt Duration**: "hours or days" (flexible, NOT fixed like "1-2 days")
-4. **DDD Integration**: Domain-Driven Design is integral to AI-DLC
-5. **Sequential Phases**: NOT iterative like Agile (phases are sequential, execution within Construction is iterative)
-6. **AI Drives, Human Validates**: AI proposes, humans approve
+- ❌ Introducing sequence enforcement in skills (chains, "REQUIRED NEXT SKILL", phase gates)
+- ❌ Adding a central state file
+- ❌ Hardcoding recipe stages in scripts or skills (recipes are data)
+- ❌ Mutating artifact state outside the owning scripts
+- ❌ Naming competitor tools in repo documents
 
 ---
 
-## 3. **Forbidden Actions**
+## Legacy AI-DLC Flow: Strict AWS Fidelity (frozen)
 
-When working on AI-DLC features, you MUST NOT:
+The rules in this section apply **only when modifying the legacy flow** (`src/flows/aidlc/`), which is frozen for existing users — bug fixes only, no new features, no concept changes.
 
-- ❌ Invent or modify AI-DLC concepts not in the PDF
-- ❌ Add phases beyond Inception/Construction/Operations
-- ❌ Change "hours or days" to fixed durations (e.g., "1-2 days")
-- ❌ Use terms like "Discovery Bolt" or "Design Bolt" (these don't exist in AI-DLC)
-- ❌ Make AI-DLC iterative like Agile (phases are sequential)
-- ❌ Use verb-noun command patterns (use noun-verb instead)
-- ❌ Duplicate documentation content in this file (point to specs instead)
-- ❌ Invoke Bolt commands (`bolt-plan`, `bolt-start`, etc.) outside of Construction Agent context
+**Core Principle**: The legacy flow implements AI-DLC as defined by AWS, not our own version of it.
+
+### Required reading before legacy changes (in order)
+
+1. **AI-DLC Specification** — `/resources/aidlc.pdf` (original), `/resources/ai-dlc-specification.md` (readable). The authoritative source; if it's not in the spec, it's not AI-DLC.
+2. **`/src/flows/aidlc/agents/`** — Master, Inception, Construction, Operations agents.
+3. **`/src/flows/aidlc/`** — memory-bank.yaml, context-config.yaml, skills, templates.
+4. **`/memory-bank/`** — PRFAQ, glossary, term-mappings, intents, standards.
+
+### Immutable principles (legacy flow only)
+
+1. Three phases only: Inception → Construction → Operations
+2. Mob rituals: Mob Elaboration (Inception), Mob Construction (Construction)
+3. Bolt duration: "hours or days" (flexible, NOT fixed)
+4. DDD is integral to AI-DLC
+5. Phases are sequential, NOT iterative (execution within Construction is iterative)
+6. AI drives, human validates
+
+### Forbidden in legacy-flow work
+
+- ❌ Inventing or modifying AI-DLC concepts not in the PDF
+- ❌ Adding phases; changing "hours or days" to fixed durations
+- ❌ Terms like "Discovery Bolt" / "Design Bolt" (not in AI-DLC)
+- ❌ Making phases iterative
+- ❌ Invoking Bolt commands outside Construction Agent context
 
 ---
 
-## 4. **Where to Find Specifications**
-
-Instead of duplicating content here, refer to these files:
+## Where to Find Specifications
 
 | Topic | File Location |
 |-------|---------------|
+| **Unified flow concept** | `.specs-ideation/sessions/aidlc-fire-unification-20260809/concept-briefs/unified-bolt-flow.md` |
+| **Unification study** | `memory-bank/research/aidlc-fire-unification-study.md` |
+| **Skills port plan** | `memory-bank/ideas/skills-port-plan.md` |
+| **Plugins** | `plugins/` (specsmd-core, -aidlc, -fire, -ideation, -simple) |
 | **Term Mappings** | `/memory-bank/term-mappings.md` |
 | **Glossary** | `/memory-bank/glossary.md` |
 | **PRFAQ** | `/memory-bank/PRFAQ.md` |
-| **Standards** | `/memory-bank/standards/` (tech-stack, coding-standards, system-architecture) |
-| **Agent Specs** | `/memory-bank/intents/001-multi-agent-orchestration/units/` |
-| **Memory Bank Specs** | `/memory-bank/intents/003-memory-bank-system/units/` |
-| **Agent Implementation** | `/src/flows/aidlc/agents/` |
-| **Skills** | `/src/flows/aidlc/skills/` (inception, construction) |
-| **Templates** | `/src/flows/aidlc/templates/` |
-| **Memory Bank Config** | `/src/flows/aidlc/memory-bank.yaml` |
+| **Standards** | `/memory-bank/standards/` |
+| **Legacy agent implementation** | `/src/flows/aidlc/agents/` |
+| **Legacy FIRE flow** | `/src/flows/fire/` |
+
+**Conventions**: commands use the noun-verb pattern (e.g., `bolt-start`, `intent-create`). Point to specs rather than duplicating content. Check `/memory-bank/glossary.md` for terminology. If uncertain about methodology, ask rather than invent.
 
 ---
 
-## 5. **Process for AI-DLC Feature Development**
+## Project Context
 
-Follow this process for ANY AI-DLC feature work:
-
-1. **Review existing agent implementations** (`/src/flows/aidlc/agents/`)
-   - Understand established patterns and conventions
-   - Follow existing agent structure (Persona, Critical Actions, Skills, Workflow)
-
-2. **Check specifications** (`/memory-bank/`)
-   - Review glossary and term-mappings for consistent terminology
-   - Check relevant unit-briefs for requirements
-
-3. **Review skills and templates** (`/src/flows/aidlc/`)
-   - Skills define agent capabilities
-   - Templates ensure consistent artifact creation
-
-4. **If uncertain, ask rather than invent**
-   - Don't make assumptions about AI-DLC methodology
-   - Don't "improve" or modify AI-DLC concepts without discussion
+- **Company / Project**: specsmd (all lowercase) — https://specs.md
+- **Primary Focus**: spec-driven development flows for AI-native engineers
 
 ---
 
-## 6. **Project Context**
+## Dogfooding
 
-### Company & Branding
-- **Company**: specsmd (all lowercase)
-- **Website**: https://specs.md
-- **Project**: specsmd (all lowercase)
-- **Primary Focus**: AI-DLC implementation for AI-native engineers
-
-### Key Conventions
-- Command naming: noun-verb pattern (e.g., `bolt-start`, `intent-create`)
-- File structure: See `/memory-bank/` for specifications, `/src/flows/aidlc/` for implementation
-
----
-
-## 7. **Quick Validation Checklist**
-
-Before implementing any AI-DLC feature, ask:
-
-- ✅ Have I reviewed existing agent implementations in `/src/flows/aidlc/agents/`?
-- ✅ Am I following established patterns (Persona, Critical Actions, Skills, Workflow)?
-- ✅ Am I using noun-verb command pattern?
-- ✅ Am I respecting the 3-phase structure (Inception → Construction → Operations)?
-- ✅ Am I pointing to specs rather than duplicating content?
-- ✅ Have I checked `/memory-bank/glossary.md` for consistent terminology?
-
----
-
-*These instructions ensure specsmd delivers a faithful, world-class AI-DLC implementation.*
-
----
-
-## 8. **Dogfooding: Using AI-DLC to Build specsmd**
-
-specsmd is built using its own AI-DLC flows. This section explains the setup.
-
-### Directory Structure
+specsmd is built using its own flows.
 
 ```
 specsmd/
-├── .specsmd/aidlc/    → symlink to src/flows/aidlc/  (AI-DLC flow definitions)
-├── memory-bank/       → primary artifact storage     (intents, bolts, standards)
-└── .claude/commands/  → slash commands for agents
+├── .specsmd/aidlc/    → symlink to src/flows/aidlc/  (legacy flow definitions)
+├── memory-bank/       → this repo's own artifact storage (legacy schema)
+├── plugins/           → Agent Skills plugins (the new delivery mechanism)
+└── .claude/commands/  → slash commands for legacy agents
 ```
 
-### Slash Commands Available
+Legacy slash commands: `/specsmd-master-agent`, `/specsmd-inception-agent`, `/specsmd-construction-agent`, `/specsmd-operations-agent`. Ideation: `/specsmd-ideation` (sessions in `.specs-ideation/sessions/`).
 
-| Command | Description |
-|---------|-------------|
-| `/specsmd-master-agent` | Start here - orchestrates flow and routes to appropriate agent |
-| `/specsmd-inception-agent` | Planning phase - requirements, stories, units, bolt planning |
-| `/specsmd-construction-agent` | Building phase - execute bolts through DDD stages |
-| `/specsmd-operations-agent` | Deployment phase - build, deploy, verify, monitor |
-
-### How It Works
-
-1. **Flow Source**: The AI-DLC flow is defined in `src/flows/aidlc/` (source)
-2. **Flow Link**: `.specsmd/aidlc/` symlinks to the source for agents to read
-3. **Artifacts**: `memory-bank/` is the primary storage for project artifacts
-4. **Commands**: `.claude/commands/` contains slash commands that activate agents
-
-### Starting Development
-
-```text
-/specsmd-master-agent
-```
-
-This activates the Master Orchestrator which will:
-1. Check if project is initialized (standards exist)
-2. Analyze current project state
-3. Route you to the appropriate phase/agent
-
-### Key Paths for Agents
-
-| Purpose | Path |
-|---------|------|
-| Agent Definitions | `.specsmd/aidlc/agents/` |
-| Skills | `.specsmd/aidlc/skills/` |
-| Templates | `.specsmd/aidlc/templates/` |
-| Memory Bank Schema | `.specsmd/aidlc/memory-bank.yaml` |
-| Standards | `memory-bank/standards/` |
-| Intents | `memory-bank/intents/` |
-| Bolts | `memory-bank/bolts/` |
+The unified flow will dogfood under `docs/specsmd/` once it exists.
 
 ---
 
-## 9. **Git Commit Messages (Semantic Versioning)**
+## Git Commit Messages (Semantic Versioning)
 
-This project uses **semantic-release** for automatic versioning. Commit messages determine version bumps.
+This project uses **semantic-release**. Format: `<type>: <description>` (lowercase type, present tense).
 
-### Required Commit Format
+| Type | Version Impact |
+|------|----------------|
+| `feat:` | Minor bump |
+| `fix:`, `perf:` | Patch bump |
+| `docs:`, `chore:`, `refactor:`, `style:`, `test:` | No release |
 
-```
-<type>: <description>
-```
-
-### Commit Types and Version Impact
-
-| Type | Version Bump | When to Use |
-|------|--------------|-------------|
-| `feat:` | Minor (0.1.0) | New feature or capability |
-| `fix:` | Patch (0.0.1) | Bug fix |
-| `perf:` | Patch (0.0.1) | Performance improvement |
-| `docs:` | No release | Documentation only |
-| `chore:` | No release | Maintenance, dependencies |
-| `refactor:` | No release | Code refactor, no behavior change |
-| `style:` | No release | Formatting, whitespace |
-| `test:` | No release | Adding or updating tests |
-
-**Note:** Major versions (1.0.0, 2.0.0) are NOT auto-bumped. Update `package.json` manually for major releases.
-
-### Examples
-
-```bash
-# Triggers releases
-feat: add YAML validation support      # → minor bump (0.1.0)
-fix: resolve memory leak in watcher    # → patch bump (0.0.1)
-perf: optimize file parsing            # → patch bump (0.0.1)
-
-# No release triggered
-docs: update README installation steps
-chore: update dependencies
-refactor: simplify parser logic
-test: add unit tests for validator
-```
-
-### Important Rules
-
-- **Always use lowercase** for the type prefix
-- **Use present tense** ("add feature" not "added feature")
-- **Be concise but descriptive** in the description
-- **Major versions** require manual `package.json` update
-
-See `/dev_release_guide.md` for full workflow documentation.
+Major versions are manual (`package.json`). See `/dev_release_guide.md`.
 
 ---
 
-## 10. **Testing Requirements**
+## Testing Requirements
 
-**MANDATORY**: Always run tests for projects with code changes before considering work complete.
+**MANDATORY**: run tests for any project you changed before considering work complete.
 
-### Test Commands by Project
+| Project | Command | Framework |
+|---------|---------|-----------|
+| NPM package (`src/`) | `cd src && npm run test` | Vitest |
+| VS Code extension | `cd vs-code-extension && npm run test` | Mocha |
 
-| Project | Directory | Test Command | Framework |
-|---------|-----------|--------------|-----------|
-| **NPM Package** | `src/` | `cd src && npm run test` | Vitest |
-| **VS Code Extension** | `vs-code-extension/` | `cd vs-code-extension && npm run test` | Mocha |
+Plugin format rules are tested in `src/__tests__/plugins-validation.test.ts`. Full validation: `cd src && npm run validate:all`.
 
-### When to Run Tests
-
-Run tests when you have made changes to:
-- Any `.ts` or `.js` files in the respective project
-- Configuration files that affect runtime behavior
-- Dependencies or imports
-
-### Testing Workflow
-
-1. **Before committing**: Always run the test suite for any project you modified
-2. **After fixing bugs**: Run tests to verify the fix and prevent regressions
-3. **After refactoring**: Ensure no tests are broken by the changes
-4. **When adding features**: Write tests first or alongside the feature, then run the full suite
-
-### Test Commands Quick Reference
-
-```bash
-# Run NPM package tests (src/)
-cd src && npm run test
-
-# Run VS Code extension tests
-cd vs-code-extension && npm run test
-
-# Run all validation (tests + linting) for NPM package
-cd src && npm run validate:all
-```
-
-### Handling Test Failures
-
-- **DO NOT** commit code with failing tests
-- **DO NOT** skip tests without explicit user approval
-- If tests fail, fix the issues before proceeding
-- Report test failures to the user with clear error messages
+- Do NOT commit with failing tests; do NOT skip tests without explicit user approval.
+- Report failures with clear error messages.
 
 ---
 
-*Last updated: 2026-01-09 - Added testing requirements section*
+*Last updated: 2026-08-09 — rescoped strict AI-DLC fidelity to the frozen legacy flow; added Unified Bolt Flow direction.*
