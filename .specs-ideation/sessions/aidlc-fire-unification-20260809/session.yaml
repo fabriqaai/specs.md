@@ -30,6 +30,7 @@ decisions:
   - "Research synthesis complete (6 agents): nlspec standard authored at docs/specsmd/standards/nlspec.md; study at memory-bank/research/nlspec-harness-study.md; work items rewritten as nlspecs; 000-flow-evals added"
   - "Memory lifecycle: two classes only — semantic (kept true forever, drift-gardened) and episodic (distillation-gated pruning, git history as archive); NO procedural class (skills/recipes are specsmd itself); memory class declared per artifact type in flow contract"
   - "Event-sourced memory ratified (2026-08-09): intents/work items/bolts are change records — semantic while active, episodic once complete; current truth lives in system/ layer (registered doc types with claimed scopes); projection at completion is ADVISORY (user choice), gardening catches misses; forgetting/archival stays gated on captured truth; decisions = immutable events + in-force index; episodic carries one-hop upward pointers to semantic"
+  - "Open items closed (2026-08-09): slim ops in v1 (release checklist + verify in shipping lens; work item 012); NO migration tooling ever; v2 npm = plugins/marketplace only (manual path for marketplace-less tools; bootstrapper CLI shelved); main-v2 becomes default branch at v2 public launch; v1 gets FULL maintenance (bugs+deps+compat, no features); specsmd plugin absorbs specsmd-core (self-contained)"
 
 spark:
   batches_generated: 4

@@ -4,7 +4,7 @@
 
 **Decision (2026-08-09)**: AI-DLC and FIRE are being unified into a single skills-native flow — the **Unified Bolt Flow**. The legacy `aidlc` and `fire` flows are **frozen** for existing users; new development targets the unified flow.
 
-**Branching**: v1 is immutable forever on its own branch and the current npm package. All v2/skills work happens on the **`main-v2`** branch. The website deploys from `main-v2` and carries both doc sets — legacy docs at their existing URLs (never break them; SEO), unified-flow docs under `/v2`.
+**Branching**: v1 lives forever on `main` and the current npm package (full maintenance, no features). All v2/skills work happens on the **`main-v2`** branch; `main-v2` becomes the repo's default branch at v2 public launch. The website deploys from `main-v2` and carries both doc sets — legacy docs at their existing URLs (never break them; SEO), unified-flow docs under `/v2`.
 
 Full concept: `.specs-ideation/sessions/aidlc-fire-unification-20260809/concept-briefs/unified-bolt-flow.md`
 Background study: `memory-bank/research/aidlc-fire-unification-study.md`
@@ -19,7 +19,7 @@ Background study: `memory-bank/research/aidlc-fire-unification-study.md`
 6. **State in frontmatter, not state.yaml**: no central state file. State lives in artifact YAML frontmatter (AI-DLC style) — `bolt.md` carries status, recipe, current_stage, stages_completed, checkpoint_state; work items and intent briefs carry their own status. Scripts are the only writers; the cascade (bolt → work items → intent) and an integrity validator reconcile drift.
 7. **Artifact root is `docs/specsmd/`**: a visible docs folder (intents/, bolts/, recipes/, standards/, decisions/) — specs are browsable project documentation, not hidden tool state.
 8. **Delivery is skills-native**: Agent Skills plugins (see `plugins/`); verb skills carry `disable-model-invocation: true`; minimal model-invocable descriptions.
-9. **Plugin naming**: the unified flow ships as the **`specsmd`** plugin (the default install — it IS the AI-DLC v2 implementation). Companion flows are separate `specsmd-*` plugins (`specsmd-simple`, `specsmd-ideation`, …). Existing `specsmd-aidlc` / `specsmd-fire` plugins stay published and frozen as legacy v1 channels.
+9. **Plugin naming & distribution**: the unified flow ships as the **`specsmd`** plugin (the default install — it IS the AI-DLC v2 implementation), **self-contained** (absorbs the core bootstrap/navigator; one install = complete flow). Companion flows are separate `specsmd-*` plugins. Distribution is **marketplace-only** (Claude Code + Codex); no v2 npm CLI — marketplace-less tools get a documented manual path. Legacy plugins stay published as v1 channels. **No migration tooling, ever** — legacy users stay on v1, which receives full maintenance (no features) indefinitely.
 10. **Intents and work items are nlspecs** (`docs/specsmd/standards/nlspec.md`): natural language with engineering-grade precision about *observable behavior* — never mechanism, code, or implementation file names. The dividing question is "does this decision affect correctness or interoperability?" Every spec ends in a behavioral Definition of Done with gating vs. advisory criteria. The spec is the source of truth; code is derived from it.
 11. **Harness carries the technical opinions**: standards are invariants with a tiered escalation ladder (principle → doc → judge → mechanical check, promoted on recurring violation); guardrail failures speak in remediation instructions (what to change, where, which standard says so); completion is goal-gated by the state layer, not by skill prose.
 12. **Evals first**: verifiers (spec-sufficiency triangulation, DoD conformance with honest coverage, trigger evals, holdout scenarios) exist before flow implementation starts. Research: `memory-bank/research/nlspec-harness-study.md`.
@@ -38,7 +38,7 @@ Background study: `memory-bank/research/aidlc-fire-unification-study.md`
 
 ## Legacy AI-DLC Flow: Strict AWS Fidelity (frozen)
 
-The rules in this section apply **only when modifying the legacy flow** (`src/flows/aidlc/`), which is frozen for existing users — bug fixes only, no new features, no concept changes.
+The rules in this section apply **only when modifying the legacy flow** (`src/flows/aidlc/`), which is frozen for existing users — full maintenance continues (bug fixes, dependency/security updates, compatibility fixes; the open dependabot findings are triaged on v1), but no new features and no concept changes.
 
 **Core Principle**: The legacy flow implements AI-DLC as defined by AWS, not our own version of it.
 

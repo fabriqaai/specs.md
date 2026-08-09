@@ -90,13 +90,14 @@ Fewer model-invocable descriptions than today's 8 — one navigator, one bootstr
 4. **Tooling gains a third root** → prerequisite is study Phase 1 (one parsed flow contract driving flow-detect, dashboard, VS Code).
 5. **Naming collisions in skills** — `bolt-start`, `bolt-plan` exist in the aidlc plugin with different semantics; unified plugin needs its own namespace.
 
-## Open questions
+## Open questions — all resolved 2026-08-09
 
-1. ~~Unified plugin name~~ Resolved: **`specsmd`** — default plugin = the unified flow = AI-DLC v2; companion flows as `specsmd-*` plugins.
-2. Do Operations skills ship in v1 of the unified flow or follow?
-3. Migration tooling for existing users who *want* to move (converter from memory-bank/ and .specs-fire/), or frozen-only?
-4. npm strategy for v2: v1 keeps the current npm package — does v2 ship as a major bump on the same package (dist-tags: `latest`=v2, `v1` pinned), a new package, or marketplace/plugins-only?
-5. When (if ever) does `main-v2` become the repo's default branch?
+1. **Plugin name**: `specsmd` — default plugin = the unified flow = AI-DLC v2; companion flows as `specsmd-*` plugins. The plugin **absorbs specsmd-core** (bootstrap + navigator included; one install = complete flow); companion flows ship their own thin bootstrap.
+2. **Operations**: slim ops in v1 — the shipping lens gets a minimal release checklist / verify capability. Full build/deploy/monitor skills are a possible follow-up, not v1.
+3. **Migration**: never. No converter tooling, ever — legacy users stay on v1, which keeps working; the /v2 docs' terminology mapping exists for orientation only.
+4. **npm**: plugins/marketplace only for v2 — no v2 npm CLI. Official channels: Claude Code + Codex marketplaces; tools without a marketplace get a documented manual path (copy the plugin's skills into `.agents/skills/`). The skills bootstrapper CLI is shelved; revisit on demand.
+5. **Default branch**: `main-v2` becomes the repo default at v2 public launch; until then `main` (v1) stays default.
+6. **v1 maintenance**: full maintenance — bugs, dependency updates, compatibility fixes continue on v1 indefinitely (the 49 open dependabot findings get triaged there). Frozen means no new features and no concept changes, not abandonment.
 
 ## Suggested next steps
 

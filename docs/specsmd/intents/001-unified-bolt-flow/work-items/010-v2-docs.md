@@ -14,7 +14,7 @@ The unified flow is documented on the site under the `/v2` path. Legacy document
 
 ## Behavior
 
-- The `/v2` section covers: a quickstart (install → first intent → first bolt), the concepts (bolt, recipe, ceremony dial, lenses, nlspec), a recipe reference, a skills reference, the nlspec writing standard, and a "coming from v1" terminology mapping for both legacy flows.
+- The `/v2` section covers: a quickstart (install → first intent → first bolt), the concepts (bolt, recipe, ceremony dial, lenses, nlspec, memory model), a recipe reference, a skills reference, the nlspec writing standard, the manual install path for tools without a plugin marketplace, and a "coming from v1" terminology mapping for both legacy flows *(orientation only — v2 provides no migration tooling, and the docs say so plainly)*.
 - Every documentation URL that resolved before this work resolves to the same content after it.
 - A version switcher is visible from both documentation sets.
 - The site deploys from the v2 branch and carries both documentation sets.

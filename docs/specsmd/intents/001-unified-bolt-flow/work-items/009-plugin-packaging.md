@@ -18,11 +18,13 @@ The unified flow reaches users as the **specsmd** plugin — the default install
 - The plugin conforms to the same format rules the existing plugin validation enforces (skill frontmatter, plugin manifest, per-tool overlays); trigger evals from the evals work item pass against its shipped descriptions.
 - The model-invocable surface is minimal: the navigator and the bootstrap announce themselves; every other skill activates by name only.
 - Legacy plugins continue to install and pass their validation unchanged; a project using a legacy flow is never auto-migrated or warned by the new plugin.
-- Whether the plugin is self-contained or depends on shared core infrastructure is decided during this work item and recorded as a decision entry with rationale and the rejected alternative.
+- The plugin is self-contained (decision, 2026-08-09): it carries its own bootstrap and navigator — one install yields the complete flow, with no dependency on a shared core plugin. The decision entry records the rationale and the rejected shared-core alternative.
+- Distribution is marketplace-only: no npm CLI ships for the unified flow. Tools without a plugin marketplace are served by a documented manual path (the plugin's skills copied into the tool's skills directory), covered in the v2 documentation.
 
 ## Definition of Done
 
-- [ ] (gating) A fresh install via each supported channel produces a responding navigator and by-name skill activation.
+- [ ] (gating) A fresh install via each supported marketplace channel produces a responding navigator and by-name skill activation, with no second install required.
+- [ ] (gating) The documented manual path, followed verbatim in a marketplace-less tool, yields by-name skill activation.
 - [ ] (gating) The plugin passes the repository's plugin-format validation.
 - [ ] (gating) Trigger evals pass against the shipped skill descriptions.
 - [ ] (gating) Legacy plugin validation results are identical before and after this work item.
