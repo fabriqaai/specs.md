@@ -15,8 +15,14 @@ A new user runs `/plugin install specsmd@specsmd` and gets: intent capture → w
 
 ## Scope
 
-- In: flow schema + frontmatter contracts, recipe catalog, state scripts, integrity validation, planning/execution/navigator skills, standards system, `specsmd` plugin packaging, `/v2` documentation.
+- In: evals & verifiers (first), the flow contract, recipe catalog, trustworthy state, integrity validation, shaping/execution/navigator skills, standards system, `specsmd` plugin packaging, `/v2` documentation.
 - Out (open questions): Operations skills in v1, migration converters from legacy roots, npm packaging strategy.
+
+## Principles binding this intent
+
+- Every spec here follows the **nlspec standard** (`docs/specsmd/standards/nlspec.md`): behavior, not mechanism; Definition of Done with gating/advisory criteria; no implementation file names or code.
+- **Evals first**: work item 000 exists before any other is implemented; each spec passes a sufficiency check before its implementation starts.
+- Research grounding: `memory-bank/research/nlspec-harness-study.md`.
 
 ## Source decisions
 

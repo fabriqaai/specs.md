@@ -1,6 +1,6 @@
 ---
 id: 003-state-scripts
-title: State scripts — the only frontmatter writers
+title: State changes are trustworthy — tooling-owned, gated, resumable
 intent: 001-unified-bolt-flow
 complexity: high
 status: pending
@@ -8,15 +8,28 @@ depends_on: [001-flow-schema]
 created: 2026-08-09
 ---
 
-# State scripts — the only frontmatter writers
+# State changes are trustworthy — tooling-owned, gated, resumable
 
-Port FIRE's script discipline onto frontmatter state: `init-bolt.cjs`, `update-stage.cjs`, `update-checkpoint.cjs`, `complete-bolt.cjs`. Scripts mutate artifact frontmatter; nothing else does.
+All state mutation goes through the flow's own tooling. Because state is trustworthy, everything downstream — resuming, routing, completion, reporting — can rely on it without re-deriving the world from scratch.
 
-## Acceptance criteria
+## Behavior
 
-- `init-bolt.cjs`: mints bolt ID (collision-safe), creates `bolts/{id}/bolt.md` with recipe, work_items, autonomy; supports batching multiple work items. Hard gate: the only way to create a bolt.
-- `update-stage.cjs` / `update-checkpoint.cjs`: advance `current_stage`/`stages_completed`/`checkpoint_state` in bolt.md frontmatter; checkpoint synonym normalization carried over from FIRE.
-- `complete-bolt.cjs`: refuses completion unless the recipe's final stage is reached and required artifacts exist (test report); `--force` override; cascades status bolt → work items → intent brief (fixes v1's `bolt-complete.cjs` argv bug by design).
-- Resume point derives from bolt.md frontmatter, never from which artifact files happen to exist.
-- No `npm install` into user projects (v1 FIRE footgun) — bundle or vendor the YAML dependency.
-- Unit tests for every script in the existing Vitest suite.
+- Creating a bolt, advancing its stage, recording a checkpoint decision, and completing work happen only through the flow's tooling. The tooling maintains the status cascade: completing a bolt updates its work items; a work item's status is reflected in its intent's status.
+- **Completion is goal-gated**: completing is refused while the bolt's recipe-required evidence is missing or a gating acceptance criterion is unmet. The refusal message states exactly what is missing and how to produce it *(a remediation instruction, not a diagnostic dump)*. An explicit override exists; using it is recorded in the bolt's state as an override.
+- **Resume is state-derived**: an interrupted bolt resumes from its recorded stage and checkpoint state — never inferred from which artifact files happen to exist.
+- Failures are typed: a retryable condition (transient), a terminal condition (needs a different input), and a structural condition (the artifact tree itself is invalid) produce distinguishable outcomes, and retry effort is never spent on terminal or structural conditions.
+- The tooling leaves user projects untouched: it installs nothing into the project, requires nothing of the project's language or package manager, and writes only within the flow's artifact root.
+- Checkpoint decisions accept the natural vocabulary of approval ("yes", "approved", "go ahead") and normalize it; save-then-resume produces the same continuation as never having stopped.
+
+## Out of scope
+
+Concurrent mutation locking across parallel bolts (identifier collision-safety is in the flow contract; simultaneous edits to one bolt's state would attach here as an advisory check in the integrity validator).
+
+## Definition of Done
+
+- [ ] (gating) A bolt completed through the tooling cascades: bolt complete → its work items complete → intent status reflects it.
+- [ ] (gating) Completing a bolt with missing required evidence is refused, and the refusal names the missing evidence and the action that produces it.
+- [ ] (gating) An override of a refused completion succeeds and is visible in the bolt's recorded state afterward.
+- [ ] (gating) A bolt interrupted mid-stage resumes at its recorded stage even when later-stage artifact files exist on disk *(state wins over file existence)*.
+- [ ] (gating) Running the flow's tooling in a project with no package manifest of any kind succeeds and modifies nothing outside the artifact root.
+- [ ] (advisory) Fifteen common approval phrasings normalize to the intended checkpoint state.

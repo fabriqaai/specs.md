@@ -24,6 +24,10 @@ decisions:
   - "Plugin name: specsmd (default install = unified flow = AI-DLC v2); companion flows as specsmd-* plugins; legacy specsmd-aidlc/-fire frozen"
   - "Branching: v1 immutable forever on its own branch + current npm package; all v2/skills work on new main-v2 branch"
   - "Website: existing URLs never break (SEO); v2 docs under /v2 on same site; site deploys from main-v2 carrying both doc sets"
+  - "Intents are nlspecs: purely intent-focused natural language specs (strongdm attractor lineage) — no code snippets, file names, or technical design in intents/work items; technical detail belongs to the execution harness and bolt-time artifacts"
+  - "Harness over prescription: specsmd = set intent + set guardrails via execution harness, agents do the work (OpenAI harness-engineering influence; research in flight)"
+  - "Evals-first: verifiers and evals for the new flow are built BEFORE implementation starts"
+  - "Research synthesis complete (6 agents): nlspec standard authored at docs/specsmd/standards/nlspec.md; study at memory-bank/research/nlspec-harness-study.md; work items rewritten as nlspecs; 000-flow-evals added"
 
 spark:
   batches_generated: 2

@@ -1,6 +1,6 @@
 ---
 id: 006-execution-skills
-title: Execution skills — bolt-start, code-review, walkthrough
+title: Executing work — bolts run recipes under the ceremony dial
 intent: 001-unified-bolt-flow
 complexity: high
 status: pending
@@ -8,14 +8,30 @@ depends_on: [002-recipe-catalog, 003-state-scripts]
 created: 2026-08-09
 ---
 
-# Execution skills
+# Executing work — bolts run recipes under the ceremony dial
 
-The core loop. `bolt-start`: offer scope (single item / batch / adopt draft), pick recipe, run stages under the ceremony dial, resume from frontmatter if interrupted. Plus FIRE's `code-review` (project linter, AUTO-FIX vs CONFIRM classification, revert-on-test-failure) and `walkthrough` (human-facing narrative, no code, deviations-from-plan).
+Execution is where agents do the work. A bolt is created when the user (or the flow's recommendation, accepted by the user) decides work starts; it runs its recipe's stages under exactly as much ceremony as the work's complexity and the project's autonomy bias call for.
 
-## Acceptance criteria
+## Behavior
 
-- `bolt-start` reads the recipe file for its stage sequence — bolt-type/recipe agnostic, exactly like v1's construction agent was.
-- Ceremony dial applied per stage: autopilot / confirm / validate from complexity × autonomy bias; gates are checkpoint_state in frontmatter, machine-readable.
-- Resume table: interrupted bolts continue from `current_stage`, derived from bolt.md frontmatter only.
-- Test artifacts required before completion (enforced by `complete-bolt.cjs`, not by skill prose).
-- ADRs from ddd-recipe bolts land in `decisions/` with "Read when" index entries.
+- Starting a bolt offers scope: a single work item, a batch, or an existing draft. The chosen work items, recipe, and ceremony level are recorded in the bolt's state at creation.
+- Stages come from the bolt's recipe — execution is recipe-agnostic. A stage's required artifacts must exist before the stage is recorded complete.
+- The ceremony dial governs gates: at the autonomous end stages flow without stopping; at the controlled end each gateable stage awaits approval. Awaiting, granted, and not-required gate states are readable from the bolt's state at any time.
+- The plan a bolt produces is itself a spec: at confirm and validate ceremony the plan is presented for genuine review before implementation *(an unread approved plan encodes instructions nobody chose — the flow surfaces the plan, not a summary of it)*.
+- Guardrail failures during execution (a standard violated, required evidence missing) reach the agent as remediation instructions — what to change, where, and which standard says so.
+- Decision-heavy recipes record decisions as retrievable entries: each decision names when a future reader should consult it.
+- A completed bolt yields a human-facing walkthrough: what changed, why, deviations from plan, and how to verify — containing no code.
+- Review feedback (from humans or reviewing agents) is severity-gated: load-bearing findings block; advisory findings may be acknowledged, deferred, or contested with reasoning.
+
+## Out of scope
+
+Deployment and post-release operation (the Operations question is open at the intent level). Parallel execution coordination beyond what identifier safety and per-bolt state already give.
+
+## Definition of Done
+
+- [ ] (gating) A bolt started from a batch of two work items runs its recipe's stages once for the bolt, tracks both items, and completes both on bolt completion.
+- [ ] (gating) The same recipe run at autonomous ceremony reaches completion with zero approval stops; at controlled ceremony every gateable stage stops and awaits.
+- [ ] (gating) A bolt's gate state is answerable from its recorded state at any moment *(no reconstruction from conversation history)*.
+- [ ] (gating) Completion without the recipe's required test evidence is refused by the state layer *(the skill cannot talk its way past it)*.
+- [ ] (gating) The walkthrough of a completed bolt contains no code and includes deviations from plan.
+- [ ] (advisory) A decision entry's "consult when" hint retrieves the decision in a later bolt facing that situation.

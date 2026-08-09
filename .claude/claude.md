@@ -20,6 +20,9 @@ Background study: `memory-bank/research/aidlc-fire-unification-study.md`
 7. **Artifact root is `docs/specsmd/`**: a visible docs folder (intents/, bolts/, recipes/, standards/, decisions/) — specs are browsable project documentation, not hidden tool state.
 8. **Delivery is skills-native**: Agent Skills plugins (see `plugins/`); verb skills carry `disable-model-invocation: true`; minimal model-invocable descriptions.
 9. **Plugin naming**: the unified flow ships as the **`specsmd`** plugin (the default install — it IS the AI-DLC v2 implementation). Companion flows are separate `specsmd-*` plugins (`specsmd-simple`, `specsmd-ideation`, …). Existing `specsmd-aidlc` / `specsmd-fire` plugins stay published and frozen as legacy v1 channels.
+10. **Intents and work items are nlspecs** (`docs/specsmd/standards/nlspec.md`): natural language with engineering-grade precision about *observable behavior* — never mechanism, code, or implementation file names. The dividing question is "does this decision affect correctness or interoperability?" Every spec ends in a behavioral Definition of Done with gating vs. advisory criteria. The spec is the source of truth; code is derived from it.
+11. **Harness carries the technical opinions**: standards are invariants with a tiered escalation ladder (principle → doc → judge → mechanical check, promoted on recurring violation); guardrail failures speak in remediation instructions (what to change, where, which standard says so); completion is goal-gated by the state layer, not by skill prose.
+12. **Evals first**: verifiers (spec-sufficiency triangulation, DoD conformance with honest coverage, trigger evals, holdout scenarios) exist before flow implementation starts. Research: `memory-bank/research/nlspec-harness-study.md`.
 
 ### Forbidden in unified-flow work
 
@@ -28,6 +31,8 @@ Background study: `memory-bank/research/aidlc-fire-unification-study.md`
 - ❌ Hardcoding recipe stages in scripts or skills (recipes are data)
 - ❌ Mutating artifact state outside the owning scripts
 - ❌ Naming competitor tools in repo documents
+- ❌ Code snippets, implementation file names, or internal mechanism in intents/work items (nlspec violation)
+- ❌ Implementing a work item whose spec has not passed a sufficiency check (evals-first)
 
 ---
 
