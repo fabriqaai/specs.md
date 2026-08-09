@@ -15,7 +15,7 @@ A new user runs `/plugin install specsmd@specsmd` and gets: intent capture → w
 
 ## Scope
 
-- In: evals & verifiers (first), the flow contract, recipe catalog, trustworthy state, integrity validation, shaping/execution/navigator skills, standards system, `specsmd` plugin packaging, `/v2` documentation.
+- In: evals & verifiers (first), the flow contract, recipe catalog, trustworthy state, integrity validation, shaping/execution/navigator skills, standards system, memory lifecycle (semantic kept true, episodic distilled then pruned), `specsmd` plugin packaging, `/v2` documentation.
 - Out (open questions): Operations skills in v1, migration converters from legacy roots, npm packaging strategy.
 
 ## Principles binding this intent

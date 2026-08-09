@@ -19,6 +19,7 @@ Everything the flow knows about itself — where artifacts live, what state each
 - State lives in each artifact's own frontmatter. There is no central state file. The contract states this explicitly, together with the rule that only the flow's own tooling writes state.
 - Identifiers are collision-safe under parallel work: two bolts created concurrently in separate working copies of the same project receive distinct identifiers.
 - Any tool that needs flow knowledge (installer, dashboard, editor integrations, the flow's own skills) can obtain everything it needs by reading the contract. Adding an artifact type or status value is a contract change, not a code change in each consumer.
+- Every artifact type declares its **memory class** — semantic (never expires, kept true) or episodic (prunable after a retention horizon, per the memory-lifecycle work item). There are exactly two classes.
 
 ## Out of scope
 
@@ -26,7 +27,7 @@ Migration of legacy artifact roots (a converter would attach as a separate reade
 
 ## Definition of Done
 
-- [ ] (gating) For every artifact type, location, identifier pattern, state fields, and allowed values are answerable from the contract alone.
+- [ ] (gating) For every artifact type, location, identifier pattern, state fields, allowed values, and memory class are answerable from the contract alone.
 - [ ] (gating) No status value or artifact path pattern appears in more than one authoritative place.
 - [ ] (gating) Creating two bolts concurrently in two working copies of one project yields non-colliding identifiers.
 - [ ] (advisory) A consumer written against the contract needs no change when a new status value is added to the contract.

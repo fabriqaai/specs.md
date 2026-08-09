@@ -28,10 +28,11 @@ decisions:
   - "Harness over prescription: specsmd = set intent + set guardrails via execution harness, agents do the work (OpenAI harness-engineering influence; research in flight)"
   - "Evals-first: verifiers and evals for the new flow are built BEFORE implementation starts"
   - "Research synthesis complete (6 agents): nlspec standard authored at docs/specsmd/standards/nlspec.md; study at memory-bank/research/nlspec-harness-study.md; work items rewritten as nlspecs; 000-flow-evals added"
+  - "Memory lifecycle: two classes only — semantic (kept true forever, drift-gardened) and episodic (distillation-gated pruning, git history as archive); NO procedural class (skills/recipes are specsmd itself); memory class declared per artifact type in flow contract"
 
 spark:
-  batches_generated: 2
-  total_ideas: 10
+  batches_generated: 3
+  total_ideas: 15
   favorites: []
   domains_used:
     - "Core architecture (asymmetric core/overlay)"

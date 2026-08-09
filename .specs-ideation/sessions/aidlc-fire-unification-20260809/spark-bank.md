@@ -53,3 +53,24 @@ Inception/Construction/Operations stop being modes you enter and exit — they b
 1. **Fidelity constraint scope**: CLAUDE.md mandates strict AWS AI-DLC adherence. If the unified default is FIRE-shaped, fidelity is preserved only *inside the aidlc preset/overlay*. Needs explicit user call — it redefines what "we are implementing AI-DLC" means for the product.
 2. **Upfront bolt planning is in the AWS spec** (Inception produces bolt plans). Dynamic-only grouping deviates; keeping `bolt-plan` as an optional skill inside the aidlc preset resolves it.
 3. **Artifact root**: one new root for the unified flow vs. keeping `memory-bank/` and `.specs-fire/` detection. Migration surface for dashboard, VS Code extension, flow-detect.
+
+---
+
+## Batch 3 — memory lifecycle (episodic vs semantic, 2026-08-09)
+
+User direction: treat episodic and semantic memory differently in specsmd outputs — episodic can be deleted over time (models re-derive trajectories), semantic must be kept true forever.
+
+### S3-1 — Memory class as contract data
+Every artifact type in the flow contract declares its memory class — exactly two: **semantic** (specs, standards, constitution, decisions, glossary — never expires, drift-managed) and **episodic** (bolt plans, test/review reports, walkthroughs, surprises, maintenance-log entries, eval reports — retention horizon). Lifecycle policy is data, like recipes. *User decision 2026-08-09: no third "procedural" class — skills/recipes are specsmd itself, managed by coding agents; the memory model governs only what specsmd manages.*
+
+### S3-2 — Distillation-gated forgetting (the goal gate for deletion)
+An episodic record may be pruned only after its semantic residue is captured: decisions → decision records with "read when" hints; surprises → spec corrections or standards updates; recurring corrections → guardrail promotion (the escalation ladder). Pruning is refused while residue is missing — same structural pattern as goal-gated completion. The nlspec vacuum-artifact rule IS the distillation law: the spec says "X", never "we discovered X".
+
+### S3-3 — Git history is the episodic archive
+Nothing is truly deleted: `docs/specsmd/` is versioned, so pruning removes artifacts from the *working tree* (= the agent's reachable context) while git history retains the full trajectory. "Anything the agent can't access in-context effectively doesn't exist" — inverted into a feature: forgetting = removing from context-reachable space, not destroying evidence. Bolt frontmatter (tiny) can persist as an index entry; heavyweight trajectory artifacts get pruned.
+
+### S3-4 — Semantic freshness as a recurring flow
+Semantic memory earns its permanence by being kept true: doc-gardening/spec-drift detection runs recurringly, each semantic doc carries a verification status and temporal anchors ("at the time of writing…"), and stale semantic content is a finding with a remediation — a wrong permanent memory is worse than a deleted temporary one.
+
+### S3-5 — The economics justification
+Episodic deletion is safe *because* code+specs are regenerable: the trajectory (how it was done) is re-derivable by a capable model from the semantic layer (what is true + why). What is NOT re-derivable is exactly what semantic memory holds: decisions among valid options, rationale, constraints. Delete the how, keep the which-and-why. Stale episodic content isn't just dead weight — it's an attractive nuisance that contradicts current state.
