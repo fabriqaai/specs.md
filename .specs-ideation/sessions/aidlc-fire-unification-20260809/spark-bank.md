@@ -74,3 +74,24 @@ Semantic memory earns its permanence by being kept true: doc-gardening/spec-drif
 
 ### S3-5 — The economics justification
 Episodic deletion is safe *because* code+specs are regenerable: the trajectory (how it was done) is re-derivable by a capable model from the semantic layer (what is true + why). What is NOT re-derivable is exactly what semantic memory holds: decisions among valid options, rationale, constraints. Delete the how, keep the which-and-why. Stale episodic content isn't just dead weight — it's an attractive nuisance that contradicts current state.
+
+---
+
+## Batch 4 — semantic projection & the read path (2026-08-09)
+
+User pain (from fabriqa-2026 practice): completed work piles up as episodic files (old plans, ADRs, specs); agents read stale ones before current truth; user hand-maintains "superseded-by" chains to redirect agents — token waste, fragile. Goal: semantic memory ALWAYS reflects reality; episodic is kept (not necessarily deleted) but out of the default read path, reachable via semantic references when detail is needed; users can register their own semantic artifact types and have specsmd keep them true.
+
+### S4-1 — Event-sourced memory: intents are events, semantic docs are projections
+Reclassify: intents/work items/bolts are **change records** — semantic while active (they spec the change being made), **episodic once complete**. A separate persistent semantic layer holds *current truth* (system facts: "auth uses X", architecture, integration inventory, standards). Completing work **projects the delta onto the semantic layer** — the auth-migration bolt's completion includes rewriting the auth truth doc. Like event sourcing: append-only event log + materialized views. Supersede chains disappear because truth lives in exactly one place (define-once) and history was never the read path.
+
+### S4-2 — Read-path discipline with one-hop upward redirects
+Agents read semantic first — the bootstrap/navigator says so, and layout enforces the scent: semantic docs prominent, episodic under an archival area whose README says "historical — read only when directed." Every episodic artifact carries a standing header: "Historical record ({date}). Current truth: {semantic doc link}." Redirects point UP to semantic, never sideways to newer episodic — one hop, no chains to maintain, because the semantic doc is unique and always current. Aged episodic moves out of the greppable hot path (archive folder), not deleted.
+
+### S4-3 — Registered semantic doc types with declared scopes
+The semantic layer is user-extensible: a project registers semantic artifact types — name, location, purpose, **scope** (topics/domains/paths it claims), update expectation — in the flow contract's project extension. The projection step matches a completing bolt's touched scope against registered docs' claimed scopes and requires each match be reviewed ("this bolt touched authentication; 'auth-architecture' claims that scope; confirm it's still true or update it"). This is "ask specsmd to keep my artifact up to date," declaratively.
+
+### S4-4 — Decisions as events + an in-force index
+ADR files are immutable episodic events (a decision WAS made — that never becomes false). What changes is which decisions are IN FORCE. A semantic **decisions index** lists only in-force decisions with their read-when hints; agents consult the index, never crawl the folder. Superseding a decision = new ADR event + index update + a one-hop upward stamp on the old ADR. Kills the stale-ADR read without deleting anything.
+
+### S4-5 — Eager + lazy truth maintenance
+Two loops keep semantic true: **eager** — the completion gate demands scope-matched semantic docs be confirmed-or-updated at the moment reality changes (catches the auth contradiction immediately); **lazy** — the recurring gardening pass finds drift that slipped through (semantic doc vs code, semantic doc vs semantic doc) and reports findings with remediations. Each semantic doc carries a verification status ("last confirmed true: date, by what"), so staleness is visible instead of discovered by accident.

@@ -19,6 +19,7 @@ One skills-native flow that merges AI-DLC and FIRE: **FIRE's mechanics, AI-DLC's
 | State model | **Markdown frontmatter, AI-DLC style** — no central `state.yaml`. State lives in the artifacts themselves (bolt.md, work items, briefs); scripts own mutations and reconcile the cascade |
 | Spec register | **Intents and work items are nlspecs** (2026-08-09): behavior not mechanism, behavioral Definition of Done, no code/file names. Standard: `docs/specsmd/standards/nlspec.md`; research: `memory-bank/research/nlspec-harness-study.md` |
 | Verification | **Evals-first** (2026-08-09): spec-sufficiency triangulation, DoD conformance with honest coverage, trigger evals, and holdout scenarios exist before implementation (work item 000) |
+| Memory model | **Event-sourced, two classes** (2026-08-09): change records (intents/work items/bolts) are semantic while active, episodic once complete; current truth lives in `system/` (registered doc types with claimed scopes, verification status); completion projection is advisory, gardening catches drift, archival is gated on captured truth; decisions = immutable events + in-force index; read path is semantic-first with one-hop upward pointers |
 
 ## Architecture
 

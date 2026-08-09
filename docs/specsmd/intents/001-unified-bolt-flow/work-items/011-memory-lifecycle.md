@@ -1,34 +1,55 @@
 ---
 id: 011-memory-lifecycle
-title: Memory has a lifecycle — episodic records distill then expire, semantic records stay true
+title: Memory model — current truth in system/, history as change records
 intent: 001-unified-bolt-flow
-complexity: medium
+complexity: high
 status: pending
 depends_on: [001-flow-schema, 003-state-scripts, 004-integrity-validator]
 created: 2026-08-09
 ---
 
-# Memory has a lifecycle — episodic records distill then expire, semantic records stay true
+# Memory model — current truth in system/, history as change records
 
-The artifact tree is the project's memory, and its two classes age differently. **Semantic** artifacts — specs, standards, the constitution, decision records — state what is true and which options were chosen; they never expire and must be kept true. **Episodic** artifacts — bolt plans, test and review reports, walkthroughs, log entries, eval reports — record what happened on a particular run; they are valuable while fresh and prunable once their lessons are captured, because a capable model can re-derive *how* from what is true and why. What cannot be re-derived — the choice and its rationale — is exactly what semantic memory holds.
+The artifact tree is the project's memory, in two classes with different lifecycles. **Semantic memory always reflects reality**; **episodic memory is history** — valuable, kept, but never the default read path.
+
+Intents, work items, and bolts are **change records**: they specify a delta. While active they are the working spec of that delta; once complete they become episodic — history that is *correctly* stale. Current truth lives in the **`system/` layer**: a small set of persistent documents stating what is true now (architecture, integrations, domain facts). Completing a change is *projected* onto that layer — when the auth migration completes, the auth truth document says the new reality, and no chain of superseded files needs maintaining, because truth has exactly one address and history points up to it.
 
 ## Behavior
 
-- Every artifact type's memory class (semantic or episodic) is declared in the flow contract, alongside a retention horizon for episodic types. The horizon has a default and is configurable per project. There are exactly two classes.
-- **Pruning is distillation-gated**: an episodic record past its horizon may be pruned only when its semantic residue is captured — decisions appear as decision records, discoveries that changed behavior appear as spec or standards updates. Pruning an undistilled record is refused, and the refusal names what residue is missing and where it belongs. An explicit override exists and is recorded.
-- Pruning removes episodic artifacts from the working tree only; in a version-controlled project, history retains the full record. A bolt's compact state record persists as a permanent index entry — what ran, when, what it completed — while its trajectory artifacts are pruned.
-- A pruned bolt remains valid in every status cascade: its completed work items and intent statuses are unaffected *(the cascade happened at completion; pruning changes nothing downstream)*.
-- **Semantic freshness is enforced by findings, not hope**: a recurring maintenance pass detects semantic artifacts that contradict the current system or each other, and reports each as an integrity finding with severity and remediation. Semantic artifacts carry a verification status; claims tied to a moment in time are anchored ("at the time of writing…").
-- The maintenance pass proposes, the user consents: no pruning and no semantic correction happens unprompted, and everything done is recorded in the maintenance log.
+### Classes and the contract
+- The flow contract declares each artifact type's memory class. Change records (intents, work items, bolts and their stage artifacts) are semantic while active and episodic once their status is terminal. `system/` documents, standards, and the decisions index are always semantic. Exactly two classes exist.
+- A project registers its own semantic document types in `system/`: each declares a name, purpose, and **scope** — the topics or areas of the codebase it claims. Registration is data; adding a type requires nothing but the declaration.
+
+### Projection (advisory)
+- When a bolt completes, the flow matches the bolt's touched scope against registered `system/` documents' claimed scopes and surfaces each match for review: confirm still true, or update. This is a recommendation with a named target — never a completion blocker.
+- A scope-matched document left unreviewed becomes an integrity finding (advisory severity) naming the bolt, the document, and what to verify.
+- Each `system/` document carries a visible verification status: when it was last confirmed true and by what. Staleness is a lookup, not an accident.
+
+### The read path
+- Semantic memory is read first: the flow's bootstrap and navigator direct agents to `system/`, standards, and the decisions index before anything else. Episodic artifacts are read only when a semantic document refers to them for detail, or when the user asks for history.
+- Every episodic artifact carries a standing header naming its nature and its upward pointer: "Historical record ({date}). Current truth: {semantic document}." Pointers go up to semantic, never sideways to newer episodic — one hop, nothing to re-chain when reality changes again.
+- Episodic artifacts past their retention horizon move to an archive area out of the default search path. Nothing requires deletion; in a version-controlled project, history retains everything regardless.
+
+### Decisions
+- Decision records are immutable episodic events — that a decision was made never becomes false. Which decisions are **in force** is semantic: the decisions index lists only in-force decisions, each with a hint naming when a future reader should consult it. Superseding a decision adds a new record, updates the index, and stamps the old record's upward pointer. Agents consult the index; they do not crawl the folder.
+
+### Forgetting (gated, unlike projection)
+- Moving an episodic record to the archive — and any deeper pruning — is refused while the record holds uncaptured truth: a decision absent from the index, or a discovery that changed behavior but is reflected in no semantic document. The refusal names what is missing and where it belongs. An explicit override exists and is recorded.
+- Archival changes nothing downstream: completed statuses, cascades, and the bolt's compact index entry are unaffected.
+
+### Gardening (the lazy loop)
+- A recurring maintenance pass detects: semantic documents contradicting the current system, semantic documents contradicting each other, in-force index entries pointing at superseded records, episodic artifacts past horizon still in the hot path, and missing upward pointers. Each finding carries severity and a remediation. Nothing is changed without consent; everything done is logged.
 
 ## Out of scope
 
-Cross-project memory (anything outside the artifact root). Automatic scheduling of the maintenance pass (attaches to the project's own automation; the flow provides the invocable pass). Retention of the version-control history itself (the project's concern, not the flow's).
+Cross-project memory (outside the artifact root). Scheduling of the gardening pass (the flow provides the invocable pass; automation is the project's). Retrieval tooling beyond the read-path conventions (a queryable index would attach as a consumer of the flow contract).
 
 ## Definition of Done
 
-- [ ] (gating) The flow contract answers, for every artifact type, its memory class; episodic types carry a retention horizon with a default.
-- [ ] (gating) Pruning an episodic record containing an unextracted decision is refused, and the refusal names the decision and its destination.
-- [ ] (gating) After a permitted prune, the bolt's index entry remains, downstream statuses are unchanged, and the pruned artifacts are absent from the working tree.
-- [ ] (gating) A semantic artifact deliberately made to contradict the current system is reported as a finding with a remediation *(not silently tolerated, not silently fixed)*.
-- [ ] (advisory) A project that never prunes anything experiences no warnings beyond advisory findings — retention is recommended, never forced.
+- [ ] (gating) The contract answers, for every artifact type, its memory class — including the active→terminal class transition for change records.
+- [ ] (gating) A registered `system/` document whose scope matches a completing bolt is surfaced for review at completion; declining to review completes the bolt anyway and leaves an advisory finding.
+- [ ] (gating) Every episodic artifact created by the flow carries the historical-record header with a valid upward pointer.
+- [ ] (gating) The decisions index lists only in-force decisions; superseding via the flow updates the index and the old record's pointer in one operation.
+- [ ] (gating) Archiving an episodic record holding an unindexed decision is refused with the decision and its destination named; the override, when used, is visible in the record.
+- [ ] (gating) A `system/` document deliberately contradicting the codebase is reported by the gardening pass with a remediation *(not silently tolerated, not silently fixed)*.
+- [ ] (advisory) An agent following the bootstrap's read-path guidance reaches current truth without opening any episodic artifact.

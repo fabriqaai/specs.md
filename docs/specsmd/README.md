@@ -8,11 +8,14 @@ Concept: `.specs-ideation/sessions/aidlc-fire-unification-20260809/concept-brief
 
 | Path | Purpose |
 |---|---|
-| `intents/{id}/` | Intent brief + work items (status in YAML frontmatter) |
-| `bolts/{id}/` | Execution containers: bolt.md, plan.md, test-report.md, walkthrough.md |
+| `system/` | **Current truth** — registered semantic docs (architecture, integrations, domain facts) + verification status. Read first. |
+| `intents/{id}/` | Change records: intent brief + work items (semantic while active, episodic once complete) |
+| `bolts/{id}/` | Execution containers: bolt.md, plan.md, test-report.md, walkthrough.md (episodic once complete) |
 | `recipes/` | Stage catalogs as data (default, ddd, spike, simple) |
 | `standards/` | Constitution + project standards (hierarchical monorepo overrides) |
-| `decisions/` | ADRs + "Read when" index |
+| `decisions/` | Decision records (immutable events) + the in-force index (semantic — consult the index, don't crawl the folder) |
+
+**Read path**: semantic first — `system/`, `standards/`, the decisions index. Episodic artifacts are history; each carries an upward pointer to current truth and is read only when a semantic doc directs there or history is explicitly wanted.
 
 ## Ground rules
 

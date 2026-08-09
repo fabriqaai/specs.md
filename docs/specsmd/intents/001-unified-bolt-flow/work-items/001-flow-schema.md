@@ -19,7 +19,8 @@ Everything the flow knows about itself — where artifacts live, what state each
 - State lives in each artifact's own frontmatter. There is no central state file. The contract states this explicitly, together with the rule that only the flow's own tooling writes state.
 - Identifiers are collision-safe under parallel work: two bolts created concurrently in separate working copies of the same project receive distinct identifiers.
 - Any tool that needs flow knowledge (installer, dashboard, editor integrations, the flow's own skills) can obtain everything it needs by reading the contract. Adding an artifact type or status value is a contract change, not a code change in each consumer.
-- Every artifact type declares its **memory class** — semantic (never expires, kept true) or episodic (prunable after a retention horizon, per the memory-lifecycle work item). There are exactly two classes.
+- Every artifact type declares its **memory class** — semantic (kept true, never expires) or episodic (history, archivable after a retention horizon). Change records (intents, work items, bolts) are semantic while active and episodic once terminal. There are exactly two classes; details in the memory-lifecycle work item.
+- The contract supports project-registered semantic document types in the `system/` layer, each declaring name, purpose, and claimed scope.
 
 ## Out of scope
 

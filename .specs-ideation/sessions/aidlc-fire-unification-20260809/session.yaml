@@ -29,10 +29,11 @@ decisions:
   - "Evals-first: verifiers and evals for the new flow are built BEFORE implementation starts"
   - "Research synthesis complete (6 agents): nlspec standard authored at docs/specsmd/standards/nlspec.md; study at memory-bank/research/nlspec-harness-study.md; work items rewritten as nlspecs; 000-flow-evals added"
   - "Memory lifecycle: two classes only — semantic (kept true forever, drift-gardened) and episodic (distillation-gated pruning, git history as archive); NO procedural class (skills/recipes are specsmd itself); memory class declared per artifact type in flow contract"
+  - "Event-sourced memory ratified (2026-08-09): intents/work items/bolts are change records — semantic while active, episodic once complete; current truth lives in system/ layer (registered doc types with claimed scopes); projection at completion is ADVISORY (user choice), gardening catches misses; forgetting/archival stays gated on captured truth; decisions = immutable events + in-force index; episodic carries one-hop upward pointers to semantic"
 
 spark:
-  batches_generated: 3
-  total_ideas: 15
+  batches_generated: 4
+  total_ideas: 20
   favorites: []
   domains_used:
     - "Core architecture (asymmetric core/overlay)"
