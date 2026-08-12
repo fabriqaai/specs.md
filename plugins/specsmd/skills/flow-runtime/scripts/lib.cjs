@@ -1010,6 +1010,8 @@ module.exports = {
   terminal,
   structural,
   exitCodeFor,
+  emitSuccess,
+  emitFailure,
   runMain,
   parseYaml,
   stringifyYaml,

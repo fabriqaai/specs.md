@@ -26,7 +26,10 @@ Resolve `SCRIPTS_DIR` as this skill's `scripts/` directory. Invoke with the proj
 | `scripts/update-stage.cjs` | Record a stage complete |
 | `scripts/update-checkpoint.cjs` | Record a gate decision |
 | `scripts/complete-bolt.cjs` | Complete a bolt; cascade status |
-| `scripts/status.cjs` | Read-only lenses |
+| `scripts/validate-integrity.cjs` | Detect drift; repair only with `--fix` or `--finding` |
+| `scripts/status.cjs` | Read-only lenses (runs the validator without `--fix`) |
+
+`validate-integrity.cjs` prints the same JSON envelope as the other scripts. Findings include `severity`, `auto_repairable`, and a remediation that names what to change and where. `--fix` consents to every auto-repairable finding; `--finding F1` consents to one. `--stale-after` overrides the contract default (`P7D`). Every applied repair is appended to `docs/specsmd/maintenance-log.md`. A clean tree exits 0 with zero findings. `status.cjs` calls the same detector read-only and exposes the findings as `health`.
 
 Never install packages into the user's project. These scripts have no dependencies.
 

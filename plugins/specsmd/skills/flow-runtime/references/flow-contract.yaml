@@ -151,6 +151,11 @@ errors:
   terminal: 2
   structural: 3
 
+# Defaults for validate-integrity. CLI --stale-after overrides the duration.
+integrity:
+  stale_active_after: P7D
+  maintenance_log: maintenance-log.md
+
 artifact_types:
   project:
     path: project.md

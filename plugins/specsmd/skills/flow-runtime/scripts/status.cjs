@@ -4,46 +4,24 @@
  * Usage: node status.cjs <rootPath>
  */
 const lib = require('./lib.cjs');
+const { collectFindings } = require('./validate-integrity.cjs');
 
-function collectHealth(rootPath, contract, intents, workItems, bolts) {
-  const findings = [];
-  const knownStatus = new Set(contract.status.values);
-  for (const art of [...intents, ...workItems, ...bolts]) {
-    if (art.status && !knownStatus.has(art.status)) {
-      findings.push({
+function collectHealth(rootPath, contract) {
+  try {
+    return collectFindings(rootPath, contract);
+  } catch (err) {
+    return [
+      {
+        id: 'F1',
+        code: err.code || 'VALIDATOR_FAILED',
+        class: 'unreadable',
         severity: 'error',
-        code: 'STATUS_DRIFT',
-        message: `${art.id} has status "${art.status}" which is not in the contract.`,
-        remediation: `Set status to one of: ${contract.status.values.join(', ')}.`,
-      });
-    }
+        auto_repairable: false,
+        message: err.message,
+        remediation: err.remediation || 'Run validate-integrity.cjs and read the remediation on each finding.',
+      },
+    ];
   }
-  for (const bolt of bolts) {
-    for (const wi of lib.splitList(bolt.work_items)) {
-      if (!workItems.some((w) => w.id === wi)) {
-        findings.push({
-          severity: 'error',
-          code: 'ORPHAN_WORK_ITEM',
-          message: `Bolt ${bolt.id} names work item "${wi}" which does not exist.`,
-          remediation: `Create the work item or remove it from ${bolt.id}'s work_items.`,
-        });
-      }
-    }
-    if (bolt.status === 'complete') {
-      for (const wi of lib.splitList(bolt.work_items)) {
-        const item = workItems.find((w) => w.id === wi);
-        if (item && item.status !== 'complete' && item.status !== 'abandoned') {
-          findings.push({
-            severity: 'error',
-            code: 'CASCADE_DRIFT',
-            message: `Bolt ${bolt.id} is complete but work item ${wi} is ${item.status}.`,
-            remediation: `Set ${wi} to complete, or re-run complete-bolt.`,
-          });
-        }
-      }
-    }
-  }
-  return findings;
 }
 
 function suggestNext(lenses, initialized, drafts) {
@@ -208,7 +186,7 @@ function projectStatus(rootPath) {
     autonomy_bias: lib.projectExists(root, contract) ? lib.readProject(root, contract).data.autonomy_bias : null,
     lenses,
     drafts,
-    health: collectHealth(root, contract, intents, workItems, bolts),
+    health: collectHealth(root, contract),
     suggestion: suggestNext(lenses, true, drafts),
   };
 }

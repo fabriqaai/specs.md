@@ -94,6 +94,11 @@ describe('flow contract', () => {
     expect(contract.errors).toEqual({ retryable: 1, terminal: 2, structural: 3 });
   });
 
+  it('declares the integrity stale threshold and maintenance log once', () => {
+    expect(contract.integrity.stale_active_after).toBe('P7D');
+    expect(contract.integrity.maintenance_log).toBe('maintenance-log.md');
+  });
+
   it('does not list status values in another references file', () => {
     const others = readdirSync(REFERENCES)
       .filter((name) => name.endsWith('.yaml') && name !== 'flow-contract.yaml')
