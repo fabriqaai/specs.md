@@ -19,7 +19,12 @@ jobs:
         if: github.event_name == 'pull_request'
         run: git fetch --no-tags --prune origin ${{ github.base_ref }}
 
+      - name: Fetch push parent
+        if: github.event_name == 'push' && github.event.before != '0000000000000000000000000000000000000000'
+        run: git fetch --no-tags --prune origin ${{ github.event.before }} || true
+
       - name: Reject mixed evals and flow implementation changes
         env:
           GITHUB_BASE_REF: ${{ github.base_ref }}
+          EVALS_HOLDOUT_BASE: ${{ github.event_name == 'push' && github.event.before || '' }}
         run: node evals/holdout/run.cjs

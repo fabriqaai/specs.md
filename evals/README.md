@@ -49,4 +49,4 @@ Fixtures map canonical prompts to `using-specsmd` and `specsmd-status`. The runn
 
 ## Holdout
 
-`holdout/run.cjs` (and the test that calls it) fails when the same git commit or the working tree versus merge-base changes both `evals/` and `plugins/specsmd/`. Changing only one side passes. Scenarios, when added, live in `holdout/scenarios/` and are judged on satisfaction, not on whether a test asserted true.
+`holdout/run.cjs` (and the test that calls it) fails when the same git commit or the working tree versus merge-base changes both an evals-side path (`evals/` or `.github/workflows/evals-holdout.yml`) and `plugins/specsmd/`. Changing only one side passes. Renames that leave `evals/` and land in `plugins/specsmd/` count as both sides. On a push, the previous SHA is the base (a zero SHA has no parent). Scenarios, when added, live in `holdout/scenarios/` and are judged on satisfaction, not on whether a test asserted true.

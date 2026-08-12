@@ -5,8 +5,9 @@ const { spawnSync } = require('child_process');
 const path = require('path');
 const { parseArgs, posix } = require('../lib/common.cjs');
 
-const EVALS_PREFIXES = ['evals'];
+const EVALS_PREFIXES = ['evals', '.github/workflows/evals-holdout.yml'];
 const FLOW_IMPL_PREFIXES = ['plugins/specsmd'];
+const ZERO_SHA = /^0+$/;
 
 function git(cwd, args) {
   return spawnSync('git', args, { cwd, encoding: 'utf8' });
@@ -20,6 +21,24 @@ function gitLines(cwd, args) {
     .map((line) => line.trim())
     .filter(Boolean)
     .map(posix);
+}
+
+function parseNameStatusLines(stdout) {
+  const files = [];
+  for (const line of String(stdout || '').split(/\r?\n/)) {
+    if (!line.trim()) continue;
+    const parts = line.split('\t').map((part) => part.trim()).filter(Boolean);
+    if (parts.length < 2) continue;
+    for (let i = 1; i < parts.length; i += 1) {
+      files.push(posix(parts[i]));
+    }
+  }
+  return files;
+}
+
+function isUsableRev(cwd, rev) {
+  if (!rev || ZERO_SHA.test(String(rev))) return false;
+  return git(cwd, ['rev-parse', '--verify', `${rev}^{commit}`]).status === 0;
 }
 
 function matchesPrefix(file, prefix) {
@@ -44,8 +63,8 @@ function classifyChanges(files) {
 }
 
 function resolveBase(cwd, explicit) {
-  if (explicit) return explicit;
-  if (process.env.EVALS_HOLDOUT_BASE) return process.env.EVALS_HOLDOUT_BASE;
+  if (isUsableRev(cwd, explicit)) return explicit;
+  if (isUsableRev(cwd, process.env.EVALS_HOLDOUT_BASE)) return process.env.EVALS_HOLDOUT_BASE;
   if (process.env.GITHUB_BASE_REF) {
     const ref = process.env.GITHUB_BASE_REF;
     const remote = ref.startsWith('origin/') ? ref : `origin/${ref}`;
@@ -69,19 +88,25 @@ function resolveBase(cwd, explicit) {
 
 function collectChangedFiles(cwd, base) {
   const files = new Set();
-  const add = (args) => {
-    for (const file of gitLines(cwd, args)) files.add(file);
+  const addStatus = (args) => {
+    const result = git(cwd, args);
+    if (result.status !== 0) return;
+    for (const file of parseNameStatusLines(result.stdout)) files.add(file);
   };
+  // --no-renames so a move evals/ → plugins/specsmd/ is a delete + add, not dest-only.
+  const nameStatus = ['diff', '--name-status', '--no-renames', '--diff-filter=ACDMR'];
   if (base) {
-    add(['diff', '--name-only', '--diff-filter=ACDMR', base, 'HEAD']);
-    add(['diff', '--name-only', '--diff-filter=ACDMR', base]);
-    add(['diff', '--name-only', '--cached', '--diff-filter=ACDMR', base]);
+    addStatus([...nameStatus, base, 'HEAD']);
+    addStatus([...nameStatus, base]);
+    addStatus([...nameStatus, '--cached', base]);
   } else {
-    add(['diff', '--name-only', '--diff-filter=ACDMR', 'HEAD']);
-    add(['diff', '--name-only', '--cached', '--diff-filter=ACDMR']);
+    addStatus([...nameStatus, 'HEAD']);
+    addStatus([...nameStatus, '--cached']);
   }
-  add(['diff', '--name-only', '--diff-filter=ACDMR']);
-  add(['ls-files', '--others', '--exclude-standard']);
+  addStatus([...nameStatus]);
+  for (const file of gitLines(cwd, ['ls-files', '--others', '--exclude-standard'])) {
+    files.add(file);
+  }
   return [...files];
 }
 
@@ -100,7 +125,7 @@ function evaluateHoldout({ files, cwd, base } = {}) {
         '  1. Land flow implementation without evals/ changes, or',
         '  2. Land evals/ changes without plugins/specsmd/ changes.',
         '',
-        `evals/ files (${classified.evalsFiles.length}):`,
+        `evals-side files (${classified.evalsFiles.length}):`,
         ...classified.evalsFiles.map((file) => `  - ${file}`),
         '',
         `plugins/specsmd/ files (${classified.implFiles.length}):`,
@@ -128,8 +153,10 @@ function printUsage() {
     'Usage:',
     '  node evals/holdout/run.cjs [--root <dir>] [--base <git-rev>] [--json]',
     '',
-    'Fails when the same contribution changes evals/ and plugins/specsmd/.',
-    'Changing only one side passes. Working tree + commits since merge-base are included.',
+    'Fails when the same contribution changes evals-side paths (evals/ or',
+    '.github/workflows/evals-holdout.yml) and plugins/specsmd/.',
+    'Changing only one side passes. Working tree + commits since the base are included.',
+    'On a push, pass --base / EVALS_HOLDOUT_BASE as the previous SHA (zero SHA = no parent).',
   ].join('\n');
 }
 
@@ -164,6 +191,8 @@ module.exports = {
   classifyPath,
   collectChangedFiles,
   evaluateHoldout,
+  isUsableRev,
   matchesPrefix,
+  parseNameStatusLines,
   resolveBase,
 };

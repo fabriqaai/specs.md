@@ -247,8 +247,11 @@ function checkHoldoutIsolation() {
   const evalsOnly = evaluateHoldout({ files: ['evals/README.md'] });
   const implOnly = evaluateHoldout({ files: ['plugins/specsmd/skills/using-specsmd/SKILL.md'] });
   const sibling = evaluateHoldout({ files: ['plugins/specsmd-aidlc/plugin.json', 'evals/README.md'] });
-  if (mixed.ok) {
-    return { result: 'failed', detail: 'Mixed evals + plugins/specsmd change was not rejected.' };
+  const gate = evaluateHoldout({
+    files: ['.github/workflows/evals-holdout.yml', 'plugins/specsmd/plugin.json'],
+  });
+  if (mixed.ok || gate.ok) {
+    return { result: 'failed', detail: 'Mixed evals-side + plugins/specsmd change was not rejected.' };
   }
   if (!evalsOnly.ok || !implOnly.ok) {
     return { result: 'failed', detail: 'A one-sided change was rejected.' };
@@ -261,7 +264,7 @@ function checkHoldoutIsolation() {
   }
   return {
     result: 'verified',
-    detail: 'Mixed evals + plugins/specsmd contributions are rejected; one-sided changes pass.',
+    detail: 'Mixed evals-side + plugins/specsmd contributions are rejected; one-sided changes pass.',
   };
 }
 
