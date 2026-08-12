@@ -6,7 +6,7 @@ kind: overridable
 override: allowed
 enforcement_tier: review
 invariant: "Intents and work items state observable behavior with a behavioral Definition of Done, never mechanism or implementation file names."
-remediation: "In {file}, {change} so the nlspec properties hold."
+remediation: "To satisfy {standard} in {file}, {change}."
 created: 2026-08-09
 ---
 

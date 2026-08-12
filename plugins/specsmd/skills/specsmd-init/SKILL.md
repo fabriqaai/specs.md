@@ -28,10 +28,10 @@ Workspace shape (greenfield vs existing code, single project vs monorepo) is det
 3. Run: `node {SCRIPTS_DIR}/init-project.cjs {projectRoot} --autonomy-bias {bias}`
 4. Report the artifact root, the recorded bias, and the detected workspace shape.
 5. If `data.standards.pending_confirmation` is non-empty, present those inferred standards (id, scope, invariant, inferred_from) and wait for accept / edit / skip. That confirmation is not a second required question — initialization already completed after autonomy bias.
-   - Accept: `node {SCRIPTS_DIR}/record-standards.cjs {projectRoot} --confirm`
-   - Edit: `node {SCRIPTS_DIR}/record-standards.cjs {projectRoot} --standards-json '{...}'`
+   - Accept the inferred set: `node {SCRIPTS_DIR}/record-standards.cjs {projectRoot} --confirm`
+   - Edit: `node {SCRIPTS_DIR}/record-standards.cjs {projectRoot} --standards-json '<json>'` where `<json>` is an array of `{id, scope, invariant, enforcement_tier}` objects, or an object with `standards`, `proposals`, or `pending_confirmation` (the init payload round-trips). Any other JSON shape is rejected.
    - Skip: leave them unrecorded.
-6. Do not record inferred standards until the user confirms.
+6. Do not record inferred standards until the user confirms. `--standards-json` without a valid array is not confirmation.
 
 Do not write files yourself. The scripts create `docs/specsmd/` and record standards.
 

@@ -731,7 +731,11 @@ function initProjectTree(rootPath, contract, autonomyBias) {
 
 function ensureProject(rootPath, contract) {
   if (!projectExists(rootPath, contract)) {
-    initProjectTree(rootPath, contract);
+    throw terminal(
+      'PROJECT_MISSING',
+      'No artifact root yet.',
+      'Run init-project with --autonomy-bias first. Autonomy bias is the one required question; this script will not default it.'
+    );
   }
 }
 

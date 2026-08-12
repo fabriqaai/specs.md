@@ -6,7 +6,7 @@ kind: overridable
 override: allowed
 enforcement_tier: review
 invariant: "{{invariant}}"
-remediation: "In {file}, {change} so the file matches the coding invariant of its scope."
+remediation: "To satisfy {standard} in {file}, {change}."
 created: "{{created}}"
 ---
 

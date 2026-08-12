@@ -6,7 +6,7 @@ kind: overridable
 override: allowed
 enforcement_tier: review
 invariant: "{{invariant}}"
-remediation: "In {file}, {change} so changed behavior is covered by automated tests."
+remediation: "To satisfy {standard} in {file}, {change}."
 created: "{{created}}"
 ---
 

@@ -227,6 +227,7 @@ artifact_types:
       - invariant
       - remediation
       - created
+      - scope
   decision:
     path: decisions/{id}.md
     identifier_pattern: "{id}"

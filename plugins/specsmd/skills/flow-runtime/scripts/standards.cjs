@@ -109,23 +109,107 @@ function scopesDir(rootPath, contract) {
   return path.join(rootStandardsDir(rootPath, contract), 'scopes');
 }
 
-function standardPath(rootPath, id, scope, contract) {
-  lib.assertSafeId(id, 'standard id');
-  if (!scope || scope === 'root') {
-    return path.join(rootStandardsDir(rootPath, contract), `${id}.md`);
-  }
+function normalizeScope(scope) {
+  if (scope == null || scope === true || scope === '') return 'root';
   const parts = String(scope)
     .split(/[\\/]/)
     .map((p) => p.trim())
     .filter(Boolean);
-  if (!parts.length || parts.some((p) => p === '..' || p === '.')) {
+  if (parts.some((p) => p === '..' || p === '.')) {
     throw lib.terminal(
       'SCOPE_INVALID',
       `Scope "${scope}" is not a safe module path.`,
       'Use a project-relative module path such as packages/api, with no parent segments.'
     );
   }
-  return path.join(scopesDir(rootPath, contract), ...parts, `${id}.md`);
+  // "root", "root/", " root ", "root//", "root\\" all mean the reserved project root.
+  if (!parts.length || (parts.length === 1 && parts[0] === 'root')) return 'root';
+  return parts.join('/');
+}
+
+function standardPath(rootPath, id, scope, contract) {
+  lib.assertSafeId(id, 'standard id');
+  const normalized = normalizeScope(scope);
+  if (normalized === 'root') {
+    return path.join(rootStandardsDir(rootPath, contract), `${id}.md`);
+  }
+  return path.join(scopesDir(rootPath, contract), ...normalized.split('/'), `${id}.md`);
+}
+
+function isProjectRootScope(scope) {
+  return scope && scope.project_root === true;
+}
+
+function parseStandardsJson(raw) {
+  if (raw == null) return null;
+  if (raw === true || raw === false) {
+    throw lib.terminal(
+      'STANDARDS_JSON_INVALID',
+      'Could not parse --standards-json.',
+      'Pass a JSON array of proposals, or an object with standards, proposals, or pending_confirmation.'
+    );
+  }
+  let parsed = raw;
+  if (typeof raw === 'string') {
+    const trimmed = raw.trim();
+    if (!trimmed) {
+      throw lib.terminal(
+        'STANDARDS_JSON_INVALID',
+        'Could not parse --standards-json.',
+        'Pass a JSON array of proposals, or an object with standards, proposals, or pending_confirmation.'
+      );
+    }
+    try {
+      parsed = JSON.parse(trimmed);
+    } catch {
+      throw lib.terminal(
+        'STANDARDS_JSON_INVALID',
+        'Could not parse --standards-json.',
+        'Pass a JSON array of proposals, or an object with standards, proposals, or pending_confirmation.'
+      );
+    }
+  }
+  if (Array.isArray(parsed)) return parsed;
+  if (parsed && typeof parsed === 'object') {
+    if (Array.isArray(parsed.standards)) return parsed.standards;
+    if (Array.isArray(parsed.proposals)) return parsed.proposals;
+    if (Array.isArray(parsed.pending_confirmation)) return parsed.pending_confirmation;
+  }
+  throw lib.terminal(
+    'STANDARDS_JSON_INVALID',
+    '--standards-json must be an array of proposals.',
+    'Pass a JSON array, or {standards:[...]}, {proposals:[...]}, or the init payload {pending_confirmation:[...]}.'
+  );
+}
+
+function hydrateProposals(list, contract, extra) {
+  if (!list) return null;
+  return list.map((item) => {
+    if (item && item.body && item.data) {
+      if (extra && extra.overwrite) item.overwrite = true;
+      return item;
+    }
+    const id = item && item.id;
+    if (!id) {
+      throw lib.terminal(
+        'STANDARD_ID_REQUIRED',
+        'A proposed standard is missing id.',
+        'Each proposal needs an id from the shipped or overridable set.'
+      );
+    }
+    const vars = Object.assign({}, item.values || {}, {
+      invariant: item.invariant,
+      created: item.created,
+    });
+    const proposal = proposalFromTemplate(id, vars, contract, item.scope || 'root');
+    if (item.invariant) proposal.invariant = item.invariant;
+    if (item.enforcement_tier) proposal.enforcement_tier = item.enforcement_tier;
+    if (item.remediation) proposal.remediation = item.remediation;
+    if (item.title) proposal.title = item.title;
+    proposal.inferred_from = item.inferred_from || [];
+    if (extra && extra.overwrite) proposal.overwrite = true;
+    return proposal;
+  });
 }
 
 function isDir(p) {
@@ -327,9 +411,12 @@ function listScopes(rootPath, contract) {
       id: 'root',
       directory: rootDir,
       ids: listMdStems(rootDir),
+      project_root: true,
     },
   ];
-  return scopes.concat(discoverModuleScopes(rootPath, contract));
+  return scopes.concat(
+    discoverModuleScopes(rootPath, contract).map((scope) => Object.assign({ project_root: false }, scope))
+  );
 }
 
 function matchingScopes(rootPath, filePath, contract) {
@@ -345,33 +432,37 @@ function matchingScopes(rootPath, filePath, contract) {
   }
   const all = listScopes(root, contract);
   const matched = all.filter((scope) => {
-    if (scope.id === 'root') return true;
+    if (isProjectRootScope(scope)) return true;
     return rel === scope.id || rel.startsWith(scope.id + '/');
   });
   matched.sort((a, b) => {
-    if (a.id === 'root') return 1;
-    if (b.id === 'root') return -1;
-    return b.id.length - a.id.length;
+    const aRoot = isProjectRootScope(a);
+    const bRoot = isProjectRootScope(b);
+    if (aRoot && !bRoot) return 1;
+    if (bRoot && !aRoot) return -1;
+    if (b.id.length !== a.id.length) return b.id.length - a.id.length;
+    return a.id < b.id ? -1 : a.id > b.id ? 1 : 0;
   });
   return { file: rel, scopes: matched };
+}
+
+function ignoredConstitutionOverrides(rootPath, contract) {
+  const constId = constitutionId(contract);
+  const ignored = [];
+  for (const scope of discoverModuleScopes(rootPath, contract)) {
+    const nested = path.join(scope.directory, `${constId}.md`);
+    if (isFile(nested)) {
+      ignored.push(collectIgnoreReason(scope.id, posixRel(path.resolve(rootPath), nested)));
+    }
+  }
+  ignored.sort((a, b) => (a.path < b.path ? -1 : a.path > b.path ? 1 : 0));
+  return ignored;
 }
 
 function resolveOne(id, fileRel, scopes, rootPath, contract) {
   const constId = constitutionId(contract);
   if (id === constId) {
-    const rootScope = scopes.find((s) => s.id === 'root') || {
-      id: 'root',
-      directory: rootStandardsDir(rootPath, contract),
-    };
-    const file = path.join(rootScope.directory, `${id}.md`);
-    const ignored = [];
-    for (const scope of scopes) {
-      if (scope.id === 'root') continue;
-      const nested = path.join(scope.directory, `${id}.md`);
-      if (isFile(nested)) {
-        ignored.push(collectIgnoreReason(scope.id, posixRel(path.resolve(rootPath), nested)));
-      }
-    }
+    const file = path.join(rootStandardsDir(rootPath, contract), `${id}.md`);
     if (!isFile(file)) return null;
     const parsed = readStandardFile(file);
     return {
@@ -385,7 +476,7 @@ function resolveOne(id, fileRel, scopes, rootPath, contract) {
       invariant: parsed.data.invariant || '',
       remediation: parsed.data.remediation || '',
       won_because: 'constitution is never overridden; root always wins',
-      ignored_overrides: ignored,
+      ignored_overrides: ignoredConstitutionOverrides(rootPath, contract),
     };
   }
 
@@ -393,14 +484,14 @@ function resolveOne(id, fileRel, scopes, rootPath, contract) {
     const file = path.join(scope.directory, `${id}.md`);
     if (!isFile(file)) continue;
     const parsed = readStandardFile(file);
-    const nearer =
-      scope.id === 'root'
-        ? 'no nearer scope than root declares this standard'
-        : `nearest scope ${scope.id} has ${id} (longest matching prefix of ${fileRel})`;
+    const projectRoot = isProjectRootScope(scope);
+    const nearer = projectRoot
+      ? 'no nearer scope than root declares this standard'
+      : `nearest scope ${scope.id} has ${id} (longest matching prefix of ${fileRel})`;
     return {
       id,
       title: parsed.data.title || id,
-      scope: scope.id,
+      scope: projectRoot ? 'root' : scope.id,
       path: posixRel(path.resolve(rootPath), file),
       kind: parsed.data.kind || 'overridable',
       override: parsed.data.override || 'allowed',
@@ -420,7 +511,7 @@ function resolveStandardsForFile(rootPath, filePath, contract) {
   const ids = new Set();
   for (const scope of scopes) {
     for (const id of scope.ids || []) {
-      if (id === constitutionId(c) && scope.id !== 'root') continue;
+      if (id === constitutionId(c) && !isProjectRootScope(scope)) continue;
       ids.add(id);
     }
   }
@@ -432,12 +523,11 @@ function resolveStandardsForFile(rootPath, filePath, contract) {
   return {
     file,
     scopes_considered: scopes.map((scope) => ({
-      id: scope.id,
+      id: isProjectRootScope(scope) ? 'root' : scope.id,
       path: posixRel(path.resolve(rootPath), scope.directory),
-      reason:
-        scope.id === 'root'
-          ? 'project root scope'
-          : `declared scope ${scope.id} prefixes ${file}`,
+      reason: isProjectRootScope(scope)
+        ? 'project root scope'
+        : `declared scope ${scope.id} prefixes ${file}`,
     })),
     standards,
   };
@@ -489,7 +579,7 @@ function reportViolation(rootPath, opts, contract) {
 function writeStandard(rootPath, proposal, contract) {
   const c = contract || lib.loadContract();
   const id = proposal.id;
-  const scope = proposal.scope || 'root';
+  const scope = normalizeScope(proposal.scope);
   if (isConstitutionId(id, c) && scope !== 'root') {
     throw lib.terminal(
       'CONSTITUTION_IMMUNE',
@@ -954,6 +1044,7 @@ module.exports = {
   enforcementTiers,
   shippedIds,
   overridableIds,
+  normalizeScope,
   standardPath,
   listScopes,
   resolveStandardsForFile,
@@ -967,6 +1058,8 @@ module.exports = {
   inferStandards,
   proposalFromTemplate,
   publicProposal,
+  hydrateProposals,
+  parseStandardsJson,
   loadTemplate,
   parseStandardText,
 };

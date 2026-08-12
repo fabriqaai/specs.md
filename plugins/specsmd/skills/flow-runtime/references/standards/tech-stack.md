@@ -6,7 +6,7 @@ kind: overridable
 override: allowed
 enforcement_tier: principle
 invariant: "{{invariant}}"
-remediation: "In {file}, {change} so new work uses the declared stack for this scope."
+remediation: "To satisfy {standard} in {file}, {change}."
 created: "{{created}}"
 ---
 

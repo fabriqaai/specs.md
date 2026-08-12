@@ -6,7 +6,7 @@ kind: constitution
 override: never
 enforcement_tier: review
 invariant: "Rules in this constitution hold for every file in the project and cannot be waived by a module standard."
-remediation: "In {file}, {change}. Required by constitution; a module standard cannot waive it."
+remediation: "To satisfy {standard} in {file}, {change}. A module standard cannot waive it."
 created: "{{created}}"
 ---
 

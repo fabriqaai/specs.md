@@ -6,7 +6,7 @@ kind: overridable
 override: allowed
 enforcement_tier: principle
 invariant: "{{invariant}}"
-remediation: "In {file}, {change} so the change stays inside the declared architectural boundaries."
+remediation: "To satisfy {standard} in {file}, {change}."
 created: "{{created}}"
 ---
 

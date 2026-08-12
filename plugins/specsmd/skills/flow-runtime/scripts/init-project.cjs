@@ -1,59 +1,15 @@
 #!/usr/bin/env node
 /**
  * Create the docs/specsmd/ artifact tree.
- * Usage: node init-project.cjs <rootPath> [--autonomy-bias=balanced] [--confirm-standards]
+ * Usage: node init-project.cjs <rootPath> [--autonomy-bias=balanced] [--confirm-standards] [--standards-json '...']
  *
  * Autonomy bias is the only required input. Workspace shape is detected.
  * Inferred standards for an existing codebase are returned as
- * pending_confirmation and are not written until --confirm-standards.
+ * pending_confirmation and are not written until --confirm-standards
+ * or a --standards-json confirmation payload.
  */
 const lib = require('./lib.cjs');
 const standards = require('./standards.cjs');
-
-function parseStandardsJson(raw) {
-  if (raw == null || raw === true || raw === '') return null;
-  if (Array.isArray(raw)) return raw;
-  if (typeof raw === 'object') return raw.standards || raw.proposals || null;
-  try {
-    const parsed = JSON.parse(String(raw));
-    if (Array.isArray(parsed)) return parsed;
-    if (parsed && Array.isArray(parsed.standards)) return parsed.standards;
-    if (parsed && Array.isArray(parsed.proposals)) return parsed.proposals;
-    return null;
-  } catch {
-    throw lib.terminal(
-      'STANDARDS_JSON_INVALID',
-      'Could not parse --standards-json.',
-      'Pass a JSON array of standard proposals (id, scope, invariant, enforcement_tier).'
-    );
-  }
-}
-
-function hydrateProposals(list, contract) {
-  if (!list) return null;
-  return list.map((item) => {
-    if (item && item.body && item.data) return item;
-    const id = item.id;
-    if (!id) {
-      throw lib.terminal(
-        'STANDARD_ID_REQUIRED',
-        'A proposed standard is missing id.',
-        'Each proposal needs an id from the shipped or overridable set.'
-      );
-    }
-    const vars = Object.assign({}, item.values || {}, {
-      invariant: item.invariant,
-      created: item.created,
-    });
-    const proposal = standards.proposalFromTemplate(id, vars, contract, item.scope || 'root');
-    if (item.invariant) proposal.invariant = item.invariant;
-    if (item.enforcement_tier) proposal.enforcement_tier = item.enforcement_tier;
-    if (item.remediation) proposal.remediation = item.remediation;
-    if (item.title) proposal.title = item.title;
-    proposal.inferred_from = item.inferred_from || [];
-    return proposal;
-  });
-}
 
 function initProject(rootPath, autonomyBias, opts) {
   const options = opts || {};
@@ -67,7 +23,16 @@ function initProject(rootPath, autonomyBias, opts) {
     options.confirmStandards === true ||
     options['confirm-standards'] === true ||
     options.confirmStandards === 'true';
-  const edited = hydrateProposals(parseStandardsJson(options.standards || options['standards-json']), contract);
+  const rawJson =
+    Object.prototype.hasOwnProperty.call(options, 'standards')
+      ? options.standards
+      : Object.prototype.hasOwnProperty.call(options, 'standards-json')
+        ? options['standards-json']
+        : undefined;
+  const edited =
+    rawJson === undefined
+      ? null
+      : standards.hydrateProposals(standards.parseStandardsJson(rawJson), contract, { overwrite: true });
 
   const inferred =
     workspace.kind === 'existing'
@@ -77,7 +42,7 @@ function initProject(rootPath, autonomyBias, opts) {
   const recorded = foundation.slice();
   let pending_confirmation = [];
 
-  if (workspace.kind === 'greenfield' || confirm) {
+  if (workspace.kind === 'greenfield' || confirm || edited) {
     const toWrite = edited || inferred;
     recorded.push(...standards.recordProposals(root, toWrite, contract));
   } else {
@@ -110,10 +75,13 @@ function initProject(rootPath, autonomyBias, opts) {
 if (require.main === module) {
   lib.runMain(() => {
     const { positional, flags } = lib.parseArgs(process.argv);
-    return initProject(positional[0], flags['autonomy-bias'], {
+    const opts = {
       confirmStandards: flags['confirm-standards'] === true || flags['confirm-standards'] === 'true',
-      standards: flags['standards-json'],
-    });
+    };
+    if (Object.prototype.hasOwnProperty.call(flags, 'standards-json')) {
+      opts.standards = flags['standards-json'];
+    }
+    return initProject(positional[0], flags['autonomy-bias'], opts);
   });
 }
 

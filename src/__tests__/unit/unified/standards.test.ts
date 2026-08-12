@@ -23,6 +23,8 @@ const { recordStandards } = require(join(SCRIPTS, 'record-standards.cjs'));
 const { resolveStandards } = require(join(SCRIPTS, 'resolve-standards.cjs'));
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const { reportViolation } = require(join(SCRIPTS, 'report-violation.cjs'));
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const { initIntent } = require(join(SCRIPTS, 'init-intent.cjs'));
 
 function runScript(script: string, args: string[]) {
   return spawnSync(process.execPath, [join(SCRIPTS, script), ...args], {
@@ -85,13 +87,16 @@ describe('standards system', () => {
         const parsed = lib.parseFrontmatter(readFileSync(join(TEMPLATES, `${id}.md`), 'utf8'));
         expect(parsed.data.invariant, `${id} invariant`).toBeTruthy();
         expect(tiers, `${id} tier`).toContain(parsed.data.enforcement_tier);
-        expect(String(parsed.data.remediation), `${id} remediation`).toMatch(/\{file\}/);
+        expect(String(parsed.data.remediation), `${id} standard`).toMatch(/\{standard\}/);
+        expect(String(parsed.data.remediation), `${id} file`).toMatch(/\{file\}/);
         expect(String(parsed.data.remediation), `${id} change`).toMatch(/\{change\}/);
       }
       const nlspec = lib.parseFrontmatter(readFileSync(join(REFERENCES, 'nlspec.md'), 'utf8'));
       expect(nlspec.data.invariant).toBeTruthy();
       expect(tiers).toContain(nlspec.data.enforcement_tier);
+      expect(String(nlspec.data.remediation)).toMatch(/\{standard\}/);
       expect(String(nlspec.data.remediation)).toMatch(/\{file\}/);
+      expect(String(nlspec.data.remediation)).toMatch(/\{change\}/);
     });
   });
 
@@ -140,9 +145,86 @@ describe('standards system', () => {
       expect(existsSync(join(root, 'docs/specsmd/standards/tech-stack.md'))).toBe(false);
       expect(existsSync(join(root, 'docs/specsmd/standards/coding.md'))).toBe(false);
 
-      const recorded = recordStandards(root, {});
+      expect(() => recordStandards(root, {})).toThrow(/CONFIRM_REQUIRED|without confirmation/i);
+      expect(existsSync(join(root, 'docs/specsmd/standards/tech-stack.md'))).toBe(false);
+
+      const recorded = recordStandards(root, { confirm: true });
       expect(existsSync(join(root, 'docs/specsmd/standards/tech-stack.md'))).toBe(true);
       expect(recorded.recorded.some((r: { id: string }) => r.id === 'tech-stack')).toBe(true);
+    });
+
+    it('treats --standards-json as confirmation only when the payload is a proposal list', () => {
+      writeFileSync(join(root, 'package.json'), JSON.stringify({ name: 'app' }), 'utf8');
+      mkdirSync(join(root, 'src'), { recursive: true });
+      writeFileSync(join(root, 'src/index.ts'), 'export {}\n', 'utf8');
+      writeFileSync(join(root, 'tsconfig.json'), '{}', 'utf8');
+      initProject(root, 'balanced');
+
+      expect(() => recordStandards(root, { standards: '{}' })).toThrow(
+        /must be an array of proposals|STANDARDS_JSON_INVALID/i
+      );
+      expect(() => recordStandards(root, { standards: true })).toThrow(
+        /Could not parse --standards-json|STANDARDS_JSON_INVALID/i
+      );
+      expect(() => recordStandards(root, { standards: { foo: 1 } })).toThrow(
+        /must be an array of proposals|STANDARDS_JSON_INVALID/i
+      );
+      expect(existsSync(join(root, 'docs/specsmd/standards/tech-stack.md'))).toBe(false);
+
+      recordStandards(root, {
+        standards: {
+          pending_confirmation: [
+            {
+              id: 'tech-stack',
+              scope: 'root',
+              invariant: 'USER EDIT',
+              enforcement_tier: 'principle',
+            },
+          ],
+        },
+      });
+      const md = lib.readMarkdown(join(root, 'docs/specsmd/standards/tech-stack.md'));
+      expect(md.data.invariant).toBe('USER EDIT');
+    });
+
+    it('overwrites an existing standard when the caller sent an explicit edit list', () => {
+      writeFileSync(join(root, 'package.json'), JSON.stringify({ name: 'app' }), 'utf8');
+      mkdirSync(join(root, 'src'), { recursive: true });
+      writeFileSync(join(root, 'src/index.ts'), 'export {}\n', 'utf8');
+      initProject(root, 'balanced');
+      recordStandards(root, { confirm: true });
+      recordStandards(root, {
+        standards: [
+          {
+            id: 'tech-stack',
+            scope: 'root',
+            invariant: 'Corrected stack invariant.',
+            enforcement_tier: 'principle',
+          },
+        ],
+      });
+      const md = lib.readMarkdown(join(root, 'docs/specsmd/standards/tech-stack.md'));
+      expect(md.data.invariant).toBe('Corrected stack invariant.');
+    });
+
+    it('records --standards-json at init as the confirmation payload', () => {
+      writeFileSync(join(root, 'package.json'), JSON.stringify({ name: 'app' }), 'utf8');
+      mkdirSync(join(root, 'src'), { recursive: true });
+      writeFileSync(join(root, 'src/index.ts'), 'export {}\n', 'utf8');
+      const result = initProject(root, 'balanced', {
+        standards: [{ id: 'tech-stack', invariant: 'EDITED', enforcement_tier: 'principle' }],
+      });
+      expect(result.standards.pending_confirmation).toEqual([]);
+      const md = lib.readMarkdown(join(root, 'docs/specsmd/standards/tech-stack.md'));
+      expect(md.data.invariant).toBe('EDITED');
+    });
+
+    it('refuses other scripts until init-project has asked autonomy bias', () => {
+      expect(() => initIntent(root, { title: 'Something' })).toThrow(
+        /No artifact root yet|PROJECT_MISSING|autonomy-bias/i
+      );
+      expect(existsSync(join(root, 'docs/specsmd/project.md'))).toBe(false);
+      expect(existsSync(join(root, 'docs/specsmd/standards/constitution.md'))).toBe(false);
     });
 
     it('records edited inferred standards from the confirmation payload, not silently', () => {
@@ -229,6 +311,60 @@ describe('standards system', () => {
       ).toThrow(/CONSTITUTION_IMMUNE|cannot be recorded at module scope/i);
     });
 
+    it('treats root/, root//, and root\\\\ as the reserved project root, not a second scope', () => {
+      initProject(root, 'balanced');
+      mkdirSync(join(root, 'src'), { recursive: true });
+      writeFileSync(join(root, 'src/app.ts'), 'export {}\n', 'utf8');
+      for (const spelling of ['root/', 'root//', ' root ', 'root\\']) {
+        expect(standards.normalizeScope(spelling)).toBe('root');
+        const written = standards.writeStandard(
+          root,
+          { id: 'tech-stack', scope: spelling, invariant: `from ${spelling}`, overwrite: true },
+          lib.loadContract()
+        );
+        expect(written.path).toBe('docs/specsmd/standards/tech-stack.md');
+        expect(existsSync(join(root, 'docs/specsmd/standards/scopes/root/tech-stack.md'))).toBe(false);
+      }
+      mkdirSync(join(root, 'docs/specsmd/standards/scopes/root'), { recursive: true });
+      writeFileSync(
+        join(root, 'docs/specsmd/standards/scopes/root/constitution.md'),
+        [
+          '---',
+          'id: constitution',
+          'title: shadow',
+          'status: active',
+          'kind: constitution',
+          'override: never',
+          'enforcement_tier: review',
+          'invariant: "shadow constitution"',
+          'remediation: "To satisfy {standard} in {file}, {change}."',
+          '---',
+          '',
+          '# shadow',
+          '',
+        ].join('\n'),
+        'utf8'
+      );
+      const resolved = resolveStandards(root, 'src/app.ts');
+      const rootEntries = resolved.scopes_considered.filter((s: { id: string }) => s.id === 'root');
+      expect(rootEntries).toHaveLength(1);
+      expect(rootEntries[0].path).toBe('docs/specsmd/standards');
+      const constitution = resolved.standards.find((s: { id: string }) => s.id === 'constitution');
+      expect(constitution.path).toBe('docs/specsmd/standards/constitution.md');
+      expect(constitution.invariant).not.toBe('shadow constitution');
+      expect(constitution.ignored_overrides).toEqual(
+        expect.arrayContaining([
+          {
+            scope: 'root',
+            path: 'docs/specsmd/standards/scopes/root/constitution.md',
+            reason: 'constitution is never overridden; root always wins',
+          },
+        ])
+      );
+      const again = resolveStandards(root, 'src/app.ts');
+      expect(again).toEqual(resolved);
+    });
+
     it('is deterministic and explainable for every file in a monorepo test tree', () => {
       seedMonorepo();
       const files = ['packages/api/src/handler.ts', 'packages/web/src/app.ts', 'scripts/deploy.sh'];
@@ -260,14 +396,16 @@ describe('standards system', () => {
   describe('violations', () => {
     it('reports a violation as a remediation naming the standard, the file, and the change', () => {
       initProject(root, 'balanced');
-      const result = reportViolation(root, {
-        standard: 'constitution',
-        file: 'src/secret.ts',
-        change: 'remove the committed API key',
-      });
-      expect(result.remediation).toContain('constitution');
-      expect(result.remediation).toContain('src/secret.ts');
-      expect(result.remediation).toContain('remove the committed API key');
+      for (const id of ['constitution', 'tech-stack', 'coding', 'testing', 'architecture', 'nlspec']) {
+        const result = reportViolation(root, {
+          standard: id,
+          file: 'src/a.ts',
+          change: 'do the thing',
+        });
+        expect(result.remediation, id).toContain(id);
+        expect(result.remediation, id).toContain('src/a.ts');
+        expect(result.remediation, id).toContain('do the thing');
+      }
     });
   });
 
@@ -280,6 +418,13 @@ describe('standards system', () => {
       const refused = runScript('record-standards.cjs', [root]);
       expect(refused.status).toBe(2);
       expect(refused.stdout).toMatch(/CONFIRM_REQUIRED|without confirmation/i);
+      const emptyObject = runScript('record-standards.cjs', [root, '--standards-json', '{}']);
+      expect(emptyObject.status).toBe(2);
+      expect(emptyObject.stdout).toMatch(/STANDARDS_JSON_INVALID/i);
+      const flagOnly = runScript('record-standards.cjs', [root, '--standards-json']);
+      expect(flagOnly.status).toBe(2);
+      expect(flagOnly.stdout).toMatch(/STANDARDS_JSON_INVALID/i);
+      expect(existsSync(join(root, 'docs/specsmd/standards/tech-stack.md'))).toBe(false);
       const resolved = runScript('resolve-standards.cjs', [root, '--file', 'src/index.js']);
       expect(resolved.status).toBe(0);
       const payload = JSON.parse(resolved.stdout);
