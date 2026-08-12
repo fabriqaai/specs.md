@@ -15,6 +15,8 @@ Each plugin's root `plugin.json` conforms to the vendor-neutral [Agent Plugins s
 
 ## Install
 
+The unified flow is marketplace-only. There is no v2 npm CLI. One marketplace install of `specsmd` is the complete flow (bootstrap + navigator included).
+
 ### Claude Code
 
 ```bash
@@ -32,23 +34,30 @@ Each plugin's root `plugin.json` conforms to the vendor-neutral [Agent Plugins s
 codex plugin marketplace add fabriqaai/specs.md
 ```
 
-Or link the skills directly (Codex reads `.agents/skills/`):
+### Manual install (no marketplace)
+
+Tools without a plugin marketplace get the same skills by copying them into the tool's skills directory. Follow this path verbatim from the repository root of a project (or any directory whose tool reads `.agents/skills/`):
 
 ```bash
-mkdir -p ~/.agents/skills
-ln -s /path/to/specs.md/plugins/specsmd-aidlc/skills/* ~/.agents/skills/
+mkdir -p .agents/skills
+cp -R plugins/specsmd/skills/* .agents/skills/
 ```
 
-### Cursor / Copilot / Gemini / Zed / others
+Each skill is then invocable by name (`using-specsmd`, `specsmd-status`, `intent-create`, …). Optionally append `plugins/specsmd/agents-md/AGENTS-fragment.md` to the project's `AGENTS.md`. Cursor and Copilot also read `.claude/skills/`; a symlink is enough:
 
-Every tool that reads the neutral `.agents/skills/` location works with a copy or symlink of a plugin's `skills/` directory into `<project>/.agents/skills/`. Cursor and Copilot also read `.claude/skills/` directly.
+```bash
+mkdir -p .claude
+ln -s ../.agents/skills .claude/skills
+```
+
+Legacy v1 plugins use the same copy pattern from `plugins/specsmd-<flow>/skills/` **and** `plugins/specsmd-core/skills/`.
 
 ## Design rules (for contributors)
 
 - One directory per skill: `skills/<name>/SKILL.md`; `name` frontmatter must equal the directory name.
 - Frontmatter: the six spec fields (`name`, `description`, `license`, `compatibility`, `metadata`, `allowed-tools`) plus `disable-model-invocation` for user-invoked verb skills. Nothing else.
-- Descriptions are triggers, not summaries: say when to use the skill; never enumerate its workflow steps. Verb skills ≤300 chars; phase skills ≤600.
-- Phase skills are the only model-invocable skills. Verb skills carry `disable-model-invocation: true` so they cost no model context and are invoked by name.
+- Descriptions are triggers, not summaries: say when to use the skill; never enumerate its workflow steps. Verb skills ≤350 chars; bootstrap/navigator ≤600.
+- In the unified plugin, only `using-specsmd` and `specsmd-status` are model-invocable. Every other skill carries `disable-model-invocation: true` so it costs no model context and is invoked by name. Legacy plugins keep phase skills model-invocable.
 - Supporting material ships inside the skill: `references/` (templates, schemas, bolt types), `scripts/` (Node .cjs helpers), `assets/`.
 - Skills reference each other by name ("invoke the `bolt-plan` skill"), never by path.
 - User-project artifact paths (`memory-bank/`, `.specs-fire/`, `.specs-ideation/`, `specs/`) are part of the flow contract and stay as-is.
@@ -58,4 +67,4 @@ Validation: `cd src && npx vitest run __tests__/plugins-validation.test.ts`
 
 ## Relationship to `npx specsmd install`
 
-The npm installer keeps working unchanged and remains the path for tools without plugin/skill support. These plugins are the native-skills channel; both produce workflows over the same project artifacts, and projects started with either continue to work with the other.
+The npm installer is the v1 channel. It is unchanged and does not install the unified flow. Marketplace-less tools use the manual copy path above for `specsmd`; v1 flows may still use `npx specsmd install` or `npx specsmd skills`.

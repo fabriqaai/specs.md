@@ -1,6 +1,6 @@
 ---
 name: using-specsmd
-description: Use at the start of every session in a specsmd project, before any other response. Establishes how to engage the unified bolt flow under docs/specsmd/.
+description: Use at the start of every session in a specsmd project, before any other response or action. Establishes how and when to engage specsmd flow skills for the unified bolt flow under docs/specsmd/.
 license: MIT
 metadata:
   version: "1.0.0"

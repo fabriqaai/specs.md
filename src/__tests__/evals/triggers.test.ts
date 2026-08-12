@@ -26,6 +26,17 @@ describe('trigger evals', () => {
     }
   });
 
+  it('passes every fixture prompt against shipped plugins/specsmd descriptions', () => {
+    const report = runTriggerEvals({ root: REPO_ROOT });
+    expect(report.summary.skills_found).toEqual(expect.arrayContaining(['using-specsmd', 'specsmd-status']));
+    const failed = report.results.filter((row: { outcome: string }) => row.outcome !== 'pass');
+    expect(failed, JSON.stringify(failed)).toEqual([]);
+    expect(report.summary.fail).toBe(0);
+    expect(report.summary.skipped).toBe(0);
+    expect(report.summary.pass).toBe(report.summary.total);
+    expect(report.summary.total).toBeGreaterThanOrEqual(9);
+  });
+
   it('skips honestly when plugins/specsmd skill files are missing', () => {
     const report = runTriggerEvals({ root: REPO_ROOT });
     const skillDir = join(REPO_ROOT, 'plugins', UNIFIED_PLUGIN, 'skills');

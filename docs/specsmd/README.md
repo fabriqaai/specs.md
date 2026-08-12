@@ -21,7 +21,7 @@ Concept: `.specs-ideation/sessions/aidlc-fire-unification-20260809/concept-brief
 
 - Every intent and work item is an **nlspec** — see `standards/nlspec.md`: observable behavior with engineering-grade precision; no mechanism, no code, no implementation file names. The spec is the source of truth; code is derived.
 - State lives in artifact frontmatter — there is no central state file.
-- The flow's tooling (the `specsmd` plugin's `flow-runtime` scripts) is the only state writer. Install locally with `/plugin marketplace add <path-to-this-repo>` then `/plugin install specsmd@specsmd`.
+- The flow's tooling (the `specsmd` plugin's `flow-runtime` scripts) is the only state writer. Install locally with `/plugin marketplace add <path-to-this-repo>` then `/plugin install specsmd@specsmd`. Marketplace-less tools: copy `plugins/specsmd/skills/*` into `.agents/skills/` (verbatim path in `plugins/README.md`).
 - Bolts are created when work starts, not planned upfront (draft bolts are optional proposals).
 - Nothing here enforces sequence; skills recommend, state gates. Guardrail failures speak in remediation instructions.
 - Evals and verifiers precede implementation (work item 000).

@@ -73,7 +73,7 @@ function loadSkills(): Skill[] {
 const skills = loadSkills();
 
 describe('plugins: structure', () => {
-  it('finds all five plugins with at least one skill each', () => {
+  it('finds every listed plugin with at least one skill each', () => {
     for (const plugin of PLUGIN_NAMES) {
       const withSkills = skills.filter((s) => s.plugin === plugin);
       expect(withSkills.length, `${plugin} has no skills`).toBeGreaterThan(0);
@@ -195,6 +195,37 @@ describe('plugins: manifests and marketplace', () => {
     expect(rootMarket.metadata.pluginRoot).toBe('./plugins');
     const listed = rootMarket.plugins.map((p: { name: string }) => p.name).sort();
     expect(listed).toEqual([...PLUGIN_NAMES].sort());
+  });
+
+  it('lists specsmd first and keeps both marketplace plugin lists in sync', () => {
+    const rootMarketPath = path.resolve(__dirname, '..', '..', '.claude-plugin', 'marketplace.json');
+    const rootMarket = JSON.parse(fs.readFileSync(rootMarketPath, 'utf8'));
+    const pick = (p: { name: string; source: string; version: string; description: string }) => ({
+      name: p.name,
+      source: p.source,
+      version: p.version,
+      description: p.description,
+    });
+    expect(marketplace.plugins[0].name).toBe('specsmd');
+    expect(rootMarket.plugins[0].name).toBe('specsmd');
+    expect(rootMarket.plugins.map(pick)).toEqual(marketplace.plugins.map(pick));
+  });
+
+  it('ships bootstrap and navigator inside specsmd with no specsmd-core dependency', () => {
+    const names = skills.filter((s) => s.plugin === 'specsmd').map((s) => s.dir);
+    expect(names).toEqual(expect.arrayContaining(['using-specsmd', 'specsmd-status']));
+    const invocable = skills
+      .filter((s) => s.plugin === 'specsmd' && s.frontmatter['disable-model-invocation'] !== true)
+      .map((s) => s.dir)
+      .sort();
+    expect(invocable).toEqual(['specsmd-status', 'using-specsmd']);
+    const pluginJson = fs.readFileSync(path.join(PLUGINS_ROOT, 'specsmd', 'plugin.json'), 'utf8');
+    expect(pluginJson).not.toMatch(/specsmd-core/);
+  });
+
+  it('documents the marketplace-less copy into .agents/skills/', () => {
+    const readme = fs.readFileSync(path.join(PLUGINS_ROOT, 'README.md'), 'utf8');
+    expect(readme).toMatch(/cp -R plugins\/specsmd\/skills\/\* \.agents\/skills\//);
   });
 
   it('root plugin.json conforms to the Agent Plugins spec (closed schema, $schema required)', () => {

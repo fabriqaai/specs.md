@@ -1,6 +1,6 @@
 ---
 name: specsmd-status
-description: Use when the user asks where the project stands, what to do next, or which specsmd flow is active. Reads docs/specsmd and suggests the next move without taking it.
+description: Use when the user asks where the project stands, what to do next, or which specsmd flow is active — or when you need to route to the right flow skill and the project state is unclear. Reads docs/specsmd and suggests the next move without taking it.
 license: MIT
 metadata:
   version: "1.0.0"
