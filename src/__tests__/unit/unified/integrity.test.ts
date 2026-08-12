@@ -188,6 +188,22 @@ describe('integrity validator', () => {
     expect(stale.stale_after).toBe('P7D');
   });
 
+  it('remediates a last-stage stale bolt with complete-bolt, not update-stage (none)', () => {
+    const { item } = seed();
+    const bolt = initBolt(root, { workItems: item.id, ceremony: 'autopilot' });
+    writeStageFiles(bolt.id, ['plan.md', 'test-report.md', 'review-report.md', 'walkthrough.md']);
+    for (const stage of ['plan', 'execute', 'test', 'review']) updateStage(root, bolt.id, stage);
+    expect(readArt(`docs/specsmd/bolts/${bolt.id}/bolt.md`).data.current_stage).toBeNull();
+    setBoltUpdated(bolt.id, daysAgo(10));
+
+    const stale = validateIntegrity(root).findings.find((f: { class: string }) => f.class === 'stale-active');
+    expect(stale.remediation).toMatch(/complete-bolt\.cjs/);
+    expect(stale.remediation).toContain(bolt.id);
+    expect(stale.remediation).not.toMatch(/update-stage\.cjs/);
+    expect(stale.remediation).not.toMatch(/\(none\)/);
+    expect(stale.remediation).toContain(`docs/specsmd/bolts/${bolt.id}/bolt.md`);
+  });
+
   it('honors a configured stale threshold', () => {
     const { item } = seed();
     const bolt = initBolt(root, { workItems: item.id, ceremony: 'autopilot' });

@@ -341,12 +341,16 @@ function collectFindings(rootPath, contract, opts) {
     const rel = relToRoot(root, bolt.path);
     const ageMs = now - changed;
     const boltId = bolt.id || bolt.locationId;
-    const stage = bolt.current_stage || '(none)';
+    const stage = bolt.current_stage;
     const gate = bolt.checkpoint_state || 'none';
-    const resume =
-      gate === 'awaiting'
-        ? `Run update-checkpoint.cjs ${root} ${boltId} <approval phrase> (current_stage ${stage}, checkpoint_state awaiting).`
-        : `Run update-stage.cjs ${root} ${boltId} ${stage} (current_stage ${stage}, checkpoint_state ${gate}).`;
+    let resume;
+    if (!stage) {
+      resume = `Run complete-bolt.cjs ${root} ${boltId} (current_stage is empty; checkpoint_state ${gate}).`;
+    } else if (gate === 'awaiting') {
+      resume = `Run update-checkpoint.cjs ${root} ${boltId} <approval phrase> (current_stage ${stage}, checkpoint_state awaiting).`;
+    } else {
+      resume = `Run update-stage.cjs ${root} ${boltId} ${stage} (current_stage ${stage}, checkpoint_state ${gate}).`;
+    }
     push({
       code: 'STALE_ACTIVE',
       class: 'stale-active',
