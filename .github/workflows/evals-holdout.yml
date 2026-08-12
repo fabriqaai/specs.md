@@ -1,0 +1,25 @@
+name: Evals holdout isolation
+
+on:
+  pull_request:
+    branches: [main, main-v2, dev]
+  push:
+    branches: [main, main-v2, dev]
+
+jobs:
+  holdout:
+    runs-on: blacksmith-4vcpu-ubuntu-2404
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Fetch pull request base
+        if: github.event_name == 'pull_request'
+        run: git fetch --no-tags --prune origin ${{ github.base_ref }}
+
+      - name: Reject mixed evals and flow implementation changes
+        env:
+          GITHUB_BASE_REF: ${{ github.base_ref }}
+        run: node evals/holdout/run.cjs

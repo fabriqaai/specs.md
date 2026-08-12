@@ -1,0 +1,15 @@
+skill: using-specsmd
+description: Bootstrap — how and when to engage specsmd at session start, before other action.
+prompts:
+  - id: new-session
+    text: I'm starting a new session in this specsmd project. What should I do first?
+    expected: using-specsmd
+  - id: how-to-use
+    text: How should I use specsmd here before I write any code?
+    expected: using-specsmd
+  - id: establish-before-responding
+    text: This is a specsmd project. Establish how we work before responding or acting.
+    expected: using-specsmd
+  - id: engage-flow
+    text: Before any other response, how and when do I engage specsmd flow skills?
+    expected: using-specsmd

@@ -6,6 +6,8 @@ complexity: high
 status: pending
 depends_on: []
 created: 2026-08-09
+sufficiency: cleared
+sufficiency_report: docs/specsmd/intents/001-unified-bolt-flow/sufficiency/000-flow-evals.md
 ---
 
 # Evals and verifiers exist before the flow is implemented
