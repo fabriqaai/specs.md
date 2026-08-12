@@ -1,0 +1,174 @@
+# Unified Bolt Flow contract.
+# Single source for artifact locations, identifiers, status vocabulary, and defaults.
+# Scripts read this file. Skills do not copy these facts into prose.
+
+id: specsmd-unified
+version: "0.1.0"
+artifact_root: docs/specsmd
+
+status:
+  values:
+    - draft
+    - pending
+    - active
+    - complete
+    - abandoned
+  default: pending
+  terminal:
+    - complete
+    - abandoned
+
+memory_class:
+  values:
+    - semantic
+    - episodic
+
+identifiers:
+  intent_width: 3
+  work_item_width: 3
+  bolt_width: 3
+  bolt_prefix: bolt
+
+ceremony:
+  values:
+    - autopilot
+    - confirm
+    - validate
+  autonomy_bias:
+    values:
+      - autonomous
+      - balanced
+      - controlled
+    default: balanced
+  complexity:
+    values:
+      - low
+      - medium
+      - high
+    default: medium
+  # complexity × autonomy_bias → ceremony. User choice at bolt-start always wins.
+  matrix:
+    low:
+      autonomous: autopilot
+      balanced: autopilot
+      controlled: confirm
+    medium:
+      autonomous: autopilot
+      balanced: confirm
+      controlled: validate
+    high:
+      autonomous: confirm
+      balanced: validate
+      controlled: validate
+  gates:
+    autopilot: none
+    confirm: first_gateable
+    validate: all_gateable
+
+recipe:
+  default: default
+  recommend_from_complexity:
+    low: default
+    medium: default
+    high: default
+
+checkpoint_state:
+  values:
+    - none
+    - awaiting
+    - granted
+    - not-required
+  default: none
+
+approval:
+  grant:
+    - yes
+    - y
+    - approved
+    - approve
+    - go ahead
+    - lgtm
+    - ok
+    - okay
+    - ship it
+    - proceed
+    - continue
+    - do it
+    - accepted
+    - accept
+    - confirmed
+    - confirm
+  deny:
+    - no
+    - n
+    - reject
+    - rejected
+    - denied
+    - wait
+    - hold
+    - edit
+    - change
+
+errors:
+  retryable: 1
+  terminal: 2
+  structural: 3
+
+artifact_types:
+  project:
+    path: project.md
+    memory_class: semantic
+    fields:
+      - status
+      - autonomy_bias
+      - created
+  intent:
+    path: intents/{id}/brief.md
+    memory_class: change_record
+    fields:
+      - id
+      - title
+      - status
+      - created
+  work_item:
+    path: intents/{intent}/work-items/{id}.md
+    memory_class: change_record
+    fields:
+      - id
+      - title
+      - intent
+      - complexity
+      - ceremony_suggested
+      - status
+      - depends_on
+      - created
+  bolt:
+    path: bolts/{id}/bolt.md
+    memory_class: change_record
+    fields:
+      - id
+      - status
+      - recipe
+      - ceremony
+      - current_stage
+      - stages_completed
+      - checkpoint_state
+      - work_items
+      - override
+      - created
+      - completed
+  recipe:
+    path: recipes/{id}.yaml
+    memory_class: semantic
+  standard:
+    path: standards/{id}.md
+    memory_class: semantic
+  decision:
+    path: decisions/{id}.md
+    memory_class: episodic
+  decisions_index:
+    path: decisions/index.md
+    memory_class: semantic
+  system:
+    path: system/{id}.md
+    memory_class: semantic

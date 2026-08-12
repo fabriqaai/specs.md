@@ -1,0 +1,6 @@
+{
+  "name": "specsmd",
+  "version": "1.0.0",
+  "description": "Unified bolt flow: intents, work items, and bolts under docs/specsmd — the specsmd default install",
+  "skills": "./skills/"
+}

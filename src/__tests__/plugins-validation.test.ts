@@ -15,6 +15,7 @@ import * as yaml from 'js-yaml';
 
 const PLUGINS_ROOT = path.resolve(__dirname, '..', '..', 'plugins');
 const PLUGIN_NAMES = [
+  'specsmd',
   'specsmd-core',
   'specsmd-aidlc',
   'specsmd-fire',
@@ -185,6 +186,15 @@ describe('plugins: manifests and marketplace', () => {
     for (const entry of marketplace.plugins) {
       expect(entry.source.startsWith('./'), `${entry.name}: source must be relative`).toBe(true);
     }
+  });
+
+  it('repo-root marketplace declares pluginRoot so Claude resolves plugins/', () => {
+    const rootMarketPath = path.resolve(__dirname, '..', '..', '.claude-plugin', 'marketplace.json');
+    expect(fs.existsSync(rootMarketPath), 'missing .claude-plugin/marketplace.json at repo root').toBe(true);
+    const rootMarket = JSON.parse(fs.readFileSync(rootMarketPath, 'utf8'));
+    expect(rootMarket.metadata.pluginRoot).toBe('./plugins');
+    const listed = rootMarket.plugins.map((p: { name: string }) => p.name).sort();
+    expect(listed).toEqual([...PLUGIN_NAMES].sort());
   });
 
   it('root plugin.json conforms to the Agent Plugins spec (closed schema, $schema required)', () => {

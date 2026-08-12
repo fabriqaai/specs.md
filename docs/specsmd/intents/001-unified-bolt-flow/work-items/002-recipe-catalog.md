@@ -6,6 +6,8 @@ complexity: medium
 status: pending
 depends_on: [001-flow-schema]
 created: 2026-08-09
+sufficiency: dogfood-cleared
+sufficiency_date: 2026-08-13
 ---
 
 # Recipes are data the flow reads, not behavior the flow hardcodes
@@ -23,6 +25,16 @@ A recipe is a stage catalog: the ordered stages a bolt moves through, what each 
 ## Out of scope
 
 Recipe composition/inheritance (a recipe importing another's stages) — would attach as an additional declaration in the recipe format. Per-stage tool restrictions — would attach as a recipe-level constraint.
+
+## Decided defaults (dogfood slice)
+
+- Recipe files are YAML at `docs/specsmd/recipes/{id}.yaml`. Required fields: `id`, `stages[]` with `id`, `produces`, `gateable`; optional `completion_requires`, `constraints`.
+- This slice ships `default` only (plan → execute → test → review). `ddd`, `spike`, and `simple` attach as additional files *(named freedom for the slice; the four-recipe DoD remains for the full item)*.
+- `default` produces: plan.md / — / test-report.md / review-report.md+walkthrough.md. Gateable: plan, test, review.
+- Completion evidence is `completion_requires` (default: test-report.md, walkthrough.md).
+- Omitted recipe: recommend `default` for every complexity in this slice. User choice always wins. Empty input applies the recommendation.
+- A project file with the same id shadows the shipped recipe. The bolt records the recipe *id*; later file edits affect in-flight bolts *(named freedom: snapshotting is deferred)*.
+- Unknown constraint kinds are ignored in this slice *(named freedom; full item will refuse them)*.
 
 ## Definition of Done
 

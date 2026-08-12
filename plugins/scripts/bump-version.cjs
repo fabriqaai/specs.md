@@ -8,7 +8,7 @@ const fs = require('fs');
 const path = require('path');
 
 const ROOT = path.resolve(__dirname, '..');
-const PLUGINS = ['specsmd-core', 'specsmd-aidlc', 'specsmd-fire', 'specsmd-ideation', 'specsmd-simple'];
+const PLUGINS = ['specsmd', 'specsmd-core', 'specsmd-aidlc', 'specsmd-fire', 'specsmd-ideation', 'specsmd-simple'];
 const MANIFESTS = ['.claude-plugin/plugin.json', '.codex-plugin/plugin.json', '.cursor-plugin/plugin.json', 'plugin.json'];
 
 const version = process.argv[2];

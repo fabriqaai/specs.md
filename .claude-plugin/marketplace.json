@@ -1,0 +1,56 @@
+{
+  "name": "specsmd",
+  "owner": {
+    "name": "specsmd",
+    "url": "https://specs.md"
+  },
+  "metadata": {
+    "description": "Spec-driven development flows for AI-native engineers, delivered as Agent Skills plugins",
+    "version": "1.0.0",
+    "pluginRoot": "./plugins"
+  },
+  "plugins": [
+    {
+      "name": "specsmd",
+      "source": "./specsmd",
+      "description": "Unified bolt flow (default install): intents, work items, bolts under docs/specsmd/",
+      "version": "1.0.0",
+      "strict": true
+    },
+    {
+      "name": "specsmd-core",
+      "source": "./specsmd-core",
+      "description": "Shared core: session bootstrap, project status navigator, always-on principles",
+      "version": "1.0.0",
+      "strict": true
+    },
+    {
+      "name": "specsmd-aidlc",
+      "source": "./specsmd-aidlc",
+      "description": "AI-DLC methodology: Inception, Construction, Operations with intents, units, stories, bolts",
+      "version": "1.0.0",
+      "strict": true
+    },
+    {
+      "name": "specsmd-fire",
+      "source": "./specsmd-fire",
+      "description": "FIRE flow: fast intent-to-run development with autonomy modes and central state",
+      "version": "1.0.0",
+      "strict": true
+    },
+    {
+      "name": "specsmd-ideation",
+      "source": "./specsmd-ideation",
+      "description": "Ideation flow: Spark idea generation, Flame evaluation, Forge concept shaping",
+      "version": "1.0.0",
+      "strict": true
+    },
+    {
+      "name": "specsmd-simple",
+      "source": "./specsmd-simple",
+      "description": "Simple spec flow: requirements, design, tasks, execute",
+      "version": "1.0.0",
+      "strict": true
+    }
+  ]
+}

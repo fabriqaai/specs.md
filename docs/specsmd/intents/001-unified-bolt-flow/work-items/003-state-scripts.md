@@ -4,8 +4,10 @@ title: State changes are trustworthy — tooling-owned, gated, resumable
 intent: 001-unified-bolt-flow
 complexity: high
 status: pending
-depends_on: [001-flow-schema]
+depends_on: [001-flow-schema, 002-recipe-catalog]
 created: 2026-08-09
+sufficiency: dogfood-cleared
+sufficiency_date: 2026-08-13
 ---
 
 # State changes are trustworthy — tooling-owned, gated, resumable
@@ -24,6 +26,16 @@ All state mutation goes through the flow's own tooling. Because state is trustwo
 ## Out of scope
 
 Concurrent mutation locking across parallel bolts (identifier collision-safety is in the flow contract; simultaneous edits to one bolt's state would attach here as an advisory check in the integrity validator).
+
+## Decided defaults (dogfood slice)
+
+Operations: init-project, init-intent, init-work-item, init-bolt (and --draft), update-stage, update-checkpoint, complete-bolt (--force override), status (read-only).
+
+- Cascade on complete: listed work items → `complete`; intent → `complete` if all its items are terminal, else `active` if any are pending/active, else `abandoned` if all abandoned.
+- Completion oracle: every `completion_requires` file exists; every listed work item has no unchecked `- [ ] (gating)` line. Walkthrough may not contain a language-tagged fence. `--force` skips the oracle and records `override: true`.
+- Ceremony defaults: see the matrix in the flow contract. Omitted ceremony is derived. Approval phrases in the contract normalize to `granted`; deny phrases leave the gate `awaiting`.
+- Failures: `retryable` exit 1, `terminal` exit 2, `structural` exit 3. Each carries `remediation`.
+- Resume uses `current_stage` + `checkpoint_state` only. Concurrent writes to one bolt: last writer wins *(named freedom)*.
 
 ## Definition of Done
 
