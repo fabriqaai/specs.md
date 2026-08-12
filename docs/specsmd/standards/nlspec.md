@@ -2,6 +2,11 @@
 id: nlspec
 title: The nlspec standard — how intents and work items are written
 status: active
+kind: overridable
+override: allowed
+enforcement_tier: review
+invariant: "Intents and work items state observable behavior with a behavioral Definition of Done, never mechanism or implementation file names."
+remediation: "In {file}, {change} so the nlspec properties hold."
 created: 2026-08-09
 ---
 

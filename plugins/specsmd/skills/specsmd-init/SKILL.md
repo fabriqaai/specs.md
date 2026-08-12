@@ -1,6 +1,6 @@
 ---
 name: specsmd-init
-description: Use when a project has no docs/specsmd tree yet, or the user wants to initialize the unified bolt flow. Asks autonomy bias and creates the artifact root.
+description: Use when a project has no docs/specsmd tree yet, or the user wants to initialize the unified bolt flow. Asks autonomy bias, detects workspace shape, and records standards.
 license: MIT
 metadata:
   version: "1.0.0"
@@ -26,9 +26,14 @@ Workspace shape (greenfield vs existing code, single project vs monorepo) is det
 1. If the user has not stated a bias, ask once and accept `balanced` on empty input.
 2. Resolve `SCRIPTS_DIR` as the `scripts/` directory of the `flow-runtime` skill.
 3. Run: `node {SCRIPTS_DIR}/init-project.cjs {projectRoot} --autonomy-bias {bias}`
-4. Report the artifact root and the recorded bias.
+4. Report the artifact root, the recorded bias, and the detected workspace shape.
+5. If `data.standards.pending_confirmation` is non-empty, present those inferred standards (id, scope, invariant, inferred_from) and wait for accept / edit / skip. That confirmation is not a second required question — initialization already completed after autonomy bias.
+   - Accept: `node {SCRIPTS_DIR}/record-standards.cjs {projectRoot} --confirm`
+   - Edit: `node {SCRIPTS_DIR}/record-standards.cjs {projectRoot} --standards-json '{...}'`
+   - Skip: leave them unrecorded.
+6. Do not record inferred standards until the user confirms.
 
-Do not write files yourself. The script creates `docs/specsmd/` and copies the shipped `default` recipe.
+Do not write files yourself. The scripts create `docs/specsmd/` and record standards.
 
 ## Close
 

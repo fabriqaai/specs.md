@@ -29,6 +29,9 @@ Resolve `SCRIPTS_DIR` as this skill's `scripts/` directory. Invoke with the proj
 | `scripts/complete-bolt.cjs` | Complete a bolt; cascade status |
 | `scripts/validate-integrity.cjs` | Detect drift; repair only with `--fix` or `--finding` |
 | `scripts/status.cjs` | Read-only lenses (runs the validator without `--fix`) |
+| `scripts/resolve-standards.cjs` | Resolve the standard set for a file |
+| `scripts/record-standards.cjs` | Record confirmed standard proposals |
+| `scripts/report-violation.cjs` | Phrase a violation as a remediation |
 
 `validate-integrity.cjs` prints the same JSON envelope as the other scripts. Findings include `severity`, `auto_repairable`, and a remediation that names what to change and where. `--fix` consents to every auto-repairable finding; `--finding F1` consents to one; `--interactive` walks auto-repairable findings on a TTY (refuses a non-TTY). `--stale-after` overrides the contract default (`P7D`). Every applied repair is appended to `docs/specsmd/maintenance-log.md`. A clean tree exits 0 with zero findings. `status.cjs` calls the same detector read-only and exposes the findings as `health`.
 
@@ -36,4 +39,4 @@ Never install packages into the user's project. These scripts have no dependenci
 
 ## Contract
 
-`references/flow-contract.yaml` is the single source for locations, identifiers, status tokens, and the ceremony matrix. `references/recipes/` holds the four shipped recipes (`default.yaml`, `ddd.yaml`, `spike.yaml`, `simple.yaml`). A bolt stores `recipe` plus an immutable `recipe_snapshot` at creation.
+`references/flow-contract.yaml` is the single source for locations, identifiers, status tokens, and the ceremony matrix. `references/recipes/` holds the four shipped recipes (`default.yaml`, `ddd.yaml`, `spike.yaml`, `simple.yaml`). `references/standards/` holds the shipped standard templates (invariant, enforcement tier, remediation). A bolt stores `recipe` plus an immutable `recipe_snapshot` at creation.

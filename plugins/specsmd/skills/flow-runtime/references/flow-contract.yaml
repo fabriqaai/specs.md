@@ -214,8 +214,19 @@ artifact_types:
     memory_class: semantic
   standard:
     path: standards/{id}.md
+    module_path: standards/scopes/{module}/{id}.md
     identifier_pattern: "{id}"
     memory_class: semantic
+    fields:
+      - id
+      - title
+      - status
+      - kind
+      - enforcement_tier
+      - override
+      - invariant
+      - remediation
+      - created
   decision:
     path: decisions/{id}.md
     identifier_pattern: "{id}"
@@ -241,3 +252,32 @@ system_document_types:
     - name
     - purpose
     - claimed_scope
+
+# Guardrail layer. Constitution is root-only; every other standard resolves
+# by nearest declared scope. Module files live under the artifact root so
+# scripts never write outside it.
+standards:
+  constitution_id: constitution
+  constitution_override: never
+  shipped:
+    - constitution
+    - tech-stack
+    - coding
+    - testing
+    - architecture
+    - nlspec
+  overridable:
+    - tech-stack
+    - coding
+    - testing
+    - architecture
+    - nlspec
+  enforcement_tiers:
+    - principle
+    - review
+    - mechanical
+  root_directory: standards
+  module_directory: standards/scopes/{module}
+  kinds:
+    - constitution
+    - overridable
