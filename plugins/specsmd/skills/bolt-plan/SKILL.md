@@ -20,7 +20,8 @@ A draft is a proposal: work items plus a suggested recipe. It is not an executio
 3. Resolve `SCRIPTS_DIR` as the `scripts/` directory of the `flow-runtime` skill:
 
 ```text
-node {SCRIPTS_DIR}/init-bolt.cjs {projectRoot} --draft --work-items {id,id} --recipe default
+node {SCRIPTS_DIR}/init-bolt.cjs {projectRoot} --draft --work-items {id,id}
+node {SCRIPTS_DIR}/init-bolt.cjs {projectRoot} --draft --work-items {id,id} --recipe ddd
 ```
 
 If the script refuses a dependency cycle, it names the cycle. Write nothing else from that invocation.

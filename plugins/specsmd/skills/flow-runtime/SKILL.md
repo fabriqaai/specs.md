@@ -22,6 +22,7 @@ Resolve `SCRIPTS_DIR` as this skill's `scripts/` directory. Invoke with the proj
 | `scripts/init-project.cjs` | Create the artifact tree |
 | `scripts/init-intent.cjs` | Write an intent brief |
 | `scripts/init-work-item.cjs` | Write a work item; refuse cycles |
+| `scripts/relink-work-item.cjs` | Move pending items onto an intent |
 | `scripts/init-bolt.cjs` | Create a bolt or `--draft` |
 | `scripts/update-stage.cjs` | Record a stage complete |
 | `scripts/update-checkpoint.cjs` | Record a gate decision |

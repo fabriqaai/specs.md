@@ -268,7 +268,17 @@ describe('unified state scripts', () => {
       ceremony: 'confirm',
     });
     expect(confirm.checkpoint_state).toBe('awaiting');
-    expect(() => updateStage(root, confirm.id, 'plan')).toThrow(/waiting for approval/i);
+    try {
+      updateStage(root, confirm.id, 'plan');
+      throw new Error('expected GATE_AWAITING');
+    } catch (err) {
+      const message = String((err as Error).message);
+      const remediation = String((err as { remediation?: string }).remediation || '');
+      expect(message).toMatch(/waiting for approval/i);
+      expect(message + remediation).toMatch(/full current text/i);
+      expect(message + remediation).toMatch(/entire plan\.md/i);
+      expect(message + remediation).not.toMatch(/Present the stage artifacts/);
+    }
 
     const autoSeed = initWorkItem(root, {
       intent: seeded.intent.id,
@@ -378,7 +388,31 @@ describe('unified state scripts', () => {
       '# Walkthrough\n\n```js\nconsole.log(1)\n```\n',
       'utf8'
     );
-    expect(() => completeBolt(root, bolt.id, false)).toThrow(/WALKTHROUGH_HAS_CODE|code/i);
+    expect(() => completeBolt(root, bolt.id, false)).toThrow(/WALKTHROUGH_HAS_CODE|fenced listing|patch/i);
+  });
+
+  it('refuses a walkthrough that uses a text fence', () => {
+    const { a } = seedTwoItems();
+    const bolt = initBolt(root, { workItems: a.id, ceremony: 'autopilot' });
+    writeStageFiles(bolt.id, ['plan.md', 'test-report.md', 'review-report.md']);
+    writeFileSync(
+      join(root, 'docs/specsmd/bolts', bolt.id, 'walkthrough.md'),
+      '# Walkthrough\n\n## Deviations from plan\n\nnone\n\n```text\nsrc/app.ts\n```\n',
+      'utf8'
+    );
+    expect(() => completeBolt(root, bolt.id, false)).toThrow(/WALKTHROUGH_HAS_CODE|fence/i);
+  });
+
+  it('refuses completion when the walkthrough has no deviations heading', () => {
+    const { a } = seedTwoItems();
+    const bolt = initBolt(root, { workItems: a.id, ceremony: 'autopilot' });
+    writeStageFiles(bolt.id, ['plan.md', 'test-report.md', 'review-report.md']);
+    writeFileSync(
+      join(root, 'docs/specsmd/bolts', bolt.id, 'walkthrough.md'),
+      '# Walkthrough\n\nWhat changed: a toast.\n',
+      'utf8'
+    );
+    expect(() => completeBolt(root, bolt.id, false)).toThrow(/WALKTHROUGH_MISSING_DEVIATIONS|deviations/i);
   });
 
   it('adopts a draft and leaves ignore as the no-op path', () => {

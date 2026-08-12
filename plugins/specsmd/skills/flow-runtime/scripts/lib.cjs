@@ -966,7 +966,15 @@ function uncheckedGatingCriteria(body) {
 }
 
 function walkthroughHasCode(body) {
-  return /```(?!text\b|plain\b|markdown\b|md\b)\w+/.test(String(body || ''));
+  const text = String(body || '');
+  if (/```/.test(text) || /~~~/.test(text)) return true;
+  if (/^diff --git /m.test(text)) return true;
+  if (/^@@ -\d/.test(text)) return true;
+  return false;
+}
+
+function walkthroughHasDeviations(body) {
+  return /^#{1,6}\s*Deviations from plan\s*$/im.test(String(body || ''));
 }
 
 function parseArgs(argv) {
@@ -1071,6 +1079,7 @@ module.exports = {
   detectCycle,
   uncheckedGatingCriteria,
   walkthroughHasCode,
+  walkthroughHasDeviations,
   parseArgs,
   splitList,
   REFERENCES,

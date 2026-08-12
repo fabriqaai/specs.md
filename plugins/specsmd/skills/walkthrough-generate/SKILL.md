@@ -15,9 +15,9 @@ Every completed bolt yields a walkthrough, even when the recipe has no walkthrou
 
 Write `docs/specsmd/bolts/{boltId}/walkthrough.md` using `references/walkthrough.md` in the `bolt-execute` skill.
 
-Required sections: what changed, why, deviations from plan, how to verify. The deviations section always exists. If there are no deviations, it says `none`.
+Required sections: what changed, why, deviations from plan, how to verify. The deviations heading (`## Deviations from plan`) always exists. If there are no deviations, it says `none`. Completion is refused without that heading.
 
-Contains no source listings, patches, or language-tagged fences. Allowed: user-facing names, behavior, and verification invocations (plain text).
+Contains no source listings, patches, or fences (language-tagged, untagged, or `~~~`). Allowed: user-facing names, behavior, and verification invocations (plain text).
 
 ## Close
 

@@ -42,7 +42,8 @@ Recipe: omit `--recipe` to take the complexity recommendation, or pass a shipped
 Resolve `SCRIPTS_DIR` as the `scripts/` directory of the `flow-runtime` skill:
 
 ```text
-node {SCRIPTS_DIR}/init-bolt.cjs {projectRoot} --work-items {id,id} --recipe default --ceremony confirm
+node {SCRIPTS_DIR}/init-bolt.cjs {projectRoot} --work-items {id,id}
+node {SCRIPTS_DIR}/init-bolt.cjs {projectRoot} --work-items {id,id} --recipe simple --ceremony confirm
 ```
 
 Do not mkdir a bolt folder yourself.

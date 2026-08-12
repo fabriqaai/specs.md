@@ -24,7 +24,7 @@ function collectHealth(rootPath, contract) {
   }
 }
 
-function suggestNext(lenses, initialized, drafts, health) {
+function suggestNext(lenses, initialized, drafts) {
   const options = [];
   if (!initialized) {
     options.push({ skill: 'specsmd-init', why: 'No artifact root yet — initialize the project.' });
@@ -37,13 +37,12 @@ function suggestNext(lenses, initialized, drafts, health) {
   const emptyIntent = (lenses.shaping || []).find((s) => s.kind === 'intent' && s.work_item_count === 0);
   const unbolted = (lenses.shaping || []).some((s) => s.kind === 'work-item');
   const draftList = drafts || [];
-  const findings = health || [];
   const noIntents =
     !(lenses.shaping || []).some((s) => s.kind === 'intent') &&
     !(lenses.building || []).length &&
     !(lenses.shipping || []).length;
 
-  // Locked order: awaiting gate > active bolt > integrity > empty intent > unbolted > drafts > shipping > empty tree
+  // Locked order (007): awaiting gate → active bolt → empty intent → unbolted → drafts → empty tree
   if (awaiting.length) {
     options.push({
       skill: 'bolt-execute',
@@ -62,17 +61,6 @@ function suggestNext(lenses, initialized, drafts, health) {
       why: `Bolt ${active[0].id} is active at ${active[0].current_stage || 'completion'}. Resume it.`,
     });
   }
-  if (findings.length) {
-    const highest = findings.some((f) => f.severity === 'error')
-      ? 'error'
-      : findings.some((f) => f.severity === 'warn' || f.severity === 'warning')
-        ? 'warning'
-        : findings[0].severity || 'info';
-    options.push({
-      skill: 'flow-runtime',
-      why: `${findings.length} integrity finding(s). Highest severity: ${highest}. ${findings[0].message} Follow the listed remediations. The navigator does not repair.`,
-    });
-  }
   if (emptyIntent) {
     options.push({
       skill: 'work-item-decompose',
@@ -89,12 +77,6 @@ function suggestNext(lenses, initialized, drafts, health) {
     options.push({
       skill: 'bolt-start',
       why: `Draft ${draftList[0].id} can be adopted, modified, or ignored.`,
-    });
-  }
-  if ((lenses.shipping || []).length) {
-    options.push({
-      skill: 'specsmd-status',
-      why: `${lenses.shipping.length} completed bolt(s) are in the shipping lens. Release is optional.`,
     });
   }
   if (noIntents) {
@@ -116,7 +98,7 @@ function projectStatus(rootPath) {
       artifactRoot: lib.artifactRoot(root, contract),
       lenses: { shaping: [], building: [], shipping: [] },
       health: [],
-      suggestion: suggestNext({ shaping: [], building: [], shipping: [] }, false, [], []),
+      suggestion: suggestNext({ shaping: [], building: [], shipping: [] }, false, []),
     };
   }
 
@@ -226,7 +208,7 @@ function projectStatus(rootPath) {
     lenses,
     drafts,
     health,
-    suggestion: suggestNext(lenses, true, drafts, health),
+    suggestion: suggestNext(lenses, true, drafts),
   };
 }
 

@@ -50,10 +50,15 @@ function updateStage(rootPath, boltId, stageId) {
   }
 
   if (bolt.data.checkpoint_state === 'awaiting') {
+    const produced = ((stageId && recipe.stages.find((s) => s.id === stageId)) || {}).produces || [];
+    const dir = lib.boltDir(root, boltId, contract);
+    const listed = produced.length
+      ? produced.map((name) => path.join(dir, name)).join(' and ')
+      : `the artifacts for stage "${stageId}"`;
     throw lib.terminal(
       'GATE_AWAITING',
       `Stage "${stageId}" is waiting for approval.`,
-      `Present the stage artifacts and run update-checkpoint with an approval phrase (yes, approved, go ahead, …).`
+      `Write ${listed} if missing. In the same turn as the approval prompt, emit their full current text (the entire plan.md when that file is one of them — not a summary, not a path). Then run update-checkpoint with an approval phrase (yes, approved, go ahead, …). Do not call update-stage while the gate is awaiting.`
     );
   }
 

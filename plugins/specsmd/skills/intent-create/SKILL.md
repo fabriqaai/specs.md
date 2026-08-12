@@ -21,7 +21,7 @@ Required sections of the brief: **problem**, **outcome**, **scope**, **non-goals
 
 Follow `references/nlspec.md` in the `flow-runtime` skill — the intent register is pure intent. If two readings are interchangeable to a caller, pick one and name it. If they are not interchangeable, ask. Never silently pick a side of a contradiction.
 
-If work items already exist, ask which belong to this intent. Do not hand-edit their frontmatter. New items created later under this intent are the link. The flow does not auto-link.
+If work items already exist, ask which belong to this intent. After the user confirms, relink only those **pending** items with the script below. The script refuses items that are not pending or that are named on a non-draft bolt. New items created later under this intent are also a link. The flow does not auto-link.
 
 ## Write via script
 
@@ -29,9 +29,10 @@ Resolve `SCRIPTS_DIR` as the `scripts/` directory of the `flow-runtime` skill. W
 
 ```text
 node {SCRIPTS_DIR}/init-intent.cjs {projectRoot} --title "{title}" --body-file {temp}
+node {SCRIPTS_DIR}/relink-work-item.cjs {projectRoot} --intent {id} --work-items {id,id}
 ```
 
-Do not create the markdown yourself. Do not edit status fields.
+The relink line runs only after the user confirms membership. Do not create the markdown yourself. Do not edit status fields.
 
 ## Close
 
@@ -39,6 +40,7 @@ List the artifacts that now exist. Offer at most three declinable next names. No
 
 Now exists:
 - `docs/specsmd/intents/{id}/brief.md`
+- relinked work items, if the user confirmed any
 
 Declinable next (none required):
 - `work-item-decompose` — slice this intent

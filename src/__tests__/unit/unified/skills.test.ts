@@ -26,6 +26,8 @@ const { updateStage } = require(join(SCRIPTS, 'update-stage.cjs'));
 const { completeBolt } = require(join(SCRIPTS, 'complete-bolt.cjs'));
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const { projectStatus } = require(join(SCRIPTS, 'status.cjs'));
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const { relinkWorkItems } = require(join(SCRIPTS, 'relink-work-item.cjs'));
 
 const VERB_SKILLS = [
   'intent-create',
@@ -76,11 +78,9 @@ function suggestionKeys(options: { skill: string; why: string }[]): string[] {
   return options.map((option) => {
     if (/awaiting approval/.test(option.why)) return 'G';
     if (/time box|Resume it/.test(option.why)) return 'I';
-    if (option.skill === 'flow-runtime' || /integrity finding/.test(option.why)) return 'H';
     if (option.skill === 'work-item-decompose') return 'C';
     if (/not in a bolt/.test(option.why)) return 'P';
     if (/Draft /.test(option.why)) return 'D';
-    if (/shipping lens/.test(option.why)) return 'S';
     if (/no intents yet/.test(option.why)) return 'E';
     return option.skill;
   });
@@ -159,15 +159,28 @@ describe('unified skills', () => {
   });
 
   it('requires genuine review of the full plan text', () => {
-    expect(skillBody('bolt-execute')).toMatch(/full current text/i);
-    expect(skillBody('bolt-execute')).toMatch(/not a summary/i);
+    const execute = skillBody('bolt-execute');
+    expect(execute).toMatch(/full current text/i);
+    expect(execute).toMatch(/not a summary/i);
+    expect(execute).toMatch(/this section does not apply/);
+    expect(execute).toMatch(/Do not call `update-stage`/);
   });
 
   it('keeps the navigator read-only', () => {
     const body = skillBody('specsmd-status');
     expect(body).toMatch(/Never write artifacts/);
     expect(body).toMatch(/Never invoke another skill/);
-    expect(body).toMatch(/awaiting gate → active bolt → integrity findings → empty intent → unbolted items → drafts → shipping → empty tree/);
+    expect(body).toMatch(
+      /awaiting gate → active bolt → empty intent → unbolted items → drafts → empty tree/
+    );
+    expect(body).toMatch(/Never suggest `flow-runtime`/);
+  });
+
+  it('shows the omit-recipe form before an explicit recipe', () => {
+    const plan = skillBody('bolt-plan');
+    const start = skillBody('bolt-start');
+    expect(plan.indexOf('--draft --work-items {id,id}')).toBeLessThan(plan.indexOf('--recipe ddd'));
+    expect(start.indexOf('--work-items {id,id}')).toBeLessThan(start.indexOf('--recipe simple'));
   });
 });
 
@@ -282,7 +295,7 @@ describe('navigator and shaping behavior', () => {
     expect(resumed.suggestion.best.why).toContain(awaiting.id);
   });
 
-  it('surfaces integrity findings in health and in suggestion order G>I>H>C>P>D>S', () => {
+  it('surfaces integrity findings in health and ranks next skills as 007 specifies', () => {
     initProject(root, 'balanced');
     const empty = initIntent(root, { title: 'Empty capture' });
     const shape = initIntent(root, { title: 'Shaped' });
@@ -327,7 +340,10 @@ describe('navigator and shaping behavior', () => {
       true
     );
     expect(report.lenses.shaping.some((row: { id: string }) => row.id === empty.id)).toBe(true);
-    expect(suggestionKeys(report.suggestion.options)).toEqual(['G', 'I', 'H', 'C', 'P', 'D', 'S']);
+    expect(suggestionKeys(report.suggestion.options)).toEqual(['G', 'I', 'C', 'P', 'D']);
+    expect(report.suggestion.options.some((row: { skill: string }) => row.skill === 'flow-runtime')).toBe(
+      false
+    );
     expect(report.suggestion.best.why).toMatch(/awaiting approval/);
   });
 
@@ -353,8 +369,73 @@ describe('navigator and shaping behavior', () => {
     const boltBefore = readFileSync(parsed.path, 'utf8');
     const report = projectStatus(root);
     expect(report.health.length).toBeGreaterThan(0);
-    expect(report.suggestion.best.skill).toBe('flow-runtime');
+    expect(report.suggestion.best.skill).not.toBe('flow-runtime');
+    expect(report.suggestion.options.some((row: { skill: string }) => row.skill === 'flow-runtime')).toBe(
+      false
+    );
     expect(readFileSync(join(root, 'docs/specsmd/intents', intent.id, 'brief.md'), 'utf8')).toBe(intentBefore);
     expect(readFileSync(parsed.path, 'utf8')).toBe(boltBefore);
+  });
+
+  it('ranks empty-intent ahead of unbolted items when integrity findings exist', () => {
+    initProject(root, 'balanced');
+    const empty = initIntent(root, { title: 'Empty' });
+    const shaped = initIntent(root, { title: 'Shaped' });
+    initWorkItem(root, { intent: shaped.id, title: 'Unbolted', complexity: 'low' });
+    const doneIntent = initIntent(root, { title: 'Done' });
+    const doneItem = initWorkItem(root, {
+      intent: doneIntent.id,
+      title: 'Done slice',
+      complexity: 'low',
+      body: '# D\n\n- [x] (gating) visible\n',
+    });
+    const bolt = initBolt(root, { workItems: doneItem.id, recipe: 'simple', ceremony: 'autopilot' });
+    writeStageFiles(root, bolt.id, ['plan.md', 'walkthrough.md']);
+    updateStage(root, bolt.id, 'plan');
+    updateStage(root, bolt.id, 'implement');
+    updateStage(root, bolt.id, 'walkthrough');
+    completeBolt(root, bolt.id, false);
+    const parsed = lib.readMarkdown(join(root, 'docs/specsmd/bolts', bolt.id, 'bolt.md'));
+    parsed.data.work_items = [doneItem.id, '999-missing'];
+    lib.writeMarkdown(parsed.path, parsed.data, parsed.body, root);
+
+    const report = projectStatus(root);
+    expect(report.health.length).toBeGreaterThan(0);
+    expect(report.suggestion.best.skill).toBe('work-item-decompose');
+    expect(report.suggestion.best.why).toContain(empty.id);
+    expect(report.suggestion.options.some((row: { skill: string }) => row.skill === 'flow-runtime')).toBe(
+      false
+    );
+  });
+
+  it('relinks confirmed pending items onto a new intent', () => {
+    initProject(root, 'balanced');
+    const source = initIntent(root, { title: 'Source' });
+    const target = initIntent(root, { title: 'Target' });
+    const item = initWorkItem(root, { intent: source.id, title: 'Move me', complexity: 'low' });
+    const result = relinkWorkItems(root, { intent: target.id, workItems: item.id });
+    expect(result.work_items[0].intent).toBe(target.id);
+    expect(existsSync(join(root, 'docs/specsmd/intents', source.id, 'work-items', `${item.id}.md`))).toBe(
+      false
+    );
+    const moved = lib.readMarkdown(join(root, 'docs/specsmd/intents', target.id, 'work-items', `${item.id}.md`));
+    expect(moved.data.intent).toBe(target.id);
+    expect(moved.data.status).toBe('pending');
+  });
+
+  it('refuses to relink an item that is not pending', () => {
+    initProject(root, 'balanced');
+    const source = initIntent(root, { title: 'Source' });
+    const target = initIntent(root, { title: 'Target' });
+    const item = initWorkItem(root, {
+      intent: source.id,
+      title: 'Bolted',
+      complexity: 'low',
+      body: '# B\n\n- [x] (gating) visible\n',
+    });
+    initBolt(root, { workItems: item.id, recipe: 'simple', ceremony: 'autopilot' });
+    expect(() => relinkWorkItems(root, { intent: target.id, workItems: item.id })).toThrow(
+      /cannot be relinked|named on an active/
+    );
   });
 });

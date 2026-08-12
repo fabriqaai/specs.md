@@ -49,8 +49,15 @@ function completeBolt(rootPath, boltId, force, opts) {
   if (walkthroughText && lib.walkthroughHasCode(walkthroughBody) && !force && !fromTimeBox) {
     throw lib.terminal(
       'WALKTHROUGH_HAS_CODE',
-      'The walkthrough contains a fenced code block.',
-      `Remove language-tagged code fences from ${walkthroughFile}. Describe what changed and how to verify, without code.`
+      'The walkthrough contains a fenced listing or patch.',
+      `Remove every fence (\`\`\` / \`~~~\`, tagged or not) and any diff hunk from ${walkthroughFile}. Describe what changed and how to verify, without code.`
+    );
+  }
+  if (walkthroughText && !lib.walkthroughHasDeviations(walkthroughBody) && !force && !fromTimeBox) {
+    throw lib.terminal(
+      'WALKTHROUGH_MISSING_DEVIATIONS',
+      'The walkthrough has no deviations heading.',
+      `Add a "## Deviations from plan" section to ${walkthroughFile}. If there are no deviations, the section still exists and says none.`
     );
   }
 
@@ -76,11 +83,19 @@ function completeBolt(rootPath, boltId, force, opts) {
   bolt.data.status = 'complete';
   bolt.data.completed = lib.nowStamp();
   bolt.data.current_stage = null;
-  if (force && (blockedByFiles || blockedByCriteria || lib.walkthroughHasCode(walkthroughBody))) {
+  if (
+    force &&
+    (blockedByFiles ||
+      blockedByCriteria ||
+      lib.walkthroughHasCode(walkthroughBody) ||
+      (walkthroughText && !lib.walkthroughHasDeviations(walkthroughBody)))
+  ) {
     bolt.data.override = true;
     bolt.data.override_reason = [
       blockedByFiles ? `missing:${missingFiles.join(',')}` : null,
       blockedByCriteria ? `criteria:${missingCriteria.length}` : null,
+      lib.walkthroughHasCode(walkthroughBody) ? 'walkthrough-code' : null,
+      walkthroughText && !lib.walkthroughHasDeviations(walkthroughBody) ? 'walkthrough-deviations' : null,
     ]
       .filter(Boolean)
       .join('; ');
