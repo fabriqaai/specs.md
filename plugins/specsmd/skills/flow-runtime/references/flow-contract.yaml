@@ -6,6 +6,11 @@ id: specsmd-unified
 version: "0.1.0"
 artifact_root: docs/specsmd
 
+state:
+  location: artifact_frontmatter
+  central_file: false
+  writers: scripts_only
+
 status:
   values:
     - draft
@@ -17,17 +22,31 @@ status:
   terminal:
     - complete
     - abandoned
+  rejected_synonyms:
+    - in-progress
+    - completed
+    - done
 
 memory_class:
   values:
     - semantic
     - episodic
+  stored: false
+  derivation:
+    change_record:
+      non_terminal: semantic
+      terminal: episodic
 
 identifiers:
   intent_width: 3
   work_item_width: 3
   bolt_width: 3
   bolt_prefix: bolt
+  patterns:
+    intent: "{nnn}-{slug}"
+    work_item: "{nnn}-{slug}"
+    bolt: "bolt-{worktree}-{nnn}"
+    worktree: "{basename}-{sha1(absPath)[:6]}"
 
 ceremony:
   values:
@@ -67,10 +86,28 @@ ceremony:
 
 recipe:
   default: default
+  shipped:
+    - default
+    - ddd
+    - spike
+    - simple
   recommend_from_complexity:
-    low: default
+    low: simple
     medium: default
-    high: default
+    high: ddd
+  completion_requires_default:
+    - test-report.md
+    - walkthrough.md
+  constraint_kinds:
+    - time_box
+    - no_source_code
+  time_box:
+    duration_default: PT8H
+    on_expiry_values:
+      - complete_with_findings
+    on_expiry_default: complete_with_findings
+    clock_starts: when_active
+    findings_artifact: findings.md
 
 checkpoint_state:
   values:
@@ -117,6 +154,7 @@ errors:
 artifact_types:
   project:
     path: project.md
+    identifier_pattern: none
     memory_class: semantic
     fields:
       - status
@@ -124,6 +162,7 @@ artifact_types:
       - created
   intent:
     path: intents/{id}/brief.md
+    identifier_pattern: intent
     memory_class: change_record
     fields:
       - id
@@ -132,6 +171,7 @@ artifact_types:
       - created
   work_item:
     path: intents/{intent}/work-items/{id}.md
+    identifier_pattern: work_item
     memory_class: change_record
     fields:
       - id
@@ -144,31 +184,52 @@ artifact_types:
       - created
   bolt:
     path: bolts/{id}/bolt.md
+    identifier_pattern: bolt
     memory_class: change_record
     fields:
       - id
       - status
       - recipe
+      - recipe_snapshot
       - ceremony
       - current_stage
       - stages_completed
       - checkpoint_state
       - work_items
       - override
+      - activated_at
       - created
       - completed
   recipe:
     path: recipes/{id}.yaml
+    identifier_pattern: "{id}"
     memory_class: semantic
   standard:
     path: standards/{id}.md
+    identifier_pattern: "{id}"
     memory_class: semantic
   decision:
     path: decisions/{id}.md
+    identifier_pattern: "{id}"
     memory_class: episodic
   decisions_index:
     path: decisions/index.md
+    identifier_pattern: none
     memory_class: semantic
   system:
     path: system/{id}.md
+    identifier_pattern: "{id}"
     memory_class: semantic
+    fields:
+      - id
+      - name
+      - purpose
+      - claimed_scope
+      - status
+      - created
+
+system_document_types:
+  registration_fields:
+    - name
+    - purpose
+    - claimed_scope

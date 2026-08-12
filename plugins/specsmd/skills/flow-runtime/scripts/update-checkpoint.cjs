@@ -3,7 +3,9 @@
  * Record a gate decision. Accepts natural approval phrases.
  * Usage: node update-checkpoint.cjs <rootPath> <boltId> <phrase>
  */
+const path = require('path');
 const lib = require('./lib.cjs');
+const { applyTimeBoxIfExpired } = require('./complete-bolt.cjs');
 
 function updateCheckpoint(rootPath, boltId, phrase) {
   const contract = lib.loadContract();
@@ -14,6 +16,15 @@ function updateCheckpoint(rootPath, boltId, phrase) {
       'DECISION_REQUIRED',
       'A checkpoint decision is required.',
       `Pass an approval phrase (${contract.approval.grant.slice(0, 5).join(', ')}) or a checkpoint state.`
+    );
+  }
+
+  const expired = applyTimeBoxIfExpired(root, boltId);
+  if (expired) {
+    throw lib.terminal(
+      'TIME_BOX_EXPIRED',
+      `Bolt "${boltId}" exceeded its time box and was completed with findings.`,
+      `Read ${path.join(lib.boltDir(root, boltId, contract), ((contract.recipe.time_box || {}).findings_artifact) || 'findings.md')}. The bolt is complete; start a new bolt if more work remains.`
     );
   }
 

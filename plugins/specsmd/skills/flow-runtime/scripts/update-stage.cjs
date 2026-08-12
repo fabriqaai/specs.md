@@ -6,12 +6,22 @@
 const fs = require('fs');
 const path = require('path');
 const lib = require('./lib.cjs');
+const { applyTimeBoxIfExpired } = require('./complete-bolt.cjs');
 
 function updateStage(rootPath, boltId, stageId) {
   const contract = lib.loadContract();
   const root = lib.assertRoot(rootPath);
   if (!boltId) throw lib.terminal('BOLT_REQUIRED', 'A bolt id is required.', 'Pass the bolt id as the second argument.');
   if (!stageId) throw lib.terminal('STAGE_REQUIRED', 'A stage id is required.', 'Pass the stage to record complete as the third argument.');
+
+  const expired = applyTimeBoxIfExpired(root, boltId);
+  if (expired) {
+    throw lib.terminal(
+      'TIME_BOX_EXPIRED',
+      `Bolt "${boltId}" exceeded its time box and was completed with findings.`,
+      `Read ${path.join(lib.boltDir(root, boltId, contract), ((contract.recipe.time_box || {}).findings_artifact) || 'findings.md')}. The bolt is complete; start a new bolt if more work remains.`
+    );
+  }
 
   const bolt = lib.readBolt(root, boltId, contract);
   if (bolt.data.status !== 'active') {
@@ -22,7 +32,7 @@ function updateStage(rootPath, boltId, stageId) {
     );
   }
 
-  const recipe = lib.loadRecipe(root, bolt.data.recipe, contract);
+  const recipe = lib.recipeForBolt(root, bolt.data, contract);
   const stages = recipe.stages.map((s) => s.id);
   if (!stages.includes(stageId)) {
     throw lib.terminal(

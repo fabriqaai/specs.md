@@ -7,7 +7,7 @@ const fs = require('fs');
 const path = require('path');
 const lib = require('./lib.cjs');
 
-function completeBolt(rootPath, boltId, force) {
+function completeBolt(rootPath, boltId, force, opts) {
   const contract = lib.loadContract();
   const root = lib.assertRoot(rootPath);
   if (!boltId) throw lib.terminal('BOLT_REQUIRED', 'A bolt id is required.', 'Pass the bolt id as the second argument.');
@@ -24,8 +24,12 @@ function completeBolt(rootPath, boltId, force) {
     );
   }
 
-  const recipe = lib.loadRecipe(root, bolt.data.recipe, contract);
+  const recipe = lib.recipeForBolt(root, bolt.data, contract);
+  const fromTimeBox = !!(opts && opts.fromTimeBox) || lib.isTimeBoxExpired(bolt.data, recipe);
   const dir = lib.boltDir(root, boltId, contract);
+  if (fromTimeBox) {
+    lib.ensureFindingsArtifact(root, boltId, contract);
+  }
   const missingFiles = (recipe.completion_requires || []).filter((name) => !fs.existsSync(path.join(dir, name)));
 
   const missingCriteria = [];
@@ -37,44 +41,46 @@ function completeBolt(rootPath, boltId, force) {
   }
 
   const walkthroughFile = path.join(dir, 'walkthrough.md');
-  if (fs.existsSync(walkthroughFile)) {
-    const wt = fs.readFileSync(walkthroughFile, 'utf8');
-    const parsed = lib.parseFrontmatter(wt);
-    const body = parsed ? parsed.body : wt;
-    if (lib.walkthroughHasCode(body)) {
-      if (!force) {
-        throw lib.terminal(
-          'WALKTHROUGH_HAS_CODE',
-          'The walkthrough contains a fenced code block.',
-          `Remove language-tagged code fences from ${walkthroughFile}. Describe what changed and how to verify, without code.`
-        );
-      }
-    }
+  const walkthroughText = fs.existsSync(walkthroughFile) ? fs.readFileSync(walkthroughFile, 'utf8') : '';
+  const walkthroughBody = (() => {
+    const parsed = walkthroughText ? lib.parseFrontmatter(walkthroughText) : null;
+    return parsed ? parsed.body : walkthroughText;
+  })();
+  if (walkthroughText && lib.walkthroughHasCode(walkthroughBody) && !force && !fromTimeBox) {
+    throw lib.terminal(
+      'WALKTHROUGH_HAS_CODE',
+      'The walkthrough contains a fenced code block.',
+      `Remove language-tagged code fences from ${walkthroughFile}. Describe what changed and how to verify, without code.`
+    );
   }
 
-  if ((missingFiles.length || missingCriteria.length) && !force) {
-    const parts = [];
-    if (missingFiles.length) {
-      parts.push(`missing evidence: ${missingFiles.map((f) => path.join(dir, f)).join(', ')}`);
+  const blockedByFiles = missingFiles.length > 0;
+  const blockedByCriteria = missingCriteria.length > 0;
+  if ((blockedByFiles || blockedByCriteria) && !force) {
+    if (!(fromTimeBox && !blockedByFiles)) {
+      const parts = [];
+      if (blockedByFiles) {
+        parts.push(`missing evidence: ${missingFiles.map((f) => path.join(dir, f)).join(', ')}`);
+      }
+      if (blockedByCriteria) {
+        parts.push(`unchecked gating criteria: ${missingCriteria.join('; ')}`);
+      }
+      throw lib.terminal(
+        'COMPLETE_BLOCKED',
+        `Completing bolt "${boltId}" is refused — ${parts.join(' | ')}.`,
+        `${blockedByFiles ? `Write ${missingFiles.map((f) => path.join(dir, f)).join(' and ')}. ` : ''}${blockedByCriteria ? 'Mark each gating criterion [x] only when the behavior is true. ' : ''}Then retry complete-bolt. To override, pass --force (the override is recorded on the bolt).`
+      );
     }
-    if (missingCriteria.length) {
-      parts.push(`unchecked gating criteria: ${missingCriteria.join('; ')}`);
-    }
-    throw lib.terminal(
-      'COMPLETE_BLOCKED',
-      `Completing bolt "${boltId}" is refused — ${parts.join(' | ')}.`,
-      `${missingFiles.length ? 'Write the missing evidence files. ' : ''}${missingCriteria.length ? 'Mark each gating criterion [x] only when the behavior is true. ' : ''}Then retry complete-bolt. To override, pass --force (the override is recorded on the bolt).`
-    );
   }
 
   bolt.data.status = 'complete';
   bolt.data.completed = lib.nowStamp();
   bolt.data.current_stage = null;
-  if (force && (missingFiles.length || missingCriteria.length || lib.walkthroughHasCode(fs.existsSync(walkthroughFile) ? fs.readFileSync(walkthroughFile, 'utf8') : ''))) {
+  if (force && (blockedByFiles || blockedByCriteria || lib.walkthroughHasCode(walkthroughBody))) {
     bolt.data.override = true;
     bolt.data.override_reason = [
-      missingFiles.length ? `missing:${missingFiles.join(',')}` : null,
-      missingCriteria.length ? `criteria:${missingCriteria.length}` : null,
+      blockedByFiles ? `missing:${missingFiles.join(',')}` : null,
+      blockedByCriteria ? `criteria:${missingCriteria.length}` : null,
     ]
       .filter(Boolean)
       .join('; ');
@@ -100,14 +106,8 @@ function completeBolt(rootPath, boltId, force) {
   const intentStatuses = {};
   for (const intentId of touchedIntents) {
     const items = lib.listWorkItems(root, intentId, contract);
-    const allTerminal = items.every((w) => contract.status.terminal.includes(w.status) || w.status === 'complete');
-    const anyActive = items.some((w) => w.status === 'active' || w.status === 'pending');
     const intent = lib.readMarkdown(lib.intentPath(root, intentId, contract));
-    if (allTerminal && items.length) {
-      intent.data.status = items.every((w) => w.status === 'abandoned') ? 'abandoned' : 'complete';
-    } else if (anyActive) {
-      intent.data.status = 'active';
-    }
+    intent.data.status = lib.deriveIntentStatus(items, contract);
     lib.writeMarkdown(intent.path, intent.data, intent.body);
     intentStatuses[intentId] = intent.data.status;
   }
@@ -119,7 +119,17 @@ function completeBolt(rootPath, boltId, force) {
     work_items: bolt.data.work_items,
     intents: intentStatuses,
     completed: bolt.data.completed,
+    time_box_expired: fromTimeBox,
   };
+}
+
+function applyTimeBoxIfExpired(rootPath, boltId) {
+  const contract = lib.loadContract();
+  const root = lib.assertRoot(rootPath);
+  const bolt = lib.readBolt(root, boltId, contract);
+  const recipe = lib.recipeForBolt(root, bolt.data, contract);
+  if (!lib.isTimeBoxExpired(bolt.data, recipe)) return null;
+  return completeBolt(root, boltId, false, { fromTimeBox: true });
 }
 
 if (require.main === module) {
@@ -129,4 +139,4 @@ if (require.main === module) {
   });
 }
 
-module.exports = { completeBolt };
+module.exports = { completeBolt, applyTimeBoxIfExpired };

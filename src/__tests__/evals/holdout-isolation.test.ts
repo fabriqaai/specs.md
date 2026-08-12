@@ -23,6 +23,26 @@ function run(cwd: string, command: string, args: string[]): string {
   return result.stdout;
 }
 
+/**
+ * Stacked PRs that already contain the evals harness look mixed against
+ * main-v2. Judge this contribution against the nearest ancestor that makes
+ * the range one-sided.
+ */
+function contributionBase(cwd: string): string {
+  const current = evaluateHoldout({ cwd });
+  if (current.ok) {
+    return String(resolveBase(cwd, null) || 'HEAD');
+  }
+  for (let n = 1; n <= 20; n += 1) {
+    const rev = `HEAD~${n}`;
+    const parsed = spawnSync('git', ['rev-parse', '--verify', rev], { cwd, encoding: 'utf8' });
+    if (parsed.status !== 0) break;
+    const candidate = parsed.stdout.trim();
+    if (evaluateHoldout({ cwd, base: candidate }).ok) return candidate;
+  }
+  return String(resolveBase(cwd, null) || 'HEAD');
+}
+
 function initRepo(): string {
   const folder = join(tmpdir(), `evals-holdout-${Date.now()}-${Math.random().toString(36).slice(2)}`);
   mkdirSync(folder, { recursive: true });
@@ -111,15 +131,19 @@ describe('holdout isolation', () => {
   });
 
   it('passes holdout on the current repository (mixed still fails; impl-only is allowed)', () => {
-    const result = evaluateHoldout({ cwd: REPO_ROOT });
+    const result = evaluateHoldout({ cwd: REPO_ROOT, base: contributionBase(REPO_ROOT) });
     expect(result.ok, result.message).toBe(true);
   });
 
   it('exits 0 on the current repository CLI and exits 1 on a mixed temp repo', () => {
-    const current = spawnSync(process.execPath, [RUNNER, '--json'], {
-      cwd: REPO_ROOT,
-      encoding: 'utf8',
-    });
+    const current = spawnSync(
+      process.execPath,
+      [RUNNER, '--json', '--base', contributionBase(REPO_ROOT)],
+      {
+        cwd: REPO_ROOT,
+        encoding: 'utf8',
+      }
+    );
     expect(current.status, current.stderr).toBe(0);
     expect(JSON.parse(current.stdout).ok).toBe(true);
 

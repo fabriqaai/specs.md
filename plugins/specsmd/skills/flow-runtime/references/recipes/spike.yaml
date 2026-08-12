@@ -1,0 +1,16 @@
+id: spike
+title: Spike
+stages:
+  - id: explore
+    produces: []
+    gateable: false
+  - id: findings
+    produces:
+      - findings.md
+    gateable: true
+completion_requires:
+  - findings.md
+constraints:
+  - kind: time_box
+    duration: PT8H
+    on_expiry: complete_with_findings

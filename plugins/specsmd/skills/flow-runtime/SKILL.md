@@ -32,4 +32,4 @@ Never install packages into the user's project. These scripts have no dependenci
 
 ## Contract
 
-`references/flow-contract.yaml` is the single source for locations, identifiers, status tokens, and the ceremony matrix. `references/recipes/default.yaml` is the shipped default recipe.
+`references/flow-contract.yaml` is the single source for locations, identifiers, status tokens, and the ceremony matrix. `references/recipes/` holds the four shipped recipes (`default.yaml`, `ddd.yaml`, `spike.yaml`, `simple.yaml`). A bolt stores `recipe` plus an immutable `recipe_snapshot` at creation.

@@ -281,7 +281,15 @@ function writeFrontmatter(data, body) {
 
 function readMarkdown(filePath) {
   if (!fs.existsSync(filePath)) return null;
-  const parsed = parseFrontmatter(fs.readFileSync(filePath, 'utf8'));
+  const text = fs.readFileSync(filePath, 'utf8');
+  if (text.trim() === '') {
+    throw retryable(
+      'ARTIFACT_EMPTY',
+      `${filePath} is empty.`,
+      'Retry; a concurrent write may still be in progress. If the file stays empty, restore it from version control.'
+    );
+  }
+  const parsed = parseFrontmatter(text);
   if (!parsed) {
     throw structural(
       'PARSE_FRONTMATTER',
@@ -411,6 +419,119 @@ function recipeDir(rootPath, contract) {
   return path.join(artifactRoot(rootPath, contract), 'recipes');
 }
 
+function parseIsoDuration(iso, contract) {
+  const raw = String(iso || '').trim();
+  const match = raw.match(/^P(?:(\d+)D)?(?:T(?:(\d+)H)?(?:(\d+)M)?(?:(\d+(?:\.\d+)?)S)?)?$/);
+  if (!match || raw === 'P' || raw === 'PT') {
+    throw terminal(
+      'DURATION_INVALID',
+      `Duration "${iso}" is not an ISO-8601 duration.`,
+      `Use a duration such as ${((contract && contract.recipe && contract.recipe.time_box) || {}).duration_default || 'PT8H'}.`
+    );
+  }
+  const days = parseInt(match[1] || '0', 10);
+  const hours = parseInt(match[2] || '0', 10);
+  const minutes = parseInt(match[3] || '0', 10);
+  const seconds = parseFloat(match[4] || '0');
+  return (((days * 24 + hours) * 60 + minutes) * 60 + seconds) * 1000;
+}
+
+function constraintKindOf(constraint) {
+  if (constraint == null) return '';
+  if (typeof constraint === 'string') return constraint;
+  return String(constraint.kind || '');
+}
+
+function normalizeConstraint(constraint, recipeId, contract) {
+  const kind = constraintKindOf(constraint);
+  const known = (contract.recipe && contract.recipe.constraint_kinds) || [];
+  if (!known.includes(kind)) {
+    throw terminal(
+      'CONSTRAINT_UNKNOWN',
+      `Recipe "${recipeId}" declares unknown constraint kind "${kind || '(missing)'}".`,
+      `Use one of: ${known.join(', ')}. Remove or rename the constraint and reload the recipe.`
+    );
+  }
+  if (kind === 'time_box') {
+    const tb = contract.recipe.time_box || {};
+    const duration = (constraint && constraint.duration) || tb.duration_default || 'PT8H';
+    parseIsoDuration(duration, contract);
+    const onExpiry = (constraint && constraint.on_expiry) || tb.on_expiry_default || 'complete_with_findings';
+    const allowed = tb.on_expiry_values || ['complete_with_findings'];
+    if (!allowed.includes(onExpiry)) {
+      throw terminal(
+        'CONSTRAINT_UNKNOWN',
+        `Recipe "${recipeId}" declares unknown time-box on_expiry "${onExpiry}".`,
+        `Use one of: ${allowed.join(', ')}.`
+      );
+    }
+    return { kind: 'time_box', duration, on_expiry: onExpiry };
+  }
+  if (kind === 'no_source_code') {
+    const stages = splitList(constraint && constraint.stages);
+    return { kind: 'no_source_code', stages };
+  }
+  return { kind };
+}
+
+function normalizeRecipe(raw, recipeId, contract) {
+  if (!raw || !Array.isArray(raw.stages) || raw.stages.length === 0) {
+    throw structural(
+      'RECIPE_INVALID',
+      `Recipe "${recipeId}" has no stages.`,
+      `Give the recipe an ordered stages list with id, produces, and gateable on each stage. See the shipped recipes in ${BUNDLED_RECIPES}.`
+    );
+  }
+  const stages = raw.stages.map((stage, index) => {
+    if (!stage || !stage.id) {
+      throw structural(
+        'RECIPE_INVALID',
+        `Recipe "${recipeId}" stage ${index + 1} is missing id.`,
+        'Give every stage an id, a produces list, and a gateable boolean.'
+      );
+    }
+    if (stage.produces == null) {
+      throw structural(
+        'RECIPE_INVALID',
+        `Recipe "${recipeId}" stage "${stage.id}" is missing produces.`,
+        'Set produces to a list of artifact file names (empty list if the stage produces none).'
+      );
+    }
+    if (typeof stage.gateable !== 'boolean') {
+      throw structural(
+        'RECIPE_INVALID',
+        `Recipe "${recipeId}" stage "${stage.id}" is missing gateable.`,
+        'Set gateable to true or false.'
+      );
+    }
+    const produces = Array.isArray(stage.produces) ? stage.produces.map(String) : [String(stage.produces)];
+    return { id: String(stage.id), produces, gateable: stage.gateable === true };
+  });
+  const rawConstraints = raw.constraints == null ? [] : raw.constraints;
+  if (!Array.isArray(rawConstraints)) {
+    throw structural(
+      'RECIPE_INVALID',
+      `Recipe "${recipeId}" constraints must be a list.`,
+      'Declare constraints as a list of { kind, ... } maps.'
+    );
+  }
+  const constraints = rawConstraints.map((constraint) => normalizeConstraint(constraint, recipeId, contract));
+  const completionDefault = (contract.recipe && contract.recipe.completion_requires_default) || [];
+  const completion =
+    raw.completion_requires == null ? completionDefault.slice() : splitList(raw.completion_requires);
+  return {
+    id: raw.id || recipeId,
+    title: raw.title || raw.id || recipeId,
+    stages,
+    completion_requires: completion,
+    constraints,
+  };
+}
+
+function snapshotRecipe(recipe) {
+  return JSON.parse(JSON.stringify(recipe));
+}
+
 function loadRecipe(rootPath, recipeId, contract) {
   const id = recipeId || contract.recipe.default;
   const projectFile = path.join(recipeDir(rootPath, contract), `${id}.yaml`);
@@ -424,16 +545,59 @@ function loadRecipe(rootPath, recipeId, contract) {
     );
   }
   const recipe = parseYaml(fs.readFileSync(file, 'utf8'));
-  if (!recipe || !Array.isArray(recipe.stages) || recipe.stages.length === 0) {
-    throw structural(
-      'RECIPE_INVALID',
-      `Recipe "${id}" has no stages.`,
-      `Give the recipe an ordered stages list. See the shipped default recipe at ${path.join(BUNDLED_RECIPES, 'default.yaml')}.`
+  return normalizeRecipe(recipe, id, contract);
+}
+
+function recipeForBolt(rootPath, boltData, contract) {
+  if (boltData && boltData.recipe_snapshot && typeof boltData.recipe_snapshot === 'object') {
+    return normalizeRecipe(boltData.recipe_snapshot, boltData.recipe, contract);
+  }
+  return loadRecipe(rootPath, boltData && boltData.recipe, contract);
+}
+
+function timeBoxConstraint(recipe) {
+  const list = (recipe && recipe.constraints) || [];
+  return list.find((constraint) => constraintKindOf(constraint) === 'time_box') || null;
+}
+
+function isTimeBoxExpired(boltData, recipe, nowMs) {
+  if (!boltData || boltData.status !== 'active') return false;
+  const constraint = timeBoxConstraint(recipe);
+  if (!constraint) return false;
+  const start = Date.parse(boltData.activated_at || boltData.created);
+  if (!Number.isFinite(start)) return false;
+  const durationMs = parseIsoDuration(constraint.duration);
+  const now = nowMs == null ? Date.now() : nowMs;
+  return now >= start + durationMs;
+}
+
+function ensureFindingsArtifact(rootPath, boltId, contract) {
+  const name = (((contract.recipe || {}).time_box || {}).findings_artifact) || 'findings.md';
+  const dir = boltDir(rootPath, boltId, contract);
+  const file = path.join(dir, name);
+  assertInsideRoot(rootPath, file, contract);
+  if (!fs.existsSync(file)) {
+    fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(
+      file,
+      [
+        '# Findings',
+        '',
+        'Time box expired. Partial findings are a valid outcome.',
+        '',
+        '## What was learned',
+        '',
+        '(not yet recorded)',
+        '',
+        '## Recommendation',
+        '',
+        'Stop. The bolt is complete; start a new bolt if more work remains.',
+        '',
+      ].join('\n'),
+      'utf8'
     );
   }
-  recipe.id = recipe.id || id;
-  recipe.completion_requires = recipe.completion_requires || [];
-  return recipe;
+  return file;
 }
 
 function listRecipes(rootPath, contract) {
@@ -655,6 +819,14 @@ function readBolt(rootPath, boltId, contract) {
 }
 
 function assertStatus(value, contract) {
+  const rejected = (contract.status && contract.status.rejected_synonyms) || [];
+  if (rejected.includes(value)) {
+    throw structural(
+      'STATUS_INVALID',
+      `Status "${value}" is not in the contract vocabulary.`,
+      `Use one of: ${contract.status.values.join(', ')}. Never use ${rejected.join(', ')}.`
+    );
+  }
   if (!contract.status.values.includes(value)) {
     throw structural(
       'STATUS_INVALID',
@@ -662,6 +834,32 @@ function assertStatus(value, contract) {
       `Use one of: ${contract.status.values.join(', ')}.`
     );
   }
+}
+
+function memoryClassFor(typeName, status, contract) {
+  const type = contract.artifact_types[typeName];
+  if (!type) {
+    throw structural(
+      'TYPE_UNKNOWN',
+      `Artifact type "${typeName}" is not in the contract.`,
+      `Use one of: ${Object.keys(contract.artifact_types).join(', ')}.`
+    );
+  }
+  if (type.memory_class === 'change_record') {
+    const terminal = contract.status.terminal || [];
+    const derivation = (contract.memory_class && contract.memory_class.derivation && contract.memory_class.derivation.change_record) || {};
+    return terminal.includes(status) ? derivation.terminal || 'episodic' : derivation.non_terminal || 'semantic';
+  }
+  return type.memory_class;
+}
+
+function deriveIntentStatus(items, contract) {
+  if (!items || !items.length) return 'active';
+  const terminal = contract.status.terminal || [];
+  if (items.every((item) => item.status === 'abandoned')) return 'abandoned';
+  if (items.every((item) => terminal.includes(item.status))) return 'complete';
+  if (items.some((item) => item.status === 'active' || item.status === 'pending')) return 'active';
+  return 'active';
 }
 
 function detectCycle(nodes) {
@@ -757,6 +955,7 @@ module.exports = {
   retryable,
   terminal,
   structural,
+  exitCodeFor,
   runMain,
   parseYaml,
   stringifyYaml,
@@ -776,9 +975,18 @@ module.exports = {
   projectExists,
   readProject,
   loadRecipe,
+  normalizeRecipe,
+  snapshotRecipe,
+  recipeForBolt,
+  parseIsoDuration,
+  timeBoxConstraint,
+  isTimeBoxExpired,
+  ensureFindingsArtifact,
   listRecipes,
   initProjectTree,
   ensureProject,
+  memoryClassFor,
+  deriveIntentStatus,
   suggestCeremony,
   recommendRecipe,
   normalizeApproval,

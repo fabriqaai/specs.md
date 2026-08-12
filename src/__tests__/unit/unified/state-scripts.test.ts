@@ -5,6 +5,7 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { mkdirSync, writeFileSync, rmSync, existsSync, readFileSync } from 'fs';
 import { join } from 'path';
 import { tmpdir } from 'os';
+import { spawnSync } from 'child_process';
 
 const SCRIPTS = join(
   __dirname,
@@ -74,6 +75,7 @@ describe('unified state scripts', () => {
     expect(contract.artifact_root).toBe('docs/specsmd');
     expect(contract.status.values).toContain('active');
     expect(contract.status.values).not.toContain('in-progress');
+    expect(contract.status.rejected_synonyms).toContain('in-progress');
     const recipe = lib.parseYaml(
       readFileSync(join(SCRIPTS, '../references/recipes/default.yaml'), 'utf8')
     );
@@ -92,8 +94,12 @@ describe('unified state scripts', () => {
     expect(result.autonomy_bias).toBe('controlled');
     expect(existsSync(join(root, 'docs/specsmd/project.md'))).toBe(true);
     expect(existsSync(join(root, 'docs/specsmd/recipes/default.yaml'))).toBe(true);
+    expect(existsSync(join(root, 'docs/specsmd/recipes/ddd.yaml'))).toBe(true);
+    expect(existsSync(join(root, 'docs/specsmd/recipes/spike.yaml'))).toBe(true);
+    expect(existsSync(join(root, 'docs/specsmd/recipes/simple.yaml'))).toBe(true);
     expect(existsSync(join(root, 'package.json'))).toBe(false);
     expect(existsSync(join(root, 'node_modules'))).toBe(false);
+    expect(result.recipes.sort()).toEqual(['ddd', 'default', 'simple', 'spike']);
   });
 
   it('refuses a dependency cycle and names it', () => {
@@ -130,6 +136,29 @@ describe('unified state scripts', () => {
     }
   });
 
+  it('assigns distinct bolt ids when two working copies share a basename', () => {
+    const stamp = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    const leftRoot = join(tmpdir(), `specsmd-same-${stamp}`, 'app');
+    const rightRoot = join(tmpdir(), `specsmd-other-${stamp}`, 'app');
+    mkdirSync(leftRoot, { recursive: true });
+    mkdirSync(rightRoot, { recursive: true });
+    try {
+      initProject(leftRoot, 'balanced');
+      initProject(rightRoot, 'balanced');
+      const leftIntent = initIntent(leftRoot, { title: 'Same name' });
+      const rightIntent = initIntent(rightRoot, { title: 'Same name' });
+      const leftItem = initWorkItem(leftRoot, { intent: leftIntent.id, title: 'Slice' });
+      const rightItem = initWorkItem(rightRoot, { intent: rightIntent.id, title: 'Slice' });
+      const leftBolt = initBolt(leftRoot, { workItems: leftItem.id, ceremony: 'autopilot' });
+      const rightBolt = initBolt(rightRoot, { workItems: rightItem.id, ceremony: 'autopilot' });
+      expect(lib.worktreeToken(leftRoot)).not.toBe(lib.worktreeToken(rightRoot));
+      expect(leftBolt.id).not.toBe(rightBolt.id);
+    } finally {
+      rmSync(join(tmpdir(), `specsmd-same-${stamp}`), { recursive: true, force: true });
+      rmSync(join(tmpdir(), `specsmd-other-${stamp}`), { recursive: true, force: true });
+    }
+  });
+
   it('records recipe and ceremony at create and does not change the recipe', () => {
     const { a, b } = seedTwoItems();
     const bolt = initBolt(root, { workItems: `${a.id},${b.id}`, ceremony: 'confirm' });
@@ -139,14 +168,21 @@ describe('unified state scripts', () => {
     expect(bolt.checkpoint_state).toBe('awaiting');
     const md = lib.readMarkdown(join(root, 'docs/specsmd/bolts', bolt.id, 'bolt.md'));
     expect(md.data.recipe).toBe('default');
+    expect(md.data.recipe_snapshot.stages.map((s: { id: string }) => s.id)).toEqual([
+      'plan',
+      'execute',
+      'test',
+      'review',
+    ]);
+    expect(md.data.activated_at).toBeTruthy();
   });
 
   it('selects a project-local recipe with no other change', () => {
     const { a } = seedTwoItems();
     writeFileSync(
-      join(root, 'docs/specsmd/recipes/spike.yaml'),
+      join(root, 'docs/specsmd/recipes/local-only.yaml'),
       [
-        'id: spike',
+        'id: local-only',
         'stages:',
         '  - id: explore',
         '    produces: []',
@@ -160,9 +196,69 @@ describe('unified state scripts', () => {
       ].join('\n'),
       'utf8'
     );
-    const bolt = initBolt(root, { workItems: a.id, recipe: 'spike', ceremony: 'autopilot' });
-    expect(bolt.recipe).toBe('spike');
+    const bolt = initBolt(root, { workItems: a.id, recipe: 'local-only', ceremony: 'autopilot' });
+    expect(bolt.recipe).toBe('local-only');
     expect(bolt.current_stage).toBe('explore');
+  });
+
+  it('keeps the recorded recipe and snapshot after the project recipe file changes', () => {
+    const { a } = seedTwoItems();
+    const bolt = initBolt(root, { workItems: a.id, ceremony: 'autopilot' });
+    writeFileSync(
+      join(root, 'docs/specsmd/recipes/default.yaml'),
+      [
+        'id: default',
+        'stages:',
+        '  - id: only-stage',
+        '    produces: []',
+        '    gateable: false',
+        'completion_requires: []',
+      ].join('\n'),
+      'utf8'
+    );
+    writeStageFiles(bolt.id, ['plan.md']);
+    const advanced = updateStage(root, bolt.id, 'plan');
+    expect(advanced.current_stage).toBe('execute');
+    const md = lib.readMarkdown(join(root, 'docs/specsmd/bolts', bolt.id, 'bolt.md'));
+    expect(md.data.recipe).toBe('default');
+    expect(md.data.recipe_snapshot.stages.map((s: { id: string }) => s.id)).toEqual([
+      'plan',
+      'execute',
+      'test',
+      'review',
+    ]);
+  });
+
+  it('recommends simple/default/ddd from complexity and lets the user win', () => {
+    initProject(root, 'balanced');
+    const intent = initIntent(root, { title: 'Mapping' });
+    const low = initWorkItem(root, { intent: intent.id, title: 'Low slice', complexity: 'low', body: '# L\n' });
+    const mid = initWorkItem(root, { intent: intent.id, title: 'Mid slice', complexity: 'medium', body: '# M\n' });
+    const high = initWorkItem(root, { intent: intent.id, title: 'High slice', complexity: 'high', body: '# H\n' });
+    expect(initBolt(root, { workItems: low.id }).recipe).toBe('simple');
+    expect(initBolt(root, { workItems: mid.id }).recipe).toBe('default');
+    expect(initBolt(root, { workItems: high.id }).recipe).toBe('ddd');
+    expect(initBolt(root, { workItems: high.id, recipe: 'simple' }).recipe).toBe('simple');
+  });
+
+  it('refuses an unknown constraint kind at recipe load', () => {
+    const { a } = seedTwoItems();
+    writeFileSync(
+      join(root, 'docs/specsmd/recipes/bad-constraint.yaml'),
+      [
+        'id: bad-constraint',
+        'stages:',
+        '  - id: only',
+        '    produces: []',
+        '    gateable: false',
+        'constraints:',
+        '  - kind: ban_network',
+      ].join('\n'),
+      'utf8'
+    );
+    expect(() => initBolt(root, { workItems: a.id, recipe: 'bad-constraint' })).toThrow(
+      /CONSTRAINT_UNKNOWN|unknown constraint/i
+    );
   });
 
   it('confirm ceremony stops on the first gateable stage; autopilot does not', () => {
@@ -180,7 +276,7 @@ describe('unified state scripts', () => {
       complexity: 'low',
       body: '# A\n\n- [x] (gating) done\n',
     });
-    const auto = initBolt(root, { workItems: autoSeed.id, ceremony: 'autopilot' });
+    const auto = initBolt(root, { workItems: autoSeed.id, recipe: 'default', ceremony: 'autopilot' });
     expect(auto.checkpoint_state).toBe('not-required');
     writeStageFiles(auto.id, ['plan.md']);
     const advanced = updateStage(root, auto.id, 'plan');
@@ -190,7 +286,7 @@ describe('unified state scripts', () => {
 
   it('validate ceremony awaits every gateable stage', () => {
     const { a } = seedTwoItems({ complexity: 'high' });
-    const bolt = initBolt(root, { workItems: a.id, ceremony: 'validate' });
+    const bolt = initBolt(root, { workItems: a.id, recipe: 'default', ceremony: 'validate' });
     expect(bolt.checkpoint_state).toBe('awaiting');
     writeStageFiles(bolt.id, ['plan.md']);
     updateCheckpoint(root, bolt.id, 'approved');
@@ -228,7 +324,17 @@ describe('unified state scripts', () => {
   it('refuses completion without recipe evidence and names the files', () => {
     const { a, b } = seedTwoItems();
     const bolt = initBolt(root, { workItems: `${a.id},${b.id}`, ceremony: 'autopilot' });
-    expect(() => completeBolt(root, bolt.id, false)).toThrow(/COMPLETE_BLOCKED|missing evidence/i);
+    try {
+      completeBolt(root, bolt.id, false);
+      throw new Error('expected completion to be refused');
+    } catch (err) {
+      const message = String((err as Error).message);
+      const remediation = String((err as { remediation?: string }).remediation || '');
+      expect(message).toMatch(/COMPLETE_BLOCKED|missing evidence/i);
+      expect(message + remediation).toMatch(/test-report\.md/);
+      expect(message + remediation).toMatch(/walkthrough\.md/);
+      expect(remediation).toMatch(/Write /);
+    }
     const md = lib.readMarkdown(join(root, 'docs/specsmd/bolts', bolt.id, 'bolt.md'));
     expect(md.data.status).toBe('active');
   });
@@ -338,6 +444,7 @@ describe('unified state scripts', () => {
     expect(item.ceremony_suggested).toBe('autopilot');
     const bolt = initBolt(root, { workItems: item.id });
     expect(bolt.ceremony).toBe('autopilot');
+    expect(bolt.recipe).toBe('simple');
     expect(bolt.checkpoint_state).toBe('not-required');
   });
 
@@ -359,6 +466,201 @@ describe('unified state scripts', () => {
     expect(again.id).toBeTruthy();
     const intentAfterBolt = lib.readMarkdown(join(root, 'docs/specsmd/intents', intent.id, 'brief.md'));
     expect(intentAfterBolt.data.status).toBe('active');
+  });
+
+  it('completing one bolt leaves the intent active when another item is still pending', () => {
+    const { intent, a, b } = seedTwoItems();
+    const leftover = initWorkItem(root, {
+      intent: intent.id,
+      title: 'Still pending',
+      complexity: 'low',
+      body: '# leftover\n\n- [x] (gating) leftover\n',
+    });
+    const bolt = initBolt(root, { workItems: `${a.id},${b.id}`, ceremony: 'autopilot' });
+    writeStageFiles(bolt.id, ['plan.md', 'test-report.md', 'review-report.md', 'walkthrough.md']);
+    for (const stage of ['plan', 'execute', 'test', 'review']) updateStage(root, bolt.id, stage);
+    const done = completeBolt(root, bolt.id, false);
+    expect(done.intents[intent.id]).toBe('active');
+    const leftoverMd = lib.readMarkdown(
+      join(root, 'docs/specsmd/intents', intent.id, 'work-items', `${leftover.id}.md`)
+    );
+    expect(leftoverMd.data.status).toBe('pending');
+  });
+
+  it('derives abandoned when every work item is abandoned', () => {
+    const contract = lib.loadContract();
+    expect(
+      lib.deriveIntentStatus(
+        [
+          { status: 'abandoned' },
+          { status: 'abandoned' },
+        ],
+        contract
+      )
+    ).toBe('abandoned');
+    expect(
+      lib.deriveIntentStatus(
+        [
+          { status: 'complete' },
+          { status: 'abandoned' },
+        ],
+        contract
+      )
+    ).toBe('complete');
+    expect(
+      lib.deriveIntentStatus(
+        [
+          { status: 'complete' },
+          { status: 'pending' },
+        ],
+        contract
+      )
+    ).toBe('active');
+  });
+
+  it('expires a spike through the complete path and keeps partial findings', () => {
+    const { a } = seedTwoItems();
+    const bolt = initBolt(root, { workItems: a.id, recipe: 'spike', ceremony: 'autopilot' });
+    const findings = join(root, 'docs/specsmd/bolts', bolt.id, 'findings.md');
+    writeFileSync(findings, '# Partial notes\n\nWe learned the cache is sticky.\n', 'utf8');
+    const parsed = lib.readMarkdown(join(root, 'docs/specsmd/bolts', bolt.id, 'bolt.md'));
+    parsed.data.activated_at = new Date(Date.now() - 9 * 60 * 60 * 1000).toISOString();
+    lib.writeMarkdown(parsed.path, parsed.data, parsed.body);
+
+    expect(() => updateStage(root, bolt.id, 'explore')).toThrow(/TIME_BOX_EXPIRED|time box/i);
+    const after = lib.readMarkdown(join(root, 'docs/specsmd/bolts', bolt.id, 'bolt.md'));
+    expect(after.data.status).toBe('complete');
+    expect(after.data.override).toBe(false);
+    expect(readFileSync(findings, 'utf8')).toContain('Partial notes');
+    const workItem = lib.findWorkItem(root, a.id, lib.loadContract());
+    expect(workItem.status).toBe('complete');
+  });
+
+  it('writes findings.md on expiry when it is missing and completes without an override', () => {
+    const { a } = seedTwoItems();
+    const bolt = initBolt(root, { workItems: a.id, recipe: 'spike', ceremony: 'autopilot' });
+    const parsed = lib.readMarkdown(join(root, 'docs/specsmd/bolts', bolt.id, 'bolt.md'));
+    parsed.data.activated_at = new Date(Date.now() - 9 * 60 * 60 * 1000).toISOString();
+    lib.writeMarkdown(parsed.path, parsed.data, parsed.body);
+    const done = completeBolt(root, bolt.id, false);
+    expect(done.status).toBe('complete');
+    expect(done.override).toBe(false);
+    expect(done.time_box_expired).toBe(true);
+    expect(existsSync(join(root, 'docs/specsmd/bolts', bolt.id, 'findings.md'))).toBe(true);
+  });
+
+  it('does not start the spike clock on a draft', () => {
+    const { a } = seedTwoItems();
+    const draft = initDraft(root, { workItems: a.id, recipe: 'spike' });
+    const parsed = lib.readMarkdown(join(root, 'docs/specsmd/bolts', draft.id, 'bolt.md'));
+    expect(parsed.data.activated_at).toBeNull();
+    parsed.data.created = new Date(Date.now() - 9 * 60 * 60 * 1000).toISOString();
+    lib.writeMarkdown(parsed.path, parsed.data, parsed.body);
+    expect(parsed.data.status).toBe('draft');
+    expect(
+      lib.isTimeBoxExpired(parsed.data, lib.recipeForBolt(root, parsed.data, lib.loadContract()))
+    ).toBe(false);
+  });
+
+  it('normalizes every grant phrase in the contract and leaves deny as awaiting', () => {
+    const { a } = seedTwoItems();
+    const bolt = initBolt(root, { workItems: a.id, ceremony: 'confirm' });
+    const contract = lib.loadContract();
+    for (const phrase of contract.approval.grant) {
+      expect(updateCheckpoint(root, bolt.id, phrase).checkpoint_state).toBe('granted');
+    }
+    expect(updateCheckpoint(root, bolt.id, 'no').checkpoint_state).toBe('awaiting');
+    expect(updateCheckpoint(root, bolt.id, 'hold').checkpoint_state).toBe('awaiting');
+  });
+
+  it('types errors as retryable 1, terminal 2, structural 3 with remediation', () => {
+    const contract = lib.loadContract();
+    expect(lib.exitCodeFor(lib.retryable('X', 'retry', 'try again'), contract)).toBe(1);
+    expect(lib.exitCodeFor(lib.terminal('Y', 'stop', 'pass a different input'), contract)).toBe(2);
+    expect(lib.exitCodeFor(lib.structural('Z', 'broken', 'repair the tree'), contract)).toBe(3);
+    expect(lib.terminal('Y', 'stop', 'pass a different input').remediation).toMatch(/different input/);
+
+    writeFileSync(join(root, 'empty.md'), '', 'utf8');
+    try {
+      lib.readMarkdown(join(root, 'empty.md'));
+      throw new Error('expected empty artifact to be retryable');
+    } catch (err) {
+      expect((err as { kind: string }).kind).toBe('retryable');
+      expect(lib.exitCodeFor(err, contract)).toBe(1);
+    }
+
+    writeFileSync(join(root, 'docs-only.md'), '# no frontmatter\n', 'utf8');
+    try {
+      lib.readMarkdown(join(root, 'docs-only.md'));
+      throw new Error('expected missing frontmatter to be structural');
+    } catch (err) {
+      expect((err as { kind: string }).kind).toBe('structural');
+      expect(lib.exitCodeFor(err, contract)).toBe(3);
+    }
+
+    expect(() => lib.assertStatus('in-progress', contract)).toThrow(/STATUS_INVALID|in-progress/);
+
+    const missingRoot = spawnSync(process.execPath, [join(SCRIPTS, 'init-bolt.cjs')], {
+      encoding: 'utf8',
+    });
+    expect(missingRoot.status).toBe(2);
+    expect(missingRoot.stdout).toMatch(/"kind": "terminal"/);
+
+    const missingBolt = spawnSync(
+      process.execPath,
+      [join(SCRIPTS, 'update-stage.cjs'), root, 'bolt-missing-000', 'plan'],
+      { encoding: 'utf8' }
+    );
+    expect(missingBolt.status).toBe(2);
+    expect(missingBolt.stdout).toMatch(/remediation/);
+  });
+
+  it('writes nothing outside the artifact root across a full bolt lifecycle', () => {
+    const { intent, a } = seedTwoItems();
+    const before = new Set(require('fs').readdirSync(root));
+    const bolt = initBolt(root, { workItems: a.id, ceremony: 'autopilot' });
+    writeStageFiles(bolt.id, ['plan.md', 'test-report.md', 'review-report.md', 'walkthrough.md']);
+    for (const stage of ['plan', 'execute', 'test', 'review']) updateStage(root, bolt.id, stage);
+    completeBolt(root, bolt.id, false);
+    const after = require('fs').readdirSync(root);
+    for (const name of after) {
+      if (!before.has(name)) expect(name).toBe('docs');
+    }
+    expect(existsSync(join(root, 'package.json'))).toBe(false);
+    expect(existsSync(join(root, 'node_modules'))).toBe(false);
+    expect(existsSync(join(root, 'docs/specsmd/intents', intent.id, 'brief.md'))).toBe(true);
+  });
+
+  it('runs the ddd and simple recipes from their snapshots', () => {
+    const { a } = seedTwoItems({ complexity: 'high' });
+    const ddd = initBolt(root, { workItems: a.id, recipe: 'ddd', ceremony: 'autopilot' });
+    expect(ddd.current_stage).toBe('domain-model');
+    writeStageFiles(ddd.id, ['domain-model.md']);
+    expect(updateStage(root, ddd.id, 'domain-model').current_stage).toBe('design');
+    writeStageFiles(ddd.id, ['design.md']);
+    expect(updateStage(root, ddd.id, 'design').current_stage).toBe('decisions');
+    writeStageFiles(ddd.id, ['decisions.md']);
+    expect(updateStage(root, ddd.id, 'decisions').current_stage).toBe('implement');
+    expect(updateStage(root, ddd.id, 'implement').current_stage).toBe('test');
+    writeStageFiles(ddd.id, ['test-report.md']);
+    updateStage(root, ddd.id, 'test');
+    const dddDone = completeBolt(root, ddd.id, false);
+    expect(dddDone.status).toBe('complete');
+
+    const simpleItem = initWorkItem(root, {
+      intent: a.intent,
+      title: 'Simple slice',
+      complexity: 'low',
+      body: '# S\n\n- [x] (gating) the label reads Save\n',
+    });
+    const simple = initBolt(root, { workItems: simpleItem.id, recipe: 'simple', ceremony: 'autopilot' });
+    expect(simple.current_stage).toBe('plan');
+    writeStageFiles(simple.id, ['plan.md']);
+    expect(updateStage(root, simple.id, 'plan').current_stage).toBe('implement');
+    expect(updateStage(root, simple.id, 'implement').current_stage).toBe('walkthrough');
+    writeStageFiles(simple.id, ['walkthrough.md']);
+    updateStage(root, simple.id, 'walkthrough');
+    expect(completeBolt(root, simple.id, false).status).toBe('complete');
   });
 
   it('refuses a dependency cycle that crosses intents', () => {

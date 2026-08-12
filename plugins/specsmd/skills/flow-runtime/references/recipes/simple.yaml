@@ -1,0 +1,17 @@
+id: simple
+title: Simple
+stages:
+  - id: plan
+    produces:
+      - plan.md
+    gateable: true
+  - id: implement
+    produces: []
+    gateable: false
+  - id: walkthrough
+    produces:
+      - walkthrough.md
+    gateable: true
+completion_requires:
+  - walkthrough.md
+constraints: []

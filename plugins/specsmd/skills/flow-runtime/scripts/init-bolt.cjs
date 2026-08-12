@@ -67,7 +67,14 @@ function initBolt(rootPath, opts) {
   const maxComplexity = pickHighestComplexity(items.map((i) => i.complexity), contract);
 
   if (!recipeId) recipeId = lib.recommendRecipe(maxComplexity, contract);
-  const recipe = lib.loadRecipe(root, recipeId, contract);
+  let recipe;
+  if (opts.adoptDraft && !opts.recipe) {
+    const draft = lib.readBolt(root, opts.adoptDraft, contract);
+    if (draft.data.recipe_snapshot) {
+      recipe = lib.normalizeRecipe(draft.data.recipe_snapshot, recipeId, contract);
+    }
+  }
+  if (!recipe) recipe = lib.loadRecipe(root, recipeId, contract);
 
   if (!ceremony) {
     ceremony = pickMostControlledCeremony(items, project.data.autonomy_bias, contract);
@@ -92,17 +99,20 @@ function initBolt(rootPath, opts) {
   const file = lib.boltPath(root, id, contract);
   lib.assertInsideRoot(root, file, contract);
 
+  const created = lib.nowStamp();
   const data = {
     id,
     status: 'active',
     recipe: recipe.id,
+    recipe_snapshot: lib.snapshotRecipe(recipe),
     ceremony,
     current_stage: firstStage,
     stages_completed: [],
     checkpoint_state: checkpoint,
     work_items: workItemIds,
     override: false,
-    created: lib.nowStamp(),
+    activated_at: created,
+    created,
     completed: null,
   };
   if (adoptedDraft) data.adopted_draft = adoptedDraft;
@@ -135,10 +145,12 @@ function initBolt(rootPath, opts) {
     id,
     path: file,
     recipe: recipe.id,
+    recipe_snapshot: data.recipe_snapshot,
     ceremony,
     current_stage: firstStage,
     checkpoint_state: checkpoint,
     work_items: workItemIds,
+    activated_at: created,
     adopted_draft: adoptedDraft,
   };
 }
@@ -183,7 +195,7 @@ function initDraft(rootPath, opts) {
   }
   const maxComplexity = pickHighestComplexity(items.map((i) => i.complexity), contract);
   const recipeId = opts.recipe || lib.recommendRecipe(maxComplexity, contract);
-  lib.loadRecipe(root, recipeId, contract);
+  const recipe = lib.loadRecipe(root, recipeId, contract);
   const project = lib.readProject(root, contract);
   const ceremony = opts.ceremony || pickMostControlledCeremony(items, project.data.autonomy_bias, contract);
 
@@ -198,19 +210,21 @@ function initDraft(rootPath, opts) {
     {
       id,
       status: 'draft',
-      recipe: recipeId,
+      recipe: recipe.id,
+      recipe_snapshot: lib.snapshotRecipe(recipe),
       ceremony,
       current_stage: null,
       stages_completed: [],
       checkpoint_state: 'none',
       work_items: workItemIds,
       override: false,
+      activated_at: null,
       created: lib.nowStamp(),
       completed: null,
     },
     `# Draft bolt: ${id}\n\nProposal only. Starting a bolt may adopt, modify, or ignore this draft.\n`
   );
-  return { id, path: file, status: 'draft', recipe: recipeId, ceremony, work_items: workItemIds };
+  return { id, path: file, status: 'draft', recipe: recipe.id, ceremony, work_items: workItemIds };
 }
 
 if (require.main === module) {

@@ -1,0 +1,30 @@
+id: ddd
+title: Domain-Driven Design
+stages:
+  - id: domain-model
+    produces:
+      - domain-model.md
+    gateable: true
+  - id: design
+    produces:
+      - design.md
+    gateable: true
+  - id: decisions
+    produces:
+      - decisions.md
+    gateable: true
+  - id: implement
+    produces: []
+    gateable: false
+  - id: test
+    produces:
+      - test-report.md
+    gateable: true
+completion_requires:
+  - test-report.md
+constraints:
+  - kind: no_source_code
+    stages:
+      - domain-model
+      - design
+      - decisions
