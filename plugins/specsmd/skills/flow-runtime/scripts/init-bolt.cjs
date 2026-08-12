@@ -111,6 +111,7 @@ function initBolt(rootPath, opts) {
     work_items: workItemIds,
     override: false,
     activated_at: created,
+    updated: created,
     created,
     completed: null,
   };
@@ -123,6 +124,7 @@ function initBolt(rootPath, opts) {
     const draftFile = lib.boltPath(root, adoptedDraft, contract);
     const draft = lib.readMarkdown(draftFile);
     draft.data.status = 'abandoned';
+    lib.touchUpdated(draft.data);
     lib.writeMarkdown(draftFile, draft.data, draft.body, root, contract);
   }
 
@@ -211,6 +213,7 @@ function initDraft(rootPath, opts) {
   const seq = lib.nextPrefixedId(lib.listDirNames(boltsDir), contract.identifiers.bolt_width, prefix);
   const id = `${prefix}-${seq}`;
   const file = lib.boltPath(root, id, contract);
+  const created = lib.nowStamp();
   lib.writeMarkdown(
     file,
     {
@@ -225,7 +228,8 @@ function initDraft(rootPath, opts) {
       work_items: workItemIds,
       override: false,
       activated_at: null,
-      created: lib.nowStamp(),
+      updated: created,
+      created,
       completed: null,
     },
     `# Draft bolt: ${id}\n\nProposal only. Starting a bolt may adopt, modify, or ignore this draft.\n`,

@@ -205,6 +205,7 @@ artifact_types:
       - override_reason
       - adopted_draft
       - activated_at
+      - updated
       - created
       - completed
   recipe:

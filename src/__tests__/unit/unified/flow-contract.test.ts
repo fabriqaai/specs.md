@@ -33,6 +33,7 @@ describe('flow contract', () => {
     }
     expect(contract.artifact_types.bolt.fields).toContain('adopted_draft');
     expect(contract.artifact_types.bolt.fields).toContain('override_reason');
+    expect(contract.artifact_types.bolt.fields).toContain('updated');
 
     expect(contract.identifiers.patterns.bolt).toBe('bolt-{worktree}-{nnn}');
     expect(contract.identifiers.patterns.worktree).toContain('sha1(absPath)[:6]');

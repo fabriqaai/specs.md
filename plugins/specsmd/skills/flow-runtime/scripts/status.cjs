@@ -4,7 +4,7 @@
  * Usage: node status.cjs <rootPath>
  */
 const lib = require('./lib.cjs');
-const { collectFindings } = require('./validate-integrity.cjs');
+const { collectFindings, scanTree } = require('./validate-integrity.cjs');
 
 function collectHealth(rootPath, contract) {
   try {
@@ -108,23 +108,28 @@ function projectStatus(rootPath) {
     };
   }
 
-  const intents = lib.listIntents(root, contract);
-  const workItems = lib.listAllWorkItems(root, contract);
-  const bolts = lib.listBolts(root, contract);
+  const arts = scanTree(root, contract);
+  const intents = arts.intents;
+  const workItems = arts.workItems;
+  const bolts = arts.bolts;
   const assigned = new Set();
   for (const bolt of bolts) {
     if (bolt.status === 'abandoned' || bolt.status === 'draft') continue;
     for (const wi of lib.splitList(bolt.work_items)) assigned.add(wi);
   }
 
+  function isAssigned(item) {
+    return assigned.has(item.id) || assigned.has(item.locationId);
+  }
+
   const shaping = [];
   for (const intent of intents) {
-    const items = workItems.filter((w) => w.intent === intent.id);
-    const unbolted = items.filter((w) => !assigned.has(w.id) && w.status !== 'complete' && w.status !== 'abandoned');
+    const items = workItems.filter((w) => w.intent === intent.id || w.locationIntent === intent.locationId);
+    const unbolted = items.filter((w) => !isAssigned(w) && w.status !== 'complete' && w.status !== 'abandoned');
     if (intent.status !== 'complete' && intent.status !== 'abandoned' && (unbolted.length || !items.length)) {
       shaping.push({
         kind: 'intent',
-        id: intent.id,
+        id: intent.id || intent.locationId,
         title: intent.title,
         status: intent.status,
         work_item_count: items.length,
@@ -134,24 +139,45 @@ function projectStatus(rootPath) {
     for (const w of unbolted) {
       shaping.push({
         kind: 'work-item',
-        id: w.id,
+        id: w.id || w.locationId,
         title: w.title,
         status: w.status,
-        intent: w.intent,
+        intent: w.intent || w.locationIntent,
         complexity: w.complexity,
         ceremony_suggested: w.ceremony_suggested,
       });
     }
   }
 
+  const intentKeys = new Set(intents.flatMap((i) => [i.id, i.locationId].filter(Boolean)));
+  for (const w of workItems) {
+    const parent = w.intent || w.locationIntent;
+    if (intentKeys.has(parent)) continue;
+    if (isAssigned(w) || w.status === 'complete' || w.status === 'abandoned') continue;
+    shaping.push({
+      kind: 'work-item',
+      id: w.id || w.locationId,
+      title: w.title,
+      status: w.status,
+      intent: parent,
+      complexity: w.complexity,
+      ceremony_suggested: w.ceremony_suggested,
+    });
+  }
+
   const building = bolts
     .filter((b) => b.status === 'active')
     .map((b) => {
-      const recipe = lib.recipeForBolt(root, b, contract);
-      const expired = lib.isTimeBoxExpired(b, recipe);
+      let expired = false;
+      try {
+        const recipe = lib.recipeForBolt(root, b, contract);
+        expired = lib.isTimeBoxExpired(b, recipe);
+      } catch {
+        expired = false;
+      }
       return {
         kind: 'bolt',
-        id: b.id,
+        id: b.id || b.locationId,
         status: b.status,
         recipe: b.recipe,
         ceremony: b.ceremony,
@@ -169,7 +195,7 @@ function projectStatus(rootPath) {
     .filter((b) => b.status === 'complete')
     .map((b) => ({
       kind: 'bolt',
-      id: b.id,
+      id: b.id || b.locationId,
       status: b.status,
       completed: b.completed,
       work_items: b.work_items,
@@ -177,13 +203,13 @@ function projectStatus(rootPath) {
 
   const drafts = bolts
     .filter((b) => b.status === 'draft')
-    .map((b) => ({ id: b.id, work_items: b.work_items, recipe: b.recipe }));
+    .map((b) => ({ id: b.id || b.locationId, work_items: b.work_items, recipe: b.recipe }));
 
   const lenses = { shaping, building, shipping };
   return {
     initialized: true,
     artifactRoot: lib.artifactRoot(root, contract),
-    autonomy_bias: lib.projectExists(root, contract) ? lib.readProject(root, contract).data.autonomy_bias : null,
+    autonomy_bias: arts.project ? arts.project.autonomy_bias : null,
     lenses,
     drafts,
     health: collectHealth(root, contract),

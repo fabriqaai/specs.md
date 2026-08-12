@@ -365,6 +365,11 @@ function nowStamp() {
   return new Date().toISOString().replace(/\.\d+Z$/, 'Z');
 }
 
+function touchUpdated(data) {
+  data.updated = nowStamp();
+  return data;
+}
+
 function kebab(value) {
   const s = String(value || '')
     .toLowerCase()
@@ -1024,6 +1029,7 @@ module.exports = {
   assertRoot,
   assertInsideRoot,
   nowStamp,
+  touchUpdated,
   kebab,
   assertSafeId,
   normalizePrefixedSlug,

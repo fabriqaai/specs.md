@@ -2,7 +2,7 @@
  * Integrity validator — drift classes, consent, maintenance log, clean tree.
  */
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { mkdirSync, writeFileSync, rmSync, existsSync, readFileSync, utimesSync } from 'fs';
+import { mkdirSync, writeFileSync, rmSync, existsSync, readFileSync, unlinkSync, utimesSync } from 'fs';
 import { join } from 'path';
 import { tmpdir } from 'os';
 import { spawnSync } from 'child_process';
@@ -79,6 +79,16 @@ describe('integrity validator', () => {
 
   function readArt(rel: string) {
     return lib.readMarkdown(join(root, rel));
+  }
+
+  function daysAgo(days: number) {
+    return new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString().replace(/\.\d+Z$/, 'Z');
+  }
+
+  function setBoltUpdated(boltId: string, stamp: string) {
+    const parsed = lib.readMarkdown(join(root, 'docs/specsmd/bolts', boltId, 'bolt.md'));
+    parsed.data.updated = stamp;
+    lib.writeMarkdown(parsed.path, parsed.data, parsed.body, root);
   }
 
   it('reports zero findings and exit 0 on a clean tree', () => {
@@ -161,9 +171,7 @@ describe('integrity validator', () => {
   it('detects a stale active bolt using the contract default threshold', () => {
     const { item } = seed();
     const bolt = initBolt(root, { workItems: item.id, ceremony: 'autopilot' });
-    const boltPath = join(root, 'docs/specsmd/bolts', bolt.id, 'bolt.md');
-    const age = new Date(Date.now() - 10 * 24 * 60 * 60 * 1000);
-    utimesSync(boltPath, age, age);
+    setBoltUpdated(bolt.id, daysAgo(10));
 
     const result = validateIntegrity(root);
     const stale = result.findings.find((f: { class: string }) => f.class === 'stale-active');
@@ -174,15 +182,16 @@ describe('integrity validator', () => {
       artifact: bolt.id,
     });
     expect(stale.remediation).toContain(`docs/specsmd/bolts/${bolt.id}/bolt.md`);
+    expect(stale.remediation).toMatch(/update-stage\.cjs/);
+    expect(stale.remediation).toContain(bolt.id);
+    expect(stale.remediation).toMatch(/current_stage/);
     expect(stale.stale_after).toBe('P7D');
   });
 
   it('honors a configured stale threshold', () => {
     const { item } = seed();
     const bolt = initBolt(root, { workItems: item.id, ceremony: 'autopilot' });
-    const boltPath = join(root, 'docs/specsmd/bolts', bolt.id, 'bolt.md');
-    const age = new Date(Date.now() - 10 * 24 * 60 * 60 * 1000);
-    utimesSync(boltPath, age, age);
+    setBoltUpdated(bolt.id, daysAgo(10));
 
     const wide = validateIntegrity(root, { staleAfter: 'P30D' });
     expect(wide.findings.filter((f: { class: string }) => f.class === 'stale-active')).toEqual([]);
@@ -190,6 +199,19 @@ describe('integrity validator', () => {
     const cli = runCli([root, '--stale-after', 'P30D']);
     expect(cli.status).toBe(0);
     expect(parseOut(cli).data.findings.filter((f: { class: string }) => f.class === 'stale-active')).toEqual([]);
+  });
+
+  it('uses bolt.updated, not filesystem mtime, for staleness', () => {
+    const { item } = seed();
+    const bolt = initBolt(root, { workItems: item.id, ceremony: 'autopilot' });
+    const boltPath = join(root, 'docs/specsmd/bolts', bolt.id, 'bolt.md');
+    const age = new Date(Date.now() - 10 * 24 * 60 * 60 * 1000);
+    utimesSync(boltPath, age, age);
+    expect(validateIntegrity(root).findings.filter((f: { class: string }) => f.class === 'stale-active')).toEqual([]);
+
+    setBoltUpdated(bolt.id, daysAgo(10));
+    utimesSync(boltPath, new Date(), new Date());
+    expect(validateIntegrity(root).findings.some((f: { class: string }) => f.class === 'stale-active')).toBe(true);
   });
 
   it('detects a status token outside the contract vocabulary', () => {
@@ -309,9 +331,8 @@ describe('integrity validator', () => {
     const bolt = initBolt(root, { workItems: item.id, ceremony: 'autopilot' });
     const parsed = lib.readMarkdown(join(root, 'docs/specsmd/bolts', bolt.id, 'bolt.md'));
     parsed.data.work_items = [item.id, '777-absent'];
+    parsed.data.updated = daysAgo(10);
     lib.writeMarkdown(parsed.path, parsed.data, parsed.body, root);
-    const age = new Date(Date.now() - 10 * 24 * 60 * 60 * 1000);
-    utimesSync(parsed.path, age, age);
 
     const result = validateIntegrity(root, { fix: true });
     expect(result.repaired).toEqual([]);
@@ -356,6 +377,96 @@ describe('integrity validator', () => {
     expect(payload.data.repaired.length).toBeGreaterThan(0);
     expect(payload.data.findings).toEqual([]);
     expect(readArt(itemRel).data.status).toBe('complete');
+  });
+
+  it('does not treat a location-matched work item as an orphan, and still reports cascade', () => {
+    const { intent, item } = seed();
+    const bolt = finishBolt(item.id);
+    const itemRel = `docs/specsmd/intents/${intent.id}/work-items/${item.id}.md`;
+    const parsed = readArt(itemRel);
+    parsed.data.id = '099-wrong-place';
+    parsed.data.status = 'pending';
+    lib.writeMarkdown(parsed.path, parsed.data, parsed.body, root);
+
+    const result = validateIntegrity(root);
+    expect(
+      result.findings.some(
+        (f: { class: string; reference?: string }) =>
+          f.class === 'orphaned-reference' && (f.reference === item.id || f.reference === '099-wrong-place')
+      )
+    ).toBe(false);
+    expect(result.findings.some((f: { class: string }) => f.class === 'id-location')).toBe(true);
+    const itemFinding = result.findings.find(
+      (f: { class: string; path: string }) => f.class === 'status-cascade' && f.path === itemRel
+    );
+    expect(itemFinding).toMatchObject({
+      code: 'CASCADE_DRIFT',
+      auto_repairable: true,
+    });
+    expect(itemFinding.message).toMatch(new RegExp(bolt.id));
+  });
+
+  it('settles consented cascade repairs across passes without --fix', () => {
+    const { intent, item } = seed();
+    finishBolt(item.id);
+    const itemRel = `docs/specsmd/intents/${intent.id}/work-items/${item.id}.md`;
+    const parsed = readArt(itemRel);
+    parsed.data.status = 'pending';
+    lib.writeMarkdown(parsed.path, parsed.data, parsed.body, root);
+
+    const detected = collectFindings(root, lib.loadContract());
+    const ids = detected
+      .filter((f: { auto_repairable: boolean }) => f.auto_repairable)
+      .map((f: { id: string }) => f.id)
+      .join(',');
+    const result = validateIntegrity(root, { finding: ids });
+    expect(readArt(itemRel).data.status).toBe('complete');
+    expect(readArt(`docs/specsmd/intents/${intent.id}/brief.md`).data.status).toBe('complete');
+    expect(result.findings.filter((f: { class: string }) => f.class === 'status-cascade')).toEqual([]);
+  });
+
+  it('gives cascade expected_status precedence over a synonym repair on the same file', () => {
+    const { intent, item } = seed();
+    finishBolt(item.id);
+    const itemRel = `docs/specsmd/intents/${intent.id}/work-items/${item.id}.md`;
+    const parsed = readArt(itemRel);
+    parsed.data.status = 'in-progress';
+    lib.writeMarkdown(parsed.path, parsed.data, parsed.body, root);
+
+    const detected = collectFindings(root, lib.loadContract());
+    const ids = detected
+      .filter((f: { auto_repairable: boolean; path: string }) => f.auto_repairable && f.path === itemRel)
+      .map((f: { id: string }) => f.id)
+      .join(',');
+    expect(ids).toMatch(/F/);
+    const result = validateIntegrity(root, { finding: ids });
+    expect(readArt(itemRel).data.status).toBe('complete');
+    expect(result.repaired.some((r: { code: string }) => r.code === 'CASCADE_DRIFT')).toBe(true);
+  });
+
+  it('still scans work items when brief.md is missing', () => {
+    const { intent, item } = seed();
+    const itemRel = `docs/specsmd/intents/${intent.id}/work-items/${item.id}.md`;
+    const parsed = readArt(itemRel);
+    parsed.data.status = 'in-progress';
+    parsed.data.depends_on = ['888-ghost'];
+    lib.writeMarkdown(parsed.path, parsed.data, parsed.body, root);
+    unlinkSync(join(root, 'docs/specsmd/intents', intent.id, 'brief.md'));
+
+    const result = validateIntegrity(root);
+    expect(result.scanned.work_items).toBe(1);
+    expect(result.findings.some((f: { code: string }) => f.code === 'UNREADABLE')).toBe(true);
+    expect(result.findings.some((f: { class: string }) => f.class === 'illegal-status')).toBe(true);
+    expect(result.findings.some((f: { class: string }) => f.class === 'orphaned-reference')).toBe(true);
+    expect(result.findings.some((f: { class: string; reference?: string }) => f.reference === item.id)).toBe(false);
+  });
+
+  it('status reports UNREADABLE health instead of aborting when brief.md is empty', () => {
+    const { intent, item } = seed();
+    writeFileSync(join(root, 'docs/specsmd/intents', intent.id, 'brief.md'), '', 'utf8');
+    const report = projectStatus(root);
+    expect(report.health.some((f: { code: string }) => f.code === 'UNREADABLE')).toBe(true);
+    expect(report.lenses.shaping.some((s: { id: string }) => s.id === item.id || s.id === intent.id)).toBe(true);
   });
 
   it('CLI exits 1 when findings remain', () => {

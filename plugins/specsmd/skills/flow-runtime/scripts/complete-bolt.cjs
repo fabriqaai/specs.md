@@ -92,6 +92,7 @@ function completeBolt(rootPath, boltId, force, opts) {
     if (!completed.includes(s)) completed.push(s);
   }
   bolt.data.stages_completed = completed;
+  lib.touchUpdated(bolt.data);
   lib.writeMarkdown(bolt.path, bolt.data, bolt.body, root, contract);
 
   const touchedIntents = new Set();

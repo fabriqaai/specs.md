@@ -77,9 +77,12 @@ function scanTree(rootPath, contract) {
   if (fs.existsSync(intentsDir)) {
     for (const name of lib.listDirNames(intentsDir)) {
       const file = lib.intentPath(rootPath, name, contract);
-      if (!fs.existsSync(file)) continue;
-      const intent = take(file, { kind: 'intent', locationId: name });
-      if (intent) arts.intents.push(intent);
+      if (!fs.existsSync(file)) {
+        arts.unreadable.push({ ok: false, code: 'MISSING', path: file, kind: 'intent', locationId: name });
+      } else {
+        const intent = take(file, { kind: 'intent', locationId: name });
+        if (intent) arts.intents.push(intent);
+      }
 
       const itemsDir = path.join(intentsDir, name, 'work-items');
       if (!fs.existsSync(itemsDir)) continue;
@@ -109,12 +112,29 @@ function scanTree(rootPath, contract) {
   return arts;
 }
 
-function lastStateChangeMs(filePath) {
-  try {
-    return fs.statSync(filePath).mtimeMs;
-  } catch {
-    return 0;
+function lastStateChangeMs(bolt) {
+  // Script-owned stamps only — clone/checkout mtimes are not state.
+  for (const key of ['updated', 'activated_at', 'created']) {
+    const t = Date.parse(bolt[key]);
+    if (Number.isFinite(t)) return t;
   }
+  return 0;
+}
+
+function workItemAliases(item) {
+  return [item.id, item.locationId].filter(Boolean);
+}
+
+function findWorkItemRef(items, ref) {
+  return items.find((w) => w.id === ref || w.locationId === ref) || null;
+}
+
+function knownWorkItemIds(items) {
+  const ids = new Set();
+  for (const item of items) {
+    for (const key of workItemAliases(item)) ids.add(key);
+  }
+  return ids;
 }
 
 function collectFindings(rootPath, contract, opts) {
@@ -126,7 +146,7 @@ function collectFindings(rootPath, contract, opts) {
   const now = options.now == null ? Date.now() : options.now;
   const arts = scanTree(root, c);
   const findings = [];
-  const knownIds = new Set(arts.workItems.map((w) => w.id).filter(Boolean));
+  const knownIds = knownWorkItemIds(arts.workItems);
 
   function push(finding) {
     findings.push(finding);
@@ -271,7 +291,7 @@ function collectFindings(rootPath, contract, opts) {
     if (bolt.status !== 'complete') continue;
     const rel = relToRoot(root, bolt.path);
     for (const wi of lib.splitList(bolt.work_items)) {
-      const item = arts.workItems.find((w) => w.id === wi);
+      const item = findWorkItemRef(arts.workItems, wi);
       if (!item) continue;
       if (item.status === 'complete' || item.status === 'abandoned') continue;
       const itemRel = relToRoot(root, item.path);
@@ -315,20 +335,27 @@ function collectFindings(rootPath, contract, opts) {
 
   for (const bolt of arts.bolts) {
     if (bolt.status !== 'active') continue;
-    const changed = lastStateChangeMs(bolt.path);
+    const changed = lastStateChangeMs(bolt);
     if (!changed) continue;
     if (now - changed < staleMs) continue;
     const rel = relToRoot(root, bolt.path);
     const ageMs = now - changed;
+    const boltId = bolt.id || bolt.locationId;
+    const stage = bolt.current_stage || '(none)';
+    const gate = bolt.checkpoint_state || 'none';
+    const resume =
+      gate === 'awaiting'
+        ? `Run update-checkpoint.cjs ${root} ${boltId} <approval phrase> (current_stage ${stage}, checkpoint_state awaiting).`
+        : `Run update-stage.cjs ${root} ${boltId} ${stage} (current_stage ${stage}, checkpoint_state ${gate}).`;
     push({
       code: 'STALE_ACTIVE',
       class: 'stale-active',
       severity: 'warning',
       auto_repairable: false,
       path: rel,
-      artifact: bolt.id || bolt.locationId,
-      message: `Bolt ${bolt.id || bolt.locationId} is active and has had no state change for ${formatDuration(ageMs)} (threshold ${staleRaw}).`,
-      remediation: `Resume bolt ${bolt.id || bolt.locationId} with update-stage or update-checkpoint, or set status to abandoned in ${rel}.`,
+      artifact: boltId,
+      message: `Bolt ${boltId} is active and has had no state change for ${formatDuration(ageMs)} (threshold ${staleRaw}).`,
+      remediation: `${resume} Or set status to abandoned in ${rel}.`,
       stale_after: staleRaw,
     });
   }
@@ -374,42 +401,74 @@ function parseConsent(opts) {
   return { all: false, ids };
 }
 
-function isConsented(finding, consent) {
-  if (!finding.auto_repairable) return false;
-  if (consent.all) return true;
-  if (!consent.ids.size) return false;
-  return (
-    consent.ids.has(finding.id) ||
-    consent.ids.has(String(finding.index)) ||
-    consent.ids.has(finding.code) ||
-    consent.ids.has(`${finding.code}:${finding.path}`)
-  );
+function resolveConsentKeys(findings, consent) {
+  if (consent.all) return { all: true, keys: new Set() };
+  const keys = new Set();
+  for (const finding of findings) {
+    const hit =
+      consent.ids.has(finding.id) ||
+      consent.ids.has(String(finding.index)) ||
+      consent.ids.has(finding.code) ||
+      consent.ids.has(`${finding.code}:${finding.path}`);
+    if (!hit) continue;
+    if (consent.ids.has(finding.code)) keys.add(finding.code);
+    keys.add(`${finding.code}:${finding.path}`);
+  }
+  return { all: false, keys };
 }
 
-function applyRepair(rootPath, contract, finding) {
+function isConsented(finding, resolved) {
+  if (!finding.auto_repairable) return false;
+  if (resolved.all) return true;
+  return resolved.keys.has(finding.code) || resolved.keys.has(`${finding.code}:${finding.path}`);
+}
+
+function applyPathRepairs(rootPath, contract, group) {
+  const finding = group[0];
   const abs = path.join(rootPath, finding.path);
-  if (!fs.existsSync(abs)) return null;
+  if (!fs.existsSync(abs)) return [];
   const parsed = lib.readMarkdown(abs);
   const before = JSON.stringify(parsed.data);
-  if (finding.code === 'CASCADE_DRIFT' && finding.expected_status) {
-    parsed.data.status = finding.expected_status;
-  } else if (finding.code === 'ILLEGAL_STATUS' && finding.expected_status) {
-    parsed.data.status = finding.expected_status;
-  } else if (finding.code === 'ID_LOCATION') {
-    if (finding.expected_id) parsed.data.id = finding.expected_id;
-    if (finding.expected_intent) parsed.data.intent = finding.expected_intent;
-  } else {
-    return null;
+  const cascade = group.find((f) => f.code === 'CASCADE_DRIFT' && f.expected_status);
+  const illegal = group.find((f) => f.code === 'ILLEGAL_STATUS' && f.expected_status);
+  const idloc = group.find((f) => f.code === 'ID_LOCATION');
+  // Cascade expected_status wins over synonym mapping on the same file.
+  if (cascade) parsed.data.status = cascade.expected_status;
+  else if (illegal) parsed.data.status = illegal.expected_status;
+  if (idloc) {
+    if (idloc.expected_id) parsed.data.id = idloc.expected_id;
+    if (idloc.expected_intent) parsed.data.intent = idloc.expected_intent;
   }
-  if (JSON.stringify(parsed.data) === before) return null;
+  if (JSON.stringify(parsed.data) === before) return [];
   lib.writeMarkdown(abs, parsed.data, parsed.body, rootPath, contract);
-  return {
-    id: finding.id,
-    code: finding.code,
-    path: finding.path,
-    change: describeChange(finding),
-    why: finding.message,
-  };
+  const applied = [];
+  if (cascade) {
+    applied.push({
+      id: cascade.id,
+      code: cascade.code,
+      path: cascade.path,
+      change: describeChange(cascade),
+      why: cascade.message,
+    });
+  } else if (illegal) {
+    applied.push({
+      id: illegal.id,
+      code: illegal.code,
+      path: illegal.path,
+      change: describeChange(illegal),
+      why: illegal.message,
+    });
+  }
+  if (idloc) {
+    applied.push({
+      id: idloc.id,
+      code: idloc.code,
+      path: idloc.path,
+      change: describeChange(idloc),
+      why: idloc.message,
+    });
+  }
+  return applied;
 }
 
 function describeChange(finding) {
@@ -453,21 +512,28 @@ function appendMaintenanceLog(rootPath, contract, repaired) {
   return relToRoot(rootPath, file);
 }
 
-function repairConsented(rootPath, contract, opts) {
+function repairConsented(rootPath, contract, opts, initialFindings) {
   const consent = parseConsent(opts);
   if (!consent.all && !consent.ids.size) return [];
+  const seed = initialFindings || collectFindings(rootPath, contract, opts);
+  const resolved = resolveConsentKeys(seed, consent);
   const repaired = [];
   const seen = new Set();
-  const passes = consent.all ? 3 : 1;
-  for (let i = 0; i < passes; i++) {
+  for (let i = 0; i < 8; i++) {
     const findings = collectFindings(rootPath, contract, opts);
+    const eligible = findings.filter((f) => isConsented(f, resolved));
+    if (!eligible.length) break;
+    const byPath = new Map();
+    for (const finding of eligible) {
+      const list = byPath.get(finding.path) || [];
+      list.push(finding);
+      byPath.set(finding.path, list);
+    }
     let did = false;
-    for (const finding of findings) {
-      if (!isConsented(finding, consent)) continue;
-      const key = `${finding.code}:${finding.path}:${finding.expected_status || ''}:${finding.expected_id || ''}:${finding.expected_intent || ''}`;
-      if (seen.has(key)) continue;
-      const result = applyRepair(rootPath, contract, finding);
-      if (result) {
+    for (const group of byPath.values()) {
+      for (const result of applyPathRepairs(rootPath, contract, group)) {
+        const key = `${result.code}:${result.path}:${result.change}`;
+        if (seen.has(key)) continue;
         seen.add(key);
         repaired.push(result);
         did = true;
@@ -483,7 +549,7 @@ function validateIntegrity(rootPath, opts) {
   const contract = lib.loadContract();
   const root = lib.assertRoot(rootPath);
   const before = collectFindings(root, contract, options);
-  const repaired = repairConsented(root, contract, options);
+  const repaired = repairConsented(root, contract, options, before);
   const logPath = repaired.length ? appendMaintenanceLog(root, contract, repaired) : null;
   const findings = collectFindings(root, contract, options);
   const scanned = scanTree(root, contract);
@@ -566,4 +632,4 @@ if (require.main === module) {
     });
 }
 
-module.exports = { validateIntegrity, collectFindings };
+module.exports = { validateIntegrity, collectFindings, scanTree };

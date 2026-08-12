@@ -49,6 +49,7 @@ function updateCheckpoint(rootPath, boltId, phrase) {
   const normalized = lib.normalizeApproval(phrase, contract);
   if (normalized === 'denied') {
     bolt.data.checkpoint_state = 'awaiting';
+    lib.touchUpdated(bolt.data);
     lib.writeMarkdown(bolt.path, bolt.data, bolt.body, root, contract);
     return {
       id: boltId,
@@ -59,6 +60,7 @@ function updateCheckpoint(rootPath, boltId, phrase) {
   }
 
   bolt.data.checkpoint_state = normalized;
+  lib.touchUpdated(bolt.data);
   lib.writeMarkdown(bolt.path, bolt.data, bolt.body, root, contract);
   return { id: boltId, checkpoint_state: normalized, accepted: normalized === 'granted' };
 }

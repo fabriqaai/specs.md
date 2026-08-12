@@ -77,6 +77,7 @@ function updateStage(rootPath, boltId, stageId) {
   bolt.data.checkpoint_state = next
     ? lib.initialCheckpoint(recipe, next, bolt.data.ceremony, contract)
     : 'not-required';
+  lib.touchUpdated(bolt.data);
 
   lib.writeMarkdown(bolt.path, bolt.data, bolt.body, root, contract);
 
