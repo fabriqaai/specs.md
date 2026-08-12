@@ -438,4 +438,37 @@ describe('navigator and shaping behavior', () => {
       /cannot be relinked|named on an active/
     );
   });
+
+  it('writes nothing when a mixed pending,active batch fails preflight', () => {
+    initProject(root, 'balanced');
+    const source = initIntent(root, { title: 'Source' });
+    const target = initIntent(root, { title: 'Target' });
+    const pending = initWorkItem(root, { intent: source.id, title: 'Keep me', complexity: 'low' });
+    const active = initWorkItem(root, {
+      intent: source.id,
+      title: 'Already active',
+      complexity: 'low',
+      body: '# A\n\n- [x] (gating) visible\n',
+    });
+    initBolt(root, { workItems: active.id, recipe: 'simple', ceremony: 'autopilot' });
+    const sourceBefore = readFileSync(
+      join(root, 'docs/specsmd/intents', source.id, 'work-items', `${pending.id}.md`),
+      'utf8'
+    );
+    expect(() =>
+      relinkWorkItems(root, { intent: target.id, workItems: `${pending.id},${active.id}` })
+    ).toThrow(/cannot be relinked|named on an active/);
+    expect(existsSync(join(root, 'docs/specsmd/intents', source.id, 'work-items', `${pending.id}.md`))).toBe(
+      true
+    );
+    expect(existsSync(join(root, 'docs/specsmd/intents', target.id, 'work-items', `${pending.id}.md`))).toBe(
+      false
+    );
+    expect(
+      readFileSync(join(root, 'docs/specsmd/intents', source.id, 'work-items', `${pending.id}.md`), 'utf8')
+    ).toBe(sourceBefore);
+    expect(lib.readMarkdown(join(root, 'docs/specsmd/intents', source.id, 'brief.md')).data.status).toBe(
+      'active'
+    );
+  });
 });

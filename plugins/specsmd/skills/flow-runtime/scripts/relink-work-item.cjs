@@ -57,9 +57,8 @@ function relinkWorkItems(rootPath, opts) {
     );
   }
 
-  const moved = [];
-  const touched = new Set([intentId]);
-
+  const planned = [];
+  const destSeen = new Set();
   for (const id of ids) {
     const item = lib.findWorkItem(root, id, contract);
     if (item.status !== 'pending') {
@@ -76,20 +75,29 @@ function relinkWorkItems(rootPath, opts) {
         'Only items not yet in a non-draft bolt can change intent.'
       );
     }
-    if (item.intent === intentId) {
-      moved.push({ id, path: item.path, intent: intentId, unchanged: true });
-      continue;
-    }
-
     const dest = lib.workItemPath(root, intentId, item.id, contract);
     lib.assertInsideRoot(root, dest, contract);
     lib.assertInsideRoot(root, item.path, contract);
-    if (fs.existsSync(dest)) {
-      throw lib.terminal(
-        'WORK_ITEM_EXISTS',
-        `Work item "${id}" already exists under ${intentId}.`,
-        'Choose a different item or inspect the destination path.'
-      );
+    if (item.intent !== intentId) {
+      if (fs.existsSync(dest) || destSeen.has(dest)) {
+        throw lib.terminal(
+          'WORK_ITEM_EXISTS',
+          `Work item "${id}" already exists under ${intentId}.`,
+          'Choose a different item or inspect the destination path.'
+        );
+      }
+      destSeen.add(dest);
+    }
+    planned.push({ item, dest });
+  }
+
+  const moved = [];
+  const touched = new Set([intentId]);
+
+  for (const { item, dest } of planned) {
+    if (item.intent === intentId) {
+      moved.push({ id: item.id, path: item.path, intent: intentId, unchanged: true });
+      continue;
     }
 
     touched.add(item.intent);
@@ -97,7 +105,7 @@ function relinkWorkItems(rootPath, opts) {
     parsed.data.intent = intentId;
     lib.writeMarkdown(dest, parsed.data, parsed.body, root, contract);
     fs.unlinkSync(item.path);
-    moved.push({ id, path: dest, from: item.intent, intent: intentId });
+    moved.push({ id: item.id, path: dest, from: item.intent, intent: intentId });
   }
 
   const intentStatuses = {};
