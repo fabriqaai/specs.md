@@ -37,7 +37,7 @@ function initIntent(rootPath, opts) {
     body = fs.readFileSync(opts.bodyFile, 'utf8');
   }
   if (!body.trim()) {
-    body = `# Intent: ${title}\n\n## Outcome\n\n## Scope\n\n## Non-goals\n`;
+    body = `# Intent: ${title}\n\n## Problem\n\n## Outcome\n\n## Scope\n\n## Non-goals\n`;
   }
 
   const data = {

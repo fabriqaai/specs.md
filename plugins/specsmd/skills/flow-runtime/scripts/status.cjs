@@ -24,41 +24,53 @@ function collectHealth(rootPath, contract) {
   }
 }
 
-function suggestNext(lenses, initialized, drafts) {
+function suggestNext(lenses, initialized, drafts, health) {
   const options = [];
   if (!initialized) {
     options.push({ skill: 'specsmd-init', why: 'No artifact root yet — initialize the project.' });
     return { best: options[0], options };
   }
 
-  const expired = (lenses.building || []).filter((b) => b.time_box_expired);
   const awaiting = (lenses.building || []).filter((b) => b.checkpoint_state === 'awaiting' && !b.time_box_expired);
+  const expired = (lenses.building || []).filter((b) => b.time_box_expired);
   const active = (lenses.building || []).filter((b) => b.checkpoint_state !== 'awaiting' && !b.time_box_expired);
   const emptyIntent = (lenses.shaping || []).find((s) => s.kind === 'intent' && s.work_item_count === 0);
   const unbolted = (lenses.shaping || []).some((s) => s.kind === 'work-item');
   const draftList = drafts || [];
+  const findings = health || [];
   const noIntents =
     !(lenses.shaping || []).some((s) => s.kind === 'intent') &&
     !(lenses.building || []).length &&
     !(lenses.shipping || []).length;
 
-  // Locked order: expired time box > awaiting > active bolt > empty intent > unbolted items > drafts > shipping > empty tree
-  if (expired.length) {
-    options.push({
-      skill: 'bolt-execute',
-      why: `Bolt ${expired[0].id} exceeded its time box. The next update-stage, update-checkpoint, or complete-bolt will complete it with findings.`,
-    });
-  }
+  // Locked order: awaiting gate > active bolt > integrity > empty intent > unbolted > drafts > shipping > empty tree
   if (awaiting.length) {
     options.push({
       skill: 'bolt-execute',
       why: `Bolt ${awaiting[0].id} is awaiting approval on ${awaiting[0].current_stage}.`,
     });
   }
+  if (expired.length) {
+    options.push({
+      skill: 'bolt-execute',
+      why: `Bolt ${expired[0].id} exceeded its time box. The next update-stage, update-checkpoint, or complete-bolt will complete it with findings.`,
+    });
+  }
   if (active.length) {
     options.push({
       skill: 'bolt-execute',
       why: `Bolt ${active[0].id} is active at ${active[0].current_stage || 'completion'}. Resume it.`,
+    });
+  }
+  if (findings.length) {
+    const highest = findings.some((f) => f.severity === 'error')
+      ? 'error'
+      : findings.some((f) => f.severity === 'warn' || f.severity === 'warning')
+        ? 'warning'
+        : findings[0].severity || 'info';
+    options.push({
+      skill: 'flow-runtime',
+      why: `${findings.length} integrity finding(s). Highest severity: ${highest}. ${findings[0].message} Follow the listed remediations. The navigator does not repair.`,
     });
   }
   if (emptyIntent) {
@@ -73,7 +85,7 @@ function suggestNext(lenses, initialized, drafts) {
       why: 'Shaped work items are not in a bolt yet.',
     });
   }
-  if (draftList.length && !(lenses.building || []).length) {
+  if (draftList.length) {
     options.push({
       skill: 'bolt-start',
       why: `Draft ${draftList[0].id} can be adopted, modified, or ignored.`,
@@ -104,7 +116,7 @@ function projectStatus(rootPath) {
       artifactRoot: lib.artifactRoot(root, contract),
       lenses: { shaping: [], building: [], shipping: [] },
       health: [],
-      suggestion: suggestNext({ shaping: [], building: [], shipping: [] }, false, []),
+      suggestion: suggestNext({ shaping: [], building: [], shipping: [] }, false, [], []),
     };
   }
 
@@ -206,14 +218,15 @@ function projectStatus(rootPath) {
     .map((b) => ({ id: b.id || b.locationId, work_items: b.work_items, recipe: b.recipe }));
 
   const lenses = { shaping, building, shipping };
+  const health = collectHealth(root, contract);
   return {
     initialized: true,
     artifactRoot: lib.artifactRoot(root, contract),
     autonomy_bias: arts.project ? arts.project.autonomy_bias : null,
     lenses,
     drafts,
-    health: collectHealth(root, contract),
-    suggestion: suggestNext(lenses, true, drafts),
+    health,
+    suggestion: suggestNext(lenses, true, drafts, health),
   };
 }
 

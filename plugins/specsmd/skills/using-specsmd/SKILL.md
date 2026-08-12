@@ -25,8 +25,8 @@ If you are unsure of project state, invoke the `specsmd-status` skill. Never gue
 ## Shape of the flow
 
 - **Intent** — problem, outcome, scope, non-goals. No mechanism.
-- **Work item** — a vertical slice with a behavioral Definition of Done.
-- **Bolt** — the execution container. Created when work starts. Runs a **recipe** of stages under a **ceremony** (autopilot / confirm / validate).
+- **Work item** — a vertical slice with a behavioral Definition of Done. Complexity is decision load. `ceremony_suggested` is recorded from the contract matrix.
+- **Bolt** — the execution container. Created when work starts. Runs a **recipe** of stages under a **ceremony** (`autopilot` / `confirm` / `validate`). Confirm waits on the first gateable stage; validate waits on every gateable stage.
 - Artifacts live in `docs/specsmd/`. State lives in YAML frontmatter. Only the scripts in the `flow-runtime` skill write state.
 
 ## Skills (invoke by name, except this skill and `specsmd-status`)
@@ -41,7 +41,7 @@ If you are unsure of project state, invoke the `specsmd-status` skill. Never gue
 | `bolt-execute` | A bolt is active or interrupted |
 | `walkthrough-generate` | A bolt needs its human walkthrough |
 
-Nothing here is a required next step. Suggestions are options.
+Nothing here is a required next step. Suggestions are options. Close messages of verb skills list artifacts and at most three declinable names.
 
 ## Precedence
 
@@ -56,3 +56,12 @@ Nothing here is a required next step. Suggestions are options.
 | "Quick change, no spec" | Still an intent or work item. Check `specsmd-status`. |
 | "I'll write the spec after the code works" | The spec leads. Code without a spec is a prototype. |
 | "I'll set status: complete myself" | Only `scripts/complete-bolt.cjs` in the `flow-runtime` skill writes that. |
+
+## Close
+
+This skill writes nothing.
+
+Declinable next (none required):
+- `specsmd-status` — read the tree
+- `intent-create` — capture an outcome
+- `specsmd-init` — if the tree does not exist

@@ -1,6 +1,6 @@
 ---
 name: specsmd-status
-description: Use when the user asks where the project stands, what to do next, or which specsmd work is in flight. Reads docs/specsmd and suggests the next move without taking it.
+description: Use when the user asks where the project stands, what to do next, or which specsmd flow is active. Reads docs/specsmd and suggests the next move without taking it.
 license: MIT
 metadata:
   version: "1.0.0"
@@ -10,7 +10,7 @@ metadata:
 
 # specsmd Status
 
-Read-only orientation. Never write artifacts. Never invoke another skill. Never repair drift.
+Read-only orientation. Never write artifacts. Never invoke another skill. Never repair drift. Never warn, block, or nag if the user ignores every suggestion.
 
 ## Process
 
@@ -26,12 +26,16 @@ Present three lenses. Empty lenses stay visible.
 - **Building** — active bolts, with stage and checkpoint
 - **Shipping** — completed bolts (release is optional; do not nag)
 
-Then health findings from the script, each with severity and remediation.
+Then health findings from the script, each with severity and remediation. Integrity findings present in the tree appear here.
 
-Then suggested next moves from `data.suggestion`: best first, then the rest, then one line that any skill may be invoked by name. Do not take a suggestion. Do not warn if the user ignores them.
+Then suggested next moves from `data.suggestion`: use that order; do not re-rank. Best first, then the rest, then one line that any skill may be invoked by name. The script's locked order is: awaiting gate → active bolt → integrity findings → empty intent → unbolted items → drafts → shipping → empty tree. Do not take a suggestion.
 
 ## Constraints
 
 - If the script reports the tree is uninitialized, the best move is `specsmd-init`.
 - If status tokens in the tree are not in the contract, report them as health findings. Do not invent a local mapping.
 - Do not infer resume position from which files exist. Use `current_stage` and `checkpoint_state`.
+
+## Close
+
+This skill writes nothing and invokes nothing. Present `data.suggestion.options` as declinable choices. Then: any skill may be invoked by name.
