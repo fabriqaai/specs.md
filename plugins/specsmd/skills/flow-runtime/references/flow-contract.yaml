@@ -197,6 +197,8 @@ artifact_types:
       - checkpoint_state
       - work_items
       - override
+      - override_reason
+      - adopted_draft
       - activated_at
       - created
       - completed

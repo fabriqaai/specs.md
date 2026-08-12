@@ -16,6 +16,7 @@ function initWorkItem(rootPath, opts) {
   if (!intentId) {
     throw lib.terminal('INTENT_REQUIRED', 'An intent id is required.', 'Pass --intent <intent-id>.');
   }
+  lib.assertSafeId(intentId, 'intent id');
   const intentFile = lib.intentPath(root, intentId, contract);
   if (!fs.existsSync(intentFile)) {
     throw lib.terminal(
@@ -45,18 +46,14 @@ function initWorkItem(rootPath, opts) {
     : [];
   const existingGlobal = lib.listAllWorkItems(root, contract).map((w) => w.id);
   const width = contract.identifiers.work_item_width;
-  let id = opts.id ? String(opts.id).trim() : null;
-  if (id) {
-    if (!/^\d+-/.test(id)) id = `${lib.nextPrefixedId(existingGlobal, width)}-${lib.kebab(id)}`;
-    if (existingOnIntent.includes(id) || existingGlobal.includes(id)) {
-      throw lib.terminal(
-        'WORK_ITEM_EXISTS',
-        `Work item "${id}" already exists.`,
-        'Choose a different --id or omit it to allocate the next number.'
-      );
-    }
-  } else {
-    id = `${lib.nextPrefixedId(existingGlobal, width)}-${lib.kebab(title)}`;
+  let id = lib.normalizePrefixedSlug(opts.id, existingGlobal, width);
+  if (!id) id = `${lib.nextPrefixedId(existingGlobal, width)}-${lib.kebab(title)}`;
+  if (existingOnIntent.includes(id) || existingGlobal.includes(id)) {
+    throw lib.terminal(
+      'WORK_ITEM_EXISTS',
+      `Work item "${id}" already exists.`,
+      'Choose a different --id or omit it to allocate the next number.'
+    );
   }
 
   const dependsOn = lib.splitList(opts.dependsOn);
@@ -80,7 +77,7 @@ function initWorkItem(rootPath, opts) {
   let body = opts.body || '';
   if (opts.bodyFile) body = fs.readFileSync(opts.bodyFile, 'utf8');
   if (!body.trim()) {
-    body = `# ${title}\n\n## Behavior\n\n## Definition of Done\n\n- [ ] (gating) \n`;
+    body = `# ${title}\n\n## Behavior\n\n## Definition of Done\n\n`;
   }
 
   const file = lib.workItemPath(root, intentId, id, contract);
@@ -95,12 +92,12 @@ function initWorkItem(rootPath, opts) {
     depends_on: dependsOn,
     created: lib.nowStamp(),
   };
-  lib.writeMarkdown(file, data, body.endsWith('\n') ? body : body + '\n');
+  lib.writeMarkdown(file, data, body.endsWith('\n') ? body : body + '\n', root, contract);
 
   const intent = lib.readMarkdown(lib.intentPath(root, intentId, contract));
   if (intent.data.status === 'complete' || intent.data.status === 'abandoned') {
     intent.data.status = 'active';
-    lib.writeMarkdown(intent.path, intent.data, intent.body);
+    lib.writeMarkdown(intent.path, intent.data, intent.body, root, contract);
   }
 
   return {

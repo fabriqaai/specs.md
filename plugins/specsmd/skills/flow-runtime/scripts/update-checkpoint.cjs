@@ -15,7 +15,7 @@ function updateCheckpoint(rootPath, boltId, phrase) {
     throw lib.terminal(
       'DECISION_REQUIRED',
       'A checkpoint decision is required.',
-      `Pass an approval phrase (${contract.approval.grant.slice(0, 5).join(', ')}) or a checkpoint state.`
+      `Pass an approval phrase (${contract.approval.grant.slice(0, 5).join(', ')}).`
     );
   }
 
@@ -37,10 +37,19 @@ function updateCheckpoint(rootPath, boltId, phrase) {
     );
   }
 
+  const recipe = lib.recipeForBolt(root, bolt.data, contract);
+  if (!lib.stageNeedsGate(recipe, bolt.data.current_stage, bolt.data.ceremony, contract)) {
+    throw lib.terminal(
+      'GATE_NOT_REQUIRED',
+      `Bolt "${boltId}" has no checkpoint on stage "${bolt.data.current_stage}".`,
+      `Ceremony ${bolt.data.ceremony} does not gate this stage. Continue with update-stage; do not record a checkpoint.`
+    );
+  }
+
   const normalized = lib.normalizeApproval(phrase, contract);
   if (normalized === 'denied') {
     bolt.data.checkpoint_state = 'awaiting';
-    lib.writeMarkdown(bolt.path, bolt.data, bolt.body);
+    lib.writeMarkdown(bolt.path, bolt.data, bolt.body, root, contract);
     return {
       id: boltId,
       checkpoint_state: 'awaiting',
@@ -50,7 +59,7 @@ function updateCheckpoint(rootPath, boltId, phrase) {
   }
 
   bolt.data.checkpoint_state = normalized;
-  lib.writeMarkdown(bolt.path, bolt.data, bolt.body);
+  lib.writeMarkdown(bolt.path, bolt.data, bolt.body, root, contract);
   return { id: boltId, checkpoint_state: normalized, accepted: normalized === 'granted' };
 }
 

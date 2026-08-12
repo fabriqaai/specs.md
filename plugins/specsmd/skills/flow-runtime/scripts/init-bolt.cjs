@@ -3,7 +3,6 @@
  * Create a bolt. Recipe and ceremony are recorded at creation and do not change.
  * Usage: node init-bolt.cjs <rootPath> --work-items a,b [--recipe default] [--ceremony confirm] [--adopt-draft ID]
  */
-const fs = require('fs');
 const path = require('path');
 const lib = require('./lib.cjs');
 
@@ -118,13 +117,13 @@ function initBolt(rootPath, opts) {
   if (adoptedDraft) data.adopted_draft = adoptedDraft;
 
   const body = `# Bolt: ${id}\n\nRecipe: ${recipe.id}. Ceremony: ${ceremony}. Work items: ${workItemIds.join(', ')}.\n`;
-  lib.writeMarkdown(file, data, body);
+  lib.writeMarkdown(file, data, body, root, contract);
 
   if (adoptedDraft) {
     const draftFile = lib.boltPath(root, adoptedDraft, contract);
     const draft = lib.readMarkdown(draftFile);
     draft.data.status = 'abandoned';
-    lib.writeMarkdown(draftFile, draft.data, draft.body);
+    lib.writeMarkdown(draftFile, draft.data, draft.body, root, contract);
   }
 
   for (const item of items) {
@@ -132,12 +131,12 @@ function initBolt(rootPath, opts) {
       item.status = 'active';
       const parsed = lib.readMarkdown(item.path);
       parsed.data.status = 'active';
-      lib.writeMarkdown(item.path, parsed.data, parsed.body);
+      lib.writeMarkdown(item.path, parsed.data, parsed.body, root, contract);
     }
     const intent = lib.readMarkdown(lib.intentPath(root, item.intent, contract));
     if (intent.data.status !== 'active') {
       intent.data.status = 'active';
-      lib.writeMarkdown(intent.path, intent.data, intent.body);
+      lib.writeMarkdown(intent.path, intent.data, intent.body, root, contract);
     }
   }
 
@@ -198,6 +197,13 @@ function initDraft(rootPath, opts) {
   const recipe = lib.loadRecipe(root, recipeId, contract);
   const project = lib.readProject(root, contract);
   const ceremony = opts.ceremony || pickMostControlledCeremony(items, project.data.autonomy_bias, contract);
+  if (!contract.ceremony.values.includes(ceremony)) {
+    throw lib.terminal(
+      'CEREMONY_INVALID',
+      `Ceremony "${ceremony}" is not in the contract.`,
+      `Use one of: ${contract.ceremony.values.join(', ')}.`
+    );
+  }
 
   const boltsDir = path.join(lib.artifactRoot(root, contract), 'bolts');
   const token = lib.worktreeToken(root);
@@ -222,7 +228,9 @@ function initDraft(rootPath, opts) {
       created: lib.nowStamp(),
       completed: null,
     },
-    `# Draft bolt: ${id}\n\nProposal only. Starting a bolt may adopt, modify, or ignore this draft.\n`
+    `# Draft bolt: ${id}\n\nProposal only. Starting a bolt may adopt, modify, or ignore this draft.\n`,
+    root,
+    contract
   );
   return { id, path: file, status: 'draft', recipe: recipe.id, ceremony, work_items: workItemIds };
 }

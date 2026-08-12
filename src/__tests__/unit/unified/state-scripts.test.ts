@@ -525,7 +525,7 @@ describe('unified state scripts', () => {
     writeFileSync(findings, '# Partial notes\n\nWe learned the cache is sticky.\n', 'utf8');
     const parsed = lib.readMarkdown(join(root, 'docs/specsmd/bolts', bolt.id, 'bolt.md'));
     parsed.data.activated_at = new Date(Date.now() - 9 * 60 * 60 * 1000).toISOString();
-    lib.writeMarkdown(parsed.path, parsed.data, parsed.body);
+    lib.writeMarkdown(parsed.path, parsed.data, parsed.body, root);
 
     expect(() => updateStage(root, bolt.id, 'explore')).toThrow(/TIME_BOX_EXPIRED|time box/i);
     const after = lib.readMarkdown(join(root, 'docs/specsmd/bolts', bolt.id, 'bolt.md'));
@@ -541,7 +541,7 @@ describe('unified state scripts', () => {
     const bolt = initBolt(root, { workItems: a.id, recipe: 'spike', ceremony: 'autopilot' });
     const parsed = lib.readMarkdown(join(root, 'docs/specsmd/bolts', bolt.id, 'bolt.md'));
     parsed.data.activated_at = new Date(Date.now() - 9 * 60 * 60 * 1000).toISOString();
-    lib.writeMarkdown(parsed.path, parsed.data, parsed.body);
+    lib.writeMarkdown(parsed.path, parsed.data, parsed.body, root);
     const done = completeBolt(root, bolt.id, false);
     expect(done.status).toBe('complete');
     expect(done.override).toBe(false);
@@ -555,7 +555,7 @@ describe('unified state scripts', () => {
     const parsed = lib.readMarkdown(join(root, 'docs/specsmd/bolts', draft.id, 'bolt.md'));
     expect(parsed.data.activated_at).toBeNull();
     parsed.data.created = new Date(Date.now() - 9 * 60 * 60 * 1000).toISOString();
-    lib.writeMarkdown(parsed.path, parsed.data, parsed.body);
+    lib.writeMarkdown(parsed.path, parsed.data, parsed.body, root);
     expect(parsed.data.status).toBe('draft');
     expect(
       lib.isTimeBoxExpired(parsed.data, lib.recipeForBolt(root, parsed.data, lib.loadContract()))
@@ -661,6 +661,70 @@ describe('unified state scripts', () => {
     writeStageFiles(simple.id, ['walkthrough.md']);
     updateStage(root, simple.id, 'walkthrough');
     expect(completeBolt(root, simple.id, false).status).toBe('complete');
+  });
+
+  it('refuses checkpoint phrases that are not a grant or deny, and refuses checkpoints on ungated stages', () => {
+    const { a } = seedTwoItems();
+    const confirm = initBolt(root, { workItems: a.id, ceremony: 'confirm' });
+    expect(() => updateCheckpoint(root, confirm.id, 'not-required')).toThrow(/APPROVAL_UNRECOGNIZED|not-required/);
+    expect(() => updateCheckpoint(root, confirm.id, 'none')).toThrow(/APPROVAL_UNRECOGNIZED|none/);
+    const md = lib.readMarkdown(join(root, 'docs/specsmd/bolts', confirm.id, 'bolt.md'));
+    expect(md.data.checkpoint_state).toBe('awaiting');
+
+    const auto = initBolt(root, { workItems: a.id, recipe: 'default', ceremony: 'autopilot' });
+    expect(() => updateCheckpoint(root, auto.id, 'no')).toThrow(/GATE_NOT_REQUIRED|no checkpoint/i);
+    writeStageFiles(auto.id, ['plan.md']);
+    updateStage(root, auto.id, 'plan');
+    expect(() => updateCheckpoint(root, auto.id, 'yes')).toThrow(/GATE_NOT_REQUIRED|no checkpoint/i);
+  });
+
+  it('refuses an unknown ceremony on a draft', () => {
+    const { a } = seedTwoItems();
+    expect(() => initDraft(root, { workItems: a.id, ceremony: 'banana' })).toThrow(/CEREMONY_INVALID|banana/);
+  });
+
+  it('refuses path-like ids and writes only under the artifact root', () => {
+    initProject(root);
+    expect(() => initIntent(root, { title: 'Escape', id: '001-../../../tmp/pwned' })).not.toThrow();
+    const intent = initIntent(root, { title: 'Safe intent' });
+    expect(intent.id).toMatch(/^\d+-[a-z0-9]+(?:-[a-z0-9]+)*$/);
+    expect(existsSync(join(root, 'docs/specsmd/intents', '001-tmp-pwned', 'brief.md'))).toBe(true);
+    expect(existsSync(join(root, 'docs/specsmd/tmp/pwned/brief.md'))).toBe(false);
+
+    expect(() =>
+      initWorkItem(root, { intent: intent.id, title: 'Escape item', id: '009-../../../tmp/wi-pwned' })
+    ).not.toThrow();
+    expect(existsSync(join(root, 'docs/specsmd/intents', intent.id, 'work-items', '009-tmp-wi-pwned.md'))).toBe(true);
+
+    expect(() => lib.readBolt(root, '../../../outside-bolt', lib.loadContract())).toThrow(
+      /not a safe identifier|ID_INVALID/
+    );
+  });
+
+  it('omits an empty gating checkbox from the work-item stub', () => {
+    initProject(root);
+    const intent = initIntent(root, { title: 'Stub' });
+    const item = initWorkItem(root, { intent: intent.id, title: 'No checkbox yet' });
+    const md = readFileSync(item.path, 'utf8');
+    expect(md).not.toMatch(/- \[ \] \(gating\)\s*$/m);
+    expect(lib.uncheckedGatingCriteria(lib.readMarkdown(item.path).body)).toEqual([]);
+  });
+
+  it('status notes an expired spike without writing', () => {
+    const { a, intent } = seedTwoItems();
+    const bolt = initBolt(root, { workItems: a.id, recipe: 'spike', ceremony: 'autopilot' });
+    const parsed = lib.readMarkdown(join(root, 'docs/specsmd/bolts', bolt.id, 'bolt.md'));
+    parsed.data.activated_at = new Date(Date.now() - 9 * 60 * 60 * 1000).toISOString();
+    lib.writeMarkdown(parsed.path, parsed.data, parsed.body, root);
+    const before = readFileSync(join(root, 'docs/specsmd/intents', intent.id, 'brief.md'), 'utf8');
+    const report = projectStatus(root);
+    const listed = report.lenses.building.find((b: { id: string }) => b.id === bolt.id);
+    expect(listed.time_box_expired).toBe(true);
+    expect(listed.note).toMatch(/Time box expired/);
+    expect(report.suggestion.best.why).toMatch(/time box/i);
+    const afterBolt = lib.readMarkdown(join(root, 'docs/specsmd/bolts', bolt.id, 'bolt.md'));
+    expect(afterBolt.data.status).toBe('active');
+    expect(readFileSync(join(root, 'docs/specsmd/intents', intent.id, 'brief.md'), 'utf8')).toBe(before);
   });
 
   it('refuses a dependency cycle that crosses intents', () => {

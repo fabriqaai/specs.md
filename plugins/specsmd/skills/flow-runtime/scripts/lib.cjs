@@ -301,7 +301,16 @@ function readMarkdown(filePath) {
   return parsed;
 }
 
-function writeMarkdown(filePath, data, body) {
+function writeMarkdown(filePath, data, body, rootPath, contract) {
+  const c = contract || loadContract();
+  if (!rootPath) {
+    throw structural(
+      'ROOT_REQUIRED',
+      'A project root is required to write artifacts.',
+      'Pass the project root so the write can be checked against the artifact root.'
+    );
+  }
+  assertInsideRoot(rootPath, filePath, c);
   fs.mkdirSync(path.dirname(filePath), { recursive: true });
   fs.writeFileSync(filePath, writeFrontmatter(data, body), 'utf8');
 }
@@ -362,6 +371,49 @@ function kebab(value) {
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '');
   return s || 'item';
+}
+
+function assertSafeId(id, label) {
+  const value = String(id || '');
+  if (!value || value.includes('..') || /[\\/]/.test(value) || path.isAbsolute(value)) {
+    throw terminal(
+      'ID_INVALID',
+      `The ${label} "${id}" is not a safe identifier.`,
+      'Use a kebab slug with no path separators.'
+    );
+  }
+}
+
+function normalizePrefixedSlug(rawId, existing, width) {
+  const given = rawId == null ? '' : String(rawId).trim();
+  let value;
+  if (!given) {
+    value = null;
+  } else if (!/^\d+-/.test(given)) {
+    value = `${nextPrefixedId(existing, width)}-${kebab(given)}`;
+  } else {
+    const dash = given.indexOf('-');
+    value = `${given.slice(0, dash)}-${kebab(given.slice(dash + 1))}`;
+  }
+  if (value && !/^\d+-[a-z0-9]+(?:-[a-z0-9]+)*$/.test(value)) {
+    throw terminal(
+      'ID_INVALID',
+      `The identifier "${rawId}" is not {nnn}-{slug}.`,
+      'Use digits, a hyphen, and a kebab slug (a-z, 0-9). No path separators.'
+    );
+  }
+  return value;
+}
+
+function assertBoltId(id) {
+  assertSafeId(id, 'bolt id');
+  if (!/^bolt-[a-z0-9]+(?:-[a-z0-9]+)*-\d+$/.test(id)) {
+    throw terminal(
+      'ID_INVALID',
+      `Bolt id "${id}" does not match bolt-{worktree}-{nnn}.`,
+      'Pass a bolt id created by init-bolt. Do not use path segments.'
+    );
+  }
 }
 
 function worktreeToken(rootPath) {
@@ -664,7 +716,9 @@ function initProjectTree(rootPath, contract, autonomyBias) {
     writeMarkdown(
       projectFile,
       { status: 'active', autonomy_bias: bias, created: nowStamp() },
-      '# Project\n\nAutonomy bias for this workspace. Change it by editing this frontmatter through the flow tooling.\n'
+      '# Project\n\nAutonomy bias for this workspace. Change it by editing this frontmatter through the flow tooling.\n',
+      rootPath,
+      contract
     );
   }
   return readMarkdown(projectFile);
@@ -699,13 +753,12 @@ function recommendRecipe(complexity, contract) {
 
 function normalizeApproval(phrase, contract) {
   const raw = String(phrase || '').trim().toLowerCase();
-  if (contract.checkpoint_state.values.includes(raw)) return raw;
-  if (contract.approval.grant.includes(raw)) return 'granted';
+  if (raw === 'granted' || contract.approval.grant.includes(raw)) return 'granted';
   if (contract.approval.deny.includes(raw)) return 'denied';
   throw terminal(
     'APPROVAL_UNRECOGNIZED',
     `Could not normalize "${phrase}" to a checkpoint decision.`,
-    `Use one of: ${contract.approval.grant.slice(0, 6).join(', ')}, or an explicit checkpoint state (${contract.checkpoint_state.values.join(', ')}).`
+    `Use an approval phrase (${contract.approval.grant.slice(0, 6).join(', ')}) or a deny phrase. Do not pass checkpoint states such as not-required or none.`
   );
 }
 
@@ -807,7 +860,9 @@ function listBolts(rootPath, contract) {
 }
 
 function readBolt(rootPath, boltId, contract) {
+  assertBoltId(boltId);
   const file = boltPath(rootPath, boltId, contract);
+  assertInsideRoot(rootPath, file, contract);
   if (!fs.existsSync(file)) {
     throw terminal(
       'BOLT_MISSING',
@@ -863,7 +918,6 @@ function deriveIntentStatus(items, contract) {
 }
 
 function detectCycle(nodes) {
-  // nodes: [{id, depends_on: []}]
   const byId = new Map(nodes.map((n) => [n.id, n]));
   const visiting = new Set();
   const visited = new Set();
@@ -969,6 +1023,9 @@ module.exports = {
   assertInsideRoot,
   nowStamp,
   kebab,
+  assertSafeId,
+  normalizePrefixedSlug,
+  assertBoltId,
   worktreeToken,
   nextPrefixedId,
   listDirNames,

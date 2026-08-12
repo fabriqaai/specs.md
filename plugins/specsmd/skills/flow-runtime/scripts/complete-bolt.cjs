@@ -92,14 +92,14 @@ function completeBolt(rootPath, boltId, force, opts) {
     if (!completed.includes(s)) completed.push(s);
   }
   bolt.data.stages_completed = completed;
-  lib.writeMarkdown(bolt.path, bolt.data, bolt.body);
+  lib.writeMarkdown(bolt.path, bolt.data, bolt.body, root, contract);
 
   const touchedIntents = new Set();
   for (const workItemId of lib.splitList(bolt.data.work_items)) {
     const item = lib.findWorkItem(root, workItemId, contract);
     const parsed = lib.readMarkdown(item.path);
     parsed.data.status = 'complete';
-    lib.writeMarkdown(item.path, parsed.data, parsed.body);
+    lib.writeMarkdown(item.path, parsed.data, parsed.body, root, contract);
     touchedIntents.add(item.intent);
   }
 
@@ -108,7 +108,7 @@ function completeBolt(rootPath, boltId, force, opts) {
     const items = lib.listWorkItems(root, intentId, contract);
     const intent = lib.readMarkdown(lib.intentPath(root, intentId, contract));
     intent.data.status = lib.deriveIntentStatus(items, contract);
-    lib.writeMarkdown(intent.path, intent.data, intent.body);
+    lib.writeMarkdown(intent.path, intent.data, intent.body, root, contract);
     intentStatuses[intentId] = intent.data.status;
   }
 

@@ -53,8 +53,9 @@ function suggestNext(lenses, initialized, drafts) {
     return { best: options[0], options };
   }
 
-  const awaiting = (lenses.building || []).filter((b) => b.checkpoint_state === 'awaiting');
-  const active = (lenses.building || []).filter((b) => b.checkpoint_state !== 'awaiting');
+  const expired = (lenses.building || []).filter((b) => b.time_box_expired);
+  const awaiting = (lenses.building || []).filter((b) => b.checkpoint_state === 'awaiting' && !b.time_box_expired);
+  const active = (lenses.building || []).filter((b) => b.checkpoint_state !== 'awaiting' && !b.time_box_expired);
   const emptyIntent = (lenses.shaping || []).find((s) => s.kind === 'intent' && s.work_item_count === 0);
   const unbolted = (lenses.shaping || []).some((s) => s.kind === 'work-item');
   const draftList = drafts || [];
@@ -63,7 +64,13 @@ function suggestNext(lenses, initialized, drafts) {
     !(lenses.building || []).length &&
     !(lenses.shipping || []).length;
 
-  // Locked order: awaiting > active bolt > empty intent > unbolted items > drafts > shipping > empty tree
+  // Locked order: expired time box > awaiting > active bolt > empty intent > unbolted items > drafts > shipping > empty tree
+  if (expired.length) {
+    options.push({
+      skill: 'bolt-execute',
+      why: `Bolt ${expired[0].id} exceeded its time box. The next update-stage, update-checkpoint, or complete-bolt will complete it with findings.`,
+    });
+  }
   if (awaiting.length) {
     options.push({
       skill: 'bolt-execute',
@@ -161,16 +168,24 @@ function projectStatus(rootPath) {
 
   const building = bolts
     .filter((b) => b.status === 'active')
-    .map((b) => ({
-      kind: 'bolt',
-      id: b.id,
-      status: b.status,
-      recipe: b.recipe,
-      ceremony: b.ceremony,
-      current_stage: b.current_stage,
-      checkpoint_state: b.checkpoint_state,
-      work_items: b.work_items,
-    }));
+    .map((b) => {
+      const recipe = lib.recipeForBolt(root, b, contract);
+      const expired = lib.isTimeBoxExpired(b, recipe);
+      return {
+        kind: 'bolt',
+        id: b.id,
+        status: b.status,
+        recipe: b.recipe,
+        ceremony: b.ceremony,
+        current_stage: b.current_stage,
+        checkpoint_state: b.checkpoint_state,
+        work_items: b.work_items,
+        time_box_expired: expired,
+        note: expired
+          ? 'Time box expired. The next update-stage, update-checkpoint, or complete-bolt will complete this bolt with findings.'
+          : undefined,
+      };
+    });
 
   const shipping = bolts
     .filter((b) => b.status === 'complete')

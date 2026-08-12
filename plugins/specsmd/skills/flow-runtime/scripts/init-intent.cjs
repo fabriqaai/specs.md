@@ -19,20 +19,14 @@ function initIntent(rootPath, opts) {
   const intentsDir = require('path').join(lib.artifactRoot(root, contract), 'intents');
   const existing = lib.listDirNames(intentsDir);
   const width = contract.identifiers.intent_width;
-  let id = opts.id ? String(opts.id).trim() : null;
-  if (id) {
-    if (!/^\d+-/.test(id)) {
-      id = `${lib.nextPrefixedId(existing, width)}-${lib.kebab(id)}`;
-    }
-    if (existing.includes(id)) {
-      throw lib.terminal(
-        'INTENT_EXISTS',
-        `Intent "${id}" already exists.`,
-        'Choose a different --id or omit it to allocate the next number.'
-      );
-    }
-  } else {
-    id = `${lib.nextPrefixedId(existing, width)}-${lib.kebab(title)}`;
+  let id = lib.normalizePrefixedSlug(opts.id, existing, width);
+  if (!id) id = `${lib.nextPrefixedId(existing, width)}-${lib.kebab(title)}`;
+  if (existing.includes(id)) {
+    throw lib.terminal(
+      'INTENT_EXISTS',
+      `Intent "${id}" already exists.`,
+      'Choose a different --id or omit it to allocate the next number.'
+    );
   }
 
   const file = lib.intentPath(root, id, contract);
@@ -53,7 +47,7 @@ function initIntent(rootPath, opts) {
     created: lib.nowStamp(),
   };
   lib.assertStatus(data.status, contract);
-  lib.writeMarkdown(file, data, body.endsWith('\n') ? body : body + '\n');
+  lib.writeMarkdown(file, data, body.endsWith('\n') ? body : body + '\n', root, contract);
 
   return { id, path: file, status: data.status, title: data.title };
 }

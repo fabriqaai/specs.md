@@ -78,7 +78,7 @@ function updateStage(rootPath, boltId, stageId) {
     ? lib.initialCheckpoint(recipe, next, bolt.data.ceremony, contract)
     : 'not-required';
 
-  lib.writeMarkdown(bolt.path, bolt.data, bolt.body);
+  lib.writeMarkdown(bolt.path, bolt.data, bolt.body, root, contract);
 
   return {
     id: boltId,
