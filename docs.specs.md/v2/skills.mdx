@@ -1,0 +1,130 @@
+---
+title: Skills reference
+description: Every specsmd v2 skill, when to invoke it, and what it writes
+---
+
+The unified flow is **skills-native**. You invoke verb skills **by name**. Only two skills announce themselves to the model: the bootstrap and the navigator.
+
+Nothing in this list is a required next step. Close messages offer at most three declinable names.
+
+## How to invoke
+
+In your coding tool, ask for the skill by name:
+
+```text
+Use the intent-create skill.
+```
+
+Some tools also expose slash commands (`/intent-create`). Either form is a prompt to the agent, not a shell command.
+
+Do not invoke `flow-runtime`. Other skills call its scripts. The navigator never suggests it.
+
+## Model-invocable
+
+These two are the only skills the model may pick up without you naming them.
+
+| Skill | When | Writes |
+|-------|------|--------|
+| `using-specsmd` | Start of a session in a specsmd project | Nothing |
+| `specsmd-status` | “Where are we?” or the next move is unclear | Nothing |
+
+### `using-specsmd`
+
+Session bootstrap. States the rule: if you asked to build, add, change, or fix behavior in a specsmd project, the work goes through an intent, work items, and a bolt. Points at the other skills. Writes nothing.
+
+### `specsmd-status`
+
+Read-only navigator. Reads `docs/specsmd/` and reports the three [lenses](/v2/concepts#lenses) (shaping, building, shipping), health findings, and suggested next moves.
+
+- Never writes artifacts
+- Never invokes another skill
+- Never repairs drift
+- Never warns, blocks, or nags if you ignore every suggestion
+
+Suggestion order is fixed: awaiting gate → active bolt → empty intent → unbolted items → drafts → empty tree. Integrity findings appear under health, not as a next skill.
+
+## Shaping
+
+Invocable at any time, in any order. Decomposition against a one-line intent works (and says what is thin). Capture after work items exist works (and can link them).
+
+| Skill | When | Writes |
+|-------|------|--------|
+| `specsmd-init` | No `docs/specsmd/` tree yet | Artifact root, recorded bias, proposed standards |
+| `intent-create` | A new outcome is not captured yet | `docs/specsmd/intents/{id}/brief.md` |
+| `work-item-decompose` | An intent needs executable slices | `docs/specsmd/intents/{intent}/work-items/{id}.md` |
+| `bolt-plan` | You want a proposed grouping before execution | A bolt record with status `draft` |
+
+### `specsmd-init`
+
+Asks **one** question: autonomy bias (`autonomous` / `balanced` / `controlled`). Empty input is `balanced`. Detects greenfield vs existing code and single project vs monorepo. In an existing codebase, inferred standards are presented for accept / edit / skip before they are recorded.
+
+### `intent-create`
+
+Turns a dialogue into an intent brief: **problem**, **outcome**, **scope**, **non-goals**. No mechanism. Additional sections are allowed. A one-line prompt still writes a brief and names which sections are thin.
+
+Follows the [nlspec](/v2/nlspec) intent register. If work items already exist, you may confirm which pending items belong on this intent.
+
+### `work-item-decompose`
+
+Turns an intent into vertical slices — independently valuable observable behavior, not layers (“the schema” then “the API”). Each item gets complexity (`low` / `medium` / `high` by decision load, default `medium`), dependencies, a behavioral Definition of Done, and a recorded `ceremony_suggested`.
+
+A dependency cycle is refused with the cycle named as an ordered id list. Nothing is written from that invocation.
+
+### `bolt-plan`
+
+Writes a **draft** bolt: work items plus a suggested recipe. A draft is not an execution container. `bolt-start` may adopt, modify, or ignore it. Dismissing the adopt prompt is ignore.
+
+## Execution
+
+| Skill | When | Writes |
+|-------|------|--------|
+| `bolt-start` | Shaped work is ready to run | `docs/specsmd/bolts/{id}/bolt.md` |
+| `bolt-execute` | A bolt is active or interrupted | Stage artifacts; completion via the flow's scripts |
+| `walkthrough-generate` | A bolt needs its human walkthrough | `docs/specsmd/bolts/{id}/walkthrough.md` |
+
+### `bolt-start`
+
+Creates the execution container. Offer: one work item, a batch, or an existing draft.
+
+If drafts exist, the first three options are **adopt**, **modify**, and **ignore**. Adopt consumes the draft (`abandoned`). Modify and ignore leave it.
+
+Records recipe and ceremony at creation. Omit `--recipe` / `--ceremony` to take the recommendations. A cycle among the chosen items is refused with the cycle named.
+
+### `bolt-execute`
+
+Runs the bolt's recorded recipe **once for the bolt**, not once per work item. There is no per-stage skill.
+
+- Resume from `current_stage` and `checkpoint_state`
+- Honor ceremony gates; at a gate, emit the full artifact text and wait
+- Write stage files under `docs/specsmd/bolts/{id}/`
+- On completion, write the walkthrough (or you may invoke `walkthrough-generate` yourself) and call the complete script
+- If the script refuses, report the remediation and stop
+
+Guardrail failures arrive as remediations: what to change, where, which standard or evidence it names.
+
+### `walkthrough-generate`
+
+Every completed bolt needs a walkthrough, even when the recipe has no walkthrough stage. Required sections: what changed, why, deviations from plan, how to verify. The deviations heading always exists. No source listings, patches, or fences.
+
+`bolt-execute` can write this itself. This skill exists so you can produce the walkthrough without chaining skills.
+
+## What the scripts gate on
+
+Skills recommend. Scripts refuse illegal state:
+
+- Missing `completion_requires` files
+- Unchecked `(gating)` criteria on tracked work items
+- Walkthrough missing the deviations heading, or containing fenced source
+- Dependency cycles
+- Unknown recipe constraint kinds
+- Hand-edited status tokens that are not in the contract
+
+A refused completion is not a prompt to edit frontmatter. Produce the named evidence and retry, or ask for an override (`--force`) if you intend one.
+
+## Invocation surface
+
+| Kind | Skills |
+|------|--------|
+| Model may start these | `using-specsmd`, `specsmd-status` |
+| You invoke by name | `specsmd-init`, `intent-create`, `work-item-decompose`, `bolt-plan`, `bolt-start`, `bolt-execute`, `walkthrough-generate` |
+| Internal | `flow-runtime` (state scripts; do not suggest) |

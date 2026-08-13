@@ -1,0 +1,76 @@
+---
+title: Manual install
+description: Install specsmd v2 on a tool that has no plugin marketplace
+---
+
+v2 is **marketplace-only** as a product: there is no v2 npm CLI. Tools that cannot install from a plugin marketplace still get the same skills by **copying them** into the project.
+
+After this page, invoke skills by name exactly as in the [quickstart](/v2/quickstart).
+
+## What you copy
+
+The source is a **specs.md checkout on `main-v2`** (or this documentation's branch), not the consumer tree and not the v1 npm package.
+
+Copy every directory under `plugins/specsmd/skills/` into the consuming project's `.agents/skills/`:
+
+```bash
+# From a consumer project
+mkdir -p .agents/skills
+cp -R /path/to/specs.md/plugins/specsmd/skills/* .agents/skills/
+```
+
+If you are working inside the specs.md repository itself:
+
+```bash
+mkdir -p .agents/skills
+cp -R plugins/specsmd/skills/* .agents/skills/
+```
+
+You should then have, among others:
+
+```
+.agents/skills/
+├── using-specsmd/SKILL.md
+├── specsmd-status/SKILL.md
+├── specsmd-init/SKILL.md
+├── intent-create/SKILL.md
+├── work-item-decompose/SKILL.md
+├── bolt-plan/SKILL.md
+├── bolt-start/SKILL.md
+├── bolt-execute/SKILL.md
+├── walkthrough-generate/SKILL.md
+└── flow-runtime/          # scripts + contract; do not invoke directly
+```
+
+Each skill is invocable by name.
+
+<Warning>
+  Do not copy a legacy `plugins/specsmd-aidlc` or `plugins/specsmd-fire` tree for this path. Those are v1. Do not also copy `plugins/specsmd-core` — the unified plugin is self-contained.
+</Warning>
+
+## Optional: always-on principles
+
+Append `plugins/specsmd/agents-md/AGENTS-fragment.md` from the checkout to the project's `AGENTS.md`. Create the file if needed; do not overwrite existing project instructions — append.
+
+## Tools that also read `.claude/skills/`
+
+Some editors read `.claude/skills/` in addition to `.agents/skills/`. A symlink is enough:
+
+```bash
+mkdir -p .claude
+ln -s ../.agents/skills .claude/skills
+```
+
+## Then initialize
+
+In the coding tool, start a session and invoke `specsmd-init`. Continue with the [quickstart](/v2/quickstart) from “Initialize the artifact tree.”
+
+The flow's scripts run with Node.js. They write only under `docs/specsmd/` and install nothing into the project.
+
+## Updating
+
+Copy the skills again from a newer checkout to replace `.agents/skills/`. Project artifacts under `docs/specsmd/` are yours; a recopy of skills does not migrate or rewrite them.
+
+## v1 users
+
+This path is for the unified plugin only. Legacy flows still install with `npx specsmd install` or by copying `plugins/specsmd-<flow>/skills/` **and** `plugins/specsmd-core/skills/`. v2 provides **no migration tooling** — see [Coming from v1](/v2/coming-from-v1).
