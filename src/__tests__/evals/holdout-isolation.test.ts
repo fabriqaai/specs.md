@@ -24,11 +24,15 @@ function run(cwd: string, command: string, args: string[]): string {
 }
 
 /**
- * Stacked PRs that already contain the evals harness look mixed against
- * main-v2. Judge this contribution against the nearest ancestor that makes
- * the range one-sided.
+ * After the stack is merged onto main-v2, the range against origin/main-v2
+ * is mixed (evals + plugin landed together). The holdout cares about *this*
+ * contribution: uncommitted work versus HEAD, then the nearest ancestor
+ * whose range is one-sided.
  */
 function contributionBase(cwd: string): string {
+  const vsHead = evaluateHoldout({ cwd, base: 'HEAD' });
+  if (vsHead.ok) return 'HEAD';
+
   const current = evaluateHoldout({ cwd });
   if (current.ok) {
     return String(resolveBase(cwd, null) || 'HEAD');
@@ -38,6 +42,14 @@ function contributionBase(cwd: string): string {
     const parsed = spawnSync('git', ['rev-parse', '--verify', rev], { cwd, encoding: 'utf8' });
     if (parsed.status !== 0) break;
     const candidate = parsed.stdout.trim();
+    if (evaluateHoldout({ cwd, base: candidate }).ok) return candidate;
+  }
+  const mergeParent = spawnSync('git', ['rev-parse', '--verify', 'HEAD^2'], {
+    cwd,
+    encoding: 'utf8',
+  });
+  if (mergeParent.status === 0) {
+    const candidate = mergeParent.stdout.trim();
     if (evaluateHoldout({ cwd, base: candidate }).ok) return candidate;
   }
   return String(resolveBase(cwd, null) || 'HEAD');
