@@ -6,6 +6,7 @@
 const fs = require('fs');
 const path = require('path');
 const lib = require('./lib.cjs');
+const memory = require('./memory-lib.cjs');
 
 function initWorkItem(rootPath, opts) {
   const contract = lib.loadContract();
@@ -97,6 +98,7 @@ function initWorkItem(rootPath, opts) {
   const intent = lib.readMarkdown(lib.intentPath(root, intentId, contract));
   if (intent.data.status === 'complete' || intent.data.status === 'abandoned') {
     intent.data.status = 'active';
+    intent.body = memory.stripHistoricalHeader(intent.body);
     lib.writeMarkdown(intent.path, intent.data, intent.body, root, contract);
   }
 

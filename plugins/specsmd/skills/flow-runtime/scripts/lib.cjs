@@ -679,7 +679,7 @@ function copyBundledRecipes(rootPath, contract) {
 function initProjectTree(rootPath, contract, autonomyBias) {
   const root = artifactRoot(rootPath, contract);
   fs.mkdirSync(root, { recursive: true });
-  for (const dir of ['intents', 'bolts', 'recipes', 'standards', 'decisions', 'system']) {
+  for (const dir of ['intents', 'bolts', 'recipes', 'standards', 'decisions', 'system', 'archive']) {
     fs.mkdirSync(path.join(root, dir), { recursive: true });
   }
   copyBundledRecipes(rootPath, contract);
@@ -705,6 +705,17 @@ function initProjectTree(rootPath, contract, autonomyBias) {
       index,
       '---\nid: decisions-index\nstatus: active\n---\n\n# Decisions in force\n\n(none yet)\n',
       'utf8'
+    );
+  }
+
+  const boltsIndex = path.join(root, 'bolts', 'index.md');
+  if (!fs.existsSync(boltsIndex)) {
+    writeMarkdown(
+      boltsIndex,
+      { id: 'bolts-index', status: 'active' },
+      '# Completed bolts\n\n(none yet)\n',
+      rootPath,
+      contract
     );
   }
 

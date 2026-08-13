@@ -29,6 +29,16 @@ If you are unsure of project state, invoke the `specsmd-status` skill. Never gue
 - **Bolt** — the execution container. Created when work starts. Runs a **recipe** of stages under a **ceremony** (`autopilot` / `confirm` / `validate`). Confirm waits on the first gateable stage; validate waits on every gateable stage.
 - Artifacts live in `docs/specsmd/`. State lives in YAML frontmatter. Only the scripts in the `flow-runtime` skill write state.
 
+## Read path
+
+Read **semantic memory first**. Do not open change records (intents, work items, bolts, individual decision files) unless a semantic document points at them or the user asks for history.
+
+1. `docs/specsmd/system/` — current truth (architecture, integrations, domain facts) plus verification status
+2. `docs/specsmd/standards/` — invariants in force
+3. `docs/specsmd/decisions/index.md` — in-force decisions only; do not crawl `decisions/`
+
+Episodic artifacts are history. Each carries a header of the form `Historical record ({date}). Current truth: {semantic document}.` Follow that one hop up; never chain sideways to a newer episodic file.
+
 ## Skills (invoke by name, except this skill and `specsmd-status`)
 
 | Skill | When |

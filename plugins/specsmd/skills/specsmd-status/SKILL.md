@@ -20,7 +20,9 @@ Read-only orientation. Never write artifacts. Never invoke another skill. Never 
 
 ## Report
 
-Present three lenses. Empty lenses stay visible.
+Present **semantic memory first**, from `data.read_path`: `system/`, `standards/`, and the decisions index. That is current truth. Do not open episodic artifacts unless a semantic document refers to them or the user asks for history.
+
+Then present three lenses. Empty lenses stay visible.
 
 - **Shaping** — intents and work items not named on any non-draft bolt
 - **Building** — active bolts, with stage and checkpoint

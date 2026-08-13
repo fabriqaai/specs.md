@@ -6,6 +6,7 @@
 const fs = require('fs');
 const path = require('path');
 const lib = require('./lib.cjs');
+const memory = require('./memory-lib.cjs');
 
 function completeBolt(rootPath, boltId, force, opts) {
   const contract = lib.loadContract();
@@ -107,14 +108,47 @@ function completeBolt(rootPath, boltId, force, opts) {
     if (!completed.includes(s)) completed.push(s);
   }
   bolt.data.stages_completed = completed;
+  if (opts && opts.touchedScope) {
+    bolt.data.touched_scope = lib.splitList(opts.touchedScope);
+  }
   lib.touchUpdated(bolt.data);
+
+  const workItems = lib.splitList(bolt.data.work_items).map((id) => lib.findWorkItem(root, id, contract));
+  const matches = memory.matchSystemDocs(root, bolt.data, workItems, contract);
+  const skipReview = !!(opts && (opts.skipReview === true || opts.skipReview === 'true'));
+  let projection = memory.projectionItemsFor(boltId, matches);
+  if (projection.length) {
+    projection = memory.markProjection(projection, opts && opts.reviewed, skipReview);
+    bolt.data.projection_review = projection;
+  }
+
+  const pointer = memory.chooseCurrentTruth(
+    root,
+    projection.map((p) => p.path).concat(['project.md']),
+    contract
+  );
+  const stamp = bolt.data.completed;
+  bolt.body = memory.applyHistoricalHeader(bolt.body, stamp, pointer);
   lib.writeMarkdown(bolt.path, bolt.data, bolt.body, root, contract);
+  memory.stampBoltEpisodic(root, boltId, stamp, pointer, contract);
+  memory.upsertCompactBolt(root, bolt.data, contract);
+
+  for (const item of projection) {
+    if (item.status !== 'reviewed') continue;
+    const sysFile = path.join(lib.artifactRoot(root, contract), item.path);
+    if (!fs.existsSync(sysFile)) continue;
+    const sys = lib.readMarkdown(sysFile);
+    sys.data.last_verified = stamp;
+    sys.data.verified_by = boltId;
+    lib.writeMarkdown(sysFile, sys.data, sys.body, root, contract);
+  }
 
   const touchedIntents = new Set();
   for (const workItemId of lib.splitList(bolt.data.work_items)) {
     const item = lib.findWorkItem(root, workItemId, contract);
     const parsed = lib.readMarkdown(item.path);
     parsed.data.status = 'complete';
+    parsed.body = memory.applyHistoricalHeader(parsed.body, stamp, pointer);
     lib.writeMarkdown(item.path, parsed.data, parsed.body, root, contract);
     touchedIntents.add(item.intent);
   }
@@ -124,6 +158,11 @@ function completeBolt(rootPath, boltId, force, opts) {
     const items = lib.listWorkItems(root, intentId, contract);
     const intent = lib.readMarkdown(lib.intentPath(root, intentId, contract));
     intent.data.status = lib.deriveIntentStatus(items, contract);
+    if (lib.memoryClassFor('intent', intent.data.status, contract) === 'episodic') {
+      intent.body = memory.applyHistoricalHeader(intent.body, stamp, pointer);
+    } else {
+      intent.body = memory.stripHistoricalHeader(intent.body);
+    }
     lib.writeMarkdown(intent.path, intent.data, intent.body, root, contract);
     intentStatuses[intentId] = intent.data.status;
   }
@@ -136,6 +175,8 @@ function completeBolt(rootPath, boltId, force, opts) {
     intents: intentStatuses,
     completed: bolt.data.completed,
     time_box_expired: fromTimeBox,
+    projection_review: projection,
+    current_truth: pointer,
   };
 }
 
@@ -151,7 +192,11 @@ function applyTimeBoxIfExpired(rootPath, boltId) {
 if (require.main === module) {
   lib.runMain(() => {
     const { positional, flags } = lib.parseArgs(process.argv);
-    return completeBolt(positional[0], positional[1], flags.force === true || flags.force === 'true');
+    return completeBolt(positional[0], positional[1], flags.force === true || flags.force === 'true', {
+      reviewed: flags.reviewed,
+      skipReview: flags['skip-review'],
+      touchedScope: flags['touched-scope'],
+    });
   });
 }
 

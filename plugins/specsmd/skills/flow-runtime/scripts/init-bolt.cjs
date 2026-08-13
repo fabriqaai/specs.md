@@ -5,6 +5,7 @@
  */
 const path = require('path');
 const lib = require('./lib.cjs');
+const memory = require('./memory-lib.cjs');
 
 function resolveWorkItems(rootPath, ids, contract) {
   return ids.map((id) => {
@@ -116,6 +117,7 @@ function initBolt(rootPath, opts) {
     completed: null,
   };
   if (adoptedDraft) data.adopted_draft = adoptedDraft;
+  if (opts.touchedScope) data.touched_scope = lib.splitList(opts.touchedScope);
 
   const body = `# Bolt: ${id}\n\nRecipe: ${recipe.id}. Ceremony: ${ceremony}. Work items: ${workItemIds.join(', ')}.\n`;
   lib.writeMarkdown(file, data, body, root, contract);
@@ -125,6 +127,8 @@ function initBolt(rootPath, opts) {
     const draft = lib.readMarkdown(draftFile);
     draft.data.status = 'abandoned';
     lib.touchUpdated(draft.data);
+    const pointer = memory.chooseCurrentTruth(root, 'project.md', contract);
+    draft.body = memory.applyHistoricalHeader(draft.body, lib.nowStamp(), pointer);
     lib.writeMarkdown(draftFile, draft.data, draft.body, root, contract);
   }
 
@@ -247,6 +251,7 @@ if (require.main === module) {
       recipe: flags.recipe,
       ceremony: flags.ceremony,
       adoptDraft: flags['adopt-draft'],
+      touchedScope: flags['touched-scope'],
     };
     if (flags.draft === true || flags.draft === 'true') return initDraft(positional[0], opts);
     return initBolt(positional[0], opts);

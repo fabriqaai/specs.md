@@ -4,6 +4,7 @@
  * Usage: node status.cjs <rootPath>
  */
 const lib = require('./lib.cjs');
+const memory = require('./memory-lib.cjs');
 const { collectFindings, scanTree } = require('./validate-integrity.cjs');
 
 function collectHealth(rootPath, contract) {
@@ -97,6 +98,14 @@ function projectStatus(rootPath) {
       initialized: false,
       artifactRoot: lib.artifactRoot(root, contract),
       lenses: { shaping: [], building: [], shipping: [] },
+      read_path: {
+        order: ['system', 'standards', 'decisions_index'],
+        system: [],
+        standards: [],
+        decisions_index: { path: 'decisions/index.md', in_force: [] },
+        guidance:
+          'Read semantic memory first (system/, standards/, decisions/index.md). Open episodic artifacts only when a semantic document refers to them or the user asks for history.',
+      },
       health: [],
       suggestion: suggestNext({ shaping: [], building: [], shipping: [] }, false, []),
     };
@@ -185,15 +194,27 @@ function projectStatus(rootPath) {
       };
     });
 
-  const shipping = bolts
-    .filter((b) => b.status === 'complete')
-    .map((b) => ({
+  const shippingById = new Map();
+  for (const b of bolts.filter((bolt) => bolt.status === 'complete')) {
+    shippingById.set(b.id || b.locationId, {
       kind: 'bolt',
       id: b.id || b.locationId,
       status: b.status,
       completed: b.completed,
       work_items: b.work_items,
-    }));
+      archived: !!b.archived,
+    });
+  }
+  for (const entry of memory.readCompactIndex(root, contract).entries) {
+    if (shippingById.has(entry.id)) continue;
+    shippingById.set(entry.id, {
+      kind: 'bolt',
+      id: entry.id,
+      status: entry.status || 'complete',
+      completed: entry.completed,
+    });
+  }
+  const shipping = [...shippingById.values()];
 
   const drafts = bolts
     .filter((b) => b.status === 'draft')
@@ -207,8 +228,9 @@ function projectStatus(rootPath) {
     autonomy_bias: arts.project ? arts.project.autonomy_bias : null,
     lenses,
     drafts,
+    read_path: memory.semanticReadPath(root, contract),
     health,
-    suggestion: suggestNext(lenses, true, drafts),
+    suggestion: suggestNext(lenses, true, drafts, health),
   };
 }
 

@@ -7,6 +7,7 @@ const fs = require('fs');
 const path = require('path');
 const readline = require('readline');
 const lib = require('./lib.cjs');
+const memory = require('./memory-lib.cjs');
 
 const STATUS_REPAIRS = {
   'in-progress': 'active',
@@ -102,10 +103,43 @@ function scanTree(rootPath, contract) {
   const boltsDir = path.join(rootDir, 'bolts');
   if (fs.existsSync(boltsDir)) {
     for (const name of lib.listDirNames(boltsDir)) {
+      if (name === 'index.md') continue;
       const file = lib.boltPath(rootPath, name, contract);
       if (!fs.existsSync(file)) continue;
       const bolt = take(file, { kind: 'bolt', locationId: name });
       if (bolt) arts.bolts.push(bolt);
+    }
+  }
+
+  const archiveRoot = path.join(rootDir, ((contract.memory_class || {}).archive_path) || 'archive');
+  if (fs.existsSync(archiveRoot)) {
+    const archivedIntents = path.join(archiveRoot, 'intents');
+    if (fs.existsSync(archivedIntents)) {
+      for (const name of lib.listDirNames(archivedIntents)) {
+        const file = path.join(archivedIntents, name, 'brief.md');
+        const intent = take(file, { kind: 'intent', locationId: name, archived: true });
+        if (intent) arts.intents.push(intent);
+        const itemsDir = path.join(archivedIntents, name, 'work-items');
+        if (!fs.existsSync(itemsDir)) continue;
+        for (const entry of fs.readdirSync(itemsDir, { withFileTypes: true })) {
+          if (!entry.isFile() || !entry.name.endsWith('.md')) continue;
+          const item = take(path.join(itemsDir, entry.name), {
+            kind: 'work_item',
+            locationId: entry.name.slice(0, -3),
+            locationIntent: name,
+            archived: true,
+          });
+          if (item) arts.workItems.push(item);
+        }
+      }
+    }
+    const archivedBolts = path.join(archiveRoot, 'bolts');
+    if (fs.existsSync(archivedBolts)) {
+      for (const name of lib.listDirNames(archivedBolts)) {
+        const file = path.join(archivedBolts, name, 'bolt.md');
+        const bolt = take(file, { kind: 'bolt', locationId: name, archived: true });
+        if (bolt) arts.bolts.push(bolt);
+      }
     }
   }
 
@@ -331,6 +365,29 @@ function collectFindings(rootPath, contract, opts) {
       }`,
       expected_status: expected,
     });
+  }
+
+  for (const bolt of arts.bolts) {
+    if (bolt.status !== 'complete') continue;
+    const reviews = memory.normalizeProjection(bolt.projection_review);
+    for (const item of reviews) {
+      if (item.status === 'reviewed') continue;
+      const rel = relToRoot(root, bolt.path);
+      const doc = item.document || item.path;
+      push({
+        code: 'UNREVIEWED_PROJECTION',
+        class: 'unreviewed-projection',
+        severity: 'advisory',
+        auto_repairable: false,
+        path: rel,
+        artifact: bolt.id || bolt.locationId,
+        document: doc,
+        message: `Bolt ${bolt.id || bolt.locationId} completed without reviewing ${doc}.`,
+        remediation:
+          item.verify ||
+          `Open ${item.path || doc} and confirm it still states current reality after ${bolt.id || bolt.locationId}. This finding is advisory and does not block completion.`,
+      });
+    }
   }
 
   for (const bolt of arts.bolts) {

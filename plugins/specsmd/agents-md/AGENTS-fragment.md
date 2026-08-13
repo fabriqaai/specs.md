@@ -11,5 +11,6 @@ This project uses specsmd. Specifications under `docs/specsmd/` are the source o
 4. **Ceremony dial.** Complexity × autonomy bias → autopilot / confirm / validate. The user's choice at bolt start wins.
 5. **State in frontmatter.** Only the flow-runtime scripts write status fields. Do not hand-edit them.
 6. **nlspec.** Intents and work items describe observable behavior, never mechanism or implementation file names.
+7. **Read path.** Read `docs/specsmd/system/`, `docs/specsmd/standards/`, and `docs/specsmd/decisions/index.md` before any change record. Episodic artifacts are history.
 
 Before implementing, invoke the `specsmd-status` skill and enter work through the named skills.
