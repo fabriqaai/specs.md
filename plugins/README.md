@@ -30,20 +30,37 @@ The unified flow is marketplace-only. There is no v2 npm CLI. One marketplace in
 
 ### Codex CLI
 
+Codex reads `.agents/plugins/marketplace.json` (`source.path: "./plugins/<name>"`). `origin/HEAD` is still `main` (v1 only), so add a checkout of this branch or pin `--ref main-v2` until that branch is the default.
+
 ```bash
-codex plugin marketplace add fabriqaai/specs.md
+# This checkout (has the unified plugin today)
+codex plugin marketplace add /absolute/path/to/specs.md
+codex plugin install specsmd
+
+# Git — pin the v2 branch until it is the default
+codex plugin marketplace add fabriqaai/specs.md --ref main-v2
+codex plugin install specsmd
 ```
 
 ### Manual install (no marketplace)
 
-Tools without a plugin marketplace get the same skills by copying them into the tool's skills directory. Follow this path verbatim from the repository root of a project (or any directory whose tool reads `.agents/skills/`):
+Tools without a plugin marketplace get the same skills by copying them into the consuming project's `.agents/skills/`. The source is this specs.md checkout, not the consumer tree.
+
+From this repository's root (dogfood):
 
 ```bash
 mkdir -p .agents/skills
 cp -R plugins/specsmd/skills/* .agents/skills/
 ```
 
-Each skill is then invocable by name (`using-specsmd`, `specsmd-status`, `intent-create`, …). Optionally append `plugins/specsmd/agents-md/AGENTS-fragment.md` to the project's `AGENTS.md`. Cursor and Copilot also read `.claude/skills/`; a symlink is enough:
+From a consumer project:
+
+```bash
+mkdir -p .agents/skills
+cp -R /path/to/specs.md/plugins/specsmd/skills/* .agents/skills/
+```
+
+Each skill is then invocable by name (`using-specsmd`, `specsmd-status`, `intent-create`, …). Optionally append `plugins/specsmd/agents-md/AGENTS-fragment.md` from this checkout to the project's `AGENTS.md`. Cursor and Copilot also read `.claude/skills/`; a symlink is enough:
 
 ```bash
 mkdir -p .claude

@@ -40,6 +40,7 @@ for (const plugin of targets) {
 const marketFiles = [
   path.join(ROOT, '.claude-plugin', 'marketplace.json'),
   path.join(ROOT, '..', '.claude-plugin', 'marketplace.json'),
+  path.join(ROOT, '..', '.agents', 'plugins', 'marketplace.json'),
 ];
 for (const marketFile of marketFiles) {
   if (!fs.existsSync(marketFile)) continue;
@@ -47,7 +48,7 @@ for (const marketFile of marketFiles) {
   for (const entry of market.plugins) {
     if (targets.includes(entry.name)) entry.version = version;
   }
-  if (!only) market.metadata.version = version;
+  if (!only && market.metadata) market.metadata.version = version;
   fs.writeFileSync(marketFile, JSON.stringify(market, null, 2) + '\n');
   changed++;
 }

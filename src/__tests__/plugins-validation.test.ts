@@ -211,6 +211,19 @@ describe('plugins: manifests and marketplace', () => {
     expect(rootMarket.plugins.map(pick)).toEqual(marketplace.plugins.map(pick));
   });
 
+  it('ships a Codex catalog with source.path under ./plugins/', () => {
+    const codexMarketPath = path.resolve(__dirname, '..', '..', '.agents', 'plugins', 'marketplace.json');
+    expect(fs.existsSync(codexMarketPath), 'missing .agents/plugins/marketplace.json').toBe(true);
+    const codexMarket = JSON.parse(fs.readFileSync(codexMarketPath, 'utf8'));
+    expect(codexMarket.plugins[0].name).toBe('specsmd');
+    expect(codexMarket.plugins.map((p: { name: string }) => p.name)).toEqual(PLUGIN_NAMES);
+    for (const entry of codexMarket.plugins) {
+      expect(entry.source.path, `${entry.name}: Codex source.path`).toBe(`./plugins/${entry.name}`);
+      expect(entry.policy?.installation, `${entry.name}: Codex policy`).toBe('AVAILABLE');
+      expect(entry.category, `${entry.name}: Codex category`).toBeTruthy();
+    }
+  });
+
   it('ships bootstrap and navigator inside specsmd with no specsmd-core dependency', () => {
     const names = skills.filter((s) => s.plugin === 'specsmd').map((s) => s.dir);
     expect(names).toEqual(expect.arrayContaining(['using-specsmd', 'specsmd-status']));
@@ -226,6 +239,7 @@ describe('plugins: manifests and marketplace', () => {
   it('documents the marketplace-less copy into .agents/skills/', () => {
     const readme = fs.readFileSync(path.join(PLUGINS_ROOT, 'README.md'), 'utf8');
     expect(readme).toMatch(/cp -R plugins\/specsmd\/skills\/\* \.agents\/skills\//);
+    expect(readme).toMatch(/cp -R \/path\/to\/specs\.md\/plugins\/specsmd\/skills\/\* \.agents\/skills\//);
   });
 
   it('root plugin.json conforms to the Agent Plugins spec (closed schema, $schema required)', () => {
