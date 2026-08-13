@@ -6,7 +6,7 @@ complexity: high
 status: pending
 depends_on: []
 created: 2026-08-09
-sufficiency: cleared
+sufficiency: not-cleared
 sufficiency_report: docs/specsmd/intents/001-unified-bolt-flow/sufficiency/000-flow-evals.md
 ---
 

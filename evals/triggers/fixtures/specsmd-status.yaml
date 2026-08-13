@@ -1,5 +1,10 @@
 skill: specsmd-status
 description: Navigator — where the project stands, what to do next, which flow is active.
+signatures:
+  - where the project stands
+  - what to do next
+  - which specsmd flow is active
+  - project state is unclear
 prompts:
   - id: where-stands
     text: Where does this project stand?

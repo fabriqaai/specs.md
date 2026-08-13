@@ -40,10 +40,11 @@ The spec is **cleared** when no open `divergence` or `contradiction` remains. Ad
 node evals/sufficiency/run.cjs --work-item <id> --record --findings findings.yaml
 ```
 
-Omit `--outcome` to derive `cleared` / `not-cleared` from findings. `--outcome cleared` is refused while a blocking finding is open.
+Omit `--outcome` to derive `cleared` / `not-cleared` from findings. `--outcome cleared` is refused while a blocking finding is open, **and** while the findings file lacks a `reviewer` attestation.
 
 ```yaml
 protocol: adversarial-review
+reviewer: name-or-agent-id
 findings:
   - id: F1
     class: divergence   # divergence | contradiction | advisory | named-freedom

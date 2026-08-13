@@ -81,7 +81,7 @@ describe('trigger evals', () => {
         [
           '---',
           'name: specsmd-status',
-          'description: Use when the user asks where the project stands, what to do next, or which specsmd flow is active.',
+          'description: Use when the user asks where the project stands, what to do next, or which specsmd flow is active — or when you need to route to the right flow skill and the project state is unclear.',
           '---',
           '',
           '# specsmd Status',
@@ -100,10 +100,18 @@ describe('trigger evals', () => {
       expect(bootPrompt.outcome).toBe('pass');
       expect(bootPrompt.predicted).toBe('using-specsmd');
 
-      const predicted = predictSkill('Where does this project stand?', [
-        { name: 'using-specsmd', description: 'start of every session engage flow skills', disableModelInvocation: false },
-        { name: 'specsmd-status', description: 'where the project stands what to do next', disableModelInvocation: false },
-      ]);
+      const fixtures = [
+        { skill: 'using-specsmd', signatures: ['start of every session', 'how and when to engage'] },
+        { skill: 'specsmd-status', signatures: ['where the project stands', 'what to do next'] },
+      ];
+      const predicted = predictSkill(
+        'Where does this project stand?',
+        [
+          { name: 'using-specsmd', description: 'start of every session how and when to engage', disableModelInvocation: false },
+          { name: 'specsmd-status', description: 'where the project stands what to do next', disableModelInvocation: false },
+        ],
+        { fixtures }
+      );
       expect(predicted.skill).toBe('specsmd-status');
     } finally {
       rmSync(root, { recursive: true, force: true });

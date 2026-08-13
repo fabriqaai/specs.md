@@ -253,6 +253,61 @@ function deriveSufficiency(findings) {
   return openBlockingFindings(findings).length === 0 ? 'cleared' : 'not-cleared';
 }
 
+function normalizeProbes(meta) {
+  const raw = meta && typeof meta === 'object' ? meta : {};
+  if (Array.isArray(raw.probes)) {
+    return raw.probes.map((probe, index) => ({
+      id: String((probe && probe.id) || `P${index + 1}`),
+      isolated: probe && probe.isolated === true,
+      observable: String((probe && (probe.observable || probe.notes)) || '').trim(),
+    }));
+  }
+  if (raw.probe) {
+    return [
+      {
+        id: 'legacy-single-probe',
+        isolated: false,
+        observable: String(raw.probe).trim(),
+      },
+    ];
+  }
+  return [];
+}
+
+function protocolEvidenceErrors(protocol, meta) {
+  const raw = meta && typeof meta === 'object' ? meta : {};
+  const errors = [];
+  if (!protocol || !protocol.id) {
+    errors.push('No protocol selected.');
+    return errors;
+  }
+  if (protocol.id === 'triangulation') {
+    const probes = normalizeProbes(raw);
+    if (probes.length < 2) {
+      errors.push(
+        'Triangulation requires two isolated probes, each with observable-behavior notes. A single self-probe is not the protocol.'
+      );
+    }
+    probes.forEach((probe) => {
+      if (!probe.observable) {
+        errors.push(`Probe ${probe.id} is missing observable-behavior notes.`);
+      }
+      if (!probe.isolated) {
+        errors.push(`Probe ${probe.id} must attest isolated: true (spec + standards only).`);
+      }
+    });
+    const judge = String(raw.judge || raw.judge_notes || '').trim();
+    if (!judge) {
+      errors.push('Triangulation requires a judge note comparing the two probes.');
+    }
+  } else if (protocol.id === 'adversarial-review') {
+    if (!String(raw.reviewer || '').trim()) {
+      errors.push('Adversarial review requires a reviewer attestation before the spec can be cleared.');
+    }
+  }
+  return errors;
+}
+
 function isoNow() {
   return new Date().toISOString().replace(/\.\d{3}Z$/, 'Z');
 }
@@ -275,7 +330,9 @@ module.exports = {
   loadWorkItemFile,
   loadYaml,
   normalizeFinding,
+  normalizeProbes,
   openBlockingFindings,
+  protocolEvidenceErrors,
   parseArgs,
   parseDodCriteria,
   parseFrontmatter,

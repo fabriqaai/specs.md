@@ -10,7 +10,7 @@ const UNIFIED_PLUGIN = 'specsmd';
 const STOPWORDS = new Set([
   'a', 'an', 'the', 'and', 'or', 'to', 'of', 'in', 'on', 'for', 'at', 'by', 'is', 'it',
   'this', 'that', 'with', 'from', 'as', 'be', 'are', 'was', 'do', 'i', 'we', 'you', 'my',
-  'me', 'any', 'should', 'what', 'how', 'when', 'where', 'which',
+  'me', 'any', 'should', 'what', 'how', 'when', 'where', 'which', 'other', 'every',
 ]);
 
 function skillFilePath(repoRoot, skillName) {
@@ -48,57 +48,96 @@ function loadFixtures(yaml) {
       const file = path.join(FIXTURES_DIR, name);
       const data = yaml.load(fs.readFileSync(file, 'utf8')) || {};
       const skill = String(data.skill || data.expected_skill || path.basename(name, path.extname(name)));
+      const signatures = (data.signatures || []).map((item) => String(item).trim()).filter(Boolean);
       const prompts = (data.prompts || []).map((prompt, index) => ({
         id: String(prompt.id || `${skill}-${index + 1}`),
         text: String(prompt.text || prompt.prompt || ''),
         expected: String(prompt.expected || skill),
       }));
-      return { file: name, skill, description: data.description || '', prompts };
+      return { file: name, skill, description: data.description || '', signatures, prompts };
     });
 }
 
-function stem(token) {
-  if (token.length > 4 && token.endsWith('ing')) return token.slice(0, -3);
-  if (token.length > 3 && token.endsWith('s')) return token.slice(0, -1);
-  return token;
+function includesPhrase(haystack, phrase) {
+  return String(haystack).toLowerCase().includes(String(phrase).toLowerCase());
 }
 
-function tokenize(text) {
+function words(text) {
   return String(text)
     .toLowerCase()
     .split(/[^a-z0-9]+/)
-    .filter((token) => token && !STOPWORDS.has(token) && token.length > 1)
-    .map(stem);
+    .filter((token) => token && token.length > 3 && !STOPWORDS.has(token));
 }
 
-function scorePromptAgainstSkill(promptText, skill) {
-  const promptTokens = new Set(tokenize(promptText));
-  const skillTokens = new Set([...tokenize(skill.name), ...tokenize(skill.description)]);
-  if (promptTokens.size === 0 || skillTokens.size === 0) return 0;
-  let overlap = 0;
-  for (const token of promptTokens) {
-    if (skillTokens.has(token)) overlap += 1;
-  }
-  let score = overlap / promptTokens.size;
-  for (const token of tokenize(skill.name)) {
-    if (promptTokens.has(token)) score += 0.25;
-  }
-  return score;
+function signaturesForSkill(skillName, fixtures) {
+  const fixture = fixtures.find((entry) => entry.skill === skillName);
+  return fixture ? fixture.signatures.slice() : [];
 }
 
-function predictSkill(promptText, skills) {
+function uniqueVocabulary(fixtures) {
+  const counts = new Map();
+  for (const fixture of fixtures) {
+    const seen = new Set(words(fixture.signatures.join(' ')));
+    for (const token of seen) counts.set(token, (counts.get(token) || 0) + 1);
+  }
+  const unique = new Map();
+  for (const fixture of fixtures) {
+    unique.set(
+      fixture.skill,
+      words(fixture.signatures.join(' ')).filter((token) => counts.get(token) === 1)
+    );
+  }
+  return unique;
+}
+
+function wordPresent(promptWords, token) {
+  if (promptWords.has(token)) return true;
+  if (token.endsWith('s') && promptWords.has(token.slice(0, -1))) return true;
+  if (promptWords.has(`${token}s`)) return true;
+  return false;
+}
+
+function scorePromptAgainstSkill(promptText, skillName, fixtures, vocab) {
+  const signatures = signaturesForSkill(skillName, fixtures);
+  const promptWords = new Set(words(promptText));
+  const unique = new Set((vocab && vocab.get(skillName)) || []);
+  let uniqueHits = 0;
+  for (const token of unique) {
+    if (wordPresent(promptWords, token)) uniqueHits += 1;
+  }
+  let phraseHits = 0;
+  for (const phrase of signatures) {
+    if (phrase.trim().split(/\s+/).length >= 4 && includesPhrase(promptText, phrase)) phraseHits += 2;
+  }
+  if (includesPhrase(promptText, skillName)) uniqueHits += 1;
+  return { score: uniqueHits + phraseHits, uniqueHits, phraseHits };
+}
+
+function predictSkill(promptText, skills, options = {}) {
+  const fixtures = options.fixtures || [];
+  const vocab = uniqueVocabulary(fixtures);
   const invocable = skills.filter((skill) => !skill.disableModelInvocation);
   const pool = invocable.length > 0 ? invocable : skills;
-  let best = null;
-  for (const skill of pool) {
-    const score = scorePromptAgainstSkill(promptText, skill);
-    if (!best || score > best.score) best = { skill: skill.name, score };
+  const scored = pool.map((skill) => {
+    const detail = scorePromptAgainstSkill(promptText, skill.name, fixtures, vocab);
+    return { skill: skill.name, score: detail.score, uniqueHits: detail.uniqueHits };
+  });
+  scored.sort((a, b) => b.score - a.score || a.skill.localeCompare(b.skill));
+  const best = scored[0] || { skill: null, score: 0 };
+  const second = scored[1] || { score: -1 };
+  const tied = Boolean(best.skill && second.skill && best.score === second.score);
+  if (!best.skill || best.score <= 0 || tied) {
+    return { skill: null, score: best.score || 0, tied, ranked: scored };
   }
-  if (!best || best.score <= 0) return { skill: null, score: 0 };
-  return best;
+  return { skill: best.skill, score: best.score, tied: false, ranked: scored };
 }
 
-function evaluatePrompt({ fixture, prompt, skills, repoRoot }) {
+function descriptionCarriesSignatures(description, signatures) {
+  const missing = signatures.filter((phrase) => !includesPhrase(description, phrase));
+  return { ok: missing.length === 0, missing };
+}
+
+function evaluatePrompt({ fixture, prompt, skills, fixtures, repoRoot }) {
   const expectedPath = skillFilePath(repoRoot, prompt.expected);
   if (!fs.existsSync(expectedPath) || skills.length === 0) {
     return {
@@ -111,7 +150,52 @@ function evaluatePrompt({ fixture, prompt, skills, repoRoot }) {
       reason: `Skill file missing: plugins/${UNIFIED_PLUGIN}/skills/${prompt.expected}/SKILL.md`,
     };
   }
-  const prediction = predictSkill(prompt.text, skills);
+
+  const expectedSkill = skills.find((skill) => skill.name === prompt.expected);
+  if (!expectedSkill) {
+    return {
+      id: prompt.id,
+      fixture: fixture.skill,
+      prompt: prompt.text,
+      expected: prompt.expected,
+      predicted: null,
+      outcome: 'fail',
+      reason: `Expected skill ${prompt.expected} is not among loaded descriptions.`,
+    };
+  }
+
+  const drift = descriptionCarriesSignatures(expectedSkill.description, fixture.signatures);
+  if (!drift.ok) {
+    return {
+      id: prompt.id,
+      fixture: fixture.skill,
+      prompt: prompt.text,
+      expected: prompt.expected,
+      predicted: null,
+      outcome: 'fail',
+      reason: `Shipped description for ${prompt.expected} dropped signature phrases: ${drift.missing.join('; ')}`,
+    };
+  }
+
+  for (const other of fixtures) {
+    if (other.skill === prompt.expected) continue;
+    const stolen = other.signatures.filter(
+      (phrase) => phrase.trim().split(/\s+/).length >= 4 && includesPhrase(prompt.text, phrase)
+    );
+    if (stolen.length > 0) {
+      return {
+        id: prompt.id,
+        fixture: fixture.skill,
+        prompt: prompt.text,
+        expected: prompt.expected,
+        predicted: other.skill,
+        outcome: 'fail',
+        reason: `Prompt contains ${other.skill} signature phrase(s): ${stolen.join('; ')}`,
+      };
+    }
+  }
+
+  const prediction = predictSkill(prompt.text, skills, { fixtures });
   const pass = prediction.skill === prompt.expected;
   return {
     id: prompt.id,
@@ -119,11 +203,14 @@ function evaluatePrompt({ fixture, prompt, skills, repoRoot }) {
     prompt: prompt.text,
     expected: prompt.expected,
     predicted: prediction.skill,
-    score: Number(prediction.score.toFixed(3)),
+    score: Number((prediction.score || 0).toFixed(3)),
+    tied: Boolean(prediction.tied),
     outcome: pass ? 'pass' : 'fail',
     reason: pass
-      ? `Matched ${prompt.expected}`
-      : `Predicted ${prediction.skill || 'none'} (expected ${prompt.expected})`,
+      ? `Matched ${prompt.expected} by unique signature vocabulary`
+      : prediction.tied
+        ? `Tie between skills (expected ${prompt.expected})`
+        : `Predicted ${prediction.skill || 'none'} (expected ${prompt.expected})`,
   };
 }
 
@@ -135,7 +222,7 @@ function runTriggerEvals(options = {}) {
   const results = [];
   for (const fixture of fixtures) {
     for (const prompt of fixture.prompts) {
-      results.push(evaluatePrompt({ fixture, prompt, skills, repoRoot }));
+      results.push(evaluatePrompt({ fixture, prompt, skills, fixtures, repoRoot }));
     }
   }
   const summary = {
@@ -144,6 +231,7 @@ function runTriggerEvals(options = {}) {
     fail: results.filter((row) => row.outcome === 'fail').length,
     skipped: results.filter((row) => row.outcome === 'skipped').length,
     skills_found: skills.map((skill) => skill.name),
+    method: 'unique-signature-vocabulary',
   };
   return { fixtures: fixtures.map((fixture) => fixture.skill), skills, results, summary };
 }
@@ -153,8 +241,11 @@ function printUsage() {
     'Usage:',
     '  node evals/triggers/run.cjs [--root <dir>] [--json]',
     '',
-    'Scores canonical prompts against plugins/specsmd skill descriptions.',
-    'Missing skill files report skipped — they are not treated as failures.',
+    'Holdout for model-invocable descriptions. Each fixture names signature',
+    'phrases that must remain in the shipped description. A prompt passes when',
+    'those phrases still exist, the prompt does not quote another skill\'s',
+    'signatures, and unique vocabulary from the expected skill wins.',
+    'This is not a model router. Missing skill files report skipped.',
   ].join('\n');
 }
 
@@ -168,7 +259,7 @@ function main(argv) {
   if (args.json) {
     console.log(JSON.stringify(report, null, 2));
   } else {
-    console.log(`Trigger evals: ${report.summary.total} prompts`);
+    console.log(`Trigger evals: ${report.summary.total} prompts (${report.summary.method})`);
     console.log(
       `pass=${report.summary.pass} fail=${report.summary.fail} skipped=${report.summary.skipped}`
     );
@@ -192,6 +283,7 @@ if (require.main === module) {
 }
 
 module.exports = {
+  descriptionCarriesSignatures,
   evaluatePrompt,
   loadFixtures,
   loadSkillDescriptions,
@@ -199,6 +291,5 @@ module.exports = {
   runTriggerEvals,
   scorePromptAgainstSkill,
   skillFilePath,
-  tokenize,
   UNIFIED_PLUGIN,
 };

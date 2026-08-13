@@ -1,0 +1,6 @@
+id: clean-integrity
+kind: clean-integrity
+title: A freshly initialized tree has zero integrity findings
+judges:
+  - 004-integrity-validator
+satisfies: validate-integrity reports an empty findings list.

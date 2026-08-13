@@ -16,6 +16,8 @@ const {
 const { recordSufficiency, listSufficiency } = require('../sufficiency/run.cjs');
 const { runTriggerEvals } = require('../triggers/run.cjs');
 const { evaluateHoldout } = require('../holdout/run.cjs');
+const { runScenarios } = require('../holdout/scenarios/run.cjs');
+const { flowAvailable, loadFlow } = require('../lib/flow.cjs');
 
 const RESULTS = new Set(['verified', 'failed', 'needs-human', 'spec-defect']);
 
@@ -64,6 +66,13 @@ function checkSufficiencyProducesReport() {
       workItem: '090-sample',
       findings: [],
       notes: 'machine check',
+      meta: {
+        probes: [
+          { id: 'P1', isolated: true, observable: 'Caller sees a recorded report.' },
+          { id: 'P2', isolated: true, observable: 'Caller sees the same recorded report.' },
+        ],
+        judge: 'P1 and P2 are interchangeable to a caller.',
+      },
     });
     if (high.sufficiency !== 'cleared' || !fs.existsSync(high.reportPath)) {
       return { result: 'failed', detail: 'High-complexity record did not write a cleared report.' };
@@ -95,9 +104,11 @@ function checkSufficiencyProducesReport() {
     if (listed.length < 2) {
       return { result: 'failed', detail: 'Sufficiency list did not include the sample items.' };
     }
+    const probes = checkHighRequiresTwoProbes();
+    if (probes.result !== 'verified') return probes;
     return {
       result: 'verified',
-      detail: 'Sufficiency runner records a report at high (triangulation) and medium (adversarial) rigor.',
+      detail: 'Sufficiency runner records a report at high (triangulation) and medium (adversarial) rigor, and refuses a one-probe clear.',
     };
   } finally {
     fs.rmSync(root, { recursive: true, force: true });
@@ -151,6 +162,7 @@ function checkClearedFlip() {
     const cleared = recordSufficiency({
       root,
       workItem: '092-sample',
+      meta: { reviewer: 'conformance-machine-check' },
       findings: [
         {
           id: 'F1',
@@ -232,11 +244,179 @@ function checkTriggerOutcomes(repoRoot) {
       detail: 'Skill files are missing but some prompts were not reported as skipped.',
     };
   }
+  if (!skillsMissing && report.summary.fail > 0) {
+    return {
+      result: 'failed',
+      detail: `Trigger evals failed ${report.summary.fail} prompt(s) against shipped descriptions.`,
+    };
+  }
   return {
     result: 'verified',
     detail: skillsMissing
       ? 'Trigger evals report per-prompt outcomes; skill files are absent so prompts are skipped.'
       : 'Trigger evals report per-prompt routing outcomes against shipped skill descriptions.',
+  };
+}
+
+function checkHighRequiresTwoProbes() {
+  const root = tempRoot('evals-two-probes-');
+  try {
+    writeSampleWorkItem(root, {
+      id: '093-sample',
+      complexity: 'high',
+      criteria: ['sample observable behavior holds'],
+    });
+    let refused = false;
+    try {
+      recordSufficiency({
+        root,
+        workItem: '093-sample',
+        outcome: 'cleared',
+        findings: [],
+      });
+    } catch (err) {
+      refused = /without required triangulation evidence/.test(err.message);
+    }
+    if (!refused) {
+      return {
+        result: 'failed',
+        detail: 'High-complexity spec was allowed to clear without two isolated probes.',
+      };
+    }
+    return {
+      result: 'verified',
+      detail: 'Triangulation refuses cleared unless two isolated probes and a judge note are recorded.',
+    };
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+}
+
+function scenarioById(scenarioReport, id) {
+  const row = (scenarioReport && scenarioReport.results || []).find((item) => item.id === id);
+  if (!row) {
+    return { result: 'failed', detail: `Holdout scenario ${id} is not defined.` };
+  }
+  if (row.skipped) {
+    return { result: 'needs-human', evaluable: 'scenario', detail: row.detail };
+  }
+  return {
+    result: row.satisfied ? 'verified' : 'failed',
+    evaluable: 'scenario',
+    detail: row.detail,
+  };
+}
+
+function checkContractSchema(repoRoot) {
+  const flow = loadFlow(repoRoot);
+  if (!flow) {
+    return { result: 'needs-human', detail: 'Flow scripts are not present in this tree.' };
+  }
+  const contract = flow.lib.loadContract();
+  const required = ['project', 'intent', 'work_item', 'bolt'];
+  for (const key of required) {
+    const type = contract.artifact_types && contract.artifact_types[key];
+    if (!type || !type.path || !type.fields) {
+      return { result: 'failed', detail: `Contract artifact type ${key} is missing path or fields.` };
+    }
+    if (!type.identifier_pattern || !type.memory_class) {
+      return {
+        result: 'failed',
+        detail: `Contract artifact type ${key} is missing identifier_pattern or memory_class.`,
+      };
+    }
+  }
+  if (!contract.status.values.includes('active') || contract.status.values.includes('in-progress')) {
+    return { result: 'failed', detail: 'Contract status vocabulary is not the locked set.' };
+  }
+  const statusSources = JSON.stringify(contract).split('"in-progress"').length - 1;
+  if (statusSources !== 1) {
+    return {
+      result: 'failed',
+      detail: `Rejected synonym in-progress should appear once (in rejected_synonyms); found ${statusSources}.`,
+    };
+  }
+  return {
+    result: 'verified',
+    detail: 'Contract answers location, identifier pattern, fields, and memory class per artifact type.',
+  };
+}
+
+function checkFourRecipes(repoRoot) {
+  const flow = loadFlow(repoRoot);
+  if (!flow) {
+    return { result: 'needs-human', detail: 'Flow scripts are not present in this tree.' };
+  }
+  const contract = flow.lib.loadContract();
+  const expected = {
+    default: ['plan', 'execute', 'test', 'review'],
+    ddd: ['domain-model', 'design', 'decisions', 'implement', 'test'],
+    spike: ['explore', 'findings'],
+    simple: ['plan', 'implement', 'walkthrough'],
+  };
+  for (const [id, stages] of Object.entries(expected)) {
+    const recipe = flow.lib.loadRecipe(repoRoot, id, contract);
+    const got = recipe.stages.map((stage) => stage.id);
+    if (JSON.stringify(got) !== JSON.stringify(stages)) {
+      return { result: 'failed', detail: `Recipe ${id} stages ${got.join(',')} !== ${stages.join(',')}.` };
+    }
+    if (!Array.isArray(recipe.completion_requires)) {
+      return { result: 'failed', detail: `Recipe ${id} has no completion_requires.` };
+    }
+  }
+  return {
+    result: 'verified',
+    detail: 'Each shipped recipe yields its declared stage order and completion artifacts.',
+  };
+}
+
+function checkConcurrentBoltIds(repoRoot) {
+  const flow = loadFlow(repoRoot);
+  if (!flow) {
+    return { result: 'needs-human', detail: 'Flow scripts are not present in this tree.' };
+  }
+  const a = tempRoot('evals-bolt-a-');
+  const b = tempRoot('evals-bolt-b-');
+  try {
+    function seed(root) {
+      flow.initProject(root, 'balanced');
+      const intent = flow.initIntent(root, { title: 'Collision' });
+      const item = flow.initWorkItem(root, { intent: intent.id, title: 'Slice', complexity: 'low' });
+      return flow.initBolt(root, { workItems: item.id, recipe: 'simple' });
+    }
+    const first = seed(a);
+    const second = seed(b);
+    if (first.id === second.id) {
+      return { result: 'failed', detail: `Two working copies minted the same bolt id ${first.id}.` };
+    }
+    return {
+      result: 'verified',
+      detail: `Concurrent working copies minted ${first.id} and ${second.id}.`,
+    };
+  } catch (err) {
+    return { result: 'failed', detail: err.message || String(err) };
+  } finally {
+    fs.rmSync(a, { recursive: true, force: true });
+    fs.rmSync(b, { recursive: true, force: true });
+  }
+}
+
+function checkMemoryClassInContract(repoRoot) {
+  const flow = loadFlow(repoRoot);
+  if (!flow) {
+    return { result: 'needs-human', detail: 'Flow scripts are not present in this tree.' };
+  }
+  const contract = flow.lib.loadContract();
+  const derivation = contract.memory_class && contract.memory_class.derivation;
+  if (!derivation || !derivation.change_record) {
+    return { result: 'failed', detail: 'Contract does not derive memory class for change records.' };
+  }
+  if (derivation.change_record.non_terminal !== 'semantic' || derivation.change_record.terminal !== 'episodic') {
+    return { result: 'failed', detail: 'Change-record class transition is not semantic→episodic.' };
+  }
+  return {
+    result: 'verified',
+    detail: 'Contract answers memory class including the active→terminal transition for change records.',
   };
 }
 
@@ -250,7 +430,10 @@ function checkHoldoutIsolation() {
   const gate = evaluateHoldout({
     files: ['.github/workflows/evals-holdout.yml', 'plugins/specsmd/plugin.json'],
   });
-  if (mixed.ok || gate.ok) {
+  const tests = evaluateHoldout({
+    files: ['src/__tests__/evals/holdout-isolation.test.ts', 'plugins/specsmd/plugin.json'],
+  });
+  if (mixed.ok || gate.ok || tests.ok) {
     return { result: 'failed', detail: 'Mixed evals-side + plugins/specsmd change was not rejected.' };
   }
   if (!evalsOnly.ok || !implOnly.ok) {
@@ -297,6 +480,94 @@ const MACHINE_CHECKS = [
     workItem: '000-flow-evals',
     pattern: /changes flow implementation and the evals area together is rejected/,
     check: () => checkHoldoutIsolation(),
+  },
+  {
+    workItem: '000-flow-evals',
+    pattern: /Work items 001–012 have each been through their sufficiency pass/,
+    check: ({ repoRoot }) => {
+      const listed = listSufficiency({ root: repoRoot });
+      const later = listed.filter((row) => row.id !== '000-flow-evals');
+      const missing = later.filter(
+        (row) => row.sufficiency !== 'cleared' && row.sufficiency !== 'not-cleared'
+      );
+      if (missing.length === 0) {
+        return { result: 'verified', detail: '001–012 have a recorded sufficiency outcome.' };
+      }
+      return {
+        result: 'needs-human',
+        detail: `These items have no real sufficiency record: ${missing.map((row) => `${row.id}=${row.sufficiency}`).join(', ')}.`,
+      };
+    },
+  },
+  {
+    workItem: '001-flow-schema',
+    pattern: /location, identifier pattern, state fields, allowed values, and memory class/,
+    check: ({ repoRoot }) => checkContractSchema(repoRoot),
+  },
+  {
+    workItem: '001-flow-schema',
+    pattern: /No status value or artifact path pattern appears in more than one authoritative place/,
+    check: ({ repoRoot }) => checkContractSchema(repoRoot),
+  },
+  {
+    workItem: '001-flow-schema',
+    pattern: /Creating two bolts concurrently/,
+    check: ({ repoRoot }) => checkConcurrentBoltIds(repoRoot),
+  },
+  {
+    workItem: '002-recipe-catalog',
+    pattern: /Each of the four shipped recipes/,
+    check: ({ repoRoot }) => checkFourRecipes(repoRoot),
+  },
+  {
+    workItem: '002-recipe-catalog',
+    pattern: /project-local recipe file/,
+    check: ({ scenarios }) => scenarioById(scenarios, 'project-local-recipe'),
+  },
+  {
+    workItem: '002-recipe-catalog',
+    pattern: /recorded recipe never changes after creation/,
+    check: ({ scenarios }) => scenarioById(scenarios, 'recipe-snapshot-immutable'),
+  },
+  {
+    workItem: '003-state-scripts',
+    pattern: /bolt completed through the tooling cascades/,
+    check: ({ scenarios }) => scenarioById(scenarios, 'complete-cascade'),
+  },
+  {
+    workItem: '003-state-scripts',
+    pattern: /Completing a bolt with missing required evidence is refused/,
+    check: ({ scenarios }) => scenarioById(scenarios, 'complete-refuses-missing-evidence'),
+  },
+  {
+    workItem: '003-state-scripts',
+    pattern: /project with no package manifest/,
+    check: ({ scenarios }) => scenarioById(scenarios, 'init-without-package'),
+  },
+  {
+    workItem: '004-integrity-validator',
+    pattern: /Non-interactive validation of a clean tree/,
+    check: ({ scenarios }) => scenarioById(scenarios, 'clean-integrity'),
+  },
+  {
+    workItem: '006-execution-skills',
+    pattern: /batch of two work items/,
+    check: ({ scenarios }) => scenarioById(scenarios, 'complete-cascade'),
+  },
+  {
+    workItem: '006-execution-skills',
+    pattern: /Completion without the recipe's required test evidence/,
+    check: ({ scenarios }) => scenarioById(scenarios, 'complete-refuses-missing-evidence'),
+  },
+  {
+    workItem: '007-navigator-status',
+    pattern: /one unstarted intent, one active bolt, and one completed bolt/,
+    check: ({ scenarios }) => scenarioById(scenarios, 'status-lenses'),
+  },
+  {
+    workItem: '011-memory-lifecycle',
+    pattern: /The contract answers, for every artifact type, its memory class/,
+    check: ({ repoRoot }) => checkMemoryClassInContract(repoRoot),
   },
 ];
 
@@ -348,6 +619,9 @@ function evaluateIntent(options = {}) {
   const yaml = loadYaml(repoRoot);
   const intentId = options.intent || DEFAULT_INTENT;
   const files = listWorkItemFiles(repoRoot, intentId);
+  const scenarios = flowAvailable(repoRoot)
+    ? runScenarios({ root: repoRoot })
+    : { results: [], summary: { total: 0, satisfied: 0, failed: 0, skipped: 0 } };
   const report = {
     intent: intentId,
     work_items: [],
@@ -399,7 +673,13 @@ function evaluateIntent(options = {}) {
           });
           continue;
         }
-        const outcome = evaluateCriterion({ id }, criterion, { repoRoot, yaml, report, item });
+        const outcome = evaluateCriterion({ id }, criterion, {
+          repoRoot,
+          yaml,
+          report,
+          item,
+          scenarios,
+        });
         item.criteria.push({
           index: criterion.index,
           tier: criterion.tier,
@@ -452,6 +732,7 @@ function evaluateIntent(options = {}) {
   }
   recount();
 
+  report.scenarios = scenarios.summary;
   return report;
 }
 
@@ -487,8 +768,14 @@ function main(argv) {
       }
     }
   }
-  const hardFail = report.coverage.failed > 0 || report.coverage.spec_defect > 0;
-  return hardFail ? 1 : 0;
+  let gatingFailed = false;
+  for (const item of report.work_items) {
+    for (const criterion of item.criteria) {
+      if (criterion.result === 'spec-defect') gatingFailed = true;
+      if (criterion.result === 'failed' && criterion.tier === 'gating') gatingFailed = true;
+    }
+  }
+  return gatingFailed ? 1 : 0;
 }
 
 if (require.main === module) {

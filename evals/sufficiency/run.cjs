@@ -13,8 +13,10 @@ const {
   loadFindingsFile,
   loadWorkItemFile,
   loadYaml,
+  normalizeProbes,
   openBlockingFindings,
   parseArgs,
+  protocolEvidenceErrors,
   protocolForComplexity,
   resolveRoot,
   sufficiencyReportAbs,
@@ -73,11 +75,25 @@ function renderReport({ item, intentId, complexity, protocol, sufficiency, findi
     lines.push('## Notes', '', notes.trim(), '');
   }
 
-  if (meta && meta.probe) {
+  const probes = normalizeProbes(meta || {});
+  if (probes.length > 0) {
+    lines.push('## Probes', '');
+    for (const probe of probes) {
+      lines.push(
+        `- ${probe.id} — isolated: ${probe.isolated ? 'yes' : 'no'}`,
+        '',
+        probe.observable || '(no observable notes)',
+        ''
+      );
+    }
+  } else if (meta && meta.probe) {
     lines.push(`Probe: ${meta.probe}`, '');
   }
-  if (meta && meta.judge) {
-    lines.push(`Judge: ${meta.judge}`, '');
+  if (meta && (meta.judge || meta.judge_notes)) {
+    lines.push('## Judge', '', String(meta.judge || meta.judge_notes).trim(), '');
+  }
+  if (meta && meta.reviewer) {
+    lines.push(`Reviewer: ${meta.reviewer}`, '');
   }
 
   lines.push('## Findings', '');
@@ -141,6 +157,15 @@ function recordSufficiency(options) {
         'Resolve each divergence/contradiction in the spec, or name it intentional freedom, then re-record. ' +
         `Work item: ${item.file}`
     );
+  }
+  if (sufficiency === 'cleared') {
+    const evidenceErrors = protocolEvidenceErrors(protocol, meta);
+    if (evidenceErrors.length > 0) {
+      throw new Error(
+        `Cannot record sufficiency: cleared without required ${protocol.id} evidence. ` +
+          `${evidenceErrors.join(' ')} Work item: ${item.file}`
+      );
+    }
   }
 
   const recordedAt = options.recordedAt || isoNow();

@@ -77,6 +77,11 @@ describe('holdout isolation', () => {
     expect(evaluateHoldout({ files: ['plugins/specsmd/plugin.json'] }).ok).toBe(true);
     expect(evaluateHoldout({ files: ['src/__tests__/evals/holdout-isolation.test.ts'] }).ok).toBe(true);
     expect(
+      evaluateHoldout({
+        files: ['src/__tests__/evals/holdout-isolation.test.ts', 'plugins/specsmd/plugin.json'],
+      }).ok
+    ).toBe(false);
+    expect(
       evaluateHoldout({ files: ['plugins/specsmd-aidlc/plugin.json', 'evals/README.md'] }).ok
     ).toBe(true);
     expect(

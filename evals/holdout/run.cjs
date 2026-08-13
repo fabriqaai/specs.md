@@ -5,7 +5,7 @@ const { spawnSync } = require('child_process');
 const path = require('path');
 const { parseArgs, posix } = require('../lib/common.cjs');
 
-const EVALS_PREFIXES = ['evals', '.github/workflows/evals-holdout.yml'];
+const EVALS_PREFIXES = ['evals', '.github/workflows/evals-holdout.yml', 'src/__tests__/evals'];
 const FLOW_IMPL_PREFIXES = ['plugins/specsmd'];
 const ZERO_SHA = /^0+$/;
 
@@ -153,8 +153,8 @@ function printUsage() {
     'Usage:',
     '  node evals/holdout/run.cjs [--root <dir>] [--base <git-rev>] [--json]',
     '',
-    'Fails when the same contribution changes evals-side paths (evals/ or',
-    '.github/workflows/evals-holdout.yml) and plugins/specsmd/.',
+    'Fails when the same contribution changes evals-side paths (evals/,',
+    'src/__tests__/evals/, or .github/workflows/evals-holdout.yml) and plugins/specsmd/.',
     'Changing only one side passes. Working tree + commits since the base are included.',
     'On a push, pass --base / EVALS_HOLDOUT_BASE as the previous SHA (zero SHA = no parent).',
   ].join('\n');

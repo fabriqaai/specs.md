@@ -48,12 +48,20 @@ The spec is **not-cleared** while any blocking finding is open.
 node evals/sufficiency/run.cjs --work-item <id> --record --findings findings.yaml
 ```
 
-Omit `--outcome` to derive `cleared` / `not-cleared` from findings. `--outcome cleared` is refused while a blocking finding is open.
+Omit `--outcome` to derive `cleared` / `not-cleared` from findings. `--outcome cleared` is refused while a blocking finding is open, **and** while the findings file lacks two isolated probes plus a judge note. A single self-probe cannot clear a high-complexity spec.
 
 Findings file shape:
 
 ```yaml
 protocol: triangulation
+probes:
+  - id: P1
+    isolated: true
+    observable: what a caller can see from probe A
+  - id: P2
+    isolated: true
+    observable: what a caller can see from probe B
+judge: comparison of P1 and P2 against the Definition of Done
 findings:
   - id: F1
     class: divergence   # divergence | contradiction | advisory | named-freedom

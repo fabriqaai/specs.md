@@ -139,6 +139,7 @@ describe('sufficiency recording', () => {
     const cleared = recordSufficiency({
       root,
       workItem: '091-sample',
+      meta: { reviewer: 'adversarial-reviewer' },
       findings: [
         {
           id: 'F1',
@@ -168,5 +169,31 @@ describe('sufficiency recording', () => {
     expect(payload.id).toBe('000-flow-evals');
     expect(payload.protocol).toBe('triangulation');
     expect(payload.body).toMatch(/Triangulation protocol/);
+  });
+
+  it('refuses to clear a high-complexity spec without two isolated probes', () => {
+    writeWorkItem(root, '093-sample', 'high');
+    expect(() =>
+      recordSufficiency({
+        root,
+        workItem: '093-sample',
+        outcome: 'cleared',
+        findings: [],
+      })
+    ).toThrow(/two isolated probes/);
+
+    const cleared = recordSufficiency({
+      root,
+      workItem: '093-sample',
+      findings: [],
+      meta: {
+        probes: [
+          { id: 'P1', isolated: true, observable: 'Caller sees report A.' },
+          { id: 'P2', isolated: true, observable: 'Caller sees report A.' },
+        ],
+        judge: 'No caller-visible divergence.',
+      },
+    });
+    expect(cleared.sufficiency).toBe('cleared');
   });
 });

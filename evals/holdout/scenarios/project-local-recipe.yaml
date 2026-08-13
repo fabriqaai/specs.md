@@ -1,0 +1,6 @@
+id: project-local-recipe
+kind: project-local-recipe
+title: A project-local recipe file is selectable at bolt creation
+judges:
+  - 002-recipe-catalog
+satisfies: init-bolt with --recipe local records that recipe and its snapshot.

@@ -45,12 +45,15 @@ describe('DoD conformance checker', () => {
     const machine = evalsItem.criteria.filter((criterion: { evaluable: string }) => criterion.evaluable === 'machine');
     expect(machine.length).toBeGreaterThanOrEqual(5);
     for (const criterion of machine) {
+      if (criterion.tier === 'advisory') continue;
       expect(criterion.result, criterion.detail).toBe('verified');
     }
     const later = report.work_items.find((item: { id: string }) => item.id === '001-flow-schema');
-    expect(later.criteria.every((criterion: { result: string }) => criterion.result === 'needs-human')).toBe(
-      true
-    );
+    const machineLater = later.criteria.filter((criterion: { evaluable: string }) => criterion.evaluable === 'machine');
+    expect(machineLater.length).toBeGreaterThan(0);
+    for (const criterion of machineLater) {
+      expect(criterion.result, criterion.detail).not.toBe('needs-human');
+    }
   });
 
   it('prints a coverage summary from the CLI', () => {

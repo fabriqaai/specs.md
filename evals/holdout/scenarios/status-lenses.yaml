@@ -1,0 +1,6 @@
+id: status-lenses
+kind: status-lenses
+title: Unstarted, active, and completed work appear under the correct status lenses
+judges:
+  - 007-navigator-status
+satisfies: Shaping, building, and shipping each contain the planted artifact; a next move is offered, not taken.
