@@ -35,6 +35,10 @@ describe('flow contract', () => {
       }
     }
     expect(contract.artifact_types.work_item.path).toBe('intents/{intent}/tasks.md');
+    expect(contract.artifact_types.decision.path).toBe(
+      'intents/{intent}/bolts/{bolt}/decisions/{id}.md'
+    );
+    expect(contract.artifact_types.decisions_index.path).toBe('decisions/index.md');
     expect(contract.artifact_types.bolt.path).toBe('intents/{intent}/bolts/{id}/bolt.md');
     expect(contract.artifact_types.bolt.fields).toContain('intent');
     expect(contract.artifact_types.bolt.fields).toContain('adopted_draft');

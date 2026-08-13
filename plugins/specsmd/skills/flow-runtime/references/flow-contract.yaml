@@ -246,14 +246,17 @@ artifact_types:
       - created
       - scope
   decision:
-    path: decisions/{id}.md
+    path: intents/{intent}/bolts/{bolt}/decisions/{id}.md
     identifier_pattern: "{id}"
     memory_class: episodic
     fields:
       - id
       - title
+      - intent
+      - bolt
       - created
       - consult_when
+      - summary
       - superseded
       - superseded_by
       - archive_override

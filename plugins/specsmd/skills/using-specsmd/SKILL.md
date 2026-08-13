@@ -26,7 +26,7 @@ If you are unsure of project state, invoke the `specsmd-status` skill. Never gue
 
 - **Intent** — problem, outcome, scope, non-goals. No mechanism.
 - **Work item** — a vertical slice with a behavioral Definition of Done, as a section in the intent's `tasks.md`. Complexity is decision load.
-- **Bolt** — the execution container, scoped to one intent, living under that intent's folder. Created when work starts (dynamic grouping: single, batch, or wide of that intent). Optional drafts. Runs a **recipe** of stages under a **ceremony** (`autopilot` / `confirm` / `validate`). One skill: `bolt-execution`.
+- **Bolt** — the execution container, scoped to one intent. `bolt-design` writes plan/design and closes caller-visible contracts. `bolt-execute` implements, tests, and walks through — and refuses if those contracts are still open.
 
 Artifacts live in `docs/specsmd/`. State lives in YAML frontmatter. **Skills write that frontmatter** following `transitions.md` in the `flow-runtime` skill.
 
@@ -45,7 +45,8 @@ Read **semantic memory first**, then working (non-terminal) change records. Acti
 | `specsmd-init` | No `docs/specsmd/` tree yet |
 | `plan-intent` | New outcome to capture |
 | `work-item-decompose` | An intent needs slices |
-| `bolt-execution` | Draft, start, resume, or complete a bolt |
+| `bolt-design` | Start a bolt; write plan, domain model, design, decisions |
+| `bolt-execute` | Implement, test, and walk through an accepted design |
 
 Nothing here is a required next step.
 

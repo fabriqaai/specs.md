@@ -133,7 +133,11 @@ Density check: if you cannot write the checkbox, you have not specified the outc
 
 ## Two-implementer test
 
-After the draft exists, read it as a stranger. For each DoD line, ask: could two competent implementers satisfy this line and still produce caller-visible different behavior? If yes, the line is a `divergence`. Tighten it or name the freedom.
+After the draft exists, read it as a stranger. Run the hunts in `references/caller-contracts.md` in the `flow-runtime` skill: **return**, **surfaces**, **set rule**, **shape**, **credential**.
+
+If the outcome has a caller (human or program), each hunt is either a fact in Outcome / DoD / a table, or a line under Named freedoms. Two procedures for the same set, or a forbid without a required reading, is a contradiction.
+
+If two implementers could pass every DoD line and a caller would still see different products, the brief is not done. Ask. Do not write the file.
 
 ## Voice
 

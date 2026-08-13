@@ -29,7 +29,7 @@ Suggested ceremony comes from `ceremony.matrix` in `references/flow-contract.yam
 
 ## Acceptance criteria
 
-Every work item ends in a Definition of Done. Criteria are behavioral and marked `(gating)` or `(advisory)`. An internal-attribute criterion (names a module, function, or "add a validator") is flagged on that line as `flag: internal-attribute` and does not block writing.
+Every work item ends in a Definition of Done. Criteria are behavioral and marked `(gating)` or `(advisory)`. An internal-attribute criterion (names a module, function, or "add a validator") is flagged on that line as `flag: internal-attribute` and does not block writing. If the slice has a caller, close or name the hunts in `references/caller-contracts.md` in the `flow-runtime` skill on that section.
 
 Use `references/work-item.md` as the **section** shape. All slices for one intent live in one file.
 
@@ -70,6 +70,6 @@ Now exists:
 - `docs/specsmd/intents/{intentId}/tasks.md` (new or updated sections; `ceremony_suggested` recorded)
 
 Declinable next (none required):
-- `bolt-execution` — draft, start, or run a bolt on this intent
+- `bolt-design` — start a bolt on this intent
 - `plan-intent` — capture another outcome
 - `specsmd-status` — re-orient

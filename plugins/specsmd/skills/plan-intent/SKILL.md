@@ -33,7 +33,7 @@ When in doubt, treat it as one outcome and keep the bound tight.
 
 ## 3. Dialogue
 
-Ask **one question per turn**. Prefer A / B / C with your recommendation first. Hunt only: purpose, today's failure, observable success, bound, exclusions, freedoms.
+Ask **one question per turn**. Prefer A / B / C with your recommendation first. Hunt: purpose, today's failure, observable success, bound, exclusions, freedoms. If the outcome has a caller, also hunt from `references/caller-contracts.md` in the `flow-runtime` skill: return, surfaces, set rule, shape, credential.
 
 Do not interview for slices, files, stack, recipes, or skill names. If the user offers mechanism, translate it to observable behavior or ask what a caller would see.
 
@@ -80,7 +80,7 @@ Do this yourself. Do not dispatch a reviewer.
 
 1. **Placeholder scan** — `TBD`, `TODO`, "appropriately", "as needed", empty headings. Fix or mark `*(thin)*`.
 2. **Closed loop** — every Outcome/Scope claim has a DoD line; every DoD line is grounded in Outcome or Scope.
-3. **Two-implementer** — any DoD line two agents could pass while a caller sees different behavior is too loose. Tighten or name the freedom.
+3. **Two-implementer** — run return / surfaces / set rule / shape / credential. Any hunt two agents could pass while a caller sees different products is a stop. Tighten, or name the freedom. Two stories in the tree: repair; do not write.
 4. **Non-goals** — each has name, what, why out, extension point.
 5. **Voice** — present tense, terms defined once, no synonyms, no history ("we decided").
 6. **Mechanism** — no files, modules, skills, recipes, languages in the body.
@@ -94,5 +94,5 @@ Now exists:
 
 Declinable next (none required):
 - `work-item-decompose` — slice this intent
-- `bolt-execution` — group or start work on this intent
+- `bolt-design` — group or start a bolt on this intent
 - `specsmd-status` — re-orient

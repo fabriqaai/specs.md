@@ -41,6 +41,10 @@ The same properties apply at two depths. Do not flatten them.
 
 **Work item** (slice layer). Independently valuable observable behavior. Lives as a `## {id}` section in the intent's `tasks.md` — not a file per slice. Defaults, bounds, omitted-input behavior, error recovery, and a **slice-level** Definition of Done. It must not contradict the owning brief's outcome or DoD.
 
+## Caller-visible contracts
+
+If a caller can tell two implementations apart, the spec is not done. Hunt **return**, **surfaces**, **set rule**, **shape**, and **credential** — see `caller-contracts.md` in this skill. Silence is not a freedom. Two stories in one tree are a contradiction. Product code does not start while a hunt is open.
+
 ## Voice
 
 Declarative present tense, stated as fact: "The flow refuses completion while a gating criterion is unmet." No future/conditional tense for core behavior, no RFC-2119 legalese. Define each term once; never use synonyms for defined terms afterward.

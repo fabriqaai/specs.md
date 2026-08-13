@@ -247,12 +247,12 @@ The shaping side of the flow turns rough direction into nlspec artifacts: intent
 
 ### Decided defaults (dogfood slice)
 
-Shaping skills are exactly `plan-intent`, `work-item-decompose`. Draft grouping is a mode of `bolt-execution`, not a separate skill. Each is by-name only. None requires another. None uses required-next language.
+Shaping skills are exactly `plan-intent`, `work-item-decompose`. Draft grouping is a mode of `bolt-design`. Each is by-name only. None requires another. None uses required-next language.
 
 - Intent brief required sections: problem, outcome, scope, non-goals. Additional sections allowed.
 - Complexity: `low | medium | high` by decision load (see skill). Default `medium`. Unset autonomy bias is `balanced`. Suggested ceremony is the contract matrix, recorded as `ceremony_suggested`.
 - Cycle: the invocation writes nothing and names the cycle as an ordered id list.
-- Drafts: `bolt-execution` offers adopt / modify / ignore; dismiss = ignore. Adopt consumes the draft (`abandoned`). Modify/ignore leave it.
+- Drafts: `bolt-design` offers adopt / modify / ignore; dismiss = ignore. Adopt consumes the draft (`abandoned`). Modify/ignore leave it.
 
 ### Definition of Done
 
@@ -292,7 +292,7 @@ Deployment and post-release operation (the Operations question is open at the in
 
 ### Decided defaults (dogfood slice)
 
-Execution is one skill: `bolt-execution` (draft, start, run, walkthrough, complete). By-name only. Recipe-agnostic. Skills never name a required next skill. A bolt is scoped to one intent and lives under that intent's folder.
+Execution is two skills: `bolt-design` (draft, start, plan/design/decisions, two-implementer) and `bolt-execute` (implement, test, walkthrough). `bolt-execute` follows `bolt-design` when design is not done. By-name only. Recipe-agnostic. A bolt is scoped to one intent and lives under that intent's folder.
 
 - Ceremony values: `autopilot` (no gates), `confirm` (first gateable stage), `validate` (every gateable stage). Default = most controlled `ceremony_suggested` among chosen items, unless the user sets one.
 - Confirm/validate: emit the full plan text in the approval turn. Autopilot still writes `plan.md` when the recipe requires it.

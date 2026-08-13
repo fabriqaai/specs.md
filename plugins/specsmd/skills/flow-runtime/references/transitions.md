@@ -13,11 +13,11 @@ Never write `in-progress`, `completed`, or `done`.
 | From | To | Skill |
 |---|---|---|
 | (none) | `pending` | `plan-intent`, `work-item-decompose` |
-| (none) | `draft` | `bolt-execution` |
-| `draft` | `active` | `bolt-execution` (adopt) |
-| `draft` | `abandoned` | `bolt-execution` (adopt consumes the draft) |
-| `pending` | `active` | `bolt-execution` (items named on the new bolt) |
-| `active` | `complete` | `bolt-execution` (bolt, then cascade items, then intent if all items terminal) |
+| (none) | `draft` | `bolt-design` |
+| `draft` | `active` | `bolt-design` (adopt) |
+| `draft` | `abandoned` | `bolt-design` (adopt consumes the draft) |
+| `pending` | `active` | `bolt-design` (items named on the new bolt) |
+| `active` | `complete` | `bolt-execute` (bolt, then cascade items, then intent if all items terminal) |
 | any non-terminal | `abandoned` | any shaping skill when the user abandons the work |
 
 ## Bolt fields the execute path maintains
