@@ -1,5 +1,19 @@
 # Tasks
 
+- [ ] [000-flow-evals](#000-flow-evals) — Evals and verifiers exist before the flow is implemented
+- [ ] [001-flow-schema](#001-flow-schema) — One contract defines the flow's artifacts, state, and names
+- [ ] [002-recipe-catalog](#002-recipe-catalog) — Recipes are data the flow reads, not behavior the flow hardcodes
+- [ ] [003-state-scripts](#003-state-scripts) — State changes are trustworthy — tooling-owned, gated, resumable
+- [ ] [004-integrity-validator](#004-integrity-validator) — Drift between artifacts is detected, explained, and repaired with consent
+- [ ] [005-planning-skills](#005-planning-skills) — Shaping work — capture intent, decompose, optionally pre-group
+- [ ] [006-execution-skills](#006-execution-skills) — Executing work — bolts run recipes under the ceremony dial
+- [ ] [007-navigator-status](#007-navigator-status) — The navigator — state seen through lenses, suggestions never mandates
+- [ ] [008-standards-system](#008-standards-system) — Standards — the guardrail layer, from constitution to enforced check
+- [ ] [009-plugin-packaging](#009-plugin-packaging) — The flow installs as the specsmd plugin and coexists with everything
+- [ ] [010-v2-docs](#010-v2-docs) — v2 documentation lives under /v2 without disturbing v1
+- [ ] [011-memory-lifecycle](#011-memory-lifecycle) — Memory model — current truth in system/, history as change records
+- [ ] [012-slim-ops](#012-slim-ops) — Completed work has somewhere to go — a slim release step in the shipping lens
+
 ## 000-flow-evals
 id: 000-flow-evals
 title: Evals and verifiers exist before the flow is implemented

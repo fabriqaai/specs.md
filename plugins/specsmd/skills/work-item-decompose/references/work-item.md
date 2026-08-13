@@ -1,3 +1,5 @@
+- [ ] [{id}](#{id}) — {title}
+
 ## {id}
 id: {id}
 title: {title}

@@ -135,10 +135,12 @@ describe('specsmd flow skills', () => {
 
   it('keeps every work item as a section in one tasks.md', () => {
     const template = readFileSync(join(SKILLS, 'work-item-decompose/references/work-item.md'), 'utf8');
+    expect(template).toMatch(/- \[ \] \[\{id\}\]\(#\{id\}\)/);
     expect(template).toMatch(/^## \{id\}/m);
     expect(template).toMatch(/### Definition of Done/);
     expect(skillBody('work-item-decompose')).toMatch(/tasks\.md/);
     expect(skillBody('work-item-decompose')).toMatch(/Do not create a file per slice/);
+    expect(skillBody('work-item-decompose')).toMatch(/- \[x\]/);
   });
 
   it('walkthrough template always has deviations, evidence, and no language-tagged fence', () => {

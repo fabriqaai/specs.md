@@ -136,7 +136,7 @@ Write the walkthrough first from `references/walkthrough.md`. Every completed bo
 
 Do not complete if `completion_requires` files are missing, the walkthrough lacks deviations or evidence, a fence remains, or a gating DoD checkbox is unchecked. Say what is missing.
 
-On complete: bolt `status: complete`, `current_stage: null`, stamp `completed`. Then cascade named work items to `complete`, then the intent if every item on it is terminal. If matching `system/` docs exist, present them for review before completing; declining still completes and you note that in health later.
+On complete: bolt `status: complete`, `current_stage: null`, stamp `completed`. Then cascade named tasks to `complete`: set `status: complete` on each section and check its box in the `tasks.md` list (`- [x]`). Then the intent if every task on it is terminal. If matching `system/` docs exist, present them for review before completing; declining still completes and you note that in health later.
 
 ## Close
 

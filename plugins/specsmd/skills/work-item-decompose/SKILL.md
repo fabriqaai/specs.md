@@ -35,7 +35,17 @@ Use `references/work-item.md` as the **section** shape. All slices for one inten
 
 ## Write
 
-Create or append `docs/specsmd/intents/{intentId}/tasks.md`. If the file does not exist, start it with `# Tasks`. Each slice is a `## {nnn}-{slug}` section. Next `{nnn}` is global across all intents (highest existing + 1). Do not create a file per slice.
+Create or append `docs/specsmd/intents/{intentId}/tasks.md`. If the file does not exist, start it with `# Tasks` and a checkable list. Each slice is one checkbox in that list **and** a `## {nnn}-{slug}` section below.
+
+```markdown
+# Tasks
+
+- [ ] [{id}](#{id}) — {title}
+
+## {id}
+```
+
+`- [ ]` means not complete. `- [x]` means `status: complete`. Keep the list and the `status:` line in sync. Next `{nnn}` is global across all intents (highest existing + 1). Do not create a file per slice.
 
 Section metadata (plain `key: value` lines under the heading, not a second frontmatter fence):
 
