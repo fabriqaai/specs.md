@@ -1,6 +1,6 @@
-# docs/specsmd — Unified Bolt Flow artifacts
+# docs/specsmd — specsmd flow memory bank
 
-This is the artifact root of the **Unified Bolt Flow** (specsmd v2 / AI-DLC v2) — and its first project is building the flow itself. These artifacts are hand-authored in the exact shape the flow defines, so the design is dogfooded before the tooling exists.
+This is the memory bank of the **specsmd flow**. These artifacts are the source of truth; code is derived from them.
 
 Concept: `.specs-ideation/sessions/aidlc-fire-unification-20260809/concept-briefs/unified-bolt-flow.md`
 
@@ -21,7 +21,7 @@ Concept: `.specs-ideation/sessions/aidlc-fire-unification-20260809/concept-brief
 
 - Every intent and work item is an **nlspec** — see `standards/nlspec.md`: observable behavior with engineering-grade precision; no mechanism, no code, no implementation file names. The spec is the source of truth; code is derived.
 - State lives in artifact frontmatter — there is no central state file.
-- The flow's tooling (the `specsmd` plugin's `flow-runtime` scripts) is the only state writer. Install locally with `/plugin marketplace add <path-to-this-repo>` then `/plugin install specsmd@specsmd`. Marketplace-less tools: copy `plugins/specsmd/skills/*` into `.agents/skills/` (verbatim path in `plugins/README.md`).
+- **Skills write state** following `plugins/specsmd/skills/flow-runtime/references/transitions.md`. Scripts in that skill are optional helpers. Install locally with `/plugin marketplace add <path-to-this-repo>` then `/plugin install specsmd@specsmd` — only when asked. Marketplace-less tools: copy `plugins/specsmd/skills/*` into `.agents/skills/`.
 - Bolts are created when work starts, not planned upfront (draft bolts are optional proposals).
 - Nothing here enforces sequence; skills recommend, state gates. Guardrail failures speak in remediation instructions.
 - Evals and verifiers precede implementation (work item 000).

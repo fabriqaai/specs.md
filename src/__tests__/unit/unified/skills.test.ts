@@ -166,7 +166,7 @@ describe('unified skills', () => {
     expect(execute).toMatch(/full current text/i);
     expect(execute).toMatch(/not a summary/i);
     expect(execute).toMatch(/this section does not apply/);
-    expect(execute).toMatch(/Do not call `update-stage`/);
+    expect(execute).toMatch(/Do not advance the stage/);
   });
 
   it('keeps the navigator read-only', () => {
@@ -179,11 +179,11 @@ describe('unified skills', () => {
     expect(body).toMatch(/Never suggest `flow-runtime`/);
   });
 
-  it('shows the omit-recipe form before an explicit recipe', () => {
+  it('recommends a recipe from complexity when the user omits one', () => {
     const plan = skillBody('bolt-plan');
     const start = skillBody('bolt-start');
-    expect(plan.indexOf('--draft --work-items {id,id}')).toBeLessThan(plan.indexOf('--recipe ddd'));
-    expect(start.indexOf('--work-items {id,id}')).toBeLessThan(start.indexOf('--recipe simple'));
+    expect(plan).toMatch(/recommend from complexity/);
+    expect(start).toMatch(/omit a recipe pick to take the complexity recommendation/);
   });
 });
 

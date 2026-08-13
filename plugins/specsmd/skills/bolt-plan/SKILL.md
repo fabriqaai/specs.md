@@ -11,20 +11,15 @@ disable-model-invocation: true
 
 # Draft a bolt
 
-A draft is a proposal: work items plus a suggested recipe. It is not an execution container. Starting a bolt may **adopt**, **modify**, or **ignore** it. Unadopted drafts stay until someone adopts or abandons them.
+A draft is a proposal: work items plus a suggested recipe. It is not an execution container. Starting a bolt may **adopt**, **modify**, or **ignore** it. Unadopted drafts stay until someone adopts or abandons them. Drafts are optional — `bolt-start` can group on the fly.
 
 ## Process
 
-1. Read existing work items and drafts via `scripts/status.cjs` in the `flow-runtime` skill.
-2. Propose a grouping and a recipe. Shipped recipes are `default`, `ddd`, `spike`, and `simple` (ids and stages live in the recipe files). A project-local recipe in `docs/specsmd/recipes/` is also selectable. If the user does not pick a recipe, omit `--recipe` and the script recommends from complexity (`recipe.recommend_from_complexity` in `references/flow-contract.yaml` in the `flow-runtime` skill).
-3. Resolve `SCRIPTS_DIR` as the `scripts/` directory of the `flow-runtime` skill:
+1. Read pending work items and existing drafts under `docs/specsmd/`.
+2. Propose a grouping and a recipe. Shipped recipes are `default`, `ddd`, `spike`, and `simple`. A project-local recipe in `docs/specsmd/recipes/` is also selectable. If the user does not pick a recipe, recommend from complexity (`recipe.recommend_from_complexity` in `references/flow-contract.yaml` in the `flow-runtime` skill).
+3. Write `docs/specsmd/bolts/{id}/bolt.md` with `status: draft`. Id format: `bolt-{short-slug}-{nnn}` using the next free number.
 
-```text
-node {SCRIPTS_DIR}/init-bolt.cjs {projectRoot} --draft --work-items {id,id}
-node {SCRIPTS_DIR}/init-bolt.cjs {projectRoot} --draft --work-items {id,id} --recipe ddd
-```
-
-If the script refuses a dependency cycle, it names the cycle. Write nothing else from that invocation.
+If the chosen items' dependencies cycle, name the cycle. Write nothing else from that invocation.
 
 ## Close
 

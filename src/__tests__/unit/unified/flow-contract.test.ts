@@ -16,7 +16,7 @@ describe('flow contract', () => {
   it('answers location, identifier pattern, state fields, allowed values, and memory class from the contract alone', () => {
     expect(contract.artifact_root).toBe('docs/specsmd');
     expect(contract.state.central_file).toBe(false);
-    expect(contract.state.writers).toBe('scripts_only');
+    expect(contract.state.writers).toBe('skills');
     expect(contract.memory_class.stored).toBe(false);
 
     for (const [name, type] of Object.entries(contract.artifact_types) as [

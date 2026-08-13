@@ -15,18 +15,9 @@ Optional shipping step. Completion and release are independent. Do not invent fi
 
 ## Process
 
-1. Resolve `SCRIPTS_DIR` as the `scripts/` directory of the `flow-runtime` skill.
-2. If the user named completed bolts, pass them. Otherwise omit `--bolts` and the script uses every completed bolt that is not yet on a checklist.
-3. Run:
-
-```text
-node {SCRIPTS_DIR}/init-release.cjs {projectRoot} --bolts {id,id}
-node {SCRIPTS_DIR}/init-release.cjs {projectRoot} --title "{title}"
-```
-
-4. Present the written checklist. It includes, per named bolt: what changed (from the walkthrough), verification evidence present, and outstanding findings; plus integrity/standards findings and release-relevant decisions since the last checklist.
-
-Do not edit frontmatter by hand. Do not invoke another skill.
+1. Choose completed bolts the user named, or every completed bolt not yet on a checklist.
+2. Write `docs/specsmd/releases/{nnn}-{slug}/release.md` with frontmatter `id`, `title`, `status: complete`, `bolts: []`, `created`.
+3. Per named bolt include: what changed (from the walkthrough), verification evidence present, and outstanding findings; plus tree-level integrity notes and recent decisions.
 
 ## Close
 

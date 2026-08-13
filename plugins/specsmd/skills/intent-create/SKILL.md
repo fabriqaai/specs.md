@@ -11,7 +11,7 @@ disable-model-invocation: true
 
 # Create an intent
 
-Capture **problem**, **outcome**, **scope**, and **non-goals**. No mechanism, no implementation file names, no code. This skill is invocable at any time, including after work items already exist.
+Capture **problem**, **outcome**, **scope**, and **non-goals**. No mechanism, no implementation file names, no code. Invocable at any time.
 
 ## Dialogue
 
@@ -19,28 +19,31 @@ Ask only what is still missing. Summarize and confirm before writing.
 
 Required sections of the brief: **problem**, **outcome**, **scope**, **non-goals**. Additional sections are allowed. If the user gives one line, write the brief anyway and say which sections are thin.
 
-Follow `references/nlspec.md` in the `flow-runtime` skill — the intent register is pure intent. If two readings are interchangeable to a caller, pick one and name it. If they are not interchangeable, ask. Never silently pick a side of a contradiction.
+Follow `references/nlspec.md` in the `flow-runtime` skill. If two readings are interchangeable to a caller, pick one and name it. If they are not interchangeable, ask.
 
-If work items already exist, ask which belong to this intent. After the user confirms, relink only those **pending** items with the script below. The script refuses items that are not pending or that are named on a non-draft bolt. New items created later under this intent are also a link. The flow does not auto-link.
+If work items already exist, ask which belong to this intent. Relink only **pending** items (move the file under this intent's `work-items/` and set `intent:`). Refuse items that are not pending or that are named on a non-draft bolt.
 
-## Write via script
+## Write
 
-Resolve `SCRIPTS_DIR` as the `scripts/` directory of the `flow-runtime` skill. Write the body to a temp file using `references/brief.md` as the shape, then:
+Create `docs/specsmd/intents/{nnn}-{slug}/brief.md` using `references/brief.md` in this skill. Next id is one more than the highest `{nnn}` already under `intents/`.
 
-```text
-node {SCRIPTS_DIR}/init-intent.cjs {projectRoot} --title "{title}" --body-file {temp}
-node {SCRIPTS_DIR}/relink-work-item.cjs {projectRoot} --intent {id} --work-items {id,id}
+Frontmatter:
+
+```yaml
+id: {nnn}-{slug}
+title: {title}
+status: pending
+created: {ISO-8601}
 ```
 
-The relink line runs only after the user confirms membership. Do not create the markdown yourself. Do not edit status fields.
+Write the file. Do not require a script.
 
 ## Close
 
-List the artifacts that now exist. Offer at most three declinable next names. None is required. Do not invoke them. Do not say a next skill is required.
+List the artifacts that now exist. Offer at most three declinable next names. None is required. Do not invoke them.
 
 Now exists:
 - `docs/specsmd/intents/{id}/brief.md`
-- relinked work items, if the user confirmed any
 
 Declinable next (none required):
 - `work-item-decompose` — slice this intent

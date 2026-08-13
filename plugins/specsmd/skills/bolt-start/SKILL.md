@@ -11,19 +11,25 @@ disable-model-invocation: true
 
 # Start a bolt
 
-Creates the execution container. Recipe and ceremony are recorded at creation and do not change.
+Creates the execution container when work starts. Recipe and ceremony are recorded at creation and do not change.
 
 ## Scope
 
-Offer: a single work item, a batch, or an existing draft.
+Calculate three offers from pending (not-on-an-active-bolt) work items — this is the dynamic grouping:
+
+1. **Single** — one item
+2. **Batch** — items that share ceremony, or that the user names
+3. **Wide** — all compatible pending items in dependency order, one bolt
+
+Recommend from autonomy bias (`autonomous` → wide, `controlled` → single, `balanced` → batch if more than two items). If `docs/specsmd/project.md` has `grouping_history` with three matching choices, pre-select that offer. The user may pick any offer or a custom set.
 
 If drafts exist, present exactly three options first: **adopt** a listed draft, **modify** a listed draft, **ignore** drafts for this start. Dismissing the prompt is **ignore**.
 
-- **Adopt** — `--adopt-draft {id}` (consumes the draft; it becomes `abandoned`)
-- **Modify** — pass the edited `--work-items` and `--recipe`; do not pass `--adopt-draft` unless the user wants the draft consumed
-- **Ignore** — pass `--work-items` only; drafts stay `draft`
+- **Adopt** — copy the draft's work items and recipe; set the draft to `abandoned`
+- **Modify** — use the edited work items and recipe; leave the draft unless the user wants it consumed
+- **Ignore** — start from the chosen items; drafts stay `draft`
 
-A bolt may group work items from more than one intent. If the chosen items' dependencies cycle, the script refuses and names the cycle. Write nothing else from that invocation.
+A bolt may group work items from more than one intent. If the chosen items' dependencies cycle, name the cycle. Write nothing else from that invocation.
 
 ## Ceremony
 
@@ -33,22 +39,28 @@ Values and gates live in `references/flow-contract.yaml` in the `flow-runtime` s
 - `confirm` — the recipe's first gateable stage waits
 - `validate` — every gateable stage waits
 
-If the user does not pick one, omit `--ceremony` and the script uses the most controlled `ceremony_suggested` among the chosen items. The user's explicit choice always wins.
+If the user does not pick one, use the most controlled `ceremony_suggested` among the chosen items. The user's explicit choice always wins.
 
-Recipe: omit `--recipe` to take the complexity recommendation, or pass a shipped or project-local id.
+Recipe: omit a recipe pick to take the complexity recommendation, or use a shipped or project-local id.
 
-## Write via script
+## Write
 
-Resolve `SCRIPTS_DIR` as the `scripts/` directory of the `flow-runtime` skill:
+Create `docs/specsmd/bolts/{id}/bolt.md`. Snapshot the recipe YAML into `recipe_snapshot`.
 
-```text
-node {SCRIPTS_DIR}/init-bolt.cjs {projectRoot} --work-items {id,id}
-node {SCRIPTS_DIR}/init-bolt.cjs {projectRoot} --work-items {id,id} --recipe simple --ceremony confirm --touched-scope auth,identity
+```yaml
+id: {id}
+status: active
+recipe: {id}
+recipe_snapshot: {full recipe object}
+ceremony: autopilot|confirm|validate
+current_stage: {first stage id}
+stages_completed: []
+checkpoint_state: awaiting|not-required   # awaiting if first stage is gateable under this ceremony
+work_items: [{id}, {id}]
+created: {ISO-8601}
 ```
 
-`--touched-scope` is the bolt's topic list, matched at completion against `system/` `claimed_scope`. Ask which areas this bolt changes, or pick the `claimed_scope` tokens of registered `system/` docs that apply. Do not infer scope by tokenizing work-item bodies.
-
-Do not mkdir a bolt folder yourself.
+Set each named work item to `status: active`. Set the owning intent(s) to `active` if they were `pending`. Append this grouping choice to `grouping_history` on `project.md`.
 
 ## Close
 

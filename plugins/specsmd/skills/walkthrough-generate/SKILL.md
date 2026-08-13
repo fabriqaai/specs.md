@@ -21,12 +21,12 @@ Contains no source listings, patches, or fences (language-tagged, untagged, or `
 
 ## Close
 
-List the walkthrough. Offer at most three declinable next names. None is required. Do not invoke them. Completing the bolt is a script, not a required next skill.
+List the walkthrough. Offer at most three declinable next names. None is required. Do not invoke them. Completing the bolt is done in `bolt-execute` when evidence is present.
 
 Now exists:
 - `docs/specsmd/bolts/{boltId}/walkthrough.md`
 
 Declinable next (none required):
-- `bolt-execute` — complete the bolt via `scripts/complete-bolt.cjs` in the `flow-runtime` skill
+- `bolt-execute` — complete the bolt
 - `specsmd-status` — re-orient
 - `bolt-start` — start another grouping

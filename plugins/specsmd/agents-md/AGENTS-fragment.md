@@ -1,9 +1,9 @@
 <!-- specsmd: append this fragment to the project's AGENTS.md.
-     Always-on principles for the unified bolt flow. -->
+     Always-on principles for the specsmd flow. -->
 
-## specsmd — unified bolt flow
+## specsmd flow
 
-This project uses specsmd. Specifications under `docs/specsmd/` are the source of truth; implementation follows specs.
+This project uses the **specsmd flow**. Specifications under `docs/specsmd/` are the memory bank and the source of truth; implementation follows specs. Do not write specsmd state to `memory-bank/` or `.specs-fire/`.
 
 1. **Intent → work item → bolt.** Bolts are created when work starts. Draft bolts are optional.
 2. **Recipes are data.** Stages come from the recipe recorded on the bolt, not from a hardcoded sequence in a skill.

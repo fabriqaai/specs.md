@@ -1,15 +1,16 @@
-# Unified Bolt Flow contract.
+# specsmd flow contract.
 # Single source for artifact locations, identifiers, status vocabulary, and defaults.
-# Scripts read this file. Skills do not copy these facts into prose.
+# Skills read this file and write matching frontmatter. Scripts are optional helpers.
 
-id: specsmd-unified
-version: "0.1.0"
+id: specsmd-flow
+version: "0.2.0"
 artifact_root: docs/specsmd
+memory_bank: docs/specsmd
 
 state:
   location: artifact_frontmatter
   central_file: false
-  writers: scripts_only
+  writers: skills
 
 status:
   values:

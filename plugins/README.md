@@ -6,7 +6,7 @@ Each plugin's root `plugin.json` conforms to the vendor-neutral [Agent Plugins s
 
 | Plugin | What it gives you |
 |---|---|
-| `specsmd` | **Default install.** Unified bolt flow (AI-DLC v2): intents, work items, dynamic bolts, recipes, ceremony dial. Artifacts in `docs/specsmd/`. Self-contained — one install is the complete flow. |
+| `specsmd` | **Default install.** The **specsmd flow**: intents, work items, dynamic bolts, recipes, ceremony dial. Memory bank is `docs/specsmd/`. Self-contained — one install is the complete flow. |
 | `specsmd-core` | Session bootstrap (`using-specsmd`), project navigator (`specsmd-status`), always-on principles fragment. Install this with any legacy flow. |
 | `specsmd-aidlc` | AI-DLC methodology: `inception` → `construction` → `operations` phase skills + all verb skills (`intent-create`, `bolt-plan`, `bolt-start`, `deploy`, …) |
 | `specsmd-fire` | FIRE flow: `fire` entry skill + planner/builder verb skills with autonomy modes (autopilot / confirm / validate) |
@@ -21,7 +21,7 @@ The unified flow is marketplace-only. There is no v2 npm CLI. One marketplace in
 
 ```bash
 /plugin marketplace add /absolute/path/to/specs.md
-/plugin install specsmd@specsmd           # unified bolt flow (default)
+/plugin install specsmd@specsmd           # specsmd flow (default)
 
 # Legacy v1 flows (still published):
 /plugin install specsmd-core@specsmd

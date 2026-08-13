@@ -14,13 +14,11 @@ Read-only orientation. Never write artifacts. Never invoke another skill. Never 
 
 ## Process
 
-1. Resolve `SCRIPTS_DIR` as the `scripts/` directory of the `flow-runtime` skill.
-2. Run: `node {SCRIPTS_DIR}/status.cjs {projectRoot}`
-3. Parse the JSON. The file system (via that script) is the source of truth.
+Read `docs/specsmd/` directly (project, intents, work items, bolts, decisions index, system). You may run `scripts/status.cjs` in the `flow-runtime` skill if it helps; the files are the source of truth.
 
 ## Report
 
-Present **semantic memory first**, from `data.read_path`: `system/`, `standards/`, and the decisions index. That is current truth. Do not open episodic artifacts unless a semantic document refers to them or the user asks for history.
+Present **semantic memory first** (`read_path`): `system/`, `standards/`, and the decisions index. Do not open episodic artifacts unless a semantic document refers to them or the user asks for history.
 
 Then present three lenses. Empty lenses stay visible.
 
@@ -28,16 +26,15 @@ Then present three lenses. Empty lenses stay visible.
 - **Building** — active bolts, with stage and checkpoint
 - **Shipping** — completed bolts, distinguished as completed-unreleased vs released. Offer `release-checklist` when unreleased work exists — never a mandate. Release is optional; do not nag. A project that never releases is healthy.
 
-Then health findings from the script, each with severity and remediation. Integrity findings present in the tree appear here.
+Then health: illegal status tokens, missing `docs/specsmd/`, cascade drift you can see. Do not invent a local mapping for unknown tokens.
 
-Then suggested next moves from `data.suggestion`: use that order; do not re-rank. Best first, then the rest, then one line that any skill may be invoked by name. The script's locked order is: awaiting gate → active bolt → empty intent → unbolted items → drafts → completed-unreleased → empty tree. Integrity findings stay in health — they are not a next skill. Do not take a suggestion. Never suggest `flow-runtime`. Never emit a release finding for a tree that has not used release.
+Then suggested next moves in this order; do not re-rank: awaiting gate → active bolt → empty intent → unbolted items → drafts → completed-unreleased → empty tree. Integrity findings stay in health — they are not a next skill. Do not take a suggestion. Never suggest `flow-runtime`. Never emit a release finding for a tree that has not used release.
 
 ## Constraints
 
-- If the script reports the tree is uninitialized, the best move is `specsmd-init`.
-- If status tokens in the tree are not in the contract, report them as health findings. Do not invent a local mapping.
+- If the tree is uninitialized, the best move is `specsmd-init`.
 - Do not infer resume position from which files exist. Use `current_stage` and `checkpoint_state`.
 
 ## Close
 
-This skill writes nothing and invokes nothing. Present `data.suggestion.options` as declinable choices. Then: any skill may be invoked by name.
+This skill writes nothing and invokes nothing. Present options as declinable choices. Then: any skill may be invoked by name.

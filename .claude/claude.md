@@ -16,12 +16,12 @@ Background study: `memory-bank/research/aidlc-fire-unification-study.md`
 3. **Recommend, don't enforce**: skills never force sequences. Recommendation lives in exactly three places — navigator/status skill, skill descriptions, templates. Scripts gate on state prerequisites only (e.g., no bolt completion without a test report), never on phase or order.
 4. **Ceremony dial**: gates come from complexity × autonomy bias (autopilot / confirm / validate). "AI plans, human validates" is the controlled end of the dial.
 5. **Phases are lenses, not modes**: Inception/Construction/Operations survive as status *views* (shaping / building / shipping), not as gated modes.
-6. **State in frontmatter, not state.yaml**: no central state file. State lives in artifact YAML frontmatter (AI-DLC style) — `bolt.md` carries status, recipe, current_stage, stages_completed, checkpoint_state; work items and intent briefs carry their own status. Scripts are the only writers; the cascade (bolt → work items → intent) and an integrity validator reconcile drift.
+6. **State in frontmatter, not state.yaml**: no central state file. The memory bank is `docs/specsmd/`. State lives in artifact YAML frontmatter — `bolt.md` carries status, recipe, current_stage, stages_completed, checkpoint_state; work items and intent briefs carry their own status. **Skills write those fields** following `flow-runtime/references/transitions.md`. Scripts are optional helpers, not required gates. The cascade (bolt → work items → intent) is applied by the completing skill.
 7. **Artifact root is `docs/specsmd/`**: a visible docs folder (intents/, bolts/, recipes/, standards/, decisions/) — specs are browsable project documentation, not hidden tool state.
 8. **Delivery is skills-native**: Agent Skills plugins (see `plugins/`); verb skills carry `disable-model-invocation: true`; minimal model-invocable descriptions.
-9. **Plugin naming & distribution**: the unified flow ships as the **`specsmd`** plugin (the default install — it IS the AI-DLC v2 implementation), **self-contained** (absorbs the core bootstrap/navigator; one install = complete flow). Companion flows are separate `specsmd-*` plugins. Distribution is **marketplace-only** (Claude Code + Codex); no v2 npm CLI — marketplace-less tools get a documented manual path. Legacy plugins stay published as v1 channels. **No migration tooling, ever** — legacy users stay on v1, which receives full maintenance (no features) indefinitely.
+9. **Plugin naming & distribution**: the product name is the **specsmd flow**, shipped as the **`specsmd`** plugin (self-contained). Companion v1 flows stay `specsmd-*`. Distribution is marketplace-only; no v2 npm CLI. **No migration tooling, ever.**
 10. **Intents and work items are nlspecs** (`docs/specsmd/standards/nlspec.md`): natural language with engineering-grade precision about *observable behavior* — never mechanism, code, or implementation file names. The dividing question is "does this decision affect correctness or interoperability?" Every spec ends in a behavioral Definition of Done with gating vs. advisory criteria. The spec is the source of truth; code is derived from it.
-11. **Harness carries the technical opinions**: standards are invariants with a tiered escalation ladder (principle → doc → judge → mechanical check, promoted on recurring violation); guardrail failures speak in remediation instructions (what to change, where, which standard says so); completion is goal-gated by the state layer, not by skill prose.
+11. **Harness carries the technical opinions**: standards are invariants. Skills refuse illegal transitions in prose (what is missing, which field, which rule). Completion is goal-gated by the skill that writes `complete` — required evidence must exist; there is no required script.
 12. **Evals first**: verifiers (spec-sufficiency triangulation, DoD conformance with honest coverage, trigger evals, holdout scenarios) exist before flow implementation starts. Research: `memory-bank/research/nlspec-harness-study.md`.
 
 ### Forbidden in unified-flow work
@@ -29,7 +29,7 @@ Background study: `memory-bank/research/aidlc-fire-unification-study.md`
 - ❌ Introducing sequence enforcement in skills (chains, "REQUIRED NEXT SKILL", phase gates)
 - ❌ Adding a central state file
 - ❌ Hardcoding recipe stages in scripts or skills (recipes are data)
-- ❌ Mutating artifact state outside the owning scripts
+- ❌ Mutating artifact state outside the owning skill (or an optional helper that skill names)
 - ❌ Naming competitor tools in repo documents
 - ❌ Code snippets, implementation file names, or internal mechanism in intents/work items (nlspec violation)
 - ❌ Implementing a work item whose spec has not passed a sufficiency check (evals-first)

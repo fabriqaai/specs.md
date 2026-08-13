@@ -25,7 +25,7 @@ Complexity is decision load, not file count:
 
 Default complexity when unstated: `medium`.
 
-Suggested ceremony comes from `ceremony.matrix` in `references/flow-contract.yaml` in the `flow-runtime` skill (complexity × the project's autonomy bias). Unset bias is `balanced`. The script records the result as `ceremony_suggested`. The user may override it later at bolt start. Do not copy the matrix into the work item.
+Suggested ceremony comes from `ceremony.matrix` in `references/flow-contract.yaml` in the `flow-runtime` skill (complexity × the project's autonomy bias). Unset bias is `balanced`. Record the result as `ceremony_suggested`. The user may override it later at bolt start. Do not copy the matrix into the work item.
 
 ## Acceptance criteria
 
@@ -33,15 +33,24 @@ Every work item ends in a Definition of Done. Criteria are behavioral and marked
 
 Use `references/work-item.md` as the body shape.
 
-## Write via script
+## Write
 
-Resolve `SCRIPTS_DIR` as the `scripts/` directory of the `flow-runtime` skill. For each item:
+Create `docs/specsmd/intents/{intentId}/work-items/{nnn}-{slug}.md`. Next `{nnn}` is global across all intents (highest existing + 1).
 
-```text
-node {SCRIPTS_DIR}/init-work-item.cjs {projectRoot} --intent {intentId} --title "{title}" --complexity {low|medium|high} --depends-on {id,id} --body-file {temp}
+Frontmatter:
+
+```yaml
+id: {nnn}-{slug}
+title: {title}
+intent: {intentId}
+complexity: low|medium|high
+ceremony_suggested: autopilot|confirm|validate
+status: pending
+depends_on: []
+created: {ISO-8601}
 ```
 
-If the script refuses a dependency cycle, it names the cycle as an ordered id list. Write nothing else from that invocation — no partial item, no frontmatter edit.
+Refuse a dependency cycle: if A depends on B and B on A, write nothing for that item and name the cycle as an ordered id list.
 
 ## Close
 

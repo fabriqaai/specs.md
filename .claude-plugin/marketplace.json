@@ -13,7 +13,7 @@
     {
       "name": "specsmd",
       "source": "./specsmd",
-      "description": "Unified bolt flow (default install): intents, work items, bolts under docs/specsmd/",
+      "description": "specsmd flow (default install): intents, work items, bolts under docs/specsmd/",
       "version": "1.0.0",
       "strict": true
     },

@@ -2,7 +2,7 @@
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "specsmd",
   "version": "1.0.0",
-  "description": "Unified bolt flow: intents, work items, and bolts under docs/specsmd — the specsmd default install",
+  "description": "specsmd flow: intents, work items, and bolts under docs/specsmd — the default install",
   "author": {
     "name": "specsmd"
   },

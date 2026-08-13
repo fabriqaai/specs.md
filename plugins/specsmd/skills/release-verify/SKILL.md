@@ -25,17 +25,11 @@ Ask for any that are missing:
 
 The change must already appear on a release checklist.
 
-## Write via script
+## Write
 
-Resolve `SCRIPTS_DIR` as the `scripts/` directory of the `flow-runtime` skill:
+Create `docs/specsmd/releases/{releaseId}/verifications/{nnn}-{slug}.md` with frontmatter `change`, `confirmed_by`, `confirmed_at`, `environment`, `observation`, `release`. Repeat those facts in the body.
 
-```text
-node {SCRIPTS_DIR}/record-verify.cjs {projectRoot} --change {boltId} --by "{who}" --environment "{env}" --observation "{what}"
-```
-
-Optional: `--when {ISO}` `--release {releaseId}`.
-
-If the script refuses, report the remediation and stop. Do not edit frontmatter.
+If the change is not on a checklist, refuse and say so.
 
 ## Close
 
