@@ -14,7 +14,7 @@ Read-only orientation. Never write artifacts. Never invoke another skill. Never 
 
 ## Process
 
-Read `docs/specsmd/` directly (project, intents, work items, bolts, decisions index, system). You may run `scripts/status.cjs` in the `flow-runtime` skill if it helps; the files are the source of truth.
+Read `docs/specsmd/` directly (project, intents, work items, bolts, decisions index, system). The files are the source of truth.
 
 ## Report
 

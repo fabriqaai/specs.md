@@ -27,11 +27,7 @@ Skills write artifact bodies **and** frontmatter. Follow `references/flow-contra
 
 A bolt stores `recipe` plus `recipe_snapshot` at start. The snapshot does not change.
 
-## Optional helpers
-
-`scripts/` contains Node helpers that implement the same contract. Use them only if they help. A refused helper is a hint, not the only legal path — apply the same rule by writing the files yourself.
-
-Never install packages into the user's project.
+There are no state scripts. Write the files.
 
 ## Close
 

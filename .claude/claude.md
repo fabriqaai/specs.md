@@ -13,10 +13,10 @@ Background study: `memory-bank/research/aidlc-fire-unification-study.md`
 
 1. **FIRE-shaped core, AI-DLC vocabulary**: hierarchy is Intent → Work Item; the execution container is a **bolt** — created dynamically at any time, grouping one or more work items. Upfront bolt planning is available as optional *draft bolts*, never required.
 2. **Recipes, not bolt types**: stage catalogs (`default`, `ddd`, `spike`, `simple`) are data files chosen at bolt creation, not at planning time.
-3. **Recommend, don't enforce**: skills never force sequences. Recommendation lives in exactly three places — navigator/status skill, skill descriptions, templates. Scripts gate on state prerequisites only (e.g., no bolt completion without a test report), never on phase or order.
+3. **Recommend, don't enforce**: skills never force sequences. Recommendation lives in exactly three places — navigator/status skill, skill descriptions, templates. Skills refuse illegal transitions on state prerequisites only (e.g., no bolt completion without a test report), never on phase or order.
 4. **Ceremony dial**: gates come from complexity × autonomy bias (autopilot / confirm / validate). "AI plans, human validates" is the controlled end of the dial.
 5. **Phases are lenses, not modes**: Inception/Construction/Operations survive as status *views* (shaping / building / shipping), not as gated modes.
-6. **State in frontmatter, not state.yaml**: no central state file. The memory bank is `docs/specsmd/`. State lives in artifact YAML frontmatter — `bolt.md` carries status, recipe, current_stage, stages_completed, checkpoint_state; work items and intent briefs carry their own status. **Skills write those fields** following `flow-runtime/references/transitions.md`. Scripts are optional helpers, not required gates. The cascade (bolt → work items → intent) is applied by the completing skill.
+6. **State in frontmatter, not state.yaml**: no central state file. The memory bank is `docs/specsmd/`. State lives in artifact YAML frontmatter — `bolt.md` carries status, recipe, current_stage, stages_completed, checkpoint_state; work items and intent briefs carry their own status. **Skills write those fields** following `flow-runtime/references/transitions.md`. There are no state scripts. The cascade (bolt → work items → intent) is applied by the completing skill.
 7. **Artifact root is `docs/specsmd/`**: a visible docs folder (intents/, bolts/, recipes/, standards/, decisions/) — specs are browsable project documentation, not hidden tool state.
 8. **Delivery is skills-native**: Agent Skills plugins (see `plugins/`); verb skills carry `disable-model-invocation: true`; minimal model-invocable descriptions.
 9. **Plugin naming & distribution**: the product name is the **specsmd flow**, shipped as the **`specsmd`** plugin (self-contained). Companion v1 flows stay `specsmd-*`. Distribution is marketplace-only; no v2 npm CLI. **No migration tooling, ever.**
@@ -28,8 +28,8 @@ Background study: `memory-bank/research/aidlc-fire-unification-study.md`
 
 - ❌ Introducing sequence enforcement in skills (chains, "REQUIRED NEXT SKILL", phase gates)
 - ❌ Adding a central state file
-- ❌ Hardcoding recipe stages in scripts or skills (recipes are data)
-- ❌ Mutating artifact state outside the owning skill (or an optional helper that skill names)
+- ❌ Hardcoding recipe stages in skills (recipes are data)
+- ❌ Mutating artifact state outside the owning skill
 - ❌ Naming competitor tools in repo documents
 - ❌ Code snippets, implementation file names, or internal mechanism in intents/work items (nlspec violation)
 - ❌ Implementing a work item whose spec has not passed a sufficiency check (evals-first)

@@ -2,7 +2,7 @@
 
 The memory bank is `docs/specsmd/`. There is no `state.yaml` and no `memory-bank/` for this flow.
 
-Skills write artifact files and their YAML frontmatter. Optional Node helpers in `scripts/` may be used; they are not required to advance state.
+Skills write artifact files and their YAML frontmatter. There are no state scripts.
 
 ## Status
 

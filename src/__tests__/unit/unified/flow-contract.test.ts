@@ -5,16 +5,19 @@ import { describe, it, expect } from 'vitest';
 import { readFileSync, readdirSync } from 'fs';
 import { join } from 'path';
 
-const SCRIPTS = join(__dirname, '../../../../plugins/specsmd/skills/flow-runtime/scripts');
-const REFERENCES = join(SCRIPTS, '../references');
+const REFERENCES = join(
+  __dirname,
+  '../../../../plugins/specsmd/skills/flow-runtime/references'
+);
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-const lib = require(join(SCRIPTS, 'lib.cjs'));
+const yaml = require(join(__dirname, '../../../node_modules/js-yaml'));
 
 describe('flow contract', () => {
-  const contract = lib.loadContract();
+  const contract = yaml.load(readFileSync(join(REFERENCES, 'flow-contract.yaml'), 'utf8'));
 
   it('answers location, identifier pattern, state fields, allowed values, and memory class from the contract alone', () => {
     expect(contract.artifact_root).toBe('docs/specsmd');
+    expect(contract.memory_bank).toBe('docs/specsmd');
     expect(contract.state.central_file).toBe(false);
     expect(contract.state.writers).toBe('skills');
     expect(contract.memory_class.stored).toBe(false);
@@ -50,17 +53,6 @@ describe('flow contract', () => {
   it('does not treat in-progress as a status value', () => {
     expect(contract.status.values).not.toContain('in-progress');
     expect(contract.status.rejected_synonyms).toContain('in-progress');
-    expect(() => lib.assertStatus('in-progress', contract)).toThrow(/not in the contract vocabulary/);
-    expect(() => lib.assertStatus('completed', contract)).toThrow(/not in the contract vocabulary/);
-  });
-
-  it('derives memory class from status for change records', () => {
-    expect(lib.memoryClassFor('intent', 'active', contract)).toBe('semantic');
-    expect(lib.memoryClassFor('work_item', 'pending', contract)).toBe('semantic');
-    expect(lib.memoryClassFor('bolt', 'complete', contract)).toBe('episodic');
-    expect(lib.memoryClassFor('bolt', 'abandoned', contract)).toBe('episodic');
-    expect(lib.memoryClassFor('standard', 'active', contract)).toBe('semantic');
-    expect(lib.memoryClassFor('decision', 'complete', contract)).toBe('episodic');
   });
 
   it('keeps the ceremony matrix and gate policy in the contract', () => {
@@ -69,14 +61,9 @@ describe('flow contract', () => {
       confirm: 'first_gateable',
       validate: 'all_gateable',
     });
-    expect(lib.suggestCeremony('low', 'balanced', contract)).toBe('autopilot');
-    expect(lib.suggestCeremony('low', 'controlled', contract)).toBe('confirm');
-    expect(lib.suggestCeremony('medium', 'autonomous', contract)).toBe('autopilot');
-    expect(lib.suggestCeremony('medium', 'balanced', contract)).toBe('confirm');
-    expect(lib.suggestCeremony('medium', 'controlled', contract)).toBe('validate');
-    expect(lib.suggestCeremony('high', 'autonomous', contract)).toBe('confirm');
-    expect(lib.suggestCeremony('high', 'balanced', contract)).toBe('validate');
-    expect(lib.suggestCeremony('high', 'controlled', contract)).toBe('validate');
+    expect(contract.ceremony.matrix.low.balanced).toBe('autopilot');
+    expect(contract.ceremony.matrix.medium.balanced).toBe('confirm');
+    expect(contract.ceremony.matrix.high.balanced).toBe('validate');
   });
 
   it('maps complexity to recipe in the contract', () => {
@@ -85,10 +72,6 @@ describe('flow contract', () => {
       medium: 'default',
       high: 'ddd',
     });
-    expect(lib.recommendRecipe('low', contract)).toBe('simple');
-    expect(lib.recommendRecipe('medium', contract)).toBe('default');
-    expect(lib.recommendRecipe('high', contract)).toBe('ddd');
-    expect(lib.recommendRecipe(undefined, contract)).toBe('default');
   });
 
   it('declares typed error exit codes once', () => {

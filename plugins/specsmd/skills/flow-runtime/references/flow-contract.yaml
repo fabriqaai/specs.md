@@ -1,6 +1,6 @@
 # specsmd flow contract.
 # Single source for artifact locations, identifiers, status vocabulary, and defaults.
-# Skills read this file and write matching frontmatter. Scripts are optional helpers.
+# Skills read this file and write matching frontmatter. There are no state scripts.
 
 id: specsmd-flow
 version: "0.2.0"
@@ -166,7 +166,7 @@ errors:
   terminal: 2
   structural: 3
 
-# Defaults for validate-integrity. CLI --stale-after overrides the duration.
+# Integrity defaults. Skills use these when reporting health; there is no validator CLI.
 integrity:
   stale_active_after: P7D
   maintenance_log: maintenance-log.md
@@ -324,8 +324,7 @@ system_document_types:
     - verified_by
 
 # Guardrail layer. Constitution is root-only; every other standard resolves
-# by nearest declared scope. Module files live under the artifact root so
-# scripts never write outside it.
+# by nearest declared scope. Module files live under the artifact root.
 standards:
   constitution_id: constitution
   constitution_override: never

@@ -7,9 +7,9 @@ This project uses the **specsmd flow**. Specifications under `docs/specsmd/` are
 
 1. **Intent → work item → bolt.** Bolts are created when work starts. Draft bolts are optional.
 2. **Recipes are data.** Stages come from the recipe recorded on the bolt, not from a hardcoded sequence in a skill.
-3. **Recommend, don't enforce.** Skills never require a next skill. Scripts refuse illegal state changes only.
+3. **Recommend, don't enforce.** Skills never require a next skill. They refuse illegal state changes only (missing evidence, illegal status).
 4. **Ceremony dial.** Complexity × autonomy bias → autopilot / confirm / validate. The user's choice at bolt start wins.
-5. **State in frontmatter.** Only the flow-runtime scripts write status fields. Do not hand-edit them.
+5. **State in frontmatter.** Skills write status fields following `flow-runtime/references/transitions.md`. There are no state scripts.
 6. **nlspec.** Intents and work items describe observable behavior, never mechanism or implementation file names.
 7. **Read path.** Read `docs/specsmd/system/`, `docs/specsmd/standards/`, and `docs/specsmd/decisions/index.md` before any change record. Episodic artifacts are history.
 
