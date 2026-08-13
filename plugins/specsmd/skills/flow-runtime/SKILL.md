@@ -26,11 +26,11 @@ Resolve `SCRIPTS_DIR` as this skill's `scripts/` directory. Invoke with the proj
 | `scripts/init-bolt.cjs` | Create a bolt or `--draft` |
 | `scripts/update-stage.cjs` | Record a stage complete |
 | `scripts/update-checkpoint.cjs` | Record a gate decision |
-| `scripts/complete-bolt.cjs` | Complete a bolt; cascade status; surface matching `system/` docs for review |
-| `scripts/init-system-doc.cjs` | Register a semantic `system/` document |
+| `scripts/complete-bolt.cjs` | Complete a bolt; cascade status; surface matching `system/` docs (`--touched-scope`, `--reviewed`, `--skip-review`) |
+| `scripts/init-system-doc.cjs` | Register a semantic `system/` document (`--claimed-scope`, `--facts-json`, `--claims-json`) |
 | `scripts/init-decision.cjs` | Record a decision and add it to the in-force index |
 | `scripts/supersede-decision.cjs` | Replace an in-force decision (new record + index + old pointer) |
-| `scripts/archive-artifact.cjs` | Move an episodic record to `archive/` (refused while truth is uncaptured) |
+| `scripts/archive-artifact.cjs` | Move an episodic record to `archive/` (refused while truth is uncaptured; never archives semantic docs) |
 | `scripts/garden.cjs` | Memory gardening pass; repair only with `--fix` or `--finding` |
 | `scripts/validate-integrity.cjs` | Detect drift; repair only with `--fix` or `--finding` |
 | `scripts/status.cjs` | Read-only lenses (runs the validator without `--fix`) |
@@ -38,7 +38,9 @@ Resolve `SCRIPTS_DIR` as this skill's `scripts/` directory. Invoke with the proj
 | `scripts/record-standards.cjs` | Record confirmed standard proposals |
 | `scripts/report-violation.cjs` | Phrase a violation as a remediation |
 
-`validate-integrity.cjs` prints the same JSON envelope as the other scripts. Findings include `severity`, `auto_repairable`, and a remediation that names what to change and where. `--fix` consents to every auto-repairable finding; `--finding F1` consents to one; `--interactive` walks auto-repairable findings on a TTY (refuses a non-TTY). `--stale-after` overrides the contract default (`P7D`). Every applied repair is appended to `docs/specsmd/maintenance-log.md`. A clean tree exits 0 with zero findings. `status.cjs` calls the same detector read-only and exposes the findings as `health`. Completing a bolt with matching `system/` documents left unreviewed adds an advisory `UNREVIEWED_PROJECTION` finding (never a completion blocker). `garden.cjs` is the memory pass: contradictions, stale index entries, missing upward pointers, past-horizon episodic still hot. It changes nothing without `--fix` / `--finding`.
+`validate-integrity.cjs` prints the same JSON envelope as the other scripts. Findings include `severity`, `auto_repairable`, and a remediation that names what to change and where. `--fix` consents to every auto-repairable finding; `--finding F1` consents to one; `--interactive` walks auto-repairable findings on a TTY (refuses a non-TTY). `--stale-after` overrides the contract default (`P7D`). Every applied repair is appended to `docs/specsmd/maintenance-log.md`. A clean tree exits 0 with zero findings. `status.cjs` calls the same detector read-only and exposes the findings as `health`. Completing a bolt with matching `system/` documents left unreviewed adds an advisory `UNREVIEWED_PROJECTION` finding (never a completion blocker). `garden.cjs` is the memory pass: contradictions, stale index entries, missing upward pointers, past-horizon episodic still hot. Horizon starts when the record became episodic (historical-header date, then `completed`, then `created`). It changes nothing without `--fix` / `--finding`.
+
+`init-system-doc.cjs` registration fields are `name`, `purpose`, `claimed_scope`. Optional `--facts-json '{"provider":"oauth"}'` and `--claims-json '[{"path":"src/auth.js","contains":"oauth"}]'` make gardening checkable. Claims are explicit file assertions; facts without claims are checked against source files named after `claimed_scope`. Contradictions are never auto-repaired. `archive-artifact.cjs` moves only episodic records; `--force` overrides uncaptured-truth gates, not semantic current truth. Archiving an intent moves `intents/{id}/` (brief + work items).
 
 Never install packages into the user's project. These scripts have no dependencies.
 

@@ -184,6 +184,7 @@ artifact_types:
       - title
       - status
       - created
+      - completed
   work_item:
     path: intents/{intent}/work-items/{id}.md
     identifier_pattern: work_item
@@ -197,6 +198,8 @@ artifact_types:
       - status
       - depends_on
       - created
+      - completed
+      - scope
   bolt:
     path: bolts/{id}/bolt.md
     identifier_pattern: bolt

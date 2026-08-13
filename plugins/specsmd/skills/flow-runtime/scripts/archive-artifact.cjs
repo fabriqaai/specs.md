@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 /**
  * Move an episodic record to archive/. Refused while uncaptured truth remains.
+ * Semantic current truth cannot be archived, even with --force.
  * Usage: node archive-artifact.cjs <rootPath> --kind decision --id 001-foo [--force]
  */
 const fs = require('fs');
@@ -13,7 +14,7 @@ function resolveSource(rootPath, opts, contract) {
   const id = opts.id;
   if (opts.path) {
     const raw = String(opts.path);
-    const abs = path.isAbsolute(raw)
+    let abs = path.isAbsolute(raw)
       ? raw
       : fs.existsSync(path.join(lib.artifactRoot(rootPath, contract), raw))
         ? path.join(lib.artifactRoot(rootPath, contract), raw)
@@ -21,7 +22,9 @@ function resolveSource(rootPath, opts, contract) {
     if (!fs.existsSync(abs)) {
       throw lib.terminal('ARTIFACT_MISSING', `Nothing to archive at ${raw}.`, 'Pass a path under the artifact root.');
     }
-    return { abs, kind: kind || inferKind(rootPath, abs, contract), id: id || path.basename(abs, '.md') };
+    const inferred = kind || inferKind(rootPath, abs, contract);
+    abs = expandContainer(abs, inferred);
+    return { abs, kind: inferred, id: id || containerId(abs, inferred) };
   }
   if (kind === 'decision' && id) {
     const abs = memory.findDecisionFile(rootPath, id, contract);
@@ -37,14 +40,14 @@ function resolveSource(rootPath, opts, contract) {
     }
     return { abs: dir, kind: 'bolt', id };
   }
-  if ((kind === 'intent' || kind === 'work_item') && id) {
-    if (kind === 'intent') {
-      const file = lib.intentPath(rootPath, id, contract);
-      if (!fs.existsSync(file)) {
-        throw lib.terminal('INTENT_MISSING', `Intent "${id}" was not found.`, 'Pass an existing intent id.');
-      }
-      return { abs: file, kind, id };
+  if (kind === 'intent' && id) {
+    const dir = path.join(lib.artifactRoot(rootPath, contract), 'intents', id);
+    if (!fs.existsSync(dir)) {
+      throw lib.terminal('INTENT_MISSING', `Intent "${id}" was not found.`, 'Pass an existing intent id.');
     }
+    return { abs: dir, kind: 'intent', id };
+  }
+  if (kind === 'work_item' && id) {
     const item = lib.findWorkItem(rootPath, id, contract);
     return { abs: item.path, kind, id };
   }
@@ -55,11 +58,36 @@ function resolveSource(rootPath, opts, contract) {
   );
 }
 
+function expandContainer(abs, kind) {
+  if (!fs.existsSync(abs)) return abs;
+  if (kind === 'intent' && fs.statSync(abs).isFile()) return path.dirname(abs);
+  if (kind === 'bolt' && fs.statSync(abs).isFile() && path.basename(abs) === 'bolt.md') {
+    return path.dirname(abs);
+  }
+  return abs;
+}
+
+function containerId(abs, kind) {
+  if (kind === 'intent' || kind === 'bolt') {
+    return fs.statSync(abs).isDirectory() ? path.basename(abs) : path.basename(path.dirname(abs));
+  }
+  return path.basename(abs, '.md');
+}
+
 function inferKind(rootPath, abs, contract) {
   const rel = memory.artifactRel(rootPath, abs, contract);
+  if (rel === 'project.md') return 'project';
+  if (rel === 'decisions/index.md') return 'decisions_index';
+  if (rel === 'bolts/index.md') return 'bolts_index';
+  if (rel.startsWith('system/')) return 'system';
+  if (rel.startsWith('standards/')) return 'standard';
+  if (rel.startsWith('recipes/')) return 'recipe';
   if (rel.startsWith('decisions/') && !rel.endsWith('index.md')) return 'decision';
-  if (rel.startsWith('bolts/') && (rel.endsWith('/bolt.md') || !rel.includes('.', rel.lastIndexOf('/')))) return 'bolt';
-  if (/intents\/[^/]+\/brief\.md$/.test(rel)) return 'intent';
+  if (rel.startsWith('bolts/')) {
+    if (/^bolts\/[^/]+\/bolt\.md$/.test(rel) || /^bolts\/[^/]+$/.test(rel)) return 'bolt';
+    return 'stage_artifact';
+  }
+  if (/^intents\/[^/]+(\/brief\.md)?$/.test(rel)) return 'intent';
   if (/work-items\//.test(rel)) return 'work_item';
   return 'artifact';
 }
@@ -68,14 +96,57 @@ function loadArtifact(source, contract) {
   const stat = fs.statSync(source.abs);
   if (stat.isDirectory()) {
     const boltFile = path.join(source.abs, 'bolt.md');
+    const briefFile = path.join(source.abs, 'brief.md');
     if (fs.existsSync(boltFile)) {
       const md = lib.readMarkdown(boltFile);
       return { data: md.data, body: md.body, file: boltFile, dir: source.abs };
+    }
+    if (fs.existsSync(briefFile)) {
+      const md = lib.readMarkdown(briefFile);
+      return { data: md.data, body: md.body, file: briefFile, dir: source.abs };
     }
     return { data: { id: source.id }, body: '', file: null, dir: source.abs };
   }
   const md = lib.readMarkdown(source.abs);
   return { data: md.data, body: md.body, file: source.abs, dir: null };
+}
+
+function parentBoltStatus(rootPath, filePath, contract) {
+  const rel = memory.artifactRel(rootPath, filePath, contract);
+  const m = rel.match(/^bolts\/([^/]+)\//);
+  if (!m) return null;
+  const boltFile = lib.boltPath(rootPath, m[1], contract);
+  if (!fs.existsSync(boltFile)) return null;
+  return lib.readMarkdown(boltFile).data.status;
+}
+
+function assertEpisodic(rootPath, source, loaded, contract) {
+  const rel = memory.artifactRel(rootPath, source.abs, contract);
+  if (memory.alwaysSemanticRel(rel)) {
+    throw lib.terminal(
+      'NOT_EPISODIC',
+      `Archiving ${rel} is refused — it is semantic current truth.`,
+      'system/, standards/, project.md, decisions/index.md, and bolts/index.md stay in the hot path. --force does not archive semantic documents.'
+    );
+  }
+  const typeName = source.kind === 'artifact' ? 'decision' : source.kind;
+  let status = loaded.data && loaded.data.status;
+  if (typeName === 'stage_artifact') {
+    status = parentBoltStatus(rootPath, source.abs, contract);
+  }
+  let memoryClass;
+  try {
+    memoryClass = lib.memoryClassFor(typeName, status, contract);
+  } catch {
+    memoryClass = 'semantic';
+  }
+  if (memoryClass !== 'episodic') {
+    throw lib.terminal(
+      'NOT_EPISODIC',
+      `Archiving ${source.id || rel} is refused — it is ${memoryClass} (${status || 'no status'}).`,
+      'Only episodic records may move to archive/. Complete or abandon a change record first. --force does not archive semantic documents.'
+    );
+  }
 }
 
 function archiveArtifact(rootPath, opts) {
@@ -92,6 +163,8 @@ function archiveArtifact(rootPath, opts) {
   }
 
   const loaded = loadArtifact(source, contract);
+  assertEpisodic(root, source, loaded, contract);
+
   const artifact = {
     kind: source.kind,
     id: (loaded.data && loaded.data.id) || source.id,

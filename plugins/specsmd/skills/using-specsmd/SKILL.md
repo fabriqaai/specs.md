@@ -31,13 +31,13 @@ If you are unsure of project state, invoke the `specsmd-status` skill. Never gue
 
 ## Read path
 
-Read **semantic memory first**. Do not open change records (intents, work items, bolts, individual decision files) unless a semantic document points at them or the user asks for history.
+Read **semantic memory first**, then the working (non-terminal) change records. Do not open **episodic** artifacts — completed/abandoned intents, work items, bolts, or individual decision files — unless a semantic document points at them or the user asks for history.
 
 1. `docs/specsmd/system/` — current truth (architecture, integrations, domain facts) plus verification status
 2. `docs/specsmd/standards/` — invariants in force
 3. `docs/specsmd/decisions/index.md` — in-force decisions only; do not crawl `decisions/`
 
-Episodic artifacts are history. Each carries a header of the form `Historical record ({date}). Current truth: {semantic document}.` Follow that one hop up; never chain sideways to a newer episodic file.
+Active change records (in-flight briefs, work-item DoDs, the live bolt) stay on the working read path after those three. Episodic artifacts are history. Each carries a header of the form `Historical record ({date}). Current truth: {semantic document}.` Follow that one hop up; never chain sideways to a newer episodic file.
 
 ## Skills (invoke by name, except this skill and `specsmd-status`)
 

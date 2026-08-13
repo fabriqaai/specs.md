@@ -72,6 +72,19 @@ function initSystemDoc(rootPath, opts) {
   };
 }
 
+function parseJsonFlag(raw, label) {
+  if (raw == null || raw === true) return undefined;
+  try {
+    return JSON.parse(String(raw));
+  } catch {
+    throw lib.terminal(
+      'JSON_INVALID',
+      `${label} is not valid JSON.`,
+      `Pass ${label} as JSON, e.g. --claims-json '[{"path":"src/auth.js","contains":"oauth"}]' or --facts-json '{"provider":"oauth"}'.`
+    );
+  }
+}
+
 if (require.main === module) {
   lib.runMain(() => {
     const { positional, flags } = lib.parseArgs(process.argv);
@@ -80,6 +93,9 @@ if (require.main === module) {
       name: flags.name,
       purpose: flags.purpose,
       claimedScope: flags['claimed-scope'],
+      facts: parseJsonFlag(flags['facts-json'] || flags.facts, '--facts-json'),
+      claims: parseJsonFlag(flags['claims-json'] || flags.claims, '--claims-json'),
+      body: flags.body,
     });
   });
 }

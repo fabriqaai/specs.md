@@ -344,15 +344,13 @@ function textHasToken(text, token) {
 }
 
 function boltScopeHaystack(bolt, workItems) {
+  // Only explicit scope — nlspec bodies describe behavior, not topics.
   const chunks = [];
   chunks.push(...lib.splitList(bolt && bolt.touched_scope));
   chunks.push(...lib.splitList(bolt && bolt.scope));
   for (const item of workItems || []) {
     chunks.push(...lib.splitList(item.scope));
     chunks.push(...lib.splitList(item.touched_scope));
-    if (item.id) chunks.push(String(item.id).replace(/^\d+-/, ''));
-    if (item.title) chunks.push(item.title);
-    if (item.body) chunks.push(item.body);
   }
   return chunks.join(' ');
 }
@@ -562,6 +560,82 @@ function checkClaims(rootPath, doc) {
   return failures;
 }
 
+const SOURCE_SKIP = new Set(['node_modules', '.git', 'dist', 'coverage', 'docs', 'archive', '.specsmd']);
+
+function findScopedSourceFiles(rootPath, scopes, dir, depth, out) {
+  if (depth > 5 || out.length > 40) return;
+  if (!fs.existsSync(dir)) return;
+  let entries;
+  try {
+    entries = fs.readdirSync(dir, { withFileTypes: true });
+  } catch {
+    return;
+  }
+  for (const entry of entries) {
+    if (entry.name.startsWith('.') || SOURCE_SKIP.has(entry.name)) continue;
+    const abs = path.join(dir, entry.name);
+    if (entry.isDirectory()) {
+      findScopedSourceFiles(rootPath, scopes, abs, depth + 1, out);
+      continue;
+    }
+    if (!entry.isFile()) continue;
+    const rel = posixRel(rootPath, abs).toLowerCase();
+    const hit = scopes.some(
+      (scope) => rel.includes(`/${scope}.`) || rel.includes(`/${scope}/`) || rel.startsWith(`${scope}.`) || rel.endsWith(`/${scope}`)
+    );
+    if (hit) out.push(abs);
+  }
+}
+
+// When a system doc states facts but has no claims[], look for source files named after claimed_scope.
+function checkFactsAgainstCodebase(rootPath, doc) {
+  if (normalizeClaims(doc.claims).length) return [];
+  const facts = factsOf(doc);
+  const keys = Object.keys(facts);
+  if (!keys.length) return [];
+  const scopes = scopeTokens(doc.claimed_scope);
+  if (!scopes.length) return [];
+  const files = [];
+  findScopedSourceFiles(rootPath, scopes, path.resolve(rootPath), 0, files);
+  if (!files.length) return [];
+  const failures = [];
+  for (const [key, value] of Object.entries(facts)) {
+    const needle = String(value);
+    if (files.some((file) => fs.readFileSync(file, 'utf8').includes(needle))) continue;
+    failures.push({
+      path: posixRel(rootPath, files[0]),
+      contains: needle,
+      reason: 'missing_text',
+      fact: key,
+    });
+  }
+  return failures;
+}
+
+function alwaysSemanticRel(rel) {
+  const n = String(rel || '').replace(/\\/g, '/');
+  if (n === 'project.md' || n === 'decisions/index.md' || n === 'bolts/index.md') return true;
+  if (n.startsWith('system/')) return true;
+  if (n.startsWith('standards/')) return true;
+  if (n.startsWith('recipes/')) return true;
+  return false;
+}
+
+function episodicWhenMs(header, data) {
+  if (header && header.date) {
+    const raw = header.date.length === 10 ? `${header.date}T00:00:00Z` : header.date;
+    const t = Date.parse(raw);
+    if (Number.isFinite(t)) return t;
+  }
+  if (data) {
+    for (const key of ['completed', 'created']) {
+      const t = Date.parse(data[key]);
+      if (Number.isFinite(t)) return t;
+    }
+  }
+  return NaN;
+}
+
 function semanticReadPath(rootPath, contract) {
   const c = contract || lib.loadContract();
   const system = listSystemDocs(rootPath, c).map((doc) => ({
@@ -655,6 +729,9 @@ module.exports = {
   moveToArchive,
   factsOf,
   checkClaims,
+  checkFactsAgainstCodebase,
+  alwaysSemanticRel,
+  episodicWhenMs,
   semanticReadPath,
   appendMaintenanceLog,
   headerDate,

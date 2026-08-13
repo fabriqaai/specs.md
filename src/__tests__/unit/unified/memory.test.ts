@@ -5,6 +5,7 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { mkdirSync, writeFileSync, rmSync, existsSync, readFileSync } from 'fs';
 import { join } from 'path';
 import { tmpdir } from 'os';
+import { spawnSync } from 'child_process';
 
 const SCRIPTS = join(__dirname, '../../../../plugins/specsmd/skills/flow-runtime/scripts');
 const USING = join(__dirname, '../../../../plugins/specsmd/skills/using-specsmd/SKILL.md');
@@ -293,6 +294,40 @@ describe('memory lifecycle', () => {
       const report = projectStatus(root);
       expect(report.lenses.shipping.some((s: { id: string }) => s.id === bolt.id)).toBe(true);
     });
+
+    it('refuses to archive an active bolt or semantic current truth, even with --force', () => {
+      const { item } = seed();
+      initSystemDoc(root, {
+        id: 'auth',
+        name: 'Auth truth',
+        purpose: 'How authentication works now',
+        claimedScope: 'auth',
+      });
+      const bolt = initBolt(root, { workItems: item.id, ceremony: 'autopilot' });
+      expect(() => archiveArtifact(root, { kind: 'bolt', id: bolt.id })).toThrow(/NOT_EPISODIC|semantic|episodic/i);
+      expect(existsSync(join(root, 'docs/specsmd/bolts', bolt.id, 'bolt.md'))).toBe(true);
+      expect(() => archiveArtifact(root, { path: 'system/auth.md', force: true })).toThrow(/NOT_EPISODIC|semantic/i);
+      expect(existsSync(join(root, 'docs/specsmd/system/auth.md'))).toBe(true);
+      expect(() => archiveArtifact(root, { path: 'decisions/index.md', force: true })).toThrow(/NOT_EPISODIC|semantic/i);
+      expect(existsSync(join(root, 'docs/specsmd/decisions/index.md'))).toBe(true);
+    });
+
+    it('moves the whole intent directory so the live tree is not a brief-less shell', () => {
+      const { intent, item } = seed();
+      finishBolt(item.id);
+      archiveArtifact(root, { kind: 'intent', id: intent.id });
+      expect(existsSync(join(root, 'docs/specsmd/intents', intent.id, 'brief.md'))).toBe(false);
+      expect(existsSync(join(root, 'docs/specsmd/intents', intent.id, 'work-items', `${item.id}.md`))).toBe(false);
+      expect(existsSync(join(root, 'docs/specsmd/archive/intents', intent.id, 'brief.md'))).toBe(true);
+      expect(existsSync(join(root, 'docs/specsmd/archive/intents', intent.id, 'work-items', `${item.id}.md`))).toBe(true);
+      const integrity = validateIntegrity(root);
+      expect(
+        integrity.findings.some(
+          (f: { code: string; path?: string }) =>
+            f.code === 'UNREADABLE' && String(f.path || '').includes(`intents/${intent.id}/brief.md`)
+        )
+      ).toBe(false);
+    });
   });
 
   describe('gardening', () => {
@@ -347,6 +382,65 @@ describe('memory lifecycle', () => {
       const missing = findings.find((f: { code: string; artifact: string }) => f.code === 'MISSING_POINTER' && f.artifact === bolt.id);
       expect(missing.remediation).toMatch(/Historical record/);
     });
+
+    it('does not treat a just-completed long-lived work item as past horizon', () => {
+      initProject(root, 'balanced');
+      const intent = initIntent(root, { title: 'Ship notifications' });
+      const item = initWorkItem(root, {
+        intent: intent.id,
+        title: 'User sees a toast',
+        complexity: 'medium',
+        body: '# A\n\n## Definition of Done\n\n- [x] (gating) A toast appears after save\n',
+      });
+      const itemRel = `docs/specsmd/intents/${intent.id}/work-items/${item.id}.md`;
+      const parsed = read(itemRel);
+      parsed.data.created = new Date(Date.now() - 100 * 24 * 60 * 60 * 1000).toISOString();
+      lib.writeMarkdown(parsed.path, parsed.data, parsed.body, root);
+      finishBolt(item.id);
+      const findings = collectGardenFindings(root);
+      expect(
+        findings.some((f: { code: string; artifact: string }) => f.code === 'PAST_HORIZON' && f.artifact === item.id)
+      ).toBe(false);
+      expect(read(itemRel).data.completed).toBeTruthy();
+    });
+
+    it('detects a facts-only system document that contradicts scoped source files', () => {
+      initProject(root, 'balanced');
+      mkdirSync(join(root, 'src'), { recursive: true });
+      writeFileSync(join(root, 'src/auth.js'), 'module.exports = { provider: "session" };\n', 'utf8');
+      initSystemDoc(root, {
+        id: 'auth',
+        name: 'Auth truth',
+        purpose: 'How authentication works now',
+        claimedScope: 'auth',
+        facts: { provider: 'oauth' },
+      });
+      const hit = garden(root).findings.find((f: { code: string }) => f.code === 'CONTRADICTS_CODEBASE');
+      expect(hit).toBeTruthy();
+      expect(hit.auto_repairable).toBe(false);
+      expect(hit.remediation).toMatch(/src\/auth\.js|system\/auth\.md/);
+    });
+  });
+
+  describe('projection matching', () => {
+    it('does not match claimed_scope against nlspec body text', () => {
+      initProject(root, 'balanced');
+      const intent = initIntent(root, { title: 'Ship notifications' });
+      const item = initWorkItem(root, {
+        intent: intent.id,
+        title: 'User confirms their identity',
+        complexity: 'medium',
+        body: '# A\n\nThe user confirms their identity.\n\n- [x] (gating) identity is confirmed\n',
+      });
+      initSystemDoc(root, {
+        id: 'identity',
+        name: 'Identity truth',
+        purpose: 'How identity works now',
+        claimedScope: 'identity',
+      });
+      const { done } = finishBolt(item.id);
+      expect(done.projection_review || []).toEqual([]);
+    });
   });
 
   describe('read path', () => {
@@ -375,8 +469,41 @@ describe('memory lifecycle', () => {
       expect(using).toMatch(/standards\//);
       expect(using).toMatch(/decisions\/index\.md/);
       expect(using).toMatch(/semantic memory first/i);
+      expect(using).toMatch(/Active change records/i);
+      expect(using).not.toMatch(/Do not open change records \(intents/);
       expect(status).toMatch(/read_path/);
       expect(status).toMatch(/system\//);
+    });
+  });
+
+  describe('system doc CLI', () => {
+    it('accepts --claims-json so gardening is reachable from the script path', () => {
+      initProject(root, 'balanced');
+      mkdirSync(join(root, 'src'), { recursive: true });
+      writeFileSync(join(root, 'src/auth.js'), 'module.exports = { provider: "session" };\n', 'utf8');
+      const proc = spawnSync(
+        process.execPath,
+        [
+          join(SCRIPTS, 'init-system-doc.cjs'),
+          root,
+          '--id',
+          'auth',
+          '--name',
+          'Auth truth',
+          '--purpose',
+          'How authentication works now',
+          '--claimed-scope',
+          'auth',
+          '--claims-json',
+          JSON.stringify([{ path: 'src/auth.js', contains: 'oauth' }]),
+        ],
+        { encoding: 'utf8' }
+      );
+      expect(proc.status).toBe(0);
+      const sys = read('docs/specsmd/system/auth.md');
+      expect(sys.data.claims).toEqual([{ path: 'src/auth.js', contains: 'oauth' }]);
+      const hit = garden(root).findings.find((f: { code: string }) => f.code === 'CONTRADICTS_CODEBASE');
+      expect(hit).toBeTruthy();
     });
   });
 });

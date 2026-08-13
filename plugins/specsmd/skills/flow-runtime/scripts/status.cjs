@@ -169,7 +169,7 @@ function projectStatus(rootPath) {
   }
 
   const building = bolts
-    .filter((b) => b.status === 'active')
+    .filter((b) => b.status === 'active' && !b.archived)
     .map((b) => {
       let expired = false;
       try {

@@ -57,11 +57,12 @@ Autopilot still writes a plan when the recipe requires `plan.md`. Honor recipe c
 
 Write the walkthrough first from `references/walkthrough.md` (the `walkthrough-generate` skill is an alternative the user may invoke — do not chain-invoke it). Every completed bolt yields a walkthrough, even when the recipe has no walkthrough stage. Required sections: what changed, why, deviations from plan, how to verify. The deviations heading always exists (`none` if nothing diverged). No source listings, patches, or fences — language-tagged, untagged, or `~~~`. Then:
 
-```text
-node {SCRIPTS_DIR}/complete-bolt.cjs {projectRoot} {boltId}
-```
+If `touched_scope` is missing on the bolt, ask which areas changed (or pick `claimed_scope` tokens from `docs/specsmd/system/`) and pass `--touched-scope` on this call. Match registered `system/` docs' `claimed_scope` to that list and present each named document (confirm still true, or update) **before** completing. Then complete once:
 
-If it refuses, the refusal names missing evidence, a missing deviations heading, a fenced listing, or unmarked gating criteria. Produce those, then retry. `--force` records an override; only use it when the user asks. Completing the bolt completes every tracked item, or none if evidence or gating criteria are missing.
+- reviewed: `node {SCRIPTS_DIR}/complete-bolt.cjs {projectRoot} {boltId} --touched-scope {scopes} --reviewed {id,id}` — stamps `last_verified` / `verified_by`
+- declined: `node {SCRIPTS_DIR}/complete-bolt.cjs {projectRoot} {boltId} --touched-scope {scopes} --skip-review` — completes anyway; integrity records an advisory finding
+
+If it refuses, the refusal names missing evidence, a missing deviations heading, a fenced listing, or unmarked gating criteria. Produce those, then retry. `--force` records an override; only use it when the user asks. Completing the bolt completes every tracked item, or none if evidence or gating criteria are missing. The JSON `projection_review` lists what was surfaced.
 
 ## Close
 

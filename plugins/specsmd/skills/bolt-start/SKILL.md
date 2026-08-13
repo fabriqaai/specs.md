@@ -43,8 +43,10 @@ Resolve `SCRIPTS_DIR` as the `scripts/` directory of the `flow-runtime` skill:
 
 ```text
 node {SCRIPTS_DIR}/init-bolt.cjs {projectRoot} --work-items {id,id}
-node {SCRIPTS_DIR}/init-bolt.cjs {projectRoot} --work-items {id,id} --recipe simple --ceremony confirm
+node {SCRIPTS_DIR}/init-bolt.cjs {projectRoot} --work-items {id,id} --recipe simple --ceremony confirm --touched-scope auth,identity
 ```
+
+`--touched-scope` is the bolt's topic list, matched at completion against `system/` `claimed_scope`. Ask which areas this bolt changes, or pick the `claimed_scope` tokens of registered `system/` docs that apply. Do not infer scope by tokenizing work-item bodies.
 
 Do not mkdir a bolt folder yourself.
 

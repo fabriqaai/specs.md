@@ -28,7 +28,7 @@ function collectGardenFindings(rootPath, opts) {
   const systemDocs = memory.listSystemDocs(root, contract);
   for (const doc of systemDocs) {
     const rel = relProject(root, doc.path);
-    const failures = memory.checkClaims(root, doc);
+    const failures = memory.checkClaims(root, doc).concat(memory.checkFactsAgainstCodebase(root, doc));
     for (const fail of failures) {
       const detail =
         fail.reason === 'missing_file'
@@ -92,8 +92,9 @@ function collectGardenFindings(rootPath, opts) {
     }
   }
 
-  function considerEpisodic(filePath, typeName, status, stamp, id) {
+  function considerEpisodic(filePath, typeName, data, id) {
     if (memory.isArchivedPath(root, filePath, contract)) return;
+    const status = data && data.status;
     const memoryClass = lib.memoryClassFor(typeName, status, contract);
     if (memoryClass !== 'episodic') return;
     const rel = relProject(root, filePath);
@@ -115,7 +116,7 @@ function collectGardenFindings(rootPath, opts) {
         path: rel,
         artifact: id,
         message: `Episodic artifact ${id || rel} has no historical-record header.`,
-        remediation: `Add "${memory.formatHeader(stamp || lib.nowStamp(), cfg.defaultCurrentTruth)}" at the top of ${rel}.`,
+        remediation: `Add "${memory.formatHeader((data && data.completed) || lib.nowStamp(), cfg.defaultCurrentTruth)}" at the top of ${rel}.`,
         expected_pointer: cfg.defaultCurrentTruth,
       });
     } else {
@@ -135,7 +136,7 @@ function collectGardenFindings(rootPath, opts) {
       }
     }
 
-    const when = Date.parse(stamp);
+    const when = memory.episodicWhenMs(header, data);
     if (Number.isFinite(when) && now - when > horizonMs) {
       push({
         code: 'PAST_HORIZON',
@@ -151,21 +152,21 @@ function collectGardenFindings(rootPath, opts) {
   }
 
   for (const intent of lib.listIntents(root, contract)) {
-    considerEpisodic(intent.path, 'intent', intent.status, intent.completed || intent.created, intent.id);
+    considerEpisodic(intent.path, 'intent', intent, intent.id);
     for (const item of lib.listWorkItems(root, intent.id, contract)) {
-      considerEpisodic(item.path, 'work_item', item.status, item.completed || item.created, item.id);
+      considerEpisodic(item.path, 'work_item', item, item.id);
     }
   }
   for (const bolt of lib.listBolts(root, contract)) {
-    considerEpisodic(bolt.path, 'bolt', bolt.status, bolt.completed || bolt.created, bolt.id);
+    considerEpisodic(bolt.path, 'bolt', bolt, bolt.id);
     if (lib.memoryClassFor('bolt', bolt.status, contract) === 'episodic') {
       for (const file of memory.listStageArtifactFiles(lib.boltDir(root, bolt.id, contract))) {
-        considerEpisodic(file, 'stage_artifact', bolt.status, bolt.completed || bolt.created, path.basename(file));
+        considerEpisodic(file, 'stage_artifact', bolt, path.basename(file));
       }
     }
   }
   for (const decision of decisions) {
-    considerEpisodic(decision.path, 'decision', decision.status, decision.created, decision.id);
+    considerEpisodic(decision.path, 'decision', decision, decision.id);
   }
 
   findings.sort((a, b) => {

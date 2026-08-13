@@ -148,6 +148,7 @@ function completeBolt(rootPath, boltId, force, opts) {
     const item = lib.findWorkItem(root, workItemId, contract);
     const parsed = lib.readMarkdown(item.path);
     parsed.data.status = 'complete';
+    parsed.data.completed = stamp;
     parsed.body = memory.applyHistoricalHeader(parsed.body, stamp, pointer);
     lib.writeMarkdown(item.path, parsed.data, parsed.body, root, contract);
     touchedIntents.add(item.intent);
@@ -159,8 +160,10 @@ function completeBolt(rootPath, boltId, force, opts) {
     const intent = lib.readMarkdown(lib.intentPath(root, intentId, contract));
     intent.data.status = lib.deriveIntentStatus(items, contract);
     if (lib.memoryClassFor('intent', intent.data.status, contract) === 'episodic') {
+      intent.data.completed = stamp;
       intent.body = memory.applyHistoricalHeader(intent.body, stamp, pointer);
     } else {
+      delete intent.data.completed;
       intent.body = memory.stripHistoricalHeader(intent.body);
     }
     lib.writeMarkdown(intent.path, intent.data, intent.body, root, contract);

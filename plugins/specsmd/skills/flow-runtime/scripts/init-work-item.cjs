@@ -93,11 +93,13 @@ function initWorkItem(rootPath, opts) {
     depends_on: dependsOn,
     created: lib.nowStamp(),
   };
+  if (opts.scope) data.scope = lib.splitList(opts.scope);
   lib.writeMarkdown(file, data, body.endsWith('\n') ? body : body + '\n', root, contract);
 
   const intent = lib.readMarkdown(lib.intentPath(root, intentId, contract));
   if (intent.data.status === 'complete' || intent.data.status === 'abandoned') {
     intent.data.status = 'active';
+    delete intent.data.completed;
     intent.body = memory.stripHistoricalHeader(intent.body);
     lib.writeMarkdown(intent.path, intent.data, intent.body, root, contract);
   }
@@ -123,6 +125,7 @@ if (require.main === module) {
       dependsOn: flags['depends-on'],
       id: flags.id,
       bodyFile: flags['body-file'],
+      scope: flags.scope,
     });
   });
 }
