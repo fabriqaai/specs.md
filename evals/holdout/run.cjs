@@ -131,7 +131,7 @@ function evaluateHoldout({ files, cwd, base } = {}) {
         `plugins/specsmd/ files (${classified.implFiles.length}):`,
         ...classified.implFiles.map((file) => `  - ${file}`),
         '',
-        'Work item: docs/specsmd/intents/001-unified-bolt-flow/work-items/000-flow-evals.md',
+        'Work item: docs/specsmd/intents/001-unified-bolt-flow/tasks.md',
       ].join('\n')
     : classified.evalsFiles.length > 0
       ? 'Holdout isolation passed (evals-only change).'
