@@ -50,8 +50,10 @@ Active change records (in-flight briefs, work-item DoDs, the live bolt) stay on 
 | `bolt-start` | Work is ready to execute |
 | `bolt-execute` | A bolt is active or interrupted |
 | `walkthrough-generate` | A bolt needs its human walkthrough |
+| `release-checklist` | Optional shipping: compile completed bolts |
+| `release-verify` | Record confirmation of a released change |
 
-Nothing here is a required next step. Suggestions are options. Close messages of verb skills list artifacts and at most three declinable names.
+Nothing here is a required next step. Suggestions are options. Close messages of verb skills list artifacts and at most three declinable names. Release is optional; a project that never releases is fine.
 
 ## Precedence
 

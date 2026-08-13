@@ -36,6 +36,8 @@ const VERB_SKILLS = [
   'bolt-start',
   'bolt-execute',
   'walkthrough-generate',
+  'release-checklist',
+  'release-verify',
 ];
 const MODEL_INVOCABLE = ['using-specsmd', 'specsmd-status'];
 const KNOWN_SKILLS = new Set([
@@ -81,6 +83,7 @@ function suggestionKeys(options: { skill: string; why: string }[]): string[] {
     if (option.skill === 'work-item-decompose') return 'C';
     if (/not in a bolt/.test(option.why)) return 'P';
     if (/Draft /.test(option.why)) return 'D';
+    if (option.skill === 'release-checklist' || /not yet released/.test(option.why)) return 'S';
     if (/no intents yet/.test(option.why)) return 'E';
     return option.skill;
   });
@@ -171,7 +174,7 @@ describe('unified skills', () => {
     expect(body).toMatch(/Never write artifacts/);
     expect(body).toMatch(/Never invoke another skill/);
     expect(body).toMatch(
-      /awaiting gate → active bolt → empty intent → unbolted items → drafts → empty tree/
+      /awaiting gate → active bolt → empty intent → unbolted items → drafts → completed-unreleased → empty tree/
     );
     expect(body).toMatch(/Never suggest `flow-runtime`/);
   });
@@ -340,7 +343,7 @@ describe('navigator and shaping behavior', () => {
       true
     );
     expect(report.lenses.shaping.some((row: { id: string }) => row.id === empty.id)).toBe(true);
-    expect(suggestionKeys(report.suggestion.options)).toEqual(['G', 'I', 'C', 'P', 'D']);
+    expect(suggestionKeys(report.suggestion.options)).toEqual(['G', 'I', 'C', 'P', 'D', 'S']);
     expect(report.suggestion.options.some((row: { skill: string }) => row.skill === 'flow-runtime')).toBe(
       false
     );

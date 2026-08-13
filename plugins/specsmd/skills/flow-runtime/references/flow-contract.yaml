@@ -51,12 +51,16 @@ identifiers:
   intent_width: 3
   work_item_width: 3
   bolt_width: 3
+  release_width: 3
+  verification_width: 3
   bolt_prefix: bolt
   patterns:
     intent: "{nnn}-{slug}"
     work_item: "{nnn}-{slug}"
     bolt: "bolt-{worktree}-{nnn}"
     worktree: "{basename}-{sha1(absPath)[:6]}"
+    release: "{nnn}-{slug}"
+    verification: "{nnn}-{slug}"
 
 ceremony:
   values:
@@ -285,6 +289,29 @@ artifact_types:
       - verified_by
       - facts
       - claims
+  release:
+    path: releases/{id}/release.md
+    identifier_pattern: release
+    memory_class: change_record
+    fields:
+      - id
+      - title
+      - status
+      - bolts
+      - previous_release
+      - created
+  verification:
+    path: releases/{release}/verifications/{id}.md
+    identifier_pattern: verification
+    memory_class: episodic
+    fields:
+      - id
+      - release
+      - change
+      - confirmed_by
+      - confirmed_at
+      - environment
+      - observation
 
 system_document_types:
   registration_fields:

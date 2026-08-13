@@ -32,6 +32,8 @@ Resolve `SCRIPTS_DIR` as this skill's `scripts/` directory. Invoke with the proj
 | `scripts/supersede-decision.cjs` | Replace an in-force decision (new record + index + old pointer) |
 | `scripts/archive-artifact.cjs` | Move an episodic record to `archive/` (refused while truth is uncaptured; never archives semantic docs) |
 | `scripts/garden.cjs` | Memory gardening pass; repair only with `--fix` or `--finding` |
+| `scripts/init-release.cjs` | Write a release checklist over completed bolts |
+| `scripts/record-verify.cjs` | Record who/what/when confirmed a released change |
 | `scripts/validate-integrity.cjs` | Detect drift; repair only with `--fix` or `--finding` |
 | `scripts/status.cjs` | Read-only lenses (runs the validator without `--fix`) |
 | `scripts/resolve-standards.cjs` | Resolve the standard set for a file |

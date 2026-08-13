@@ -26,11 +26,11 @@ Then present three lenses. Empty lenses stay visible.
 
 - **Shaping** — intents and work items not named on any non-draft bolt
 - **Building** — active bolts, with stage and checkpoint
-- **Shipping** — completed bolts (release is optional; do not nag)
+- **Shipping** — completed bolts, distinguished as completed-unreleased vs released. Offer `release-checklist` when unreleased work exists — never a mandate. Release is optional; do not nag. A project that never releases is healthy.
 
 Then health findings from the script, each with severity and remediation. Integrity findings present in the tree appear here.
 
-Then suggested next moves from `data.suggestion`: use that order; do not re-rank. Best first, then the rest, then one line that any skill may be invoked by name. The script's locked order is: awaiting gate → active bolt → empty intent → unbolted items → drafts → empty tree. Integrity findings stay in health — they are not a next skill. Do not take a suggestion. Never suggest `flow-runtime`.
+Then suggested next moves from `data.suggestion`: use that order; do not re-rank. Best first, then the rest, then one line that any skill may be invoked by name. The script's locked order is: awaiting gate → active bolt → empty intent → unbolted items → drafts → completed-unreleased → empty tree. Integrity findings stay in health — they are not a next skill. Do not take a suggestion. Never suggest `flow-runtime`. Never emit a release finding for a tree that has not used release.
 
 ## Constraints
 

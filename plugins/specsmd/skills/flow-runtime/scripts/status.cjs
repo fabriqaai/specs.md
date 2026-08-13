@@ -38,12 +38,13 @@ function suggestNext(lenses, initialized, drafts) {
   const emptyIntent = (lenses.shaping || []).find((s) => s.kind === 'intent' && s.work_item_count === 0);
   const unbolted = (lenses.shaping || []).some((s) => s.kind === 'work-item');
   const draftList = drafts || [];
+  const unreleased = (lenses.shipping || []).filter((b) => b.release_state === 'unreleased');
   const noIntents =
     !(lenses.shaping || []).some((s) => s.kind === 'intent') &&
     !(lenses.building || []).length &&
     !(lenses.shipping || []).length;
 
-  // Locked order (007): awaiting gate → active bolt → empty intent → unbolted → drafts → empty tree
+  // Locked order (007+012): awaiting gate → active bolt → empty intent → unbolted → drafts → completed-unreleased → empty tree
   if (awaiting.length) {
     options.push({
       skill: 'bolt-execute',
@@ -78,6 +79,12 @@ function suggestNext(lenses, initialized, drafts) {
     options.push({
       skill: 'bolt-start',
       why: `Draft ${draftList[0].id} can be adopted, modified, or ignored.`,
+    });
+  }
+  if (unreleased.length) {
+    options.push({
+      skill: 'release-checklist',
+      why: `${unreleased.length} completed bolt${unreleased.length === 1 ? '' : 's'} not yet released. A release checklist is available.`,
     });
   }
   if (noIntents) {
@@ -194,15 +201,19 @@ function projectStatus(rootPath) {
       };
     });
 
+  const releasedBy = lib.releasedBoltMap(lib.listReleases(root, contract));
   const shippingById = new Map();
   for (const b of bolts.filter((bolt) => bolt.status === 'complete')) {
-    shippingById.set(b.id || b.locationId, {
+    const id = b.id || b.locationId;
+    shippingById.set(id, {
       kind: 'bolt',
-      id: b.id || b.locationId,
+      id,
       status: b.status,
       completed: b.completed,
       work_items: b.work_items,
       archived: !!b.archived,
+      release_state: releasedBy.has(id) ? 'released' : 'unreleased',
+      release: releasedBy.get(id) || null,
     });
   }
   for (const entry of memory.readCompactIndex(root, contract).entries) {
@@ -212,6 +223,8 @@ function projectStatus(rootPath) {
       id: entry.id,
       status: entry.status || 'complete',
       completed: entry.completed,
+      release_state: releasedBy.has(entry.id) ? 'released' : 'unreleased',
+      release: releasedBy.get(entry.id) || null,
     });
   }
   const shipping = [...shippingById.values()];

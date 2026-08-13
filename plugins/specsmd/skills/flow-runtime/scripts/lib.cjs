@@ -679,7 +679,7 @@ function copyBundledRecipes(rootPath, contract) {
 function initProjectTree(rootPath, contract, autonomyBias) {
   const root = artifactRoot(rootPath, contract);
   fs.mkdirSync(root, { recursive: true });
-  for (const dir of ['intents', 'bolts', 'recipes', 'standards', 'decisions', 'system', 'archive']) {
+  for (const dir of ['intents', 'bolts', 'recipes', 'standards', 'decisions', 'system', 'archive', 'releases']) {
     fs.mkdirSync(path.join(root, dir), { recursive: true });
   }
   copyBundledRecipes(rootPath, contract);
@@ -815,6 +815,18 @@ function boltPath(rootPath, boltId, contract) {
 function boltDir(rootPath, boltId, contract) {
   return path.join(artifactRoot(rootPath, contract), 'bolts', boltId);
 }
+function releaseDir(rootPath, releaseId, contract) {
+  return path.join(artifactRoot(rootPath, contract), 'releases', releaseId);
+}
+function releasePath(rootPath, releaseId, contract) {
+  return path.join(releaseDir(rootPath, releaseId, contract), 'release.md');
+}
+function verificationDir(rootPath, releaseId, contract) {
+  return path.join(releaseDir(rootPath, releaseId, contract), 'verifications');
+}
+function verificationPath(rootPath, releaseId, verificationId, contract) {
+  return path.join(verificationDir(rootPath, releaseId, contract), `${verificationId}.md`);
+}
 
 function listIntents(rootPath, contract) {
   const dir = path.join(artifactRoot(rootPath, contract), 'intents');
@@ -891,6 +903,122 @@ function readBolt(rootPath, boltId, contract) {
     );
   }
   return readMarkdown(file);
+}
+
+function assertReleaseId(id) {
+  assertSafeId(id, 'release id');
+  if (!/^\d+-[a-z0-9]+(?:-[a-z0-9]+)*$/.test(id)) {
+    throw terminal(
+      'ID_INVALID',
+      `Release id "${id}" is not {nnn}-{slug}.`,
+      'Use digits, a hyphen, and a kebab slug (a-z, 0-9). No path separators.'
+    );
+  }
+}
+
+function listReleases(rootPath, contract) {
+  const dir = path.join(artifactRoot(rootPath, contract), 'releases');
+  const out = [];
+  for (const id of listDirNames(dir)) {
+    const file = releasePath(rootPath, id, contract);
+    if (!fs.existsSync(file)) continue;
+    const md = readMarkdown(file);
+    out.push({ ...md.data, path: file, body: md.body });
+  }
+  return out.sort((a, b) => String(a.created || '').localeCompare(String(b.created || '')));
+}
+
+function readRelease(rootPath, releaseId, contract) {
+  assertReleaseId(releaseId);
+  const file = releasePath(rootPath, releaseId, contract);
+  assertInsideRoot(rootPath, file, contract);
+  if (!fs.existsSync(file)) {
+    throw terminal(
+      'RELEASE_MISSING',
+      `Release "${releaseId}" was not found.`,
+      `Produce a checklist with init-release, or pass an existing id from ${path.join(artifactRoot(rootPath, contract), 'releases')}.`
+    );
+  }
+  return readMarkdown(file);
+}
+
+function listVerifications(rootPath, releaseId, contract) {
+  const dir = verificationDir(rootPath, releaseId, contract);
+  if (!fs.existsSync(dir)) return [];
+  const out = [];
+  for (const name of fs.readdirSync(dir)) {
+    if (!name.endsWith('.md')) continue;
+    const file = path.join(dir, name);
+    const md = readMarkdown(file);
+    out.push({ ...md.data, path: file, body: md.body });
+  }
+  return out.sort((a, b) => String(a.confirmed_at || a.created || '').localeCompare(String(b.confirmed_at || b.created || '')));
+}
+
+function releasedBoltMap(releases) {
+  const map = new Map();
+  for (const rel of releases || []) {
+    for (const boltId of splitList(rel.bolts)) {
+      map.set(boltId, rel.id);
+    }
+  }
+  return map;
+}
+
+function listDecisions(rootPath, contract) {
+  const dir = path.join(artifactRoot(rootPath, contract), 'decisions');
+  if (!fs.existsSync(dir)) return [];
+  const out = [];
+  for (const name of fs.readdirSync(dir)) {
+    if (!name.endsWith('.md') || name === 'index.md') continue;
+    const file = path.join(dir, name);
+    const md = readMarkdown(file);
+    out.push({ ...md.data, path: file, body: md.body });
+  }
+  return out;
+}
+
+function inForceDecisionIds(rootPath, contract) {
+  const file = path.join(artifactRoot(rootPath, contract), 'decisions', 'index.md');
+  if (!fs.existsSync(file)) return [];
+  const text = fs.readFileSync(file, 'utf8');
+  const ids = [];
+  const re = /\[(\d+-[a-z0-9-]+)\]/g;
+  let match;
+  while ((match = re.exec(text))) ids.push(match[1]);
+  return ids;
+}
+
+function extractMarkdownSection(body, heading) {
+  const escaped = String(heading).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const re = new RegExp(`^#{1,6}\\s+${escaped}\\s*$`, 'i');
+  const lines = String(body || '').split(/\r?\n/);
+  let start = -1;
+  for (let i = 0; i < lines.length; i++) {
+    if (re.test(lines[i].trim())) {
+      start = i + 1;
+      break;
+    }
+  }
+  if (start < 0) return '';
+  const out = [];
+  for (let i = start; i < lines.length; i++) {
+    if (/^#{1,6}\s+\S/.test(lines[i])) break;
+    out.push(lines[i]);
+  }
+  return out.join('\n').trim();
+}
+
+function readLooseMarkdown(filePath) {
+  if (!fs.existsSync(filePath)) return { data: {}, body: '', path: filePath, missing: true };
+  const text = fs.readFileSync(filePath, 'utf8');
+  const parsed = parseFrontmatter(text);
+  if (parsed) {
+    parsed.path = filePath;
+    parsed.missing = false;
+    return parsed;
+  }
+  return { data: {}, body: text, path: filePath, missing: false };
 }
 
 function assertStatus(value, contract) {
@@ -1084,12 +1212,25 @@ module.exports = {
   workItemPath,
   boltPath,
   boltDir,
+  releaseDir,
+  releasePath,
+  verificationDir,
+  verificationPath,
   listIntents,
   listWorkItems,
   listAllWorkItems,
   findWorkItem,
   listBolts,
   readBolt,
+  assertReleaseId,
+  listReleases,
+  readRelease,
+  listVerifications,
+  releasedBoltMap,
+  listDecisions,
+  inForceDecisionIds,
+  extractMarkdownSection,
+  readLooseMarkdown,
   assertStatus,
   detectCycle,
   uncheckedGatingCriteria,
