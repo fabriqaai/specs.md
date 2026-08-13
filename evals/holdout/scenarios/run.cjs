@@ -45,7 +45,7 @@ function runScenario(scenario, repoRoot) {
       judges: scenario.judges || [],
       satisfied: false,
       skipped: true,
-      detail: 'plugins/specsmd is not present; scenario not run.',
+      detail: 'flow state scripts are not shipped; scenario not run.',
     };
   }
 
@@ -258,7 +258,7 @@ function runScenarios(options = {}) {
           judges: scenario.judges || [],
           satisfied: false,
           skipped: true,
-          detail: 'plugins/specsmd is not present; scenario not run.',
+          detail: 'flow state scripts are not shipped; scenario not run.',
         }
   );
   return {
@@ -279,7 +279,8 @@ function printUsage() {
     '  node evals/holdout/scenarios/run.cjs [--root <dir>] [--json]',
     '',
     'Judges holdout scenarios on satisfaction of observed behavior.',
-    'Scenarios call the shipped flow scripts in a throwaway tree.',
+    'Scenarios call shipped flow state scripts in a throwaway tree when present.',
+    'If those scripts are not shipped, every scenario is skipped.',
   ].join('\n');
 }
 

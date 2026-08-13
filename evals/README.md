@@ -12,7 +12,7 @@ Evaluation reads this tree. Implementation never writes it. Sufficiency *outcome
 | `conformance/` | Definition of Done checker with honest coverage |
 | `triggers/` | Signature-phrase holdout for model-invocable descriptions |
 | `holdout/` | Isolation check + satisfaction scenarios |
-| `lib/` | Shared parsing and a read-only loader for shipped flow scripts |
+| `lib/` | Shared parsing and an optional loader for flow state scripts (absent in the shipped plugin) |
 
 ## Run
 
@@ -54,4 +54,4 @@ Fixtures name signature phrases that must remain in the shipped `using-specsmd` 
 
 `holdout/run.cjs` fails when the same contribution changes an evals-side path (`evals/`, `src/__tests__/evals/`, or `.github/workflows/evals-holdout.yml`) and `plugins/specsmd/`. Changing only one side passes. Renames that leave `evals/` and land in `plugins/specsmd/` count as both sides.
 
-`holdout/scenarios/` judges **satisfaction** of observed behavior by running the shipped flow scripts in a throwaway tree. Adding a scenario is an evals-area change.
+`holdout/scenarios/` judges **satisfaction** of observed behavior by running flow state scripts in a throwaway tree when those scripts exist. The shipped specsmd plugin has no state scripts, so every scenario is skipped and conformance records those criteria as `needs-human`. Adding a scenario is an evals-area change.

@@ -17,7 +17,7 @@ const { recordSufficiency, listSufficiency } = require('../sufficiency/run.cjs')
 const { runTriggerEvals } = require('../triggers/run.cjs');
 const { evaluateHoldout } = require('../holdout/run.cjs');
 const { runScenarios } = require('../holdout/scenarios/run.cjs');
-const { flowAvailable, loadFlow } = require('../lib/flow.cjs');
+const { flowAvailable } = require('../lib/flow.cjs');
 
 const RESULTS = new Set(['verified', 'failed', 'needs-human', 'spec-defect']);
 
@@ -294,10 +294,17 @@ function checkHighRequiresTwoProbes() {
 
 function scenarioById(scenarioReport, id) {
   const row = (scenarioReport && scenarioReport.results || []).find((item) => item.id === id);
+  const unavailable = !scenarioReport || scenarioReport.available === false;
   if (!row) {
+    if (unavailable) {
+      return {
+        result: 'needs-human',
+        detail: 'Holdout scenario not run because flow state scripts are not shipped.',
+      };
+    }
     return { result: 'failed', detail: `Holdout scenario ${id} is not defined.` };
   }
-  if (row.skipped) {
+  if (row.skipped || unavailable) {
     return { result: 'needs-human', evaluable: 'scenario', detail: row.detail };
   }
   return {
@@ -307,12 +314,26 @@ function scenarioById(scenarioReport, id) {
   };
 }
 
+function loadContractFile(repoRoot) {
+  const file = path.join(
+    repoRoot,
+    'plugins',
+    'specsmd',
+    'skills',
+    'flow-runtime',
+    'references',
+    'flow-contract.yaml'
+  );
+  if (!fs.existsSync(file)) return null;
+  const yaml = loadYaml(repoRoot);
+  return yaml.load(fs.readFileSync(file, 'utf8'));
+}
+
 function checkContractSchema(repoRoot) {
-  const flow = loadFlow(repoRoot);
-  if (!flow) {
-    return { result: 'needs-human', detail: 'Flow scripts are not present in this tree.' };
+  const contract = loadContractFile(repoRoot);
+  if (!contract) {
+    return { result: 'needs-human', detail: 'Flow contract is not present in this tree.' };
   }
-  const contract = flow.lib.loadContract();
   const required = ['project', 'intent', 'work_item', 'bolt'];
   for (const key of required) {
     const type = contract.artifact_types && contract.artifact_types[key];
@@ -343,11 +364,7 @@ function checkContractSchema(repoRoot) {
 }
 
 function checkFourRecipes(repoRoot) {
-  const flow = loadFlow(repoRoot);
-  if (!flow) {
-    return { result: 'needs-human', detail: 'Flow scripts are not present in this tree.' };
-  }
-  const contract = flow.lib.loadContract();
+  const yaml = loadYaml(repoRoot);
   const expected = {
     default: ['plan', 'execute', 'test', 'review'],
     ddd: ['domain-model', 'design', 'decisions', 'implement', 'test'],
@@ -355,7 +372,20 @@ function checkFourRecipes(repoRoot) {
     simple: ['plan', 'implement', 'walkthrough'],
   };
   for (const [id, stages] of Object.entries(expected)) {
-    const recipe = flow.lib.loadRecipe(repoRoot, id, contract);
+    const file = path.join(
+      repoRoot,
+      'plugins',
+      'specsmd',
+      'skills',
+      'flow-runtime',
+      'references',
+      'recipes',
+      `${id}.yaml`
+    );
+    if (!fs.existsSync(file)) {
+      return { result: 'failed', detail: `Recipe file missing: ${id}.yaml` };
+    }
+    const recipe = yaml.load(fs.readFileSync(file, 'utf8')) || {};
     const got = recipe.stages.map((stage) => stage.id);
     if (JSON.stringify(got) !== JSON.stringify(stages)) {
       return { result: 'failed', detail: `Recipe ${id} stages ${got.join(',')} !== ${stages.join(',')}.` };
@@ -370,43 +400,11 @@ function checkFourRecipes(repoRoot) {
   };
 }
 
-function checkConcurrentBoltIds(repoRoot) {
-  const flow = loadFlow(repoRoot);
-  if (!flow) {
-    return { result: 'needs-human', detail: 'Flow scripts are not present in this tree.' };
-  }
-  const a = tempRoot('evals-bolt-a-');
-  const b = tempRoot('evals-bolt-b-');
-  try {
-    function seed(root) {
-      flow.initProject(root, 'balanced');
-      const intent = flow.initIntent(root, { title: 'Collision' });
-      const item = flow.initWorkItem(root, { intent: intent.id, title: 'Slice', complexity: 'low' });
-      return flow.initBolt(root, { workItems: item.id, recipe: 'simple' });
-    }
-    const first = seed(a);
-    const second = seed(b);
-    if (first.id === second.id) {
-      return { result: 'failed', detail: `Two working copies minted the same bolt id ${first.id}.` };
-    }
-    return {
-      result: 'verified',
-      detail: `Concurrent working copies minted ${first.id} and ${second.id}.`,
-    };
-  } catch (err) {
-    return { result: 'failed', detail: err.message || String(err) };
-  } finally {
-    fs.rmSync(a, { recursive: true, force: true });
-    fs.rmSync(b, { recursive: true, force: true });
-  }
-}
-
 function checkMemoryClassInContract(repoRoot) {
-  const flow = loadFlow(repoRoot);
-  if (!flow) {
-    return { result: 'needs-human', detail: 'Flow scripts are not present in this tree.' };
+  const contract = loadContractFile(repoRoot);
+  if (!contract) {
+    return { result: 'needs-human', detail: 'Flow contract is not present in this tree.' };
   }
-  const contract = flow.lib.loadContract();
   const derivation = contract.memory_class && contract.memory_class.derivation;
   if (!derivation || !derivation.change_record) {
     return { result: 'failed', detail: 'Contract does not derive memory class for change records.' };
@@ -508,11 +506,6 @@ const MACHINE_CHECKS = [
     workItem: '001-flow-schema',
     pattern: /No status value or artifact path pattern appears in more than one authoritative place/,
     check: ({ repoRoot }) => checkContractSchema(repoRoot),
-  },
-  {
-    workItem: '001-flow-schema',
-    pattern: /Creating two bolts concurrently/,
-    check: ({ repoRoot }) => checkConcurrentBoltIds(repoRoot),
   },
   {
     workItem: '002-recipe-catalog',
@@ -621,7 +614,11 @@ function evaluateIntent(options = {}) {
   const files = listWorkItemFiles(repoRoot, intentId);
   const scenarios = flowAvailable(repoRoot)
     ? runScenarios({ root: repoRoot })
-    : { results: [], summary: { total: 0, satisfied: 0, failed: 0, skipped: 0 } };
+    : {
+        available: false,
+        results: [],
+        summary: { total: 0, satisfied: 0, failed: 0, skipped: 0 },
+      };
   const report = {
     intent: intentId,
     work_items: [],
