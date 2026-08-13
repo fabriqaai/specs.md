@@ -83,7 +83,7 @@ The rules in this section apply **only when modifying the legacy flow** (`src/fl
 | **Legacy agent implementation** | `/src/flows/aidlc/agents/` |
 | **Legacy FIRE flow** | `/src/flows/fire/` |
 
-**Conventions**: commands use the noun-verb pattern (e.g., `bolt-start`, `intent-create`). Point to specs rather than duplicating content. Check `/memory-bank/glossary.md` for terminology. If uncertain about methodology, ask rather than invent.
+**Conventions**: verb skills use the noun-verb pattern (e.g., `plan-intent`, `bolt-execution`). Point to specs rather than duplicating content. Check `/memory-bank/glossary.md` for terminology. If uncertain about methodology, ask rather than invent.
 
 ---
 

@@ -42,7 +42,7 @@ memory_class:
   default_current_truth: project.md
   archive_path: archive
   retention_horizon: P90D
-  compact_index: bolts/index.md
+  compact_index: archive/bolts.md
   archive_fields:
     - archive_override
     - archive_override_reason
@@ -52,16 +52,12 @@ identifiers:
   intent_width: 3
   work_item_width: 3
   bolt_width: 3
-  release_width: 3
-  verification_width: 3
   bolt_prefix: bolt
   patterns:
     intent: "{nnn}-{slug}"
     work_item: "{nnn}-{slug}"
     bolt: "bolt-{worktree}-{nnn}"
     worktree: "{basename}-{sha1(absPath)[:6]}"
-    release: "{nnn}-{slug}"
-    verification: "{nnn}-{slug}"
 
 ceremony:
   values:
@@ -80,7 +76,7 @@ ceremony:
       - medium
       - high
     default: medium
-  # complexity × autonomy_bias → ceremony. User choice at bolt-start always wins.
+  # complexity × autonomy_bias → ceremony. User choice at bolt start always wins.
   matrix:
     low:
       autonomous: autopilot
@@ -111,7 +107,6 @@ recipe:
     medium: default
     high: ddd
   completion_requires_default:
-    - test-report.md
     - walkthrough.md
   constraint_kinds:
     - time_box
@@ -191,8 +186,9 @@ artifact_types:
       - created
       - completed
   work_item:
-    path: intents/{intent}/work-items/{id}.md
+    path: intents/{intent}/tasks.md
     identifier_pattern: work_item
+    section: "## {id}"
     memory_class: change_record
     fields:
       - id
@@ -206,11 +202,12 @@ artifact_types:
       - completed
       - scope
   bolt:
-    path: bolts/{id}/bolt.md
+    path: intents/{intent}/bolts/{id}/bolt.md
     identifier_pattern: bolt
     memory_class: change_record
     fields:
       - id
+      - intent
       - status
       - recipe
       - recipe_snapshot
@@ -267,11 +264,11 @@ artifact_types:
     identifier_pattern: none
     memory_class: semantic
   bolts_index:
-    path: bolts/index.md
+    path: archive/bolts.md
     identifier_pattern: none
     memory_class: semantic
   stage_artifact:
-    path: bolts/{id}/{artifact}
+    path: intents/{intent}/bolts/{id}/{artifact}
     identifier_pattern: "{artifact}"
     memory_class: change_record
     status_source: parent_bolt
@@ -290,29 +287,6 @@ artifact_types:
       - verified_by
       - facts
       - claims
-  release:
-    path: releases/{id}/release.md
-    identifier_pattern: release
-    memory_class: change_record
-    fields:
-      - id
-      - title
-      - status
-      - bolts
-      - previous_release
-      - created
-  verification:
-    path: releases/{release}/verifications/{id}.md
-    identifier_pattern: verification
-    memory_class: episodic
-    fields:
-      - id
-      - release
-      - change
-      - confirmed_by
-      - confirmed_at
-      - environment
-      - observation
 
 system_document_types:
   registration_fields:

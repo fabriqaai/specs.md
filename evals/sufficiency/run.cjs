@@ -9,9 +9,8 @@ const {
   deriveSufficiency,
   findWorkItem,
   isoNow,
-  listWorkItemFiles,
+  listWorkItems,
   loadFindingsFile,
-  loadWorkItemFile,
   loadYaml,
   normalizeProbes,
   openBlockingFindings,
@@ -21,7 +20,7 @@ const {
   resolveRoot,
   sufficiencyReportAbs,
   sufficiencyReportRel,
-  upsertFrontmatterFields,
+  upsertWorkItemFields,
 } = require('../lib/common.cjs');
 
 const PROTOCOLS_DIR = path.join(__dirname, 'protocols');
@@ -188,7 +187,7 @@ function recordSufficiency(options) {
     'utf8'
   );
 
-  const updated = upsertFrontmatterFields(item.content, {
+  const updated = upsertWorkItemFields(item, {
     sufficiency,
     sufficiency_report: reportRel,
   });
@@ -211,14 +210,13 @@ function listSufficiency(options) {
   const repoRoot = resolveRoot(options.root);
   const yaml = loadYaml(repoRoot);
   const intentId = options.intent || DEFAULT_INTENT;
-  return listWorkItemFiles(repoRoot, intentId).map((file) => {
-    const item = loadWorkItemFile(file, yaml);
-    const id = String(item.data.id || path.basename(file, '.md'));
+  return listWorkItems(repoRoot, intentId, yaml).map((item) => {
+    const id = item.id;
     const complexity = String(item.data.complexity || '');
     const protocol = protocolForComplexity(complexity);
     return {
       id,
-      file,
+      file: item.file,
       complexity: complexity || null,
       protocol: protocol ? protocol.id : null,
       sufficiency: item.data.sufficiency || 'unchecked',

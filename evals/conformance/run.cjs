@@ -6,8 +6,7 @@ const os = require('os');
 const path = require('path');
 const {
   DEFAULT_INTENT,
-  listWorkItemFiles,
-  loadWorkItemFile,
+  listWorkItems,
   loadYaml,
   parseArgs,
   protocolForComplexity,
@@ -611,7 +610,7 @@ function evaluateIntent(options = {}) {
   const repoRoot = resolveRoot(options.root);
   const yaml = loadYaml(repoRoot);
   const intentId = options.intent || DEFAULT_INTENT;
-  const files = listWorkItemFiles(repoRoot, intentId);
+  const items = listWorkItems(repoRoot, intentId, yaml);
   const scenarios = flowAvailable(repoRoot)
     ? runScenarios({ root: repoRoot })
     : {
@@ -632,12 +631,11 @@ function evaluateIntent(options = {}) {
     },
   };
 
-  for (const file of files) {
-    const loaded = loadWorkItemFile(file, yaml);
-    const id = String(loaded.data.id || path.basename(file, '.md'));
+  for (const loaded of items) {
+    const id = String(loaded.id || loaded.data.id);
     const item = {
       id,
-      file,
+      file: loaded.file,
       complexity: loaded.data.complexity || null,
       protocol: (protocolForComplexity(loaded.data.complexity) || {}).id || null,
       sufficiency: loaded.data.sufficiency || 'unchecked',

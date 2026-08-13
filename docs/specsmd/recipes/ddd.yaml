@@ -18,10 +18,10 @@ stages:
     gateable: false
   - id: test
     produces:
-      - test-report.md
+      - walkthrough.md
     gateable: true
 completion_requires:
-  - test-report.md
+  - walkthrough.md
 constraints:
   - kind: no_source_code
     stages:

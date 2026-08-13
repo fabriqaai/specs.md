@@ -34,9 +34,18 @@ describe('flow contract', () => {
         expect(type.fields).toContain('status');
       }
     }
+    expect(contract.artifact_types.work_item.path).toBe('intents/{intent}/tasks.md');
+    expect(contract.artifact_types.bolt.path).toBe('intents/{intent}/bolts/{id}/bolt.md');
+    expect(contract.artifact_types.bolt.fields).toContain('intent');
     expect(contract.artifact_types.bolt.fields).toContain('adopted_draft');
     expect(contract.artifact_types.bolt.fields).toContain('override_reason');
     expect(contract.artifact_types.bolt.fields).toContain('updated');
+    expect(contract.artifact_types.release).toBeUndefined();
+    expect(contract.artifact_types.verification).toBeUndefined();
+    expect(contract.identifiers).not.toHaveProperty('release_width');
+    expect(contract.identifiers).not.toHaveProperty('verification_width');
+    expect(contract.identifiers.patterns).not.toHaveProperty('release');
+    expect(contract.identifiers.patterns).not.toHaveProperty('verification');
 
     expect(contract.identifiers.patterns.bolt).toBe('bolt-{worktree}-{nnn}');
     expect(contract.identifiers.patterns.worktree).toContain('sha1(absPath)[:6]');

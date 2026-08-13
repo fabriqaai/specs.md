@@ -9,8 +9,7 @@ Concept: `.specs-ideation/sessions/aidlc-fire-unification-20260809/concept-brief
 | Path | Purpose |
 |---|---|
 | `system/` | **Current truth** — registered semantic docs (architecture, integrations, domain facts) + verification status. Read first. |
-| `intents/{id}/` | Change records: intent brief + work items (semantic while active, episodic once complete) |
-| `bolts/{id}/` | Execution containers: bolt.md, plan.md, test-report.md, walkthrough.md (episodic once complete) |
+| `intents/{id}/` | One change: `brief.md`, `tasks.md` (all slices), and `bolts/` (semantic while active, episodic once complete) |
 | `recipes/` | Stage catalogs as data (default, ddd, spike, simple) |
 | `standards/` | Constitution + project standards (hierarchical monorepo overrides) |
 | `decisions/` | Decision records (immutable events) + the in-force index (semantic — consult the index, don't crawl the folder) |

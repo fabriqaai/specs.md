@@ -33,6 +33,14 @@ The boundary is *behavior vs. mechanism*, not "technical vs. non-technical." A s
 7. **Rationale present.** Key decisions carry their why, so an agent hitting an unanticipated constraint deviates intelligently instead of arbitrarily. Write for the implementer who disagrees with you.
 8. **Vacuum artifact.** Insights from prototypes enter the spec as plain statements ("X"), never as history ("we discovered X"). The spec leads implementation or keeps pace with it; it never trails.
 
+## Registers
+
+The same properties apply at two depths. Do not flatten them.
+
+**Intent brief** (outcome layer). Short. Always reviewed. It states the problem, the observable outcome, scope, non-goals (each with an extension point), named freedoms, rationale, and an **outcome-level** Definition of Done. It does not decompose into slices, name files or skills, choose a stack, or specify per-slice defaults. A sentence that only a work item can make testable does not belong here.
+
+**Work item** (slice layer). Independently valuable observable behavior. Lives as a `## {id}` section in the intent's `tasks.md` — not a file per slice. Defaults, bounds, omitted-input behavior, error recovery, and a **slice-level** Definition of Done. It must not contradict the owning brief's outcome or DoD.
+
 ## Voice
 
 Declarative present tense, stated as fact: "The flow refuses completion while a gating criterion is unmet." No future/conditional tense for core behavior, no RFC-2119 legalese. Define each term once; never use synonyms for defined terms afterward.

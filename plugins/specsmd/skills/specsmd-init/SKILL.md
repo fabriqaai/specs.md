@@ -29,15 +29,14 @@ Create `docs/specsmd/` as the memory bank (not `memory-bank/`, not `.specs-fire/
 docs/specsmd/
   project.md          # frontmatter: status, autonomy_bias, grouping_history, created
   README.md
-  intents/
-  bolts/
+  intents/            # each intent holds brief.md, tasks.md, bolts/
   recipes/            # copy default.yaml, ddd.yaml, spike.yaml, simple.yaml from flow-runtime
   standards/          # copy constitution + shipped templates from flow-runtime
   decisions/index.md
   system/
 ```
 
-`project.md` status is `active`. Copy recipe and standard files from the `flow-runtime` skill's `references/`.
+`project.md` status is `active`. Copy recipe files from `references/recipes/` in the `flow-runtime` skill and standard files from `references/standards/` in the `flow-runtime` skill. Also copy `references/nlspec.md` in the `flow-runtime` skill to `docs/specsmd/standards/nlspec.md`.
 
 In an existing codebase, propose inferred standards (id, scope, invariant). Confirm before writing them. That confirmation is not a second required question.
 
@@ -45,8 +44,8 @@ Do not require a script. Write the files.
 
 ## Close
 
-State what now exists. Offer — without requiring — `intent-create`.
+State what now exists. Offer — without requiring — `plan-intent`.
 
 Declinable next (none required):
-- `intent-create` — capture an outcome
+- `plan-intent` — capture an outcome
 - `specsmd-status` — read the tree

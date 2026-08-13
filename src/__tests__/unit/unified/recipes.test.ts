@@ -42,7 +42,7 @@ describe('shipped recipes', () => {
     expect(recipe.stages.map((s: { produces: string[] }) => s.produces)).toEqual([
       ['plan.md'],
       [],
-      ['test-report.md'],
+      ['walkthrough.md'],
       ['review-report.md', 'walkthrough.md'],
     ]);
     expect(recipe.stages.map((s: { gateable: boolean }) => s.gateable)).toEqual([
@@ -51,7 +51,7 @@ describe('shipped recipes', () => {
       true,
       true,
     ]);
-    expect(recipe.completion_requires).toEqual(['test-report.md', 'walkthrough.md']);
+    expect(recipe.completion_requires).toEqual(['walkthrough.md']);
     expect(recipe.constraints).toEqual([]);
   });
 
@@ -69,7 +69,7 @@ describe('shipped recipes', () => {
       ['design.md'],
       ['decisions.md'],
       [],
-      ['test-report.md'],
+      ['walkthrough.md'],
     ]);
     expect(recipe.stages.map((s: { gateable: boolean }) => s.gateable)).toEqual([
       true,

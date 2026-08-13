@@ -120,11 +120,107 @@ function workItemsDir(repoRoot, intentId) {
   return path.join(repoRoot, 'docs', 'specsmd', 'intents', intentId, 'work-items');
 }
 
+function tasksFilePath(repoRoot, intentId) {
+  return path.join(repoRoot, 'docs', 'specsmd', 'intents', intentId, 'tasks.md');
+}
+
+const TASK_HEADING = /^## (\d{3}-[a-z0-9-]+)\s*$/;
+const META_LINE = /^([a-z][a-z0-9_]*)\s*:\s*(.*?)\s*$/;
+
+function parseTaskMetaValue(raw) {
+  const text = String(raw || '').trim();
+  if (text === '' || text === '[]') return text === '[]' ? [] : '';
+  if (text === 'null') return null;
+  if ((text.startsWith('"') && text.endsWith('"')) || (text.startsWith("'") && text.endsWith("'"))) {
+    return text.slice(1, -1);
+  }
+  if (text.startsWith('[') && text.endsWith(']')) {
+    return text
+      .slice(1, -1)
+      .split(',')
+      .map((part) => part.trim())
+      .filter(Boolean)
+      .map((part) => part.replace(/^['"]|['"]$/g, ''));
+  }
+  return text;
+}
+
+function parseTasksFile(content, file) {
+  const text = String(content);
+  const lines = text.split(/\r?\n/);
+  const starts = [];
+  for (let i = 0; i < lines.length; i += 1) {
+    const match = lines[i].match(TASK_HEADING);
+    if (match) starts.push({ line: i, id: match[1] });
+  }
+  return starts.map((start, index) => {
+    const end = index + 1 < starts.length ? starts[index + 1].line : lines.length;
+    const sectionLines = lines.slice(start.line + 1, end);
+    const data = { id: start.id };
+    let bodyStart = 0;
+    while (bodyStart < sectionLines.length && sectionLines[bodyStart].trim() === '') bodyStart += 1;
+    while (bodyStart < sectionLines.length) {
+      const meta = sectionLines[bodyStart].match(META_LINE);
+      if (!meta) break;
+      data[meta[1]] = parseTaskMetaValue(meta[2]);
+      bodyStart += 1;
+    }
+    while (bodyStart < sectionLines.length && sectionLines[bodyStart].trim() === '') bodyStart += 1;
+    const body = sectionLines.slice(bodyStart).join('\n');
+    const dod = parseDodCriteria(body);
+    const section = [lines[start.line], ...sectionLines].join('\n');
+    return {
+      file,
+      content: section,
+      data,
+      body,
+      criteria: dod.criteria,
+      dodSection: dod.section,
+      kind: 'tasks-section',
+      id: String(data.id || start.id),
+    };
+  });
+}
+
+function upsertTaskSectionFields(fileContent, taskId, fields) {
+  const lines = String(fileContent).split(/\r?\n/);
+  const starts = [];
+  for (let i = 0; i < lines.length; i += 1) {
+    const match = lines[i].match(TASK_HEADING);
+    if (match) starts.push({ line: i, id: match[1] });
+  }
+  const index = starts.findIndex((row) => row.id === taskId);
+  if (index === -1) {
+    throw new Error(`Task ${taskId} is not in this tasks.md.`);
+  }
+  const start = starts[index].line + 1;
+  const end = index + 1 < starts.length ? starts[index + 1].line : lines.length;
+  let cursor = start;
+  while (cursor < end && lines[cursor].trim() === '') cursor += 1;
+  const metaStart = cursor;
+  while (cursor < end && META_LINE.test(lines[cursor])) cursor += 1;
+  const metaLines = lines.slice(metaStart, cursor);
+  const keys = new Set(Object.keys(fields));
+  const nextMeta = metaLines.map((line) => {
+    const meta = line.match(META_LINE);
+    if (!meta || !Object.prototype.hasOwnProperty.call(fields, meta[1])) return line;
+    keys.delete(meta[1]);
+    return formatYamlScalar(meta[1], fields[meta[1]]);
+  });
+  for (const key of keys) {
+    nextMeta.push(formatYamlScalar(key, fields[key]));
+  }
+  const next = [...lines.slice(0, metaStart), ...nextMeta, ...lines.slice(cursor)];
+  return next.join('\n');
+}
+
 function listWorkItemFiles(repoRoot, intentId) {
+  const tasks = tasksFilePath(repoRoot, intentId);
+  if (fs.existsSync(tasks)) return [tasks];
   const dir = workItemsDir(repoRoot, intentId);
   if (!fs.existsSync(dir)) {
     throw new Error(
-      `Work-item directory not found: ${dir}. Expected docs/specsmd/intents/${intentId}/work-items/.`
+      `No tasks.md or work-items/ under docs/specsmd/intents/${intentId}/.`
     );
   }
   return fs
@@ -134,19 +230,38 @@ function listWorkItemFiles(repoRoot, intentId) {
     .map((name) => path.join(dir, name));
 }
 
+function listWorkItems(repoRoot, intentId, yaml) {
+  const tasks = tasksFilePath(repoRoot, intentId);
+  if (fs.existsSync(tasks)) {
+    return parseTasksFile(fs.readFileSync(tasks, 'utf8'), tasks);
+  }
+  return listWorkItemFiles(repoRoot, intentId).map((file) => {
+    const item = loadWorkItemFile(file, yaml);
+    return {
+      ...item,
+      kind: 'file',
+      id: String(item.data.id || path.basename(file, '.md')),
+    };
+  });
+}
+
 function extractDodSection(body) {
   const lines = String(body).split(/\r?\n/);
   let start = -1;
+  let level = 2;
   for (let i = 0; i < lines.length; i += 1) {
-    if (/^## Definition of Done\s*$/.test(lines[i])) {
+    const match = lines[i].match(/^(#{2,3}) Definition of Done\s*$/);
+    if (match) {
       start = i + 1;
+      level = match[1].length;
       break;
     }
   }
   if (start === -1) return null;
   const collected = [];
   for (let i = start; i < lines.length; i += 1) {
-    if (/^## /.test(lines[i])) break;
+    const heading = lines[i].match(/^(#{1,6}) /);
+    if (heading && heading[1].length <= level) break;
     collected.push(lines[i]);
   }
   return collected.join('\n');
@@ -186,17 +301,23 @@ function loadWorkItemFile(file, yaml) {
 }
 
 function findWorkItem(repoRoot, intentId, workItemId, yaml) {
-  const files = listWorkItemFiles(repoRoot, intentId);
-  for (const file of files) {
-    const item = loadWorkItemFile(file, yaml);
-    const id = String(item.data.id || path.basename(file, '.md'));
-    if (id === workItemId || path.basename(file, '.md') === workItemId) {
-      return { ...item, id, intentId };
+  const items = listWorkItems(repoRoot, intentId, yaml);
+  for (const item of items) {
+    if (item.id === workItemId) {
+      return { ...item, intentId };
     }
   }
   throw new Error(
-    `Work item ${workItemId} not found under docs/specsmd/intents/${intentId}/work-items/.`
+    `Work item ${workItemId} not found under docs/specsmd/intents/${intentId}/tasks.md.`
   );
+}
+
+function upsertWorkItemFields(item, fields) {
+  if (item.kind === 'tasks-section') {
+    const current = fs.readFileSync(item.file, 'utf8');
+    return upsertTaskSectionFields(current, item.id, fields);
+  }
+  return upsertFrontmatterFields(item.content, fields);
 }
 
 function protocolForComplexity(complexity) {
@@ -326,6 +447,7 @@ module.exports = {
   formatYamlScalar,
   isoNow,
   listWorkItemFiles,
+  listWorkItems,
   loadFindingsFile,
   loadWorkItemFile,
   loadYaml,
@@ -343,5 +465,6 @@ module.exports = {
   sufficiencyReportAbs,
   sufficiencyReportRel,
   upsertFrontmatterFields,
+  upsertWorkItemFields,
   workItemsDir,
 };

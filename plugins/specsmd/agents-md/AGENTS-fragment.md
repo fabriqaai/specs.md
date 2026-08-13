@@ -5,7 +5,7 @@
 
 This project uses the **specsmd flow**. Specifications under `docs/specsmd/` are the memory bank and the source of truth; implementation follows specs. Do not write specsmd state to `memory-bank/` or `.specs-fire/`.
 
-1. **Intent → work item → bolt.** Bolts are created when work starts. Draft bolts are optional.
+1. **Intent → work item → bolt.** A bolt belongs to one intent and lives under that intent's folder. Draft bolts are optional. `bolt-execution` is the only bolt skill.
 2. **Recipes are data.** Stages come from the recipe recorded on the bolt, not from a hardcoded sequence in a skill.
 3. **Recommend, don't enforce.** Skills never require a next skill. They refuse illegal state changes only (missing evidence, illegal status).
 4. **Ceremony dial.** Complexity × autonomy bias → autopilot / confirm / validate. The user's choice at bolt start wins.

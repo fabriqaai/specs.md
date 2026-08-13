@@ -10,7 +10,7 @@ stages:
     gateable: false
   - id: test
     produces:
-      - test-report.md
+      - walkthrough.md
     gateable: true
   - id: review
     produces:
@@ -18,6 +18,5 @@ stages:
       - walkthrough.md
     gateable: true
 completion_requires:
-  - test-report.md
   - walkthrough.md
 constraints: []

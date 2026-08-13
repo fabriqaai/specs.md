@@ -14,7 +14,7 @@ Read-only orientation. Never write artifacts. Never invoke another skill. Never 
 
 ## Process
 
-Read `docs/specsmd/` directly (project, intents, work items, bolts, decisions index, system). The files are the source of truth.
+Read `docs/specsmd/` directly (project, intents with their work items and bolts, decisions index, system). The files are the source of truth.
 
 ## Report
 
@@ -24,11 +24,11 @@ Then present three lenses. Empty lenses stay visible.
 
 - **Shaping** — intents and work items not named on any non-draft bolt
 - **Building** — active bolts, with stage and checkpoint
-- **Shipping** — completed bolts, distinguished as completed-unreleased vs released. Offer `release-checklist` when unreleased work exists — never a mandate. Release is optional; do not nag. A project that never releases is healthy.
+- **Shipping** — completed bolts (history under their intent). There is no release step.
 
 Then health: illegal status tokens, missing `docs/specsmd/`, cascade drift you can see. Do not invent a local mapping for unknown tokens.
 
-Then suggested next moves in this order; do not re-rank: awaiting gate → active bolt → empty intent → unbolted items → drafts → completed-unreleased → empty tree. Integrity findings stay in health — they are not a next skill. Do not take a suggestion. Never suggest `flow-runtime`. Never emit a release finding for a tree that has not used release.
+Then suggested next moves in this order; do not re-rank: awaiting gate → active bolt → empty intent → unbolted items → drafts → empty tree. Integrity findings stay in health — they are not a next skill. Do not take a suggestion. Never suggest `flow-runtime`.
 
 ## Constraints
 

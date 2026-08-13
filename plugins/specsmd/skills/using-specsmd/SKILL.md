@@ -25,8 +25,8 @@ If you are unsure of project state, invoke the `specsmd-status` skill. Never gue
 ## Shape of the flow
 
 - **Intent** — problem, outcome, scope, non-goals. No mechanism.
-- **Work item** — a vertical slice with a behavioral Definition of Done. Complexity is decision load.
-- **Bolt** — the execution container. Created when work starts (dynamic grouping: single, batch, or wide). Optional draft bolts from `bolt-plan`. Runs a **recipe** of stages under a **ceremony** (`autopilot` / `confirm` / `validate`).
+- **Work item** — a vertical slice with a behavioral Definition of Done, as a section in the intent's `tasks.md`. Complexity is decision load.
+- **Bolt** — the execution container, scoped to one intent, living under that intent's folder. Created when work starts (dynamic grouping: single, batch, or wide of that intent). Optional drafts. Runs a **recipe** of stages under a **ceremony** (`autopilot` / `confirm` / `validate`). One skill: `bolt-execution`.
 
 Artifacts live in `docs/specsmd/`. State lives in YAML frontmatter. **Skills write that frontmatter** following `transitions.md` in the `flow-runtime` skill.
 
@@ -43,14 +43,9 @@ Read **semantic memory first**, then working (non-terminal) change records. Acti
 | Skill | When |
 |---|---|
 | `specsmd-init` | No `docs/specsmd/` tree yet |
-| `intent-create` | New outcome to capture |
+| `plan-intent` | New outcome to capture |
 | `work-item-decompose` | An intent needs slices |
-| `bolt-plan` | Optional draft grouping |
-| `bolt-start` | Work is ready to execute |
-| `bolt-execute` | A bolt is active or interrupted |
-| `walkthrough-generate` | A bolt needs its human walkthrough |
-| `release-checklist` | Optional shipping |
-| `release-verify` | Record confirmation of a released change |
+| `bolt-execution` | Draft, start, resume, or complete a bolt |
 
 Nothing here is a required next step.
 
@@ -66,5 +61,5 @@ This skill writes nothing.
 
 Declinable next (none required):
 - `specsmd-status` — read the tree
-- `intent-create` — capture an outcome
+- `plan-intent` — capture an outcome
 - `specsmd-init` — if the tree does not exist

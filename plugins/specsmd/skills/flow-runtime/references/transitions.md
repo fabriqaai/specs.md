@@ -12,16 +12,17 @@ Never write `in-progress`, `completed`, or `done`.
 
 | From | To | Skill |
 |---|---|---|
-| (none) | `pending` | `intent-create`, `work-item-decompose` |
-| (none) | `draft` | `bolt-plan` |
-| `draft` | `active` | `bolt-start` (adopt) |
-| `draft` | `abandoned` | `bolt-start` (adopt consumes the draft) |
-| `pending` | `active` | `bolt-start` (items named on the new bolt) |
-| `active` | `complete` | `bolt-execute` (bolt, then cascade items, then intent if all items terminal) |
+| (none) | `pending` | `plan-intent`, `work-item-decompose` |
+| (none) | `draft` | `bolt-execution` |
+| `draft` | `active` | `bolt-execution` (adopt) |
+| `draft` | `abandoned` | `bolt-execution` (adopt consumes the draft) |
+| `pending` | `active` | `bolt-execution` (items named on the new bolt) |
+| `active` | `complete` | `bolt-execution` (bolt, then cascade items, then intent if all items terminal) |
 | any non-terminal | `abandoned` | any shaping skill when the user abandons the work |
 
-## Bolt fields the execute skill maintains
+## Bolt fields the execute path maintains
 
+- `intent` — owning intent; never another intent's work items
 - `current_stage` — id of the stage in progress; `null` when complete
 - `stages_completed` — list of `{name, completed}`
 - `checkpoint_state` — `none` | `awaiting` | `granted` | `not-required`
@@ -29,15 +30,19 @@ Never write `in-progress`, `completed`, or `done`.
 
 Resume from those fields. Do not infer the stage from which files exist.
 
+A bolt lives at `docs/specsmd/intents/{intent}/bolts/{id}/`. It is scoped to one intent.
+
 ## Dynamic grouping (FIRE flexibility)
 
-At `bolt-start`, calculate three offers from pending (unbolted) work items:
+At start, calculate three offers from pending (unbolted) work items **on the chosen intent**:
 
 1. **Single** — one item
 2. **Batch** — items that share ceremony (or that the user names)
-3. **Wide** — all compatible pending items, dependency order, one bolt
+3. **Wide** — all compatible pending items on this intent, dependency order, one bolt
 
-Recommend from autonomy bias (`autonomous` → wide, `controlled` → single, `balanced` → batch if more than two items). Remember the last three choices in `docs/specsmd/project.md` under `grouping_history` and pre-select after three matches. The user may ignore the recommendation. Draft bolts from `bolt-plan` stay optional.
+Refuse a set that names work items from more than one intent. Name both intents.
+
+Recommend from autonomy bias (`autonomous` → wide, `controlled` → single, `balanced` → batch if more than two items). Remember the last three choices in `docs/specsmd/project.md` under `grouping_history` and pre-select after three matches. The user may ignore the recommendation. Draft bolts stay optional.
 
 ## Cascade on bolt complete
 

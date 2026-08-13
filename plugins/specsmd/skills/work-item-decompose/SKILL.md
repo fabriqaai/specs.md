@@ -13,7 +13,7 @@ disable-model-invocation: true
 
 Turn an intent into vertical slices. Each slice is independently valuable observable behavior, not a layer (not "the schema" then "the API" then "the UI"). Invocable at any time — a one-line intent still decomposes; say which brief sections are thin.
 
-Follow `references/nlspec.md` in the `flow-runtime` skill. If two readings are interchangeable to a caller, pick one and name it. If they are not, ask.
+Follow `references/nlspec.md` in the `flow-runtime` skill (work-item register). Read the owning brief first. Do not contradict its outcome or Definition of Done. If two readings are interchangeable to a caller, pick one and name it. If they are not, ask.
 
 ## Assess
 
@@ -31,15 +31,15 @@ Suggested ceremony comes from `ceremony.matrix` in `references/flow-contract.yam
 
 Every work item ends in a Definition of Done. Criteria are behavioral and marked `(gating)` or `(advisory)`. An internal-attribute criterion (names a module, function, or "add a validator") is flagged on that line as `flag: internal-attribute` and does not block writing.
 
-Use `references/work-item.md` as the body shape.
+Use `references/work-item.md` as the **section** shape. All slices for one intent live in one file.
 
 ## Write
 
-Create `docs/specsmd/intents/{intentId}/work-items/{nnn}-{slug}.md`. Next `{nnn}` is global across all intents (highest existing + 1).
+Create or append `docs/specsmd/intents/{intentId}/tasks.md`. If the file does not exist, start it with `# Tasks`. Each slice is a `## {nnn}-{slug}` section. Next `{nnn}` is global across all intents (highest existing + 1). Do not create a file per slice.
 
-Frontmatter:
+Section metadata (plain `key: value` lines under the heading, not a second frontmatter fence):
 
-```yaml
+```text
 id: {nnn}-{slug}
 title: {title}
 intent: {intentId}
@@ -57,9 +57,9 @@ Refuse a dependency cycle: if A depends on B and B on A, write nothing for that 
 List the work items that now exist. Offer at most three declinable next names. None is required. Do not invoke them.
 
 Now exists:
-- `docs/specsmd/intents/{intentId}/work-items/{id}.md` (each item; `ceremony_suggested` recorded)
+- `docs/specsmd/intents/{intentId}/tasks.md` (new or updated sections; `ceremony_suggested` recorded)
 
 Declinable next (none required):
-- `bolt-start` — execute one item or a batch
-- `bolt-plan` — draft a grouping first
+- `bolt-execution` — draft, start, or run a bolt on this intent
+- `plan-intent` — capture another outcome
 - `specsmd-status` — re-orient
