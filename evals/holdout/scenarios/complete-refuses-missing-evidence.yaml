@@ -1,0 +1,7 @@
+id: complete-refuses-missing-evidence
+kind: complete-refuses-missing-evidence
+title: Completing a bolt without required evidence is refused and names the missing files
+judges:
+  - 003-state-scripts
+  - 006-execution-skills
+satisfies: The complete operation refuses and the refusal names the missing evidence artifacts.

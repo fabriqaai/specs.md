@@ -1,0 +1,126 @@
+---
+title: Coming from v1
+description: Terminology mapping from legacy AI-DLC and FIRE — orientation only, no migration
+---
+
+v2 is a **new install** and a **new artifact root**. It does not convert a v1 project.
+
+<Warning>
+  **There is no migration tooling.** Not now, not later. Legacy AI-DLC and FIRE keep working on v1 with full maintenance (fixes, not features). Stay on v1 if that is your project. This page is orientation for readers who already know those flows.
+</Warning>
+
+Do not run `npx specsmd install` expecting v2. That command remains the v1 channel.
+
+Install v2 with `/plugin install specsmd@specsmd` (or the [manual path](/v2/manual-install)). Do not install the unified plugin into a project that already uses a legacy flow and expect it to take over. A project should use one or the other.
+
+## What stayed, what moved
+
+v2 keeps **FIRE-shaped execution** (dynamic grouping at start time, ceremony from complexity × autonomy) and **AI-DLC vocabulary** where the words still fit (`intent`, `bolt`). The execution container is always called a **bolt**. “Run” is an ordinary verb, not a type.
+
+| Idea | v2 |
+|------|-----|
+| Artifact root | `docs/specsmd/` (visible docs). Legacy `memory-bank/` and `.specs-fire/` are untouched. |
+| Hierarchy | Intent → work item. No unit. No story. |
+| Execution container | **Bolt**, created when work starts, 1..N work items, may cross intents |
+| Upfront planning | Optional **draft bolts** (`bolt-plan`). Never required. |
+| Stages | **Recipes** (data files), not bolt types chosen at planning time |
+| Oversight | **Ceremony dial**: `autopilot` / `confirm` / `validate` |
+| Phases | **Lenses** in status: shaping / building / shipping. Not gated modes. |
+| State | Frontmatter on each artifact. No `state.yaml`. Scripts are the only writers. |
+| Specs | Intents and work items are [nlspecs](/v2/nlspec) |
+| Status words | `draft` \| `pending` \| `active` \| `complete` \| `abandoned` |
+
+## From legacy AI-DLC
+
+Legacy docs stay at their current URLs ([AI-DLC overview](/aidlc/overview), [quick start](/agents/quick-start), [intents](/core-concepts/intents), [units](/core-concepts/units), [bolts](/core-concepts/bolts)).
+
+| Legacy AI-DLC | Unified v2 |
+|---------------|------------|
+| Intent | Intent (nlspec brief: problem, outcome, scope, non-goals) |
+| Unit | *Removed.* There is no middle layer. |
+| User story | Work item |
+| Story index | Work items on the intent |
+| Bolt (one unit, planned in Inception) | Bolt (dynamic, 1..N work items, may cross intents) |
+| Bolt type (DDD / Simple / Spike) | Recipe (`ddd` / `simple` / `spike`, plus `default`) |
+| Inception | Shaping lens |
+| Construction | Building lens |
+| Operations | Shipping lens (slim release checklist; no deploy/monitor in this release) |
+| Mob Elaboration | `intent-create`, `work-item-decompose`, optional `bolt-plan` |
+| Mob Construction | `bolt-execute` under the ceremony dial |
+| Master Agent / `analyze-context` | `using-specsmd` + `specsmd-status` |
+| Inception Agent | `intent-create`, `work-item-decompose`, `bolt-plan` |
+| Construction Agent | `bolt-start`, `bolt-execute`, `walkthrough-generate` |
+| Operations Agent (`deploy`, `monitor`, …) | Not shipped in this v2 slice. Shipping lens + slim release only. |
+| `project-init` | `specsmd-init` (one question: autonomy bias) |
+| `bolt-plan` (required before construction) | `bolt-plan` writes a **draft**. Starting may adopt, modify, or ignore it. |
+| `bolt-start` | `bolt-start` |
+| `bolt-status` | `specsmd-status` |
+| `bolt-replan` | Complete or abandon, then start a new bolt. No in-place replan. |
+| Memory Bank (`memory-bank/`) | `docs/specsmd/` |
+| `requirements.md` | Intent `brief.md` |
+| System context | Registered documents in `system/` |
+| Unit brief | Work item |
+| Domain design | `domain-model.md` on the `ddd` recipe |
+| Logical / technical design | `design.md` on the `ddd` recipe |
+| ADR + decision index | `docs/specsmd/decisions/` + in-force `index.md` |
+| Implementation plan | `plan.md` |
+| Test report / test walkthrough | `test-report.md` |
+| Implementation walkthrough | `walkthrough.md` (still no source code) |
+| Status `planned` / `in-progress` / `complete` / `blocked` | `draft` / `pending` / `active` / `complete` / `abandoned` |
+| Many checkpoints per bolt type | Ceremony: none / first gateable / all gateable |
+| Standards catalog + facilitation guides | `docs/specsmd/standards/` (constitution + overridable) |
+| Agents as modes you enter | Skills you invoke by name |
+| `npx specsmd install` | Marketplace (or manual copy) of the `specsmd` plugin |
+
+## From legacy FIRE
+
+Legacy docs stay at their current URLs ([FIRE overview](/fire-flow/overview), [quick start](/fire-flow/quick-start), [execution modes](/fire-flow/execution-modes), [work items](/fire-flow/work-items)).
+
+| Legacy FIRE | Unified v2 |
+|-------------|------------|
+| Intent | Intent (nlspec brief) |
+| Work item | Work item (nlspec, still carries complexity and a suggested ceremony) |
+| Run | **Bolt** |
+| `run.md` | `bolt.md` |
+| `run-{worktree}-{NNN}` | `bolt-{worktree}-{nnn}` |
+| Execution mode (`autopilot` / `confirm` / `validate`) | Ceremony (same three names) |
+| Autonomy config / bias | Autonomy bias (`autonomous` / `balanced` / `controlled`) |
+| Complexity (low / medium / high) | Complexity as **decision load** (same three values) |
+| Checkpoints (0–2) | Gates: none / first gateable stage / every gateable stage |
+| Fixed stages plan → execute → test → review | That sequence is the `default` **recipe**. Other recipes are selectable. |
+| Planner | `intent-create`, `work-item-decompose` |
+| Builder | `bolt-start`, `bolt-execute` |
+| Orchestrator / `/specsmd-fire` | `using-specsmd`, `specsmd-status` |
+| `fire-init` / project init | `specsmd-init` |
+| `.specs-fire/` | `docs/specsmd/` |
+| `state.yaml` | Artifact frontmatter. **No central state file.** |
+| `current_phase` | `current_stage` (from the bolt's recipe) |
+| `checkpoint_state` | `checkpoint_state` on the bolt |
+| Design doc (validate mode) | Stage artifacts the recipe lists (`plan.md`, `design.md`, …) |
+| `plan.md` / `test-report.md` / `walkthrough.md` | Same names, on the bolt |
+| Code-review skill | Review stage on the `default` recipe (`review-report.md`) |
+| Constitution + hierarchical standards | Same idea under `docs/specsmd/standards/` and `standards/scopes/{module}/` |
+| Brownfield detection | `specsmd-init` detects existing vs empty; inferred standards wait for confirm |
+| Status `in_progress` / `done` | `active` / `complete` (plus `draft`, `pending`, `abandoned`) |
+| Parallel runs | Parallel bolts (collision-safe ids) |
+| `npx specsmd install` (FIRE) | Marketplace (or manual copy) of the `specsmd` plugin |
+
+## Status words (both flows)
+
+v2 uses one vocabulary everywhere. Legacy synonyms are errors if they appear in v2 frontmatter.
+
+| You used to write | Write in v2 |
+|-------------------|-------------|
+| `in-progress`, `in_progress` | `active` |
+| `done`, `completed` | `complete` |
+| `planned` | `pending` or `draft` (drafts are bolt proposals only) |
+| `blocked` | Not a status. Health findings and awaiting gates are reported by `specsmd-status`. |
+
+## What you should not expect
+
+- A converter from `memory-bank/` or `.specs-fire/` into `docs/specsmd/`
+- A warning or auto-migrate if the unified plugin is present next to a v1 project
+- Phase gates, “REQUIRED NEXT SKILL”, or agents you must enter
+- A v2 npm installer
+
+Stay on v1, or start a new tree with v2. Both documentation sets stay on this site; use the version menu or the [legacy home](/).

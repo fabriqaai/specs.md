@@ -1,0 +1,6 @@
+id: init-without-package
+kind: init-without-package
+title: Init in a project with no package manifest stays inside the artifact root
+judges:
+  - 003-state-scripts
+satisfies: docs/specsmd exists and nothing outside that root was created.

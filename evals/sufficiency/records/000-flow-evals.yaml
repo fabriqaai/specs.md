@@ -1,0 +1,61 @@
+protocol: triangulation
+notes: >
+  The first implementation of this spec was a single self-probe. A second
+  isolated implement-from-spec-only probe was not run. That is an open
+  divergence against the high-complexity protocol, not named freedom.
+probes:
+  - id: P1
+    isolated: false
+    observable: >
+      This repository's first evals harness records findings, walks Definition
+      of Done checkboxes, scores trigger fixtures, and rejects mixed
+      evals/implementation path changes. It does not spawn probe implementers.
+judge: >
+  One probe is present and it is not isolated. The high-complexity protocol
+  requires two isolated probes. Interchangeability is untested.
+findings:
+  - id: F1
+    class: named-freedom
+    status: resolved
+    summary: Sufficiency report location is not specified
+    detail: >
+      The spec requires the outcome and report to be recorded with the work
+      item but does not name a path.
+    resolution: >
+      Reports live at docs/specsmd/intents/{intent}/sufficiency/{id}.md and
+      the work item records sufficiency plus sufficiency_report.
+  - id: F2
+    class: named-freedom
+    status: resolved
+    summary: Trigger scoring method is unspecified once skill files exist
+    detail: >
+      The spec requires per-prompt routing outcomes against skill descriptions.
+      It does not prescribe a scorer.
+    resolution: >
+      Fixtures name signature phrases that must remain in the shipped
+      description. A prompt passes when those phrases still exist, it does
+      not quote another skill's signatures, and unique vocabulary from the
+      expected skill wins. This is not a model router.
+  - id: F3
+    class: named-freedom
+    status: resolved
+    summary: Flow implementation path set for holdout is unspecified
+    detail: >
+      The spec forbids changing flow implementation and evals in the same
+      contribution. The implementation root is not named.
+    resolution: >
+      Holdout treats plugins/specsmd/ as the unified-flow implementation tree
+      (not plugins/specsmd-*). Evals-side paths are evals/,
+      src/__tests__/evals/, and .github/workflows/evals-holdout.yml.
+  - id: F4
+    class: divergence
+    status: open
+    summary: Second isolated triangulation probe was not run
+    detail: >
+      High complexity requires two implement-from-spec-only probes and a
+      judge comparison. Only one non-isolated self-probe exists. Two
+      implementers could still diverge on report location (now named),
+      trigger method (now named), and what "holdout scenarios judged on
+      satisfaction" means in the absence of the flow (now supplied as
+      scenarios that call the shipped scripts). The missing second probe
+      remains a divergence: interchangeability of the spec itself is untested.

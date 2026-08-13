@@ -1,0 +1,352 @@
+# Unified Bolt Flow contract.
+# Single source for artifact locations, identifiers, status vocabulary, and defaults.
+# Scripts read this file. Skills do not copy these facts into prose.
+
+id: specsmd-unified
+version: "0.1.0"
+artifact_root: docs/specsmd
+
+state:
+  location: artifact_frontmatter
+  central_file: false
+  writers: scripts_only
+
+status:
+  values:
+    - draft
+    - pending
+    - active
+    - complete
+    - abandoned
+  default: pending
+  terminal:
+    - complete
+    - abandoned
+  rejected_synonyms:
+    - in-progress
+    - completed
+    - done
+
+memory_class:
+  values:
+    - semantic
+    - episodic
+  stored: false
+  derivation:
+    change_record:
+      non_terminal: semantic
+      terminal: episodic
+  # Header stamped on every episodic artifact. Pointers go up to semantic, never sideways.
+  header: "Historical record ({date}). Current truth: {semantic_document}."
+  default_current_truth: project.md
+  archive_path: archive
+  retention_horizon: P90D
+  compact_index: bolts/index.md
+  archive_fields:
+    - archive_override
+    - archive_override_reason
+    - archived_at
+
+identifiers:
+  intent_width: 3
+  work_item_width: 3
+  bolt_width: 3
+  release_width: 3
+  verification_width: 3
+  bolt_prefix: bolt
+  patterns:
+    intent: "{nnn}-{slug}"
+    work_item: "{nnn}-{slug}"
+    bolt: "bolt-{worktree}-{nnn}"
+    worktree: "{basename}-{sha1(absPath)[:6]}"
+    release: "{nnn}-{slug}"
+    verification: "{nnn}-{slug}"
+
+ceremony:
+  values:
+    - autopilot
+    - confirm
+    - validate
+  autonomy_bias:
+    values:
+      - autonomous
+      - balanced
+      - controlled
+    default: balanced
+  complexity:
+    values:
+      - low
+      - medium
+      - high
+    default: medium
+  # complexity × autonomy_bias → ceremony. User choice at bolt-start always wins.
+  matrix:
+    low:
+      autonomous: autopilot
+      balanced: autopilot
+      controlled: confirm
+    medium:
+      autonomous: autopilot
+      balanced: confirm
+      controlled: validate
+    high:
+      autonomous: confirm
+      balanced: validate
+      controlled: validate
+  gates:
+    autopilot: none
+    confirm: first_gateable
+    validate: all_gateable
+
+recipe:
+  default: default
+  shipped:
+    - default
+    - ddd
+    - spike
+    - simple
+  recommend_from_complexity:
+    low: simple
+    medium: default
+    high: ddd
+  completion_requires_default:
+    - test-report.md
+    - walkthrough.md
+  constraint_kinds:
+    - time_box
+    - no_source_code
+  time_box:
+    duration_default: PT8H
+    on_expiry_values:
+      - complete_with_findings
+    on_expiry_default: complete_with_findings
+    clock_starts: when_active
+    findings_artifact: findings.md
+
+checkpoint_state:
+  values:
+    - none
+    - awaiting
+    - granted
+    - not-required
+  default: none
+
+approval:
+  grant:
+    - yes
+    - y
+    - approved
+    - approve
+    - go ahead
+    - lgtm
+    - ok
+    - okay
+    - ship it
+    - proceed
+    - continue
+    - do it
+    - accepted
+    - accept
+    - confirmed
+    - confirm
+  deny:
+    - no
+    - n
+    - reject
+    - rejected
+    - denied
+    - wait
+    - hold
+    - edit
+    - change
+
+errors:
+  retryable: 1
+  terminal: 2
+  structural: 3
+
+# Defaults for validate-integrity. CLI --stale-after overrides the duration.
+integrity:
+  stale_active_after: P7D
+  maintenance_log: maintenance-log.md
+
+artifact_types:
+  project:
+    path: project.md
+    identifier_pattern: none
+    memory_class: semantic
+    fields:
+      - status
+      - autonomy_bias
+      - created
+  intent:
+    path: intents/{id}/brief.md
+    identifier_pattern: intent
+    memory_class: change_record
+    fields:
+      - id
+      - title
+      - status
+      - created
+      - completed
+  work_item:
+    path: intents/{intent}/work-items/{id}.md
+    identifier_pattern: work_item
+    memory_class: change_record
+    fields:
+      - id
+      - title
+      - intent
+      - complexity
+      - ceremony_suggested
+      - status
+      - depends_on
+      - created
+      - completed
+      - scope
+  bolt:
+    path: bolts/{id}/bolt.md
+    identifier_pattern: bolt
+    memory_class: change_record
+    fields:
+      - id
+      - status
+      - recipe
+      - recipe_snapshot
+      - ceremony
+      - current_stage
+      - stages_completed
+      - checkpoint_state
+      - work_items
+      - override
+      - override_reason
+      - adopted_draft
+      - activated_at
+      - updated
+      - created
+      - completed
+      - touched_scope
+      - projection_review
+  recipe:
+    path: recipes/{id}.yaml
+    identifier_pattern: "{id}"
+    memory_class: semantic
+  standard:
+    path: standards/{id}.md
+    module_path: standards/scopes/{module}/{id}.md
+    identifier_pattern: "{id}"
+    memory_class: semantic
+    fields:
+      - id
+      - title
+      - status
+      - kind
+      - enforcement_tier
+      - override
+      - invariant
+      - remediation
+      - created
+      - scope
+  decision:
+    path: decisions/{id}.md
+    identifier_pattern: "{id}"
+    memory_class: episodic
+    fields:
+      - id
+      - title
+      - created
+      - consult_when
+      - superseded
+      - superseded_by
+      - archive_override
+      - archive_override_reason
+      - archived_at
+  decisions_index:
+    path: decisions/index.md
+    identifier_pattern: none
+    memory_class: semantic
+  bolts_index:
+    path: bolts/index.md
+    identifier_pattern: none
+    memory_class: semantic
+  stage_artifact:
+    path: bolts/{id}/{artifact}
+    identifier_pattern: "{artifact}"
+    memory_class: change_record
+    status_source: parent_bolt
+  system:
+    path: system/{id}.md
+    identifier_pattern: "{id}"
+    memory_class: semantic
+    fields:
+      - id
+      - name
+      - purpose
+      - claimed_scope
+      - status
+      - created
+      - last_verified
+      - verified_by
+      - facts
+      - claims
+  release:
+    path: releases/{id}/release.md
+    identifier_pattern: release
+    memory_class: change_record
+    fields:
+      - id
+      - title
+      - status
+      - bolts
+      - previous_release
+      - created
+  verification:
+    path: releases/{release}/verifications/{id}.md
+    identifier_pattern: verification
+    memory_class: episodic
+    fields:
+      - id
+      - release
+      - change
+      - confirmed_by
+      - confirmed_at
+      - environment
+      - observation
+
+system_document_types:
+  registration_fields:
+    - name
+    - purpose
+    - claimed_scope
+  verification_fields:
+    - last_verified
+    - verified_by
+
+# Guardrail layer. Constitution is root-only; every other standard resolves
+# by nearest declared scope. Module files live under the artifact root so
+# scripts never write outside it.
+standards:
+  constitution_id: constitution
+  constitution_override: never
+  shipped:
+    - constitution
+    - tech-stack
+    - coding
+    - testing
+    - architecture
+    - nlspec
+  overridable:
+    - tech-stack
+    - coding
+    - testing
+    - architecture
+    - nlspec
+  enforcement_tiers:
+    - principle
+    - review
+    - mechanical
+  root_directory: standards
+  module_directory: standards/scopes/{module}
+  kinds:
+    - constitution
+    - overridable

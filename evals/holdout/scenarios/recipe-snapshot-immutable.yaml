@@ -1,0 +1,6 @@
+id: recipe-snapshot-immutable
+kind: recipe-snapshot-immutable
+title: A bolt's recorded recipe does not change after a later stage update
+judges:
+  - 002-recipe-catalog
+satisfies: recipe and recipe_snapshot are identical after advancing a stage.

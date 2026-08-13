@@ -1,0 +1,7 @@
+id: complete-cascade
+kind: complete-cascade
+title: Completing a two-item bolt completes both items and the owning intent
+judges:
+  - 003-state-scripts
+  - 006-execution-skills
+satisfies: Bolt, both work items, and the intent are complete after one successful complete operation.

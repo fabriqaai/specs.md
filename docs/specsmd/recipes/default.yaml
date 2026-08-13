@@ -1,0 +1,23 @@
+id: default
+title: Default
+stages:
+  - id: plan
+    produces:
+      - plan.md
+    gateable: true
+  - id: execute
+    produces: []
+    gateable: false
+  - id: test
+    produces:
+      - test-report.md
+    gateable: true
+  - id: review
+    produces:
+      - review-report.md
+      - walkthrough.md
+    gateable: true
+completion_requires:
+  - test-report.md
+  - walkthrough.md
+constraints: []

@@ -8,7 +8,7 @@ const fs = require('fs');
 const path = require('path');
 
 const ROOT = path.resolve(__dirname, '..');
-const PLUGINS = ['specsmd-core', 'specsmd-aidlc', 'specsmd-fire', 'specsmd-ideation', 'specsmd-simple'];
+const PLUGINS = ['specsmd', 'specsmd-core', 'specsmd-aidlc', 'specsmd-fire', 'specsmd-ideation', 'specsmd-simple'];
 const MANIFESTS = ['.claude-plugin/plugin.json', '.codex-plugin/plugin.json', '.cursor-plugin/plugin.json', 'plugin.json'];
 
 const version = process.argv[2];
@@ -37,13 +37,20 @@ for (const plugin of targets) {
   }
 }
 
-const marketFile = path.join(ROOT, '.claude-plugin', 'marketplace.json');
-const market = JSON.parse(fs.readFileSync(marketFile, 'utf8'));
-for (const entry of market.plugins) {
-  if (targets.includes(entry.name)) entry.version = version;
+const marketFiles = [
+  path.join(ROOT, '.claude-plugin', 'marketplace.json'),
+  path.join(ROOT, '..', '.claude-plugin', 'marketplace.json'),
+  path.join(ROOT, '..', '.agents', 'plugins', 'marketplace.json'),
+];
+for (const marketFile of marketFiles) {
+  if (!fs.existsSync(marketFile)) continue;
+  const market = JSON.parse(fs.readFileSync(marketFile, 'utf8'));
+  for (const entry of market.plugins) {
+    if (targets.includes(entry.name)) entry.version = version;
+  }
+  if (!only && market.metadata) market.metadata.version = version;
+  fs.writeFileSync(marketFile, JSON.stringify(market, null, 2) + '\n');
+  changed++;
 }
-if (!only) market.metadata.version = version;
-fs.writeFileSync(marketFile, JSON.stringify(market, null, 2) + '\n');
-changed++;
 
 console.log(`Set version ${version} on ${targets.join(', ')} (${changed} files).`);

@@ -1,0 +1,11 @@
+{
+  "name": "specsmd",
+  "version": "1.0.0",
+  "description": "Unified bolt flow: intents, work items, and bolts under docs/specsmd — the specsmd default install",
+  "author": { "name": "specsmd", "url": "https://specs.md" },
+  "homepage": "https://specs.md",
+  "repository": "https://github.com/fabriqaai/specs.md",
+  "license": "MIT",
+  "keywords": ["specsmd", "spec-driven-development", "skills", "ai-dlc"],
+  "hooks": "./hooks/hooks.json"
+}

@@ -6,6 +6,8 @@ complexity: high
 status: pending
 depends_on: [002-recipe-catalog, 003-state-scripts]
 created: 2026-08-09
+sufficiency: dogfood-cleared
+sufficiency_date: 2026-08-13
 ---
 
 # Executing work — bolts run recipes under the ceremony dial
@@ -26,6 +28,16 @@ Execution is where agents do the work. A bolt is created when the user (or the f
 ## Out of scope
 
 Deployment and post-release operation (the Operations question is open at the intent level). Parallel execution coordination beyond what identifier safety and per-bolt state already give.
+
+## Decided defaults (dogfood slice)
+
+Execution skills are exactly `bolt-start`, `bolt-execute`, `walkthrough-generate`. By-name only. Recipe-agnostic. Skills never name a required next skill.
+
+- Ceremony values: `autopilot` (no gates), `confirm` (first gateable stage), `validate` (every gateable stage). Default = most controlled `ceremony_suggested` among chosen items, unless the user sets one.
+- Confirm/validate: emit the full plan text in the approval turn. Autopilot still writes `plan.md` when the recipe requires it.
+- Completing the bolt completes every tracked item, or none if evidence/gating ACs are missing.
+- Every completed bolt yields a walkthrough (even without a walkthrough stage). "No code" = no language-tagged fences, source listings, or patches. Deviations section always exists.
+- Gate states: `awaiting | granted | not-required`. Denial leaves `awaiting`.
 
 ## Definition of Done
 

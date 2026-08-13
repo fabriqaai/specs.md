@@ -6,6 +6,8 @@ complexity: medium
 status: pending
 depends_on: [001-flow-schema]
 created: 2026-08-09
+sufficiency: dogfood-cleared
+sufficiency_date: 2026-08-13
 ---
 
 # Shaping work — capture intent, decompose, optionally pre-group
@@ -19,6 +21,15 @@ The shaping side of the flow turns rough direction into nlspec artifacts: intent
 - **Pre-grouping** (the optional planning ritual) writes draft bolts: proposals naming a grouping of work items and a suggested recipe. A draft is data; starting a bolt may adopt a draft, modify it, or ignore all drafts. Unadopted drafts age harmlessly *(the integrity validator may flag stale drafts, advisory only)*.
 - No shaping skill requires another to have run first: decomposition against a one-line intent works (and says what's thin); capture after work items exist works (and links them).
 - Ambiguity discovered while shaping is resolved per the nlspec standard's failure table: interchangeable readings are chosen and named; non-interchangeable ones are asked.
+
+## Decided defaults (dogfood slice)
+
+Shaping skills are exactly `intent-create`, `work-item-decompose`, `bolt-plan`. Each is by-name only. None requires another. None uses required-next language.
+
+- Intent brief required sections: problem, outcome, scope, non-goals. Additional sections allowed.
+- Complexity: `low | medium | high` by decision load (see skill). Default `medium`. Unset autonomy bias is `balanced`. Suggested ceremony is the contract matrix, recorded as `ceremony_suggested`.
+- Cycle: the invocation writes nothing and names the cycle as an ordered id list.
+- Drafts: `bolt-start` offers adopt / modify / ignore; dismiss = ignore. Adopt consumes the draft (`abandoned`). Modify/ignore leave it.
 
 ## Definition of Done
 

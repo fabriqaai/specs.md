@@ -1,0 +1,214 @@
+---
+title: Quickstart
+description: Install specsmd v2, capture a first intent, and complete a first bolt
+---
+
+Follow these steps in a **fresh project**. When you finish, you will have a completed bolt under `docs/specsmd/bolts/` with a walkthrough.
+
+There is **no v2 npm CLI**. Install the `specsmd` plugin from a marketplace, or use the [manual install path](/v2/manual-install).
+
+## Prerequisites
+
+- An AI coding tool that can load Agent Skills (Claude Code, Codex, or any tool that reads `.agents/skills/`)
+- A project directory you can write to
+- Node.js 18+ (the flow's scripts are plain Node; they install nothing into your project)
+
+## 1. Install the plugin
+
+Pick the channel that matches your tool.
+
+<Tabs>
+  <Tab title="Claude Code">
+    Add this repository as a marketplace, then install the default plugin. Until `main-v2` is the repository default, add the marketplace from a **checkout of `main-v2`** (or this branch), not from `main`.
+
+    ```text
+    /plugin marketplace add /absolute/path/to/specs.md
+    /plugin install specsmd@specsmd
+    ```
+
+    One install is the complete flow: bootstrap, navigator, shaping skills, execution skills, and state scripts.
+  </Tab>
+  <Tab title="Codex">
+    Until `main-v2` is the repository default, pin that branch:
+
+    ```bash
+    codex plugin marketplace add fabriqaai/specs.md --ref main-v2
+    codex plugin install specsmd
+    ```
+
+    Or add a local checkout that already contains `plugins/specsmd/`:
+
+    ```bash
+    codex plugin marketplace add /absolute/path/to/specs.md
+    codex plugin install specsmd
+    ```
+  </Tab>
+  <Tab title="No marketplace">
+    Copy the plugin's skills into the project. Details and the optional `AGENTS.md` fragment are on the [manual install](/v2/manual-install) page.
+
+    ```bash
+    mkdir -p .agents/skills
+    cp -R /path/to/specs.md/plugins/specsmd/skills/* .agents/skills/
+    ```
+  </Tab>
+</Tabs>
+
+<Warning>
+  `npx specsmd install` is the **v1** installer. It does not install the unified flow. Leave it alone if you are following this quickstart.
+</Warning>
+
+Open the project in your coding tool and start a new session. The `using-specsmd` skill is the session bootstrap — it explains the flow and does not write files.
+
+## 2. Initialize the artifact tree
+
+Invoke the `specsmd-init` skill by name:
+
+```text
+Use the specsmd-init skill.
+```
+
+The skill asks **one** question: the project's **autonomy bias**.
+
+| Bias | Meaning |
+|------|---------|
+| `autonomous` | Fewer gates. Trust the agent more. |
+| `balanced` | Default. Medium work confirms; high work validates. |
+| `controlled` | More gates. Review each gateable stage at the high end. |
+
+If you are unsure, accept **`balanced`** (empty input).
+
+The skill detects whether the workspace is empty or already has code, and whether it is a single project or a monorepo. In an existing codebase it may propose inferred standards — accept, edit, or skip them. That confirmation is not a second required question; initialization already completed after the bias.
+
+You now have `docs/specsmd/` with `project.md` and shipped recipe and standard files.
+
+## 3. Capture a first intent
+
+Invoke the `intent-create` skill. You can paste the following as the outcome you want. It is small on purpose so the first bolt can finish in one sitting.
+
+```text
+Use the intent-create skill.
+
+Title: Health signal
+
+Problem: A caller cannot tell whether the service is ready to accept work.
+
+Outcome: A caller can ask whether the service is ready and receive a clear yes or a clear no.
+
+Scope: One readiness question and one readiness answer. A not-ready answer may include a short reason.
+
+Non-goals: Authentication, metrics history, alerting, and changing other product behavior.
+```
+
+Confirm the brief when the skill summarizes it. The skill writes `docs/specsmd/intents/{id}/brief.md` through the flow's scripts. Do not create that file by hand.
+
+## 4. Decompose into work items
+
+Invoke the `work-item-decompose` skill against that intent:
+
+```text
+Use the work-item-decompose skill on the Health signal intent.
+```
+
+You want **one** vertical slice, complexity **`low`** (no new correctness or interoperability decisions beyond the stated yes/no). A typical item looks like this in spirit:
+
+- Behavior: a caller who asks whether the service is ready receives yes or no.
+- Definition of Done:
+  - (gating) Asking whether the service is ready yields a yes or a no.
+  - (gating) A no includes a short reason the caller can read.
+  - (advisory) A yes does not include unrelated product data.
+
+The skill records a suggested ceremony from complexity × your autonomy bias. For `low` × `balanced` that suggestion is `autopilot`. You can override it when you start the bolt.
+
+## 5. Start a bolt
+
+Invoke the `bolt-start` skill:
+
+```text
+Use the bolt-start skill. Start a bolt for the health-signal work item.
+Accept the recommended recipe and ceremony unless you want to change them.
+```
+
+If the skill offers draft bolts, choose **ignore** (this quickstart has none unless you already ran `bolt-plan`).
+
+With a `low` item and `balanced` bias:
+
+- Recommended **recipe** is `simple` (plan → implement → walkthrough)
+- Recommended **ceremony** is `autopilot` (no approval stops)
+
+Your explicit choice always wins. For this first bolt, accept the recommendations so you can reach completion without a gate.
+
+The skill creates `docs/specsmd/bolts/{id}/bolt.md`. Note the bolt id it reports.
+
+## 6. Execute through completion
+
+Invoke the `bolt-execute` skill:
+
+```text
+Use the bolt-execute skill on the bolt you just started. Run every remaining stage and complete the bolt.
+```
+
+What happens on `simple` + `autopilot`:
+
+1. **plan** — writes `plan.md` and advances (no stop)
+2. **implement** — implements the readiness behavior from the work item
+3. **walkthrough** — writes `walkthrough.md` (what changed, why, deviations, how to verify — no source listings)
+4. **complete** — the flow's complete script records the bolt `complete` and cascades that status onto the work item and intent
+
+If completion is refused, the refusal names the missing evidence or unmet gating criterion. Produce that, then ask `bolt-execute` to complete again. Do not edit status fields in frontmatter by hand.
+
+<Info>
+  If you chose `confirm` or `validate`, the skill stops at each required gate, prints the **full** stage artifact (not a summary), and waits. Approve with a phrase such as `approved` or `yes`. A denial leaves the gate awaiting.
+</Info>
+
+## 7. Confirm you finished
+
+Invoke the `specsmd-status` skill:
+
+```text
+Use the specsmd-status skill.
+```
+
+You should see:
+
+- **Shaping** — empty of this intent (it is no longer unbolted)
+- **Building** — no active bolt for this work
+- **Shipping** — the completed bolt listed
+
+On disk, a completed first bolt looks like this:
+
+```
+docs/specsmd/
+├── project.md
+├── intents/
+│   └── 001-health-signal/
+│       ├── brief.md
+│       └── work-items/
+│           └── 001-readiness-answer.md
+└── bolts/
+    └── bolt-{worktree}-001/
+        ├── bolt.md          # status: complete
+        ├── plan.md
+        └── walkthrough.md
+```
+
+That is a completed first bolt. You can start another intent, decompose further, or inspect the [concepts](/v2/concepts).
+
+## If something stalls
+
+<AccordionGroup>
+  <Accordion title="The plugin or skills are not visible">
+    Confirm you installed `specsmd`, not a legacy `specsmd-aidlc` / `specsmd-fire` plugin. Restart the session. Marketplace-less tools must have the skills under `.agents/skills/` — see [manual install](/v2/manual-install).
+  </Accordion>
+  <Accordion title="specsmd-init asks more than autonomy bias">
+    Inferred standards in an existing repo are a confirmation of proposals, not a second required init question. Accept, edit, or skip. Empty input on the bias question is `balanced`.
+  </Accordion>
+  <Accordion title="Completion is refused">
+    Read the remediation. Typical causes: missing `walkthrough.md` (or the recipe's other `completion_requires` files), a walkthrough that contains fenced source, or an unchecked `(gating)` line on a tracked work item. Fix the named artifact, then run `bolt-execute` again.
+  </Accordion>
+  <Accordion title="I want to change recipe or ceremony after start">
+    You cannot. Recipe and ceremony are recorded at creation. Complete or abandon the bolt, then start another.
+  </Accordion>
+  <Accordion title="The navigator suggests something else">
+    Suggestions are options. Ignore them and invoke any skill by name. The navigator never blocks you.
+  </Accordion>
+</AccordionGroup>

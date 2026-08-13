@@ -47,6 +47,10 @@
       {
         "label": "IDE Extension",
         "href": "/getting-started/ide-extension"
+      },
+      {
+        "label": "v2",
+        "href": "/v2"
       }
     ],
     "primary": {
@@ -56,132 +60,194 @@
     }
   },
   "navigation": {
-    "tabs": [
+    "global": {
+      "versions": [
+        {
+          "version": "v1",
+          "href": "/",
+          "default": true
+        },
+        {
+          "version": "v2",
+          "href": "/v2"
+        }
+      ]
+    },
+    "versions": [
       {
-        "tab": "Documentation",
-        "groups": [
+        "version": "v1",
+        "default": true,
+        "tabs": [
           {
-            "group": "Getting Started",
-            "pages": [
-              "index",
-              "getting-started/installation",
-              "getting-started/plugins",
-              "getting-started/ide-extension",
-              "getting-started/specs-md-dashboard",
-              "getting-started/quick-start",
-              "deepwiki"
-            ]
-          },
-          {
-            "group": "Framework",
-            "pages": [
-              "architecture/flows",
-              "architecture/choose-flow"
-            ]
-          },
-          {
-            "group": "Ideation Flow",
-            "pages": [
-              "ideation-flow/overview",
-              "ideation-flow/quick-start",
-              "ideation-flow/skills"
-            ]
-          },
-          {
-            "group": "FIRE Flow",
-            "pages": [
-              "fire-flow/overview",
-              "fire-flow/quick-start",
-              "fire-flow/execution-modes",
-              "fire-flow/work-items",
-              "fire-flow/monorepo-support",
-              "fire-flow/agents"
-            ]
-          },
-          {
-            "group": "AI-DLC Flow",
-            "pages": [
-              "aidlc/overview",
-              "agents/quick-start",
+            "tab": "Documentation",
+            "groups": [
               {
-                "group": "Methodology",
+                "group": "Getting Started",
                 "pages": [
-                  "methodology/sdlc-reimagined",
-                  "methodology/what-is-ai-dlc",
-                  "methodology/ai-dlc-vs-agile",
-                  "methodology/three-phases"
+                  "index",
+                  "getting-started/installation",
+                  "getting-started/plugins",
+                  "getting-started/ide-extension",
+                  "getting-started/specs-md-dashboard",
+                  "getting-started/quick-start",
+                  "deepwiki"
                 ]
               },
               {
-                "group": "Concepts",
+                "group": "Framework",
                 "pages": [
-                  "core-concepts/intents",
-                  "core-concepts/units",
-                  "core-concepts/bolts",
-                  "core-concepts/memory-bank",
-                  "core-concepts/standards"
+                  "architecture/flows",
+                  "architecture/choose-flow"
                 ]
               },
               {
-                "group": "Agents",
+                "group": "Ideation Flow",
                 "pages": [
-                  "agents/overview",
-                  "agents/master-agent",
-                  "agents/inception-agent",
-                  "agents/construction-agent",
-                  "agents/operations-agent"
+                  "ideation-flow/overview",
+                  "ideation-flow/quick-start",
+                  "ideation-flow/skills"
                 ]
               },
               {
-                "group": "Guides",
+                "group": "FIRE Flow",
                 "pages": [
-                  "guides/bolt-types"
+                  "fire-flow/overview",
+                  "fire-flow/quick-start",
+                  "fire-flow/execution-modes",
+                  "fire-flow/work-items",
+                  "fire-flow/monorepo-support",
+                  "fire-flow/agents"
+                ]
+              },
+              {
+                "group": "AI-DLC Flow",
+                "pages": [
+                  "aidlc/overview",
+                  "agents/quick-start",
+                  {
+                    "group": "Methodology",
+                    "pages": [
+                      "methodology/sdlc-reimagined",
+                      "methodology/what-is-ai-dlc",
+                      "methodology/ai-dlc-vs-agile",
+                      "methodology/three-phases"
+                    ]
+                  },
+                  {
+                    "group": "Concepts",
+                    "pages": [
+                      "core-concepts/intents",
+                      "core-concepts/units",
+                      "core-concepts/bolts",
+                      "core-concepts/memory-bank",
+                      "core-concepts/standards"
+                    ]
+                  },
+                  {
+                    "group": "Agents",
+                    "pages": [
+                      "agents/overview",
+                      "agents/master-agent",
+                      "agents/inception-agent",
+                      "agents/construction-agent",
+                      "agents/operations-agent"
+                    ]
+                  },
+                  {
+                    "group": "Guides",
+                    "pages": [
+                      "guides/bolt-types"
+                    ]
+                  }
+                ]
+              },
+              {
+                "group": "Simple Flow",
+                "pages": [
+                  "simple-flow/overview",
+                  "simple-flow/quick-start",
+                  "simple-flow/three-phases",
+                  "simple-flow/agent"
+                ]
+              },
+              {
+                "group": "Compare",
+                "pages": [
+                  "compare/overview",
+                  "compare/vs-speckit",
+                  "compare/vs-bmad",
+                  "compare/vs-kiro",
+                  "compare/vs-openspec"
+                ]
+              },
+              {
+                "group": "Resources",
+                "pages": [
+                  "changelog",
+                  "faq",
+                  "feedback",
+                  "community"
                 ]
               }
             ]
           },
           {
-            "group": "Simple Flow",
-            "pages": [
-              "simple-flow/overview",
-              "simple-flow/quick-start",
-              "simple-flow/three-phases",
-              "simple-flow/agent"
-            ]
-          },
-          {
-            "group": "Compare",
-            "pages": [
-              "compare/overview",
-              "compare/vs-speckit",
-              "compare/vs-bmad",
-              "compare/vs-kiro",
-              "compare/vs-openspec"
-            ]
-          },
-          {
-            "group": "Resources",
-            "pages": [
-              "changelog",
-              "faq",
-              "feedback",
-              "community"
+            "tab": "Video Tutorials",
+            "groups": [
+              {
+                "group": "Videos",
+                "pages": [
+                  "learn/index",
+                  "learn/fire-flow-intro",
+                  "learn/fire-flow-resume-run",
+                  "learn/aidlc-bolt-execution",
+                  "learn/specs-md-dashboard",
+                  "learn/specsmd-in-fabriqa"
+                ]
+              }
             ]
           }
         ]
       },
       {
-        "tab": "Video Tutorials",
-        "groups": [
+        "version": "v2",
+        "tag": "Unified",
+        "tabs": [
           {
-            "group": "Videos",
-            "pages": [
-              "learn/index",
-              "learn/fire-flow-intro",
-              "learn/fire-flow-resume-run",
-              "learn/aidlc-bolt-execution",
-              "learn/specs-md-dashboard",
-              "learn/specsmd-in-fabriqa"
+            "tab": "Documentation",
+            "groups": [
+              {
+                "group": "Getting Started",
+                "pages": [
+                  "v2/index",
+                  "v2/quickstart",
+                  "v2/manual-install",
+                  "v2/coming-from-v1"
+                ]
+              },
+              {
+                "group": "Concepts",
+                "pages": [
+                  "v2/concepts",
+                  "v2/nlspec"
+                ]
+              },
+              {
+                "group": "Reference",
+                "pages": [
+                  "v2/recipes",
+                  "v2/skills"
+                ]
+              },
+              {
+                "group": "Resources",
+                "pages": [
+                  "changelog",
+                  "faq",
+                  "feedback",
+                  "community"
+                ]
+              }
             ]
           }
         ]

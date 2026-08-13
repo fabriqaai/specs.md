@@ -6,6 +6,8 @@ complexity: medium
 status: pending
 depends_on: [003-state-scripts]
 created: 2026-08-09
+sufficiency: dogfood-cleared
+sufficiency_date: 2026-08-13
 ---
 
 # The navigator — state seen through lenses, suggestions never mandates
@@ -18,6 +20,12 @@ The navigator is how anyone — user or model — orients. It reads the artifact
 - Suggested next moves derive from state: pending shaped work suggests starting a bolt; an interrupted bolt suggests resuming it; an empty tree suggests capturing an intent; an awaiting gate suggests reviewing it. Suggestions are presented as options with the computed best first; every option is declinable and the menu never hides capabilities.
 - Health is included: the integrity validator's findings appear in status, summarized with severities.
 - The navigator and the flow's bootstrap are the only parts of the flow that announce themselves to the model unprompted; everything else activates by name.
+
+## Decided defaults (dogfood slice)
+
+Navigator is `specsmd-status`. Bootstrap is `using-specsmd`. Those two are the only model-invocable skills. Lenses are views, not skills. The navigator never writes state and never invokes another skill.
+
+Suggestion order: awaiting gate → active bolt → intent with zero items → unbolted work items → drafts → empty tree. Best first; remaining applicable moves next; then "any skill by name."
 
 ## Definition of Done
 

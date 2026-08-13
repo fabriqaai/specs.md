@@ -1,0 +1,98 @@
+---
+title: Writing nlspecs
+description: How to write intents and work items as natural language specs
+---
+
+Every intent and work item in `docs/specsmd/` is a **natural language spec (nlspec)**: a prescriptive document, written in natural language with engineering-grade precision, that an agent can implement and validate from directly — without asking questions.
+
+The spec is the source of truth. Code is derived from it. When code and spec conflict, the spec wins or the spec is fixed — never a silent deviation.
+
+The project's copy of this standard lives at `docs/specsmd/standards/nlspec.md` after init.
+
+## The one rule
+
+> Does this decision affect correctness or interoperability of the outcome? If yes, specify it. If no, leave it to the implementer — and when the freedom is deliberate, say so.
+
+The boundary is **behavior vs. mechanism**, not “technical vs. non-technical.”
+
+| In the spec | Not in the spec |
+|-------------|-----------------|
+| Observable outcomes | Implementation file names |
+| Interface contracts and data shapes | Module layout or internal decomposition |
+| Defaults, bounds, omitted-input behavior | Language or framework choice |
+| Error recovery the caller can see | Source code, even “just an example” |
+| Behavioral Definition of Done | “Add a validator” / “create a service” |
+
+If you need a sketch to kill an ambiguity, write it untagged and language-neutral. It is meaning, not code to copy.
+
+## Intent register
+
+An intent captures direction. Required sections:
+
+| Section | What it states |
+|---------|----------------|
+| **Problem** | Who is stuck, and how you can tell |
+| **Outcome** | What is true when this intent is done |
+| **Scope** | The behavior this intent covers |
+| **Non-goals** | What is deliberately out — and, when useful, where it would attach later |
+
+No mechanism. Additional sections are allowed. A thin one-line intent can still be written; the skill should say which sections are thin.
+
+## Work items
+
+A work item is a **vertical slice** of observable behavior — not a layer (not “the schema” then “the API” then “the UI”).
+
+Complexity is **decision load**, not size:
+
+| Value | Meaning |
+|-------|---------|
+| `low` | No new correctness or interoperability decisions |
+| `medium` | Local decisions inside an existing shape (default) |
+| `high` | New cross-cutting decisions |
+
+## Required properties
+
+1. **Behavioral completeness.** Two competent implementers building independently from the spec produce implementations that are interchangeable to any caller. Internal structure may differ; observable behavior does not. “Handle errors appropriately” is a defect.
+2. **Behavioral acceptance criteria.** Every work item ends in a **Definition of Done**: binary, black-box, independently verifiable assertions — “requesting X yields Y” — never internal attributes. Close the likely misreading inline: “returns an error result *(not an exception)*”. Criteria are **gating** (completion is impossible while unmet) or **advisory**. If it is not in the Definition of Done, it is not required.
+3. **Defaults are requirements.** Every configurable value has a default; every range has bounds; every optional input has documented behavior when omitted; every error category has a recovery expectation.
+4. **Named intentional ambiguity.** Where the implementer is free, say so. Silence must be distinguishable from forgetting.
+5. **Bounded scope with extension points.** Out-of-scope items are listed, and each names where it would attach later.
+6. **Spec economy.** Each fact lives in exactly one place. Tables carry mappings; prose carries why.
+7. **Rationale present.** Key decisions carry their why, so an agent hitting an unanticipated constraint deviates intelligently.
+8. **Vacuum artifact.** Insights from prototypes enter as plain statements (“X”), never as history (“we discovered X”).
+
+## Voice
+
+Declarative present tense, stated as fact: “The flow refuses completion while a gating criterion is unmet.” No future or conditional tense for core behavior, no RFC-2119 legalese. Define each term once; do not use synonyms for defined terms afterward.
+
+## Definition of Done
+
+```markdown
+## Definition of Done
+
+- [ ] (gating) Asking whether the service is ready yields a yes or a no.
+- [ ] (gating) A no includes a short reason the caller can read.
+- [ ] (advisory) A yes does not include unrelated product data.
+```
+
+Gating lines that stay unchecked block bolt completion. Advisory lines do not.
+
+An internal-attribute criterion (names a module, function, or “add a validator”) should be flagged at authoring time. It does not block writing the item, but it is not a valid gating check.
+
+## When something goes wrong
+
+| Failure | What it looks like | Resolution |
+|---------|--------------------|------------|
+| **Ambiguity** | Multiple incompatible readings | Implementer judgment if the readings are interchangeable to a caller; otherwise ask the author |
+| **Contradiction** | The spec disagrees with itself | The author repairs the document — an agent never picks a side silently |
+| **Incorrectness** | Consistent, but the wrong behavior | Escalate to the domain owner; a faithful implementation of a wrong spec is the spec's fault |
+
+## Thin examples
+
+**Intent (good):** “A caller who provides a name receives a greeting that includes that name. A missing name receives a stated fallback. No authentication.”
+
+**Intent (not a spec):** “Add a HelloController and a `/hello` route in `src/http`.”
+
+**Work item criterion (good):** “Submitting an empty name yields the fallback greeting *(not an error)*.”
+
+**Work item criterion (not a spec):** “Adds a `normalizeName` helper.”

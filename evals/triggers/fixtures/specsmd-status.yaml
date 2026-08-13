@@ -1,0 +1,23 @@
+skill: specsmd-status
+description: Navigator — where the project stands, what to do next, which flow is active.
+signatures:
+  - where the project stands
+  - what to do next
+  - which specsmd flow is active
+  - project state is unclear
+prompts:
+  - id: where-stands
+    text: Where does this project stand?
+    expected: specsmd-status
+  - id: what-next
+    text: What should I do next in this specsmd project?
+    expected: specsmd-status
+  - id: which-flow
+    text: Which specsmd flow is active right now?
+    expected: specsmd-status
+  - id: status-in-progress
+    text: Give me specsmd status — what's in progress and what's next?
+    expected: specsmd-status
+  - id: route-unclear
+    text: I need to route to the right specsmd skill but project state is unclear.
+    expected: specsmd-status

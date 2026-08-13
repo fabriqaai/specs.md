@@ -1,0 +1,82 @@
+---
+title: Unified Bolt Flow
+description: specsmd v2 — intents, work items, and dynamic bolts under docs/specsmd
+---
+
+The **unified bolt flow** is specsmd v2: one skills-native flow for shaping work as intents and work items, then executing it in **bolts** that run data-defined **recipes** under a **ceremony dial**.
+
+Specifications are the source of truth. Code is derived from them.
+
+<Info>
+  These pages document **v2**. Legacy AI-DLC, FIRE, Ideation, and Simple docs stay at their original URLs. Switch versions from the version menu, or open the [legacy documentation home](/).
+</Info>
+
+## Start here
+
+<CardGroup cols={2}>
+  <Card title="Quickstart" icon="play" href="/v2/quickstart">
+    Install the plugin, capture an intent, complete a first bolt
+  </Card>
+  <Card title="Coming from v1" icon="map" href="/v2/coming-from-v1">
+    Terminology mapping for AI-DLC and FIRE. Orientation only — no migration tooling
+  </Card>
+  <Card title="Concepts" icon="cube" href="/v2/concepts">
+    Bolt, recipe, ceremony dial, lenses, nlspec, memory model
+  </Card>
+  <Card title="Manual install" icon="folder-open" href="/v2/manual-install">
+    Copy skills into a tool that has no plugin marketplace
+  </Card>
+</CardGroup>
+
+## What you get
+
+<CardGroup cols={2}>
+  <Card title="Intent → work item → bolt" icon="layer-group">
+    Capture an outcome, slice it into behavioral work items, execute when you are ready. Draft bolts are optional.
+  </Card>
+  <Card title="Recipes, not bolt types" icon="book">
+    `default`, `ddd`, `spike`, and `simple` are data files. Add a project-local recipe by adding a file.
+  </Card>
+  <Card title="Ceremony dial" icon="sliders">
+    Complexity × autonomy bias → `autopilot`, `confirm`, or `validate`. Your choice at bolt start always wins.
+  </Card>
+  <Card title="Recommend, don't enforce" icon="comment">
+    Skills never force a sequence. Scripts refuse illegal state changes only — missing evidence, unmet gating criteria.
+  </Card>
+</CardGroup>
+
+```mermaid actions={false}
+flowchart LR
+    I(Intent):::design --> W(Work items):::plan --> B(Bolt):::build --> D(Complete):::done
+    classDef design fill:#fff,stroke:#A855F7,color:#7E22CE,stroke-width:1.5px,rx:8,ry:8
+    classDef plan fill:#fff,stroke:#6366F1,color:#4338CA,stroke-width:1.5px,rx:8,ry:8
+    classDef build fill:#fff,stroke:#0EA5E9,color:#0369A1,stroke-width:1.5px,rx:8,ry:8
+    classDef done fill:#fff,stroke:#10B981,color:#047857,stroke-width:1.5px,rx:8,ry:8
+```
+
+## Reference
+
+<CardGroup cols={2}>
+  <Card title="Recipe reference" icon="list" href="/v2/recipes">
+    Shipped stages, gates, constraints, and how to add your own
+  </Card>
+  <Card title="Skills reference" icon="wand-magic-sparkles" href="/v2/skills">
+    Every skill, when to invoke it, and what it writes
+  </Card>
+  <Card title="Writing nlspecs" icon="pen" href="/v2/nlspec">
+    Observable behavior, Definition of Done, no mechanism
+  </Card>
+  <Card title="Legacy home" icon="clock-rotate-left" href="/">
+    AI-DLC, FIRE, Ideation, and Simple — unchanged URLs
+  </Card>
+</CardGroup>
+
+## Install in one step
+
+v2 ships as the **`specsmd`** plugin. There is no v2 npm CLI. One marketplace install is the complete flow.
+
+```text
+/plugin install specsmd@specsmd
+```
+
+See the [quickstart](/v2/quickstart) for marketplace setup, or the [manual install path](/v2/manual-install) if your tool has no plugin marketplace.

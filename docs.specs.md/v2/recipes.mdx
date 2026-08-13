@@ -1,0 +1,144 @@
+---
+title: Recipe reference
+description: Shipped recipes, stages, gates, constraints, and project-local recipes
+---
+
+A **recipe** is data: the ordered stages a bolt runs, what each stage must produce, which stages may wait for approval, and any recipe-level constraints. The execution machinery is recipe-agnostic. It reads the recipe recorded on the bolt and runs those stages.
+
+Recipes live at `docs/specsmd/recipes/{id}.yaml`. The plugin also ships copies inside the flow. A project file with the same `id` shadows the shipped recipe **at bolt creation**. The bolt stores `recipe` (the id) and an immutable `recipe_snapshot`. Later edits to the YAML do not change an in-flight bolt.
+
+## How a recipe is chosen
+
+1. You pass a recipe id to `bolt-start` or `bolt-plan`.
+2. If you pass nothing, the flow recommends from complexity: `low` → `simple`, `medium` → `default`, `high` → `ddd`.
+3. Empty input applies that recommendation. Your explicit choice always wins.
+
+A recipe never changes after the bolt is created. Complete or abandon, then start another, if the choice was wrong.
+
+## Shipped recipes
+
+### `default`
+
+Plan, execute, test, review. The recommendation for **medium** complexity.
+
+| Stage | Produces | Gateable |
+|-------|----------|----------|
+| `plan` | `plan.md` | yes |
+| `execute` | — | no |
+| `test` | `test-report.md` | yes |
+| `review` | `review-report.md`, `walkthrough.md` | yes |
+
+**Completion requires:** `test-report.md`, `walkthrough.md`
+
+No constraints.
+
+### `ddd`
+
+Domain modeling before design and implementation. The recommendation for **high** complexity.
+
+| Stage | Produces | Gateable |
+|-------|----------|----------|
+| `domain-model` | `domain-model.md` | yes |
+| `design` | `design.md` | yes |
+| `decisions` | `decisions.md` | yes |
+| `implement` | — | no |
+| `test` | `test-report.md` | yes |
+
+**Completion requires:** `test-report.md`
+
+**Constraints:** `no_source_code` on `domain-model`, `design`, and `decisions`. Those stages write models and decisions only.
+
+The `decisions` stage also writes one file per decision under `docs/specsmd/decisions/` and a line on the in-force index. Each decision names `consult_when` — the situation a later bolt should retrieve it for.
+
+Every completed bolt still gets a walkthrough even though this recipe has no walkthrough stage.
+
+### `spike`
+
+Time-boxed exploration. Not recommended from complexity — choose it explicitly when the goal is knowledge, not a shipped behavior.
+
+| Stage | Produces | Gateable |
+|-------|----------|----------|
+| `explore` | — | no |
+| `findings` | `findings.md` | yes |
+
+**Completion requires:** `findings.md`
+
+**Constraints:** `time_box` of `PT8H` (eight hours). The clock starts when the bolt becomes `active`. The next tooling write after expiry writes `findings.md` if it is missing and completes through the normal complete path. Partial findings are a valid outcome, not a failure.
+
+### `simple`
+
+The shortest shipped path. The recommendation for **low** complexity.
+
+| Stage | Produces | Gateable |
+|-------|----------|----------|
+| `plan` | `plan.md` | yes |
+| `implement` | — | no |
+| `walkthrough` | `walkthrough.md` | yes |
+
+**Completion requires:** `walkthrough.md`
+
+No constraints.
+
+## Gates and ceremony
+
+`gateable: true` means the stage *may* wait. Whether it actually waits depends on the bolt's ceremony:
+
+| Ceremony | Which gateable stages wait |
+|----------|----------------------------|
+| `autopilot` | none |
+| `confirm` | the first gateable stage in the recipe |
+| `validate` | every gateable stage |
+
+A stage with `gateable: false` never waits.
+
+Autopilot still writes `plan.md` when the recipe lists it. Implementation happens only on implementation stages (empty `produces`, or ids `execute` / `implement` / `explore`) after the gate is `granted` or `not-required`.
+
+## Completion evidence
+
+`completion_requires` is the list of files that must exist before the bolt can complete. If a recipe omits the field, the contract default is `test-report.md` and `walkthrough.md`.
+
+Completion also requires:
+
+- every tracked work item has no unchecked `- [ ] (gating)` line
+- the walkthrough has a `## Deviations from plan` heading (`none` if nothing diverged)
+- the walkthrough contains no fenced source listings
+
+A refused completion names what is missing. `--force` records an override; use it only when you ask for it.
+
+## Constraints
+
+Known constraint kinds:
+
+| Kind | Effect |
+|------|--------|
+| `time_box` | Duration (ISO-8601, default `PT8H`) and `on_expiry` (default `complete_with_findings`). Clock starts when the bolt becomes active. |
+| `no_source_code` | Named stages must not write product source. |
+
+Unknown constraint kinds are refused when the recipe is loaded.
+
+## Add a project-local recipe
+
+Create `docs/specsmd/recipes/{id}.yaml`. Required fields: `id`, `stages[]` with `id`, `produces`, `gateable`. Optional: `completion_requires`, `constraints`.
+
+```yaml
+id: two-step
+title: Two step
+stages:
+  - id: plan
+    produces:
+      - plan.md
+    gateable: true
+  - id: implement
+    produces: []
+    gateable: false
+completion_requires:
+  - plan.md
+  - walkthrough.md
+constraints: []
+```
+
+The new id is selectable on the next `bolt-start` or `bolt-plan`. No skill or script change is required.
+
+<Info>
+  Recipes do not compose or inherit. A recipe that should look like `default` plus one stage is a separate file with those stages listed.
+</Info>

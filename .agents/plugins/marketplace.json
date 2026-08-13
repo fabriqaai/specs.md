@@ -1,0 +1,92 @@
+{
+  "name": "specsmd",
+  "interface": {
+    "displayName": "specsmd"
+  },
+  "plugins": [
+    {
+      "name": "specsmd",
+      "description": "Unified bolt flow (default install): intents, work items, bolts under docs/specsmd/",
+      "version": "1.0.0",
+      "source": {
+        "source": "local",
+        "path": "./plugins/specsmd"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    },
+    {
+      "name": "specsmd-core",
+      "description": "Shared core: session bootstrap, project status navigator, always-on principles",
+      "version": "1.0.0",
+      "source": {
+        "source": "local",
+        "path": "./plugins/specsmd-core"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    },
+    {
+      "name": "specsmd-aidlc",
+      "description": "AI-DLC methodology: Inception, Construction, Operations with intents, units, stories, bolts",
+      "version": "1.0.0",
+      "source": {
+        "source": "local",
+        "path": "./plugins/specsmd-aidlc"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    },
+    {
+      "name": "specsmd-fire",
+      "description": "FIRE flow: fast intent-to-run development with autonomy modes and central state",
+      "version": "1.0.0",
+      "source": {
+        "source": "local",
+        "path": "./plugins/specsmd-fire"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    },
+    {
+      "name": "specsmd-ideation",
+      "description": "Ideation flow: Spark idea generation, Flame evaluation, Forge concept shaping",
+      "version": "1.0.0",
+      "source": {
+        "source": "local",
+        "path": "./plugins/specsmd-ideation"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    },
+    {
+      "name": "specsmd-simple",
+      "description": "Simple spec flow: requirements, design, tasks, execute",
+      "version": "1.0.0",
+      "source": {
+        "source": "local",
+        "path": "./plugins/specsmd-simple"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    }
+  ]
+}
