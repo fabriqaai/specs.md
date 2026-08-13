@@ -96,7 +96,7 @@ describe('memory lifecycle', () => {
         terminal: 'episodic',
       });
 
-      const changeRecords = ['intent', 'work_item', 'bolt', 'stage_artifact'];
+      const changeRecords = ['intent', 'work_item', 'bolt', 'stage_artifact', 'release'];
       for (const [name, type] of Object.entries(contract.artifact_types) as [
         string,
         { memory_class: string },

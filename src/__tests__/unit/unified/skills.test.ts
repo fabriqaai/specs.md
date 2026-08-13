@@ -339,7 +339,7 @@ describe('navigator and shaping behavior', () => {
     lib.writeMarkdown(parsed.path, parsed.data, parsed.body, root);
 
     const report = projectStatus(root);
-    expect(report.health.some((finding: { code: string }) => finding.code === 'ORPHAN_WORK_ITEM')).toBe(
+    expect(report.health.some((finding: { code: string }) => finding.code === 'ORPHAN_REF')).toBe(
       true
     );
     expect(report.lenses.shaping.some((row: { id: string }) => row.id === empty.id)).toBe(true);
