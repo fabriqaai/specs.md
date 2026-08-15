@@ -48,8 +48,8 @@ describe('shipped recipes', () => {
     expect(recipe.stages.map((s: { gateable: boolean }) => s.gateable)).toEqual([
       true,
       false,
-      true,
-      true,
+      false,
+      false,
     ]);
     expect(recipe.completion_requires).toEqual(['walkthrough.md']);
     expect(recipe.constraints).toEqual([]);
@@ -76,7 +76,7 @@ describe('shipped recipes', () => {
       true,
       true,
       false,
-      true,
+      false,
     ]);
     expect(recipe.constraints).toEqual([
       { kind: 'no_source_code', stages: ['domain-model', 'design', 'decisions'] },
@@ -106,8 +106,25 @@ describe('shipped recipes', () => {
       [],
       ['walkthrough.md'],
     ]);
-    expect(recipe.stages.map((s: { gateable: boolean }) => s.gateable)).toEqual([true, false, true]);
+    expect(recipe.stages.map((s: { gateable: boolean }) => s.gateable)).toEqual([true, false, false]);
     expect(recipe.completion_requires).toEqual(['walkthrough.md']);
     expect(recipe.constraints).toEqual([]);
+  });
+
+  it('marks only design-class stages gateable', () => {
+    const contract = yaml.load(readFileSync(CONTRACT, 'utf8')) as {
+      ceremony: { design_artifacts: string[] };
+      recipe: { shipped: string[] };
+    };
+    const designArtifacts = new Set(contract.ceremony.design_artifacts);
+    for (const id of contract.recipe.shipped) {
+      const recipe = loadShipped(id) as {
+        stages: { id: string; produces: string[]; gateable: boolean }[];
+      };
+      for (const stage of recipe.stages) {
+        const isDesign = (stage.produces ?? []).some((file) => designArtifacts.has(file));
+        expect(stage.gateable, `${id}.${stage.id}`).toBe(isDesign);
+      }
+    }
   });
 });

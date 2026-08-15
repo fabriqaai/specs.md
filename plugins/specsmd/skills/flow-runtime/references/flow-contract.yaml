@@ -3,7 +3,7 @@
 # Skills read this file and write matching frontmatter. There are no state scripts.
 
 id: specsmd-flow
-version: "0.2.0"
+version: "0.4.0"
 artifact_root: docs/specsmd
 memory_bank: docs/specsmd
 
@@ -90,6 +90,20 @@ ceremony:
       autonomous: confirm
       balanced: validate
       controlled: validate
+  # Gates fire only on design-class stages. Implement never waits.
+  applies_to: design
+  design_stage_ids:
+    - plan
+    - domain-model
+    - design
+    - decisions
+    - findings
+  design_artifacts:
+    - plan.md
+    - domain-model.md
+    - design.md
+    - decisions.md
+    - findings.md
   gates:
     autopilot: none
     confirm: first_gateable
@@ -307,16 +321,10 @@ standards:
   constitution_override: never
   shipped:
     - constitution
-    - tech-stack
-    - coding
-    - testing
-    - architecture
+    - engineering
     - nlspec
   overridable:
-    - tech-stack
-    - coding
-    - testing
-    - architecture
+    - engineering
     - nlspec
   enforcement_tiers:
     - principle

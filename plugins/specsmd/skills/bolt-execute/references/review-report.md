@@ -6,7 +6,7 @@
 
 ## Advisory
 
-{acknowledged / deferred / contested, with a reason}
+{recorded with a reason; do not wait for a human pick}
 
 ## Outcome
 

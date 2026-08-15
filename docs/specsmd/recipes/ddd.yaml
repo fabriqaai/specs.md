@@ -19,7 +19,7 @@ stages:
   - id: test
     produces:
       - walkthrough.md
-    gateable: true
+    gateable: false
 completion_requires:
   - walkthrough.md
 constraints:

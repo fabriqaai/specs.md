@@ -14,7 +14,7 @@ Read-only orientation. Never write artifacts. Never invoke another skill. Never 
 
 ## Process
 
-Read `docs/specsmd/` directly (project, intents with their work items and bolts, decisions index, system). The files are the source of truth.
+Read `docs/specsmd/` directly (project, intents with their `tasks.md` and bolts, decisions index, system). The files are the source of truth.
 
 ## Report
 
@@ -22,13 +22,15 @@ Present **semantic memory first** (`read_path`): `system/`, `standards/`, and th
 
 Then present three lenses. Empty lenses stay visible.
 
-- **Shaping** — intents and work items not named on any non-draft bolt
+- **Shaping** — intents and `tasks.md` slices not named on any non-draft bolt
 - **Building** — active bolts, with stage and checkpoint
 - **Shipping** — completed bolts (history under their intent). There is no release step.
 
 Then health: illegal status tokens, missing `docs/specsmd/`, cascade drift you can see. Do not invent a local mapping for unknown tokens.
 
-Then suggested next moves in this order; do not re-rank: awaiting gate → active bolt → empty intent → unbolted items → drafts → empty tree. Integrity findings stay in health — they are not a next skill. Do not take a suggestion. Never suggest `flow-runtime`.
+Then suggested next moves in this order; do not re-rank: awaiting gate → active bolt → unfinished brief → captured outcome without tasks → unbolted tasks → drafts → empty tree. Integrity findings stay in health — they are not a next skill. Do not take a suggestion. Never suggest `flow-runtime`.
+
+Map those situations: unfinished brief (thin headings or the outcome still being decided) → `plan-intent`. Outcome captured and this intent has no `tasks.md` → `task-decompose`. Unbolted tasks → `bolt-design`.
 
 ## Constraints
 

@@ -10,7 +10,7 @@ const SKILLS = join(PLUGIN, 'skills');
 
 const VERB_SKILLS = [
   'plan-intent',
-  'work-item-decompose',
+  'task-decompose',
   'bolt-design',
   'bolt-execute',
 ];
@@ -61,7 +61,7 @@ describe('specsmd flow skills', () => {
         'specsmd-init',
         'specsmd-status',
         'using-specsmd',
-        'work-item-decompose',
+        'task-decompose',
       ].sort()
     );
     expect(names).not.toContain('release-checklist');
@@ -138,13 +138,15 @@ describe('specsmd flow skills', () => {
   });
 
   it('keeps every work item as a section in one tasks.md', () => {
-    const template = readFileSync(join(SKILLS, 'work-item-decompose/references/work-item.md'), 'utf8');
+    const template = readFileSync(join(SKILLS, 'task-decompose/references/task.md'), 'utf8');
     expect(template).toMatch(/- \[ \] \[\{id\}\]\(#\{id\}\)/);
     expect(template).toMatch(/^## \{id\}/m);
     expect(template).toMatch(/### Definition of Done/);
-    expect(skillBody('work-item-decompose')).toMatch(/tasks\.md/);
-    expect(skillBody('work-item-decompose')).toMatch(/Do not create a file per slice/);
-    expect(skillBody('work-item-decompose')).toMatch(/- \[x\]/);
+    expect(skillBody('task-decompose')).toMatch(/tasks\.md/);
+    expect(skillBody('task-decompose')).toMatch(/Do not create a file per slice/);
+    expect(skillBody('task-decompose')).toMatch(/- \[x\]/);
+    expect(skillBody('task-decompose')).toMatch(/when the brief states the outcome clearly enough to slice/);
+    expect(skillBody('plan-intent')).toMatch(/once the outcome is captured, write this intent's `tasks\.md`/);
   });
 
   it('walkthrough template always has deviations, evidence, and no language-tagged fence', () => {
@@ -170,6 +172,9 @@ describe('specsmd flow skills', () => {
     expect(design).toMatch(/bolts\/\{boltId\}\/decisions\//);
     expect(design).toMatch(/decisions\/index\.md/);
     expect(execute).toMatch(/test first/i);
+    expect(execute).toMatch(/No confirmation/);
+    expect(execute).toMatch(/every remaining non-design stage/i);
+    expect(execute).not.toMatch(/Ceremony while running/);
     expect(execute).toMatch(/Refuses if caller-visible contracts are still open|Two-implementer/);
     expect(execute).toMatch(/starting `bolt-design` now|follow `bolt-design`/i);
     expect(execute).toMatch(/Tell the user/);
@@ -182,6 +187,35 @@ describe('specsmd flow skills', () => {
     const implementing = readFileSync(join(SKILLS, 'bolt-execute/references/implementing.md'), 'utf8');
     expect(implementing).toMatch(/test first/i);
     expect(implementing).toMatch(/longest matching/);
+    expect(implementing).toMatch(/engineering/);
+    expect(implementing).not.toMatch(/testing standard/);
+  });
+
+  it('keeps a coverage floor with test-first gating criteria', () => {
+    const execute = skillBody('bolt-execute');
+    expect(execute).toMatch(/covering check/);
+    expect(execute).toMatch(/recorded decision/);
+    expect(execute).toMatch(/vendored or generated/);
+    const implementing = readFileSync(join(SKILLS, 'bolt-execute/references/implementing.md'), 'utf8');
+    expect(implementing).toMatch(/covering check/);
+    expect(implementing).toMatch(/fail for the right reason/);
+    expect(implementing).toMatch(/failing-first observation/);
+    expect(implementing).toMatch(/order is free; coverage is not/);
+    expect(implementing).toMatch(/empty, zero, one, many/);
+    expect(implementing).toMatch(/absent or null input/);
+    expect(implementing).toMatch(/dismissed in one Evidence line/);
+    expect(implementing).toMatch(/unfilled placeholder/);
+    expect(implementing).toMatch(/Do not proceed testless/);
+    const walkthrough = readFileSync(join(SKILLS, 'bolt-execute/references/walkthrough.md'), 'utf8');
+    expect(walkthrough).toMatch(/Coverage:/);
+    expect(walkthrough).toMatch(/failing-first/);
+    const engineering = readFileSync(
+      join(SKILLS, 'flow-runtime/references/standards/engineering.md'),
+      'utf8'
+    );
+    expect(engineering).toMatch(/failing check first/);
+    expect(engineering).toMatch(/empty, zero, one, many/);
+    expect(engineering).toMatch(/dismissed in one Evidence line/);
   });
 
   it('leaves the ceremony matrix in the contract', () => {
@@ -196,8 +230,9 @@ describe('specsmd flow skills', () => {
 
   it('records confirm as first gateable and validate as all gateable', () => {
     const body = skillBody('bolt-design');
-    expect(body).toMatch(/first gateable/);
-    expect(body).toMatch(/every gateable/);
+    expect(body).toMatch(/first gateable design/);
+    expect(body).toMatch(/every gateable design/);
+    expect(body).toMatch(/Implement stages never wait/);
   });
 
   it('treats dismiss as ignore and names adopt / modify / ignore', () => {
@@ -209,11 +244,39 @@ describe('specsmd flow skills', () => {
   });
 
   it('requires genuine review of the full plan text', () => {
-    const body = skillBody('bolt-design') + skillBody('bolt-execute');
+    const body = skillBody('bolt-design');
     expect(body).toMatch(/full current text/i);
     expect(body).toMatch(/not a summary/i);
     expect(body).toMatch(/this section does not apply/);
     expect(body).toMatch(/Do not advance the stage/);
+  });
+
+  it('init writes constitution plus one engineering standard and copies nlspec', () => {
+    const body = skillBody('specsmd-init');
+    expect(body).toMatch(/standards\.shipped/);
+    expect(body).toMatch(/lasting/i);
+    expect(body).toMatch(/constitution and engineering/);
+    expect(body).toMatch(/nlspec\.md/);
+    expect(body).toMatch(/Do not invent additional standard files/);
+    expect(body).toMatch(/leave them/);
+    expect(body).not.toMatch(/tech-stack/);
+    expect(body).not.toMatch(/architecture\.md/);
+    expect(existsSync(join(SKILLS, 'flow-runtime/references/standards/engineering.md'))).toBe(true);
+    expect(existsSync(join(SKILLS, 'flow-runtime/references/standards/tech-stack.md'))).toBe(false);
+    expect(existsSync(join(SKILLS, 'flow-runtime/references/standards/architecture.md'))).toBe(false);
+    expect(existsSync(join(SKILLS, 'flow-runtime/references/standards/coding.md'))).toBe(false);
+    expect(existsSync(join(SKILLS, 'flow-runtime/references/standards/testing.md'))).toBe(false);
+  });
+
+  it('states the target-state lifecycle in using-specsmd', () => {
+    const body = skillBody('using-specsmd');
+    expect(body).toMatch(/## Lifecycle/);
+    expect(body).toMatch(/`plan-intent`/);
+    expect(body).toMatch(/`task-decompose`/);
+    expect(body).toMatch(/`bolt-design`/);
+    expect(body).toMatch(/`bolt-execute`/);
+    expect(body).toMatch(/Stay here while the outcome is thin/);
+    expect(body).toMatch(/after the outcome is clear/);
   });
 
   it('keeps the navigator read-only', () => {
@@ -221,9 +284,11 @@ describe('specsmd flow skills', () => {
     expect(body).toMatch(/Never write artifacts/);
     expect(body).toMatch(/Never invoke another skill/);
     expect(body).toMatch(
-      /awaiting gate → active bolt → empty intent → unbolted items → drafts → empty tree/
+      /awaiting gate → active bolt → unfinished brief → captured outcome without tasks → unbolted tasks → drafts → empty tree/
     );
     expect(body).toMatch(/Never suggest `flow-runtime`/);
+    expect(body).toMatch(/unfinished brief.*`plan-intent`/s);
+    expect(body).toMatch(/Outcome captured.*`task-decompose`/);
   });
 
   it('recommends a recipe from complexity when the user omits one', () => {

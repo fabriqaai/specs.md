@@ -355,7 +355,7 @@ Standards are where the technical opinions live that specs deliberately leave ou
 
 ### Behavior
 
-- A project's standards include a **constitution** — rules that hold everywhere and can never be overridden by any module — plus overridable standards (technology choices, coding, testing, architecture).
+- A project's standards include a **constitution** — rules that hold everywhere and can never be overridden by any module — plus one overridable engineering standard (stack, shape, and verification as lasting invariants) and the nlspec writing standard.
 - In a monorepo, standards resolve by nearest scope: a module's standard wins over the root's for files in that module; the constitution is exempt and always wins. For any file, the resolved standard set is answerable deterministically.
 - Standards are written as invariants where possible — properties that must hold ("inputs are parsed at the boundary") — rather than prescriptions of method. Each records its **enforcement tier**: stated principle → checked by review → checked mechanically. A standard's tier can be raised when violations recur; the raise is a recorded decision.
 - Violations reported at any tier are phrased as remediation instructions naming the standard, the file, and the change that satisfies it.

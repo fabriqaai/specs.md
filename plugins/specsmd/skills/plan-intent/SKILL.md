@@ -1,6 +1,6 @@
 ---
 name: plan-intent
-description: Use when the user wants to plan a new outcome and no intent captures it yet. Turns a dialogue into an nlspec intent brief under docs/specsmd/.
+description: Use when capturing or shaping an outcome brief under docs/specsmd/. Stay here while the outcome is thin or still being decided.
 license: MIT
 metadata:
   version: "1.0.0"
@@ -13,9 +13,9 @@ disable-model-invocation: true
 
 Write an **intent-register nlspec** — the outcome layer. Follow `references/nlspec.md` in the `flow-runtime` skill and `references/writing.md` in this skill. Invocable at any time. Init is not required.
 
-The brief is the source of truth for *why this change exists* and *what done looks like for the whole outcome*. Work items carry How (defaults, recovery, algorithms). Do not put How on the brief.
+The brief is the source of truth for *why this change exists* and *what done looks like for the whole outcome*. `tasks.md` slices carry How (defaults, recovery, algorithms). Do not put How on the brief.
 
-Do not implement. Do not decompose into work items in this skill. Do not write the file until the user confirms the draft.
+Do not implement. Do not write `tasks.md` in this skill. Do not write the brief until the user confirms the draft.
 
 ## 1. Explore
 
@@ -93,6 +93,6 @@ Now exists:
 - `docs/specsmd/intents/{id}/brief.md`
 
 Declinable next (none required):
-- `work-item-decompose` — slice this intent
-- `bolt-design` — group or start a bolt on this intent
-- `specsmd-status` — re-orient
+- `plan-intent` — keep shaping while a heading is thin or the outcome is still being decided
+- `task-decompose` — once the outcome is captured, write this intent's `tasks.md`
+- `bolt-design` — after this intent has `tasks.md` slices, start a bolt

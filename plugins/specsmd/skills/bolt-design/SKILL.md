@@ -22,7 +22,7 @@ You write artifact files **and** frontmatter. Follow `references/transitions.md`
 If the user has not named an intent and more than one has pending or active work, ask which intent.
 
 1. User asks only to draft or pre-group → **Draft**
-2. No active bolt on this intent and the user wants to start or design → **Start**
+2. No active bolt on this intent and the user wants to start or design → **Start**. If the brief still has thin headings, offer `plan-intent`. If the outcome is captured and this intent has no `tasks.md` slices, write nothing and offer `task-decompose` so the bolt has slices to group.
 3. An active bolt whose `current_stage` is a design stage → **Run**
 4. `current_stage` is implement / execute / explore / test / review / walkthrough → do not run those here. Offer `bolt-execute`.
 
@@ -58,11 +58,13 @@ If the chosen items' dependencies cycle, name the cycle. Write nothing else from
 
 ### Ceremony
 
-Values and gates live in `references/flow-contract.yaml` in the `flow-runtime` skill (`ceremony.values` and `ceremony.gates`):
+Values and gates live in `references/flow-contract.yaml` in the `flow-runtime` skill (`ceremony.values`, `ceremony.gates`, `ceremony.applies_to`). Gates apply only to **design-class** stages.
 
 - `autopilot` — no gates
-- `confirm` — the recipe's first gateable stage waits
-- `validate` — every gateable stage waits
+- `confirm` — the first gateable design stage waits
+- `validate` — every gateable design stage waits
+
+Implement stages never wait. Invoking `bolt-execute` is the go-ahead.
 
 If the user does not pick one, use the most controlled `ceremony_suggested` among the chosen items. The user's explicit choice always wins.
 
@@ -105,8 +107,8 @@ Gates are `ceremony.gates` in `references/flow-contract.yaml` in the `flow-runti
 | Ceremony | Gates |
 |---|---|
 | `autopilot` | None. Write required artifacts and advance. |
-| `confirm` | The recipe's first gateable stage waits. |
-| `validate` | Every gateable stage waits. |
+| `confirm` | The first gateable design stage waits. |
+| `validate` | Every gateable design stage waits. |
 
 When `checkpoint_state` is `awaiting`:
 
@@ -142,6 +144,6 @@ Now exists:
 - `docs/specsmd/intents/{intent}/bolts/{id}/` design artifacts this invocation wrote
 
 Declinable next (none required):
-- `bolt-execute` — implement only after Two-implementer is closed
+- `bolt-execute` — implement; it runs the rest without confirmation
 - `specsmd-status` — re-orient
-- `work-item-decompose` — add slices
+- `task-decompose` — add `tasks.md` slices

@@ -5,7 +5,7 @@ No product code. Close caller-visible contracts. Dispatch on the **current stage
 ## 1. Load context
 
 1. `docs/specsmd/system/` docs whose claimed scope matches this bolt
-2. Constitution (root only) and nearest standards
+2. Constitution (root only) and nearest standards. Do not add a standard for a fact that will not outlive this bolt — write a decision.
 3. `docs/specsmd/decisions/index.md` — open the linked bolt decision only when `consult_when` matches
 4. Intent brief and named `tasks.md` sections
 5. This bolt's `current_stage` and `checkpoint_state`

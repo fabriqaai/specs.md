@@ -14,6 +14,8 @@ created: "{{created}}"
 
 Universal policies. They apply to every file. A module standard never overrides this document.
 
+A rule belongs here only if it will still be true after the current bolt and the next five. Agent operating procedure belongs in AGENTS, not here.
+
 ## Invariant
 
 {{invariant}}

@@ -23,7 +23,7 @@ Skills write artifact bodies **and** frontmatter. Follow `references/flow-contra
 | `references/transitions.md` | who may move which status, cascade, dynamic grouping |
 | `references/recipes/*.yaml` | stage catalogs (`default`, `ddd`, `spike`, `simple`) |
 | `references/nlspec.md` | how to write intents and work items |
-| `references/standards/` | shipped standard templates |
+| `references/standards/` | constitution and engineering templates |
 
 A bolt stores `recipe` plus `recipe_snapshot` at start. The snapshot does not change.
 

@@ -1,6 +1,6 @@
 ---
 name: bolt-execute
-description: Use when a bolt's design is accepted and product code should be implemented, tested, or walked through. Test-first. Refuses if caller-visible contracts are still open.
+description: Use when a bolt's design is accepted and product code should be implemented, tested, or walked through. Test-first on gating criteria; every behavior change carries a covering check. Runs remaining implement stages without confirmation. Refuses if caller-visible contracts are still open.
 license: MIT
 metadata:
   version: "1.0.0"
@@ -11,7 +11,7 @@ disable-model-invocation: true
 
 # Bolt execute
 
-Implement, test, review, walkthrough, complete. Test first. If design is not done, do not implement — tell the user and start `bolt-design`.
+Implement, test, review, walkthrough, complete — in this invocation. Test first. No confirmation, validation, or continue prompts. If design is not done, do not implement — tell the user and start `bolt-design`.
 
 A bolt belongs to **exactly one intent**. Path: `docs/specsmd/intents/{intent}/bolts/{id}/`.
 
@@ -19,12 +19,12 @@ You write artifact files **and** frontmatter. Follow `references/transitions.md`
 
 ## Gate — is design done?
 
-Design is **done** only when all of these are true:
+A stage is **design-class** when its id or a produced file is listed under `ceremony` in `references/flow-contract.yaml` in the `flow-runtime` skill. Design is **done** only when all of these are true:
 
 1. A `bolt.md` exists on the named intent.
-2. `current_stage` is an implement stage (`execute` / `implement` / `explore` / `test` / `review` / `walkthrough`), not a design stage.
-3. `checkpoint_state` is not `awaiting` on a design artifact.
-4. The latest design-class artifact (`plan.md`, `domain-model.md`, `design.md`, or `decisions.md`) has `## Two-implementer` with `Open: none.`
+2. `current_stage` is not design-class.
+3. `checkpoint_state` is not `awaiting` on a design-class stage.
+4. Every design-class artifact this recipe **produced** has `## Two-implementer` with `Open: none.` Do not require artifacts the recipe does not produce.
 
 If there is no bolt, or any check fails:
 
@@ -37,49 +37,36 @@ Leftover hunts become named freedoms only on the design artifact, with the user'
 
 ## Run
 
+Ceremony does not apply here (`ceremony.applies_to: design`). Invoking this skill is the go-ahead.
+
+If `checkpoint_state` is `awaiting` on a non-design stage, set it to `not-required` and continue. Do not wait. Do not emit artifacts for approval. Do not ask to confirm, validate, or continue.
+
 Follow `references/implementing.md` in this skill. The recipe snapshot is the only stage catalog.
 
-Load context first (semantic `system/` docs, constitution + nearest standards, decisions index, the intent brief and named tasks). Show bolt progress. Then do **one** stage.
+**Test first, cover always.** A gating criterion gets a failing check before product code, seen failing for the right reason. Every other behavior change gets a covering check in the same stage — no production file lands without one, an Evidence line naming the existing check that covers it, or a recorded decision exempting it (vendored or generated code).
 
-### Ceremony while running
+Load context first (semantic `system/` docs, constitution + nearest standards, decisions index, the intent brief and named tasks). Show bolt progress.
 
-Gates are `ceremony.gates` in `references/flow-contract.yaml` in the `flow-runtime` skill:
+Run **every remaining non-design stage** in snapshot order in this invocation. After each stage: append it to `stages_completed`, set `current_stage` to the next id.
 
-| Ceremony | Gates |
-|---|---|
-| `autopilot` | None. Write required artifacts and advance. |
-| `confirm` | The recipe's first gateable stage waits. |
-| `validate` | Every gateable stage waits. |
+Stop early only when:
 
-When `checkpoint_state` is `awaiting`:
+- a caller-visible hunt reopens — tell the user and follow `bolt-design` now
+- a red suite you did not cause — stop and say so
+- a load-bearing review finding — do not complete; say what failed
+- required evidence is missing — do not complete; say what is missing
 
-1. Write the stage's required artifacts if they are not already written.
-2. Emit the **full current text** of every artifact this stage produces in the same turn as the approval prompt. Not a summary.
-3. Wait. Do not implement further. Do not advance the stage.
-4. On approval, set `checkpoint_state: granted`, then advance.
+If the next stage is design-class, stop and offer `bolt-design`. Do not run it as a chain (unless this invocation started because the design-done gate failed).
 
-Any non-approval reply leaves the gate `awaiting`. Denial phrases leave `awaiting`.
-
-### Each implement stage
-
-If `checkpoint_state` is `awaiting`, this section does not apply. Do not implement. Do not advance the stage.
-
-When `checkpoint_state` is `granted` or `not-required`:
-
-1. Dispatch from `references/implementing.md` in this skill. Produce listed files under `docs/specsmd/intents/{intent}/bolts/{boltId}/`.
-2. Implementation stages (empty `produces`, or id `execute` / `implement` / `explore`) use **test first**: failing check for a gating criterion, see it fail, smallest change, see it pass. Then the existing suite. Never skip the failing check. Never implement before the check exists.
-3. Review findings are severity-gated. Load-bearing findings block. Advisory may be acknowledged, deferred, or contested.
-4. After artifacts exist: append the stage to `stages_completed`, set `current_stage` to the next id, set `checkpoint_state` for the next gate.
-
-Honor expired `time_box`. Do not invent design. If a caller-visible choice appears that design did not close, stop, tell the user the hunt reopened, and follow `bolt-design` now.
+Honor expired `time_box`. Do not invent design.
 
 ## Complete
 
 Write the walkthrough first from `references/walkthrough.md`. Every completed bolt yields a walkthrough. Required sections: what changed, why, deviations from plan, **evidence**, how to verify. The deviations heading always exists (`none` if nothing diverged). Evidence holds the test record — there is no separate test-report file. No source listings, patches, or fences — language-tagged, untagged, or `~~~`.
 
-Do not complete if `completion_requires` files are missing, the walkthrough lacks deviations or evidence, a fence remains, or a gating DoD checkbox is unchecked. Say what is missing.
+Do not complete if `completion_requires` files are missing, the walkthrough lacks deviations or evidence, a fence remains, a gating DoD checkbox is unchecked, or a changed behavior has no covering check, named cover, or recorded exemption in Evidence. Say what is missing.
 
-On complete: bolt `status: complete`, `current_stage: null`, stamp `completed`. Then cascade named tasks to `complete`: set `status: complete` and check the `tasks.md` box (`- [x]`). Then the intent if every task on it is terminal. If matching `system/` docs exist, present them for review; declining still completes.
+On complete: bolt `status: complete`, `current_stage: null`, stamp `completed`. Then cascade named tasks to `complete`: set `status: complete` and check the `tasks.md` box (`- [x]`). Then the intent if every task on it is terminal. If matching `system/` docs exist, name them after complete. Do not wait.
 
 ## Close
 

@@ -69,6 +69,14 @@ describe('flow contract', () => {
   });
 
   it('keeps the ceremony matrix and gate policy in the contract', () => {
+    expect(contract.ceremony.applies_to).toBe('design');
+    expect(contract.ceremony.design_artifacts).toEqual([
+      'plan.md',
+      'domain-model.md',
+      'design.md',
+      'decisions.md',
+      'findings.md',
+    ]);
     expect(contract.ceremony.gates).toEqual({
       autopilot: 'none',
       confirm: 'first_gateable',
@@ -77,6 +85,16 @@ describe('flow contract', () => {
     expect(contract.ceremony.matrix.low.balanced).toBe('autopilot');
     expect(contract.ceremony.matrix.medium.balanced).toBe('confirm');
     expect(contract.ceremony.matrix.high.balanced).toBe('validate');
+  });
+
+  it('ships constitution, engineering, and nlspec — not a catalog of stack files', () => {
+    expect(contract.standards.shipped).toEqual(['constitution', 'engineering', 'nlspec']);
+    expect(contract.standards.overridable).toEqual(['engineering', 'nlspec']);
+    expect(contract.standards.constitution_id).toBe('constitution');
+    expect(contract.standards.constitution_override).toBe('never');
+    const shippedDir = join(REFERENCES, 'standards');
+    expect(readdirSync(shippedDir).sort()).toEqual(['constitution.md', 'engineering.md']);
+    expect(readFileSync(join(REFERENCES, 'nlspec.md'), 'utf8')).toMatch(/^---\nid: nlspec/m);
   });
 
   it('maps complexity to recipe in the contract', () => {

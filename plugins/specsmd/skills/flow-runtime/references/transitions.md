@@ -12,7 +12,7 @@ Never write `in-progress`, `completed`, or `done`.
 
 | From | To | Skill |
 |---|---|---|
-| (none) | `pending` | `plan-intent`, `work-item-decompose` |
+| (none) | `pending` | `plan-intent`, `task-decompose` |
 | (none) | `draft` | `bolt-design` |
 | `draft` | `active` | `bolt-design` (adopt) |
 | `draft` | `abandoned` | `bolt-design` (adopt consumes the draft) |
@@ -54,10 +54,12 @@ If required evidence is missing (recipe `completion_requires`, walkthrough with 
 
 ## Ceremony (AI plans, human validates)
 
-Read `ceremony.gates` from `flow-contract.yaml`.
+Read `ceremony.gates` and `ceremony.applies_to` from `flow-contract.yaml`. Gates apply only to **design-class** stages (id or produced file listed under `ceremony` in that file). `bolt-execute` never waits.
 
 - `autopilot` — no wait
-- `confirm` — wait on the recipe's first gateable stage
-- `validate` — wait on every gateable stage
+- `confirm` — wait on the first gateable design stage
+- `validate` — wait on every gateable design stage
 
 Waiting means: write the stage artifacts, emit their **full current text** (not a summary), and stop until the user approves. Then set `checkpoint_state: granted` and advance `current_stage`.
+
+Invoking `bolt-execute` is the go-ahead. That skill runs remaining implement stages without confirmation.

@@ -1,6 +1,6 @@
 ---
 name: specsmd-init
-description: Use when a project has no docs/specsmd tree yet, or the user wants to initialize the specsmd flow. Asks autonomy bias, detects workspace shape, and records standards.
+description: Use when a project has no docs/specsmd tree yet, or the user wants to initialize the specsmd flow. Asks autonomy bias, detects workspace shape, and records constitution plus one engineering standard.
 license: MIT
 metadata:
   version: "1.0.0"
@@ -30,15 +30,25 @@ docs/specsmd/
   project.md          # frontmatter: status, autonomy_bias, grouping_history, created
   README.md
   intents/            # each intent holds brief.md, tasks.md, bolts/
-  recipes/            # copy default.yaml, ddd.yaml, spike.yaml, simple.yaml from flow-runtime
-  standards/          # copy constitution + shipped templates from flow-runtime
-  decisions/index.md
+  recipes/            # copy shipped recipe YAML from flow-runtime
+  standards/          # only the files in standards.shipped
+  decisions/index.md  # discovery index; files live on each bolt
   system/
 ```
 
-`project.md` status is `active`. Copy recipe files from `references/recipes/` in the `flow-runtime` skill and standard files from `references/standards/` in the `flow-runtime` skill. Also copy `references/nlspec.md` in the `flow-runtime` skill to `docs/specsmd/standards/nlspec.md`.
+`project.md` status is `active`.
 
-In an existing codebase, propose inferred standards (id, scope, invariant). Confirm before writing them. That confirmation is not a second required question.
+Copy recipe files from `references/recipes/` in the `flow-runtime` skill as data.
+
+Write **only** the ids in `standards.shipped` in `references/flow-contract.yaml` in the `flow-runtime` skill. Templates: `references/standards/{id}.md` in the `flow-runtime` skill for constitution and engineering; `references/nlspec.md` in the `flow-runtime` skill for nlspec (copy as-is — it is the flow writing standard, not inferred project law). Do not invent additional standard files.
+
+### Lasting test
+
+A rule belongs in constitution or engineering only if it will still be true after the current bolt and after the next five. Reject: this-bolt schema, table columns, agent operating procedure (AGENTS, charters, how to invoke skills), and implementation file names. Those go in a bolt decision, the spec, or AGENTS — not in `standards/`.
+
+In an existing codebase, infer constitution + engineering as invariants, show them, and confirm before writing. That confirmation is not a second required question. If nothing lasting can be inferred, write the seed rules from the templates and say so.
+
+If `docs/specsmd/standards/` already has files, leave them. Do not replace or delete them.
 
 Do not require a script. Write the files.
 

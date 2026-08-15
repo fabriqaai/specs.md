@@ -5,12 +5,12 @@
 
 This project uses the **specsmd flow**. Specifications under `docs/specsmd/` are the memory bank and the source of truth; implementation follows specs. Do not write specsmd state to `memory-bank/` or `.specs-fire/`.
 
-1. **Intent → tasks → bolt.** One `brief.md` and one checkable `tasks.md` per intent. A bolt belongs to one intent. `bolt-design` closes caller-visible contracts; `bolt-execute` implements only after those hunts are closed.
+1. **Lifecycle.** `plan-intent` (brief) → `task-decompose` (`tasks.md`) → `bolt-design` → `bolt-execute`. One `brief.md` and one checkable `tasks.md` per intent. A bolt belongs to one intent. Confirmations live in `bolt-design`. `bolt-execute` implements only after hunts are closed.
 2. **Recipes are data.** Stages come from the recipe recorded on the bolt, not from a hardcoded sequence in a skill.
 3. **Recommend, don't enforce.** Skills never require a next skill. They refuse illegal state changes only (missing evidence, illegal status).
-4. **Ceremony dial.** Complexity × autonomy bias → autopilot / confirm / validate. The user's choice at bolt start wins.
+4. **Ceremony dial.** Complexity × autonomy bias → autopilot / confirm / validate. Gates apply only during `bolt-design`. The user's choice at bolt start wins. `bolt-execute` does not wait.
 5. **State in frontmatter.** Skills write status fields following `flow-runtime/references/transitions.md`. There are no state scripts.
 6. **nlspec.** Intents and work items describe observable behavior, never mechanism or implementation file names.
-7. **Read path.** Read `docs/specsmd/system/`, `docs/specsmd/standards/`, and `docs/specsmd/decisions/index.md` before any change record. Episodic artifacts are history.
+7. **Read path.** Read `docs/specsmd/system/`, `docs/specsmd/standards/`, and `docs/specsmd/decisions/index.md` before any change record. Decision files live on the bolt that made them. Episodic artifacts are history.
 
 Before implementing, invoke the `specsmd-status` skill and enter work through the named skills.

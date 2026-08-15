@@ -11,7 +11,7 @@ Concept: `.specs-ideation/sessions/aidlc-fire-unification-20260809/concept-brief
 | `system/` | **Current truth** — registered semantic docs (architecture, integrations, domain facts) + verification status. Read first. |
 | `intents/{id}/` | One change: `brief.md`, `tasks.md` (all slices), and `bolts/` (semantic while active, episodic once complete) |
 | `recipes/` | Stage catalogs as data (default, ddd, spike, simple) |
-| `standards/` | Constitution + project standards (hierarchical monorepo overrides) |
+| `standards/` | Constitution + one engineering standard + nlspec (hierarchical monorepo overrides) |
 | `decisions/index.md` | Discovery index: title, summary, consult-when, path to the decision file |
 | `intents/{id}/bolts/{bolt}/decisions/` | Decision records for that bolt (immutable events) |
 
