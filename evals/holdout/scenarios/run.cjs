@@ -72,6 +72,50 @@ function runScenario(scenario, repoRoot) {
       return pack(scenario, satisfied, notes);
     }
 
+    if (kind === 'complete-refuses-uncovered-change') {
+      flow.initProject(root, 'balanced');
+      const intent = flow.initIntent(root, { title: 'Notify users' });
+      const item = flow.initWorkItem(root, {
+        intent: intent.id,
+        title: 'A toast appears after save',
+        complexity: 'medium',
+        body: '# Item\n\n## Definition of Done\n\n- [x] (gating) A toast appears after save\n',
+      });
+      const bolt = flow.initBolt(root, { workItems: item.id, recipe: 'default' });
+      writeStageFiles(root, bolt.id, ['plan.md', 'test-report.md', 'review-report.md']);
+      const dir = path.join(root, 'docs', 'specsmd', 'bolts', bolt.id);
+      fs.writeFileSync(
+        path.join(dir, 'walkthrough.md'),
+        [
+          '# walkthrough.md',
+          '',
+          '## What changed',
+          '',
+          'Saving now shows a toast.',
+          '',
+          '## Deviations from plan',
+          '',
+          'none',
+          '',
+          '## Evidence',
+          '',
+          '- Gating: A toast appears after save — observed.',
+          '',
+          '## How to verify',
+          '',
+          'Run the suite.',
+          '',
+        ].join('\n'),
+        'utf8'
+      );
+      const result = caught(() => flow.completeBolt(root, bolt.id, false));
+      const message = result.ok ? '' : `${result.error.message} ${result.error.remediation || ''}`;
+      const named = /cover/i.test(message);
+      const satisfied = !result.ok && result.error.code === 'COMPLETE_BLOCKED' && named;
+      notes.push(satisfied ? `Refused uncovered change: ${message}` : `Unexpected: ${message || 'completed'}`);
+      return pack(scenario, satisfied, notes);
+    }
+
     if (kind === 'complete-cascade') {
       flow.initProject(root, 'balanced');
       const intent = flow.initIntent(root, { title: 'Notify users' });

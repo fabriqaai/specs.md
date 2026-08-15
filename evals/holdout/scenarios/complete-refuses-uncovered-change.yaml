@@ -1,0 +1,6 @@
+id: complete-refuses-uncovered-change
+kind: complete-refuses-uncovered-change
+title: Completing a bolt whose evidence covers no changed behavior is refused and names the gap
+judges:
+  - 006-execution-skills
+satisfies: The complete operation refuses when Evidence neither names a covering check for a changed behavior nor records an exemption, and the refusal names the uncovered change.
