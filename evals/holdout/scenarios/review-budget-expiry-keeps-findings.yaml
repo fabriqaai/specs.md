@@ -1,0 +1,6 @@
+id: review-budget-expiry-keeps-findings
+kind: review-budget-expiry-keeps-findings
+title: Review round budget expiry completes honestly with advisory findings still recorded
+judges:
+  - 006-execution-skills
+satisfies: After the loop's round budget expires with only advisory findings open, completion succeeds and review-findings.md still lists those findings unmodified.

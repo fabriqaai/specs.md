@@ -72,6 +72,72 @@ function runScenario(scenario, repoRoot) {
       return pack(scenario, satisfied, notes);
     }
 
+    if (kind === 'complete-refuses-open-load-bearing-finding') {
+      flow.initProject(root, 'balanced');
+      const intent = flow.initIntent(root, { title: 'Notify users' });
+      const item = flow.initWorkItem(root, {
+        intent: intent.id,
+        title: 'A toast appears after save',
+        complexity: 'medium',
+        body: '# Item\n\n## Definition of Done\n\n- [x] (gating) A toast appears after save\n',
+      });
+      const bolt = flow.initBolt(root, { workItems: item.id, recipe: 'autonomous' });
+      writeStageFiles(root, bolt.id, ['plan.md', 'walkthrough.md']);
+      const dir = path.join(root, 'docs', 'specsmd', 'bolts', bolt.id);
+      fs.writeFileSync(
+        path.join(dir, 'review-findings.md'),
+        [
+          '# Review findings',
+          '',
+          '## Round 1',
+          '',
+          '| ID | Severity | Where | Defect | Disposition |',
+          '|---|---|---|---|---|',
+          '| R1.1 | load-bearing | src/save.ts:12 | Toast never fires on slow saves | OPEN |',
+          '',
+        ].join('\n'),
+        'utf8'
+      );
+      const result = caught(() => flow.completeBolt(root, bolt.id, false));
+      const message = result.ok ? '' : `${result.error.message} ${result.error.remediation || ''}`;
+      const named = /R1\.1|load-bearing/i.test(message);
+      const satisfied = !result.ok && result.error.code === 'COMPLETE_BLOCKED' && named;
+      notes.push(satisfied ? `Refused open finding: ${message}` : `Unexpected: ${message || 'completed'}`);
+      return pack(scenario, satisfied, notes);
+    }
+
+    if (kind === 'review-budget-expiry-keeps-findings') {
+      flow.initProject(root, 'balanced');
+      const intent = flow.initIntent(root, { title: 'Notify users' });
+      const item = flow.initWorkItem(root, {
+        intent: intent.id,
+        title: 'A toast appears after save',
+        complexity: 'medium',
+        body: '# Item\n\n## Definition of Done\n\n- [x] (gating) A toast appears after save\n',
+      });
+      const bolt = flow.initBolt(root, { workItems: item.id, recipe: 'autonomous' });
+      writeStageFiles(root, bolt.id, ['plan.md', 'walkthrough.md']);
+      const dir = path.join(root, 'docs', 'specsmd', 'bolts', bolt.id);
+      const ledger = [
+        '# Review findings',
+        '',
+        '## Round 2',
+        '',
+        '| ID | Severity | Where | Defect | Disposition |',
+        '|---|---|---|---|---|',
+        '| R2.1 | advisory | src/save.ts:30 | Toast copy could name the record | OPEN |',
+        '',
+      ].join('\n');
+      fs.writeFileSync(path.join(dir, 'review-findings.md'), ledger, 'utf8');
+      flow.completeBolt(root, bolt.id, false);
+      const boltAfter = flow.lib.readBolt(root, bolt.id, flow.lib.loadContract());
+      const ledgerAfter = fs.readFileSync(path.join(dir, 'review-findings.md'), 'utf8');
+      const satisfied =
+        boltAfter.data.status === 'complete' && ledgerAfter.includes('R2.1') && ledgerAfter.includes('OPEN');
+      notes.push(`status=${boltAfter.data.status} advisory_retained=${ledgerAfter.includes('R2.1')}`);
+      return pack(scenario, satisfied, notes);
+    }
+
     if (kind === 'complete-refuses-uncovered-change') {
       flow.initProject(root, 'balanced');
       const intent = flow.initIntent(root, { title: 'Notify users' });

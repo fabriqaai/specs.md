@@ -1,0 +1,6 @@
+id: complete-refuses-open-load-bearing-finding
+kind: complete-refuses-open-load-bearing-finding
+title: Completing a bolt while a load-bearing review finding is OPEN is refused and names the finding
+judges:
+  - 006-execution-skills
+satisfies: The complete operation refuses while review-findings.md carries an OPEN load-bearing finding, and the refusal names the finding.
