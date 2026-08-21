@@ -1,23 +1,35 @@
-# Handoff — Unified Bolt Flow execute-plan (2026-08-13)
+# Handoff — coverage floor + autonomous review loop
 
-**Read this first if you just cloned or switched machines.**
+Branch `main-v2`. Written 2026-08-21 at the end of the session that designed and shipped the autonomous review loop. Read this before continuing that work.
 
-The current work is **not** on `main` and **not** merged into `main-v2`. It lives as nine pushed git branches with **no GitHub PRs**.
+## What shipped
 
-| | |
-|---|---|
-| Repo | `https://github.com/fabriqaai/specs.md` |
-| Checkout you want for *reading this packet* | `main-v2` (this commit) |
-| Checkout you want for *the implementation* | `execute-plan/2040fa95-pr-9-v2-documentation` |
-| PLAN_ID | `2040fa95` |
-| GitHub PRs | **none** (`gh pr list --head execute-plan/2040fa95-*` is empty) |
-| Last human reaction | Evals implementation looks terrible; review it before opening PRs |
+**1. Coverage floor in bolt-execute** (commits `458e234`, `3eaa40c`, pushed 2026-08-16).
+Two-tier test rule: gating DoD criteria are test-first (failing check seen failing, recorded in Evidence); every other behavior change carries a covering check, an Evidence line naming the existing cover, or a recorded exemption (vendored/generated). Case classes (acceptance, refusal/error, boundaries, null, replay) are covered or dismissed in one Evidence line. Missing/placeholder engineering Verification rule is a named stop. Four legacy standards templates collapsed into one `engineering.md` with a verification seed.
 
-**Full packet (read in order):**
+**2. Autonomous review loop** (this commit set).
+- `plugins/specsmd/skills/bolt-review/` — read-only reviewer contract: verify-before-reporting (file:line + nearest check), never writes a fix, does not re-report dispositioned items, load-bearing = correctness or stated requirements only. Templates: `references/brief.md` (per-round brief), `references/review-findings.md` (adjudication ledger).
+- `flow-runtime/references/recipes/autonomous.yaml` — plan → implement → test → review with `loop: {max_rounds: 2, reviewers: 1, fresh_context: true, terminates_on: gates}`. Also in `docs/specsmd/recipes/`.
+- `bolt-execute` §6 Review loop — per round: regression gate, brief, fresh-context reviewer, adjudicate into ledger (forward-only: `OPEN → FIXED | REFUTED | ACCEPTED`), fix with pinned regression checks. Terminates on three gates: named suite green, an **external anchor** the bolt did not write, all load-bearing findings FIXED/REFUTED. Never terminates on a silent round. Budget expiry with load-bearing OPEN blocks completion; advisory findings survive unscrubbed.
+- Contract: bolt fields `review_rounds_completed`, `last_round_verdict`; `recipe.shipped` includes `autonomous`. Transitions doc has a Review loop section.
+- Evals (separate commit per the holdout isolation guard): scenarios `complete-refuses-open-load-bearing-finding`, `review-budget-expiry-keeps-findings`; assertions in `skills.test.ts` and `recipes.test.ts`.
 
-1. [Resume](memory-bank/handoffs/2026-08-13-unified-bolt-flow/00-resume.md) — what happened, what is true now, what to do next
-2. [Stack](memory-bank/handoffs/2026-08-13-unified-bolt-flow/01-stack.md) — branches, SHAs, compare URLs, `gh pr create` commands
-3. [Evals decisions](memory-bank/handoffs/2026-08-13-unified-bolt-flow/02-evals-decisions.md) — product decisions vs what PR1 actually built (hot)
-4. [Constraints](memory-bank/handoffs/2026-08-13-unified-bolt-flow/03-constraints.md) — locked product rules and forbidden moves
+**3. fabriqa-2026 de-linked from this repo.**
+`.agents/skills/` there now holds real copies of the nine specsmd skills (was: symlinks into this repo). `.claude/skills/*` and `.codex/skills/*` still symlink internally to `.agents/skills/*`. `autonomous.yaml` added to its `docs/specsmd/recipes/`. fabriqa is self-contained on any machine; it picks up specsmd changes only by re-copy:
 
-Older, unrelated handoff (v1 skills port on `specsmd-skills`): [2026-08-07](memory-bank/handoffs/2026-08-07-skills-port.md).
+    cd ~/code/fabriqa-workspace/fabriqa-2026 && SRC=~/code/fabriqa-workspace/specs.md/plugins/specsmd/skills; for name in bolt-design bolt-execute flow-runtime plan-intent specsmd-init specsmd-status task-decompose using-specsmd bolt-review; do rm -rf ".agents/skills/$name" && cp -R "$SRC/$name" ".agents/skills/$name"; done; find .agents/skills -name '.DS_Store' -delete
+
+## User-locked decisions
+
+One reviewer per round, no external-model driving (the skill generates briefs; the user runs external reviewers by hand when wanted). Recipe named `autonomous`, skill named `bolt-review`. No spec-gap stop inside implement — sufficiency belongs to plan-intent/bolt-design.
+
+## Why the loop closes on gates, not clean rounds
+
+Research (three reports in the 2026-08-16 session): reviewer-silence termination has no empirical support — a reviewer prompted to find gaps always finds some, and with a noisy verifier "reported acceptance keeps rising while true validity falls" (Wu et al. 2026). Two repair rounds capture 76–95% of achievable gains. Fresh context per round counters self-conditioning. The external-anchor gate encodes the fabriqa bolt-006 failure: a four-reviewer fleet went green because every suite proved behavior against the wrong schema; only an oracle outside the loop caught it.
+
+## Deferred / next
+
+- **Layer 3 `bolt-marathon`** — intent-level orchestration walking the ready frontier of `tasks.md` (open tasks with terminal `depends_on`), one context per sequential chain, fan-out only for independent slices. Deliberately deferred until `autonomous` survives real bolts.
+- **Dogfood**: run the next fabriqa bolt with `recipe: autonomous`; compare its ledger against bolt-006's hand-rolled `review-findings.md`.
+- **CI**: the "Evals holdout isolation" push job can sit queued for hours on the `blacksmith-4vcpu-ubuntu-2404` runner — check the runner pool. On bulk pushes the job evaluates the whole pushed range, which is historically mixed (pre-existing; not fixable by commit ordering).
+- **Committing here**: evals/** and plugins/specsmd/** must land as separate commits (`src/__tests__/evals/holdout-isolation.test.ts` enforces it).

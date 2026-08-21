@@ -45,6 +45,8 @@ Follow `references/implementing.md` in this skill. The recipe snapshot is the on
 
 **Test first, cover always.** A gating criterion gets a failing check before product code, seen failing for the right reason. Every other behavior change gets a covering check in the same stage — no production file lands without one, an Evidence line naming the existing check that covers it, or a recorded decision exempting it (vendored or generated code).
 
+**Review loop.** When the recipe's review stage carries `loop`, run review rounds per `references/implementing.md`: each round's reviewer is a fresh context following the `bolt-review` skill, findings adjudicate into `review-findings.md` with forward-only dispositions, and the loop closes on executable gates — the named suite plus an external anchor — never on a round returning no findings.
+
 Load context first (semantic `system/` docs, constitution + nearest standards, decisions index, the intent brief and named tasks). Show bolt progress.
 
 Run **every remaining non-design stage** in snapshot order in this invocation. After each stage: append it to `stages_completed`, set `current_stage` to the next id.
@@ -64,7 +66,7 @@ Honor expired `time_box`. Do not invent design.
 
 Write the walkthrough first from `references/walkthrough.md`. Every completed bolt yields a walkthrough. Required sections: what changed, why, deviations from plan, **evidence**, how to verify. The deviations heading always exists (`none` if nothing diverged). Evidence holds the test record — there is no separate test-report file. No source listings, patches, or fences — language-tagged, untagged, or `~~~`.
 
-Do not complete if `completion_requires` files are missing, the walkthrough lacks deviations or evidence, a fence remains, a gating DoD checkbox is unchecked, or a changed behavior has no covering check, named cover, or recorded exemption in Evidence. Say what is missing.
+Do not complete if `completion_requires` files are missing, the walkthrough lacks deviations or evidence, a fence remains, a gating DoD checkbox is unchecked, a changed behavior has no covering check, named cover, or recorded exemption in Evidence, or a load-bearing finding is still `OPEN` in `review-findings.md`. Say what is missing.
 
 On complete: bolt `status: complete`, `current_stage: null`, stamp `completed`. Then cascade named tasks to `complete`: set `status: complete` and check the `tasks.md` box (`- [x]`). Then the intent if every task on it is terminal. If matching `system/` docs exist, name them after complete. Do not wait.
 

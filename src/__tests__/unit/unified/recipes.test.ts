@@ -21,14 +21,44 @@ function loadShipped(id: string) {
 }
 
 describe('shipped recipes', () => {
-  it('ships exactly the four catalog recipes', () => {
+  it('ships exactly the five catalog recipes', () => {
     const ids = readdirSync(RECIPES)
       .filter((name) => name.endsWith('.yaml'))
       .map((name) => name.replace(/\.yaml$/, ''))
       .sort();
-    expect(ids).toEqual(['ddd', 'default', 'simple', 'spike']);
+    expect(ids).toEqual(['autonomous', 'ddd', 'default', 'simple', 'spike']);
     const contract = yaml.load(readFileSync(CONTRACT, 'utf8'));
     expect(contract.recipe.shipped.sort()).toEqual(ids);
+  });
+
+  it('reads autonomous as plan → implement → test → review loop closed by gates', () => {
+    const recipe = loadShipped('autonomous');
+    expect(recipe.stages.map((s: { id: string }) => s.id)).toEqual([
+      'plan',
+      'implement',
+      'test',
+      'review',
+    ]);
+    expect(recipe.stages.map((s: { produces: string[] }) => s.produces)).toEqual([
+      ['plan.md'],
+      [],
+      ['walkthrough.md'],
+      ['review-findings.md', 'walkthrough.md'],
+    ]);
+    expect(recipe.stages.map((s: { gateable: boolean }) => s.gateable)).toEqual([
+      true,
+      false,
+      false,
+      false,
+    ]);
+    expect(recipe.stages[3].loop).toEqual({
+      max_rounds: 2,
+      reviewers: 1,
+      fresh_context: true,
+      terminates_on: 'gates',
+    });
+    expect(recipe.completion_requires).toEqual(['walkthrough.md', 'review-findings.md']);
+    expect(recipe.constraints).toEqual([]);
   });
 
   it('reads default as plan → execute → test → review with declared artifacts', () => {

@@ -116,6 +116,7 @@ recipe:
     - ddd
     - spike
     - simple
+    - autonomous
   recommend_from_complexity:
     low: simple
     medium: default
@@ -229,6 +230,8 @@ artifact_types:
       - current_stage
       - stages_completed
       - checkpoint_state
+      - review_rounds_completed
+      - last_round_verdict
       - work_items
       - override
       - override_reason

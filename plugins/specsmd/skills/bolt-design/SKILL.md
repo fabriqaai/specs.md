@@ -31,7 +31,7 @@ If the user has not named an intent and more than one has pending or active work
 A draft is a proposal: tasks plus a suggested recipe. It is not an execution container. Starting may **adopt**, **modify**, or **ignore** it. Drafts are optional — **Start** can group on the fly.
 
 1. Read pending tasks and existing drafts **on this intent**.
-2. Propose a grouping and a recipe. Shipped recipes are `default`, `ddd`, `spike`, and `simple`. A project-local recipe in `docs/specsmd/recipes/` is also selectable. If the user does not pick a recipe, recommend from complexity (`recipe.recommend_from_complexity` in `references/flow-contract.yaml` in the `flow-runtime` skill).
+2. Propose a grouping and a recipe. Shipped recipes are `default`, `ddd`, `spike`, `simple`, and `autonomous` (adds a gate-closed review loop for large unattended runs). A project-local recipe in `docs/specsmd/recipes/` is also selectable. If the user does not pick a recipe, recommend from complexity (`recipe.recommend_from_complexity` in `references/flow-contract.yaml` in the `flow-runtime` skill).
 3. Write `docs/specsmd/intents/{intent}/bolts/{id}/bolt.md` with `status: draft`. Id format: `bolt-{worktree}-{nnn}` using the next free number for this working copy.
 
 If the chosen items' dependencies cycle, name the cycle. Write nothing else from that invocation.

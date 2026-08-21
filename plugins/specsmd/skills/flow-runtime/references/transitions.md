@@ -27,6 +27,8 @@ Never write `in-progress`, `completed`, or `done`.
 - `stages_completed` — list of `{name, completed}`
 - `checkpoint_state` — `none` | `awaiting` | `granted` | `not-required`
 - `recipe` and `recipe_snapshot` — set at start, never changed
+- `review_rounds_completed` — count of finished review rounds when the recipe's review stage carries `loop`; absent otherwise
+- `last_round_verdict` — `load-bearing` | `advisory-only` | `none`, from the most recent round
 
 Resume from those fields. Do not infer the stage from which files exist.
 
@@ -43,6 +45,10 @@ At start, calculate three offers from pending (unbolted) work items **on the cho
 Refuse a set that names work items from more than one intent. Name both intents.
 
 Recommend from autonomy bias (`autonomous` → wide, `controlled` → single, `balanced` → batch if more than two items). Remember the last three choices in `docs/specsmd/project.md` under `grouping_history` and pre-select after three matches. The user may ignore the recommendation. Draft bolts stay optional.
+
+## Review loop (recipes whose review stage carries `loop`)
+
+`bolt-execute` runs the rounds and writes the ledger; each round's reviewer is a fresh context following `bolt-review` and never edits files. Dispositions in `review-findings.md` move forward only (`OPEN → FIXED | REFUTED | ACCEPTED`); earlier rounds are never rewritten. After each round, `bolt-execute` updates `review_rounds_completed` and `last_round_verdict`. The loop closes on executable gates — the named suite plus an external anchor — never on a round returning no findings. `max_rounds` expiry with a load-bearing finding `OPEN` blocks completion; advisory findings stay recorded through completion.
 
 ## Cascade on bolt complete
 

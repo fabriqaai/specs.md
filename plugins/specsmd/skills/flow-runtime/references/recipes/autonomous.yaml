@@ -1,0 +1,28 @@
+id: autonomous
+title: Autonomous
+stages:
+  - id: plan
+    produces:
+      - plan.md
+    gateable: true
+  - id: implement
+    produces: []
+    gateable: false
+  - id: test
+    produces:
+      - walkthrough.md
+    gateable: false
+  - id: review
+    produces:
+      - review-findings.md
+      - walkthrough.md
+    gateable: false
+    loop:
+      max_rounds: 2
+      reviewers: 1
+      fresh_context: true
+      terminates_on: gates
+completion_requires:
+  - walkthrough.md
+  - review-findings.md
+constraints: []

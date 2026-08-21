@@ -13,6 +13,7 @@ const VERB_SKILLS = [
   'task-decompose',
   'bolt-design',
   'bolt-execute',
+  'bolt-review',
 ];
 const MODEL_INVOCABLE = ['using-specsmd', 'specsmd-status'];
 const KNOWN_SKILLS = new Set([
@@ -56,6 +57,7 @@ describe('specsmd flow skills', () => {
       [
         'bolt-design',
         'bolt-execute',
+        'bolt-review',
         'flow-runtime',
         'plan-intent',
         'specsmd-init',
@@ -216,6 +218,51 @@ describe('specsmd flow skills', () => {
     expect(engineering).toMatch(/failing check first/);
     expect(engineering).toMatch(/empty, zero, one, many/);
     expect(engineering).toMatch(/dismissed in one Evidence line/);
+  });
+
+  it('keeps bolt-review a read-only lead generator', () => {
+    const review = skillBody('bolt-review');
+    expect(review).toMatch(/read-only/i);
+    expect(review).toMatch(/never writes a fix/i);
+    expect(review).toMatch(/Verify before reporting/);
+    expect(review).toMatch(/Do not re-report/);
+    expect(review).toMatch(/correctness or the stated requirements/);
+    expect(review).toMatch(/load-bearing/);
+    expect(review).toMatch(/advisory/i);
+    expect(review).toMatch(/Severity \/ Where \/ Defect \/ Failure scenario \/ Evidence \/ Fix direction/);
+    const brief = readFileSync(join(SKILLS, 'bolt-review/references/brief.md'), 'utf8');
+    expect(brief).toMatch(/Read first/);
+    expect(brief).toMatch(/Known-open/);
+    expect(brief).toMatch(/Verification commands/);
+    expect(brief).toMatch(/Change surface/);
+    const ledger = readFileSync(join(SKILLS, 'bolt-review/references/review-findings.md'), 'utf8');
+    expect(ledger).toMatch(/OPEN/);
+    expect(ledger).toMatch(/FIXED/);
+    expect(ledger).toMatch(/REFUTED/);
+    expect(ledger).toMatch(/ACCEPTED/);
+    expect(ledger).toMatch(/## Round/);
+    expect(ledger).toMatch(/forward only/);
+  });
+
+  it('closes the review loop on gates, never on reviewer silence', () => {
+    const implementing = readFileSync(join(SKILLS, 'bolt-execute/references/implementing.md'), 'utf8');
+    expect(implementing).toMatch(/## \d+\. Review loop/);
+    expect(implementing).toMatch(/fresh context/i);
+    expect(implementing).toMatch(/never on reviewer silence/);
+    expect(implementing).toMatch(/Regression gate/);
+    expect(implementing).toMatch(/external anchor/i);
+    expect(implementing).toMatch(/forward only/);
+    expect(implementing).toMatch(/max_rounds/);
+    expect(implementing).toMatch(/never scrub/i);
+    const execute = skillBody('bolt-execute');
+    expect(execute).toMatch(/review-findings\.md/);
+    expect(execute).toMatch(/bolt-review/);
+    const transitions = readFileSync(
+      join(SKILLS, 'flow-runtime/references/transitions.md'),
+      'utf8'
+    );
+    expect(transitions).toMatch(/review_rounds_completed/);
+    expect(transitions).toMatch(/last_round_verdict/);
   });
 
   it('leaves the ceremony matrix in the contract', () => {
