@@ -153,6 +153,12 @@ describe('specsmd flow skills', () => {
     expect(writing).toMatch(/prescriptive/i);
     expect(writing).toMatch(/append-only/);
     expect(writing).toMatch(/review-findings\.md/);
+    // Every artifact named in the scope line lands in one of the two classes.
+    const prescriptive = writing.split(/\*\*prescriptive\*\*/i)[1]?.split('## Voice')[0] ?? '';
+    for (const artifact of ['standards', 'domain models', 'review briefs']) {
+      expect(prescriptive, `unclassified: ${artifact}`).toContain(artifact);
+    }
+    expect(prescriptive).toMatch(/walkthroughs, decisions, and finding ledgers/);
 
     expect(skillBody('plan-intent')).toMatch(/references\/writing\.md/);
     expect(skillBody('task-decompose')).toMatch(/references\/writing\.md/);

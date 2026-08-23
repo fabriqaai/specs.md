@@ -2,7 +2,7 @@
 
 Every file the flow writes under `docs/specsmd/` is read by someone who was not in the session that produced it — usually an agent with no memory of that session, sometimes a teammate months later. That reader acts on what the document says and cannot ask a follow-up question. These rules make a document survive that reading.
 
-They apply to every artifact the skills write: briefs, tasks, plans, domain models, designs, decisions, walkthroughs, review briefs, and finding ledgers.
+They apply to every artifact the skills write: standards, briefs, tasks, plans, domain models, designs, decisions, walkthroughs, review briefs, and finding ledgers.
 
 `references/nlspec.md` in this skill decides **what belongs in** an intent or work item. This file decides **how any specsmd document is written**.
 
@@ -46,16 +46,20 @@ When an example makes the principle concrete, give a matched pair — one that f
 
 Every claim carries its authority: the brief line, a Definition of Done criterion, a standard, a recorded decision, a command's output, a file and line, or the user's own words. Once a specified requirement and an agent's guess are both prose on the page, no reader can tell them apart — and an unmarked guess becomes a requirement the next agent implements.
 
-Mark inference as inference: "the brief does not name a limit; this plan assumes ten and records it under Named freedoms." An assumption that is labeled can be corrected. One that reads as fact cannot.
+Mark inference as inference — "the brief does not name a retry limit; this plan assumes three" — and say so where the assumption is used. An assumption that is labeled can be corrected. One that reads as fact cannot.
 
 ## Remove by deleting
 
 When a decision changes, delete the line that stated the old one. Writing "Do not notify the caller" under an existing "Notify the caller" leaves both in front of the reader with nothing marking which is current, and readers resolve that by choosing one.
 
-This governs **prescriptive** documents — briefs, tasks, plans, designs, standards — where only the current rule matters.
+This governs **prescriptive** documents, where only the current rule matters: standards, briefs, tasks, plans, domain models, designs, and review briefs.
 
-Records of what happened are **append-only**: walkthroughs, decisions, and `review-findings.md` keep every earlier entry, because the history is the value. Correct a record by adding the correction with its date and disposition, never by editing the entry it corrects.
+Records of what happened are **append-only**: walkthroughs, decisions, and finding ledgers such as `review-findings.md` keep every earlier entry, because the history is the value. Correct a record by adding the correction with its date and disposition, never by editing the entry it corrects.
+
+Every artifact the flow writes is one or the other. A document that would need both — current rules and a history — is two documents.
 
 ## Voice
 
-Follow the Voice rules in `references/nlspec.md` in this skill: declarative present tense, each term defined once, each fact in exactly one place. Prefer plain words to jargon — the reader may not share the vocabulary — and cut any sentence that does work another sentence already did.
+Write a document's content as declarative present tense, stated as fact: "The flow refuses completion while a gating criterion is unmet." Keep instructions to whoever writes the next document imperative — "Name the source of each claim" — so a rule to follow is never mistaken for a fact about the system.
+
+Define each term once and keep using that term; a synonym reads as a second thing. Prefer plain words to jargon, because the reader may not share the vocabulary. Give each sentence work no other sentence does — `references/nlspec.md` in this skill calls this spec economy, and the drift between two statements of one fact is what it prevents.
