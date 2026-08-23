@@ -83,16 +83,46 @@ Applies when the review stage's recipe entry carries `loop`. Review is a lead ge
 
 **Budget.** `loop.max_rounds` (default 2) is a hard ceiling; when the loop stalls, prefer re-deriving the fix from the spec over another repair round. Expiry with a load-bearing finding `OPEN` is a stop: do not complete; name the findings that remain. Expiry with only advisory findings open: continue to walkthrough with them recorded — **never scrub** or soften ledger entries to reach completion.
 
-## 7. Walkthrough
+## 7. Capture unplanned work
+
+Work reaches a bolt that no artifact asked for: a course correction mid-flight, a requirement nobody wrote down, a small change made because it was obviously needed. Left uncaptured, the artifacts describe a bolt the code no longer matches, and the next bolt plans from fiction.
+
+Record each one in the walkthrough's `## Unplanned changes` **when it happens**. Reconstructing a long session at the end loses the small ones, and the small ones are most of them.
+
+Then place it. The destination decides whether to ask.
+
+**Clear destination inside this bolt — write it, then say what you wrote.** Do not stop for approval:
+
+- a decision this bolt recorded that the new direction overtakes → add a dated correction to that decision naming what changed and why
+- behavior that extends a task this bolt named → add a Definition of Done line to that `tasks.md` section, marked as added during this bolt
+- a one-off with no future reader → the walkthrough row is the whole record
+
+**Outside this bolt, or the destination is ambiguous — ask once, then act on the answer.** One question, options, recommendation first, in the rhythm of `references/caller-contracts.md` in the `flow-runtime` skill:
+
+- the work falls outside every task this bolt named
+- two artifacts are plausible homes
+- it would change `brief.md` — the outcome belongs to `plan-intent`
+- it would rewrite an existing **gating** Definition of Done line
+
+Never weaken a gating criterion to match what was built. A gating line that no longer describes the wanted behavior is the user's decision, taken through `plan-intent` or `task-decompose`. Rewriting it here turns a defect into a requirement, and every bolt completes green.
+
+A change to a caller-visible contract — return, surfaces, set rule, shape, credential — is never captured here, in either tier. It reopens that hunt: tell the user and follow `bolt-design`, as §4 already requires. Capture records what a bolt did; it does not settle what two implementers would build.
+
+Each row carries a disposition: **captured** — an artifact now covers it, named in the row; **accepted as-is** — the user declined to capture it, and the row is the only record; **open** — no destination yet, which is a stop at complete.
+
+Once the bolt is complete, append a dated row instead of reopening the bolt. Substantial follow-on work is a new slice, not an amendment.
+
+## 8. Walkthrough
 
 Write it per `references/writing.md` in the `flow-runtime` skill. The walkthrough is a **record**: append corrections, do not edit what an earlier stage recorded.
 
-Required headings: What changed, Why, Deviations from plan, Evidence, How to verify.
+Required headings: What changed, Why, Deviations from plan, Unplanned changes, Evidence, How to verify.
 
-- **Deviations** always exists. `none` if nothing diverged.
+- **Deviations** always exists. `none` if nothing diverged. A deviation is work an artifact asked for that went another way; an **unplanned change** is work no artifact asked for at all.
+- **Unplanned changes** always exists. `none` if every change traces to a task, design, or decision.
 - **Evidence** is what was run and what each gating line did. Plain invocations, not source.
 - No language-tagged fences, no patches, no source dumps.
 
 ## Failures
 
-Speak as remediation: what to change, where, which standard or spec line. A missing `completion_requires` file, a walkthrough without Deviations or Evidence, a fence, an unchecked gating line, a changed behavior with no covering check, named cover, or recorded exemption, or a load-bearing finding still `OPEN` in `review-findings.md`: do not complete.
+Speak as remediation: what to change, where, which standard or spec line. A missing `completion_requires` file, a walkthrough without Deviations, Unplanned changes, or Evidence, a fence, an unchecked gating line, a changed behavior with no covering check, named cover, or recorded exemption, an unplanned change still `open`, or a load-bearing finding still `OPEN` in `review-findings.md`: do not complete.

@@ -10,7 +10,15 @@
 
 ## Deviations from plan
 
-{deviations, or "none"}
+{work an artifact asked for that went another way, or "none"}
+
+## Unplanned changes
+
+{work no artifact asked for, recorded as it happened, or "none"}
+
+| What changed | Prompted by | Reconciled into | Disposition |
+|---|---|---|---|
+| {change} | {user mid-execute / found while implementing / after complete on {date}} | {artifact and section, or "—"} | captured / accepted as-is |
 
 ## Evidence
 

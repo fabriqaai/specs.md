@@ -26,7 +26,7 @@ Work from the round's `review-brief.md` in the bolt folder when one exists (temp
 ## What to hunt
 
 1. Contradictions between artifacts — code vs design, design vs brief, walkthrough claims vs code.
-2. Missing authority — behavior with no spec line, standard, or recorded decision behind it.
+2. Missing authority — behavior with no spec line, standard, or recorded decision behind it. When the behavior is right and the artifact is merely stale, say so: the fix direction is to capture the behavior in the artifact, not to change the code.
 3. Unsafe sequencing — operations whose order can corrupt state or lose work.
 4. Silent capability loss — behavior the spec names that quietly stopped working.
 5. Unverifiable completion claims — Evidence lines no command reproduces, checks that cannot fail, tests proving a mock instead of the behavior.

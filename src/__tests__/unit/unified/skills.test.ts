@@ -195,6 +195,32 @@ describe('specsmd flow skills', () => {
     expect(skillBody('plan-intent')).toMatch(/once the outcome is captured, write this intent's `tasks\.md`/);
   });
 
+  it('captures unplanned work back into the artifacts it belongs to', () => {
+    const implementing = readFileSync(join(SKILLS, 'bolt-execute/references/implementing.md'), 'utf8');
+    expect(implementing).toMatch(/## \d+\. Capture unplanned work/);
+    expect(implementing).toMatch(/when it happens/);
+    // Tiered by clarity: obvious destinations are written, ambiguous ones are asked.
+    expect(implementing).toMatch(/Do not stop for approval/);
+    expect(implementing).toMatch(/ask once, then act on the answer/);
+    expect(implementing).toMatch(/two artifacts are plausible homes/);
+    // The guardrail against laundering a defect into a requirement.
+    expect(implementing).toMatch(/Never weaken a gating criterion to match what was built/);
+    expect(implementing).toMatch(/captured/);
+    expect(implementing).toMatch(/accepted as-is/);
+    expect(implementing).toMatch(/append a dated row instead of reopening the bolt/);
+
+    const walkthrough = readFileSync(join(SKILLS, 'bolt-execute/references/walkthrough.md'), 'utf8');
+    expect(walkthrough).toMatch(/## Unplanned changes/);
+    expect(walkthrough).toMatch(/Reconciled into/);
+    expect(walkthrough).toMatch(/Disposition/);
+
+    const execute = skillBody('bolt-execute');
+    expect(execute).toMatch(/Capture unplanned work/);
+    expect(execute).toMatch(/unplanned change is still `open`/);
+    // A stale artifact is captured, not coded around.
+    expect(skillBody('bolt-review')).toMatch(/the artifact is merely stale/);
+  });
+
   it('walkthrough template always has deviations, evidence, and no language-tagged fence', () => {
     const walkthrough = readFileSync(join(SKILLS, 'bolt-execute/references/walkthrough.md'), 'utf8');
     expect(walkthrough).toMatch(/## Deviations from plan/);
