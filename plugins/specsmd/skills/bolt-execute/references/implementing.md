@@ -85,6 +85,8 @@ Applies when the review stage's recipe entry carries `loop`. Review is a lead ge
 
 ## 7. Walkthrough
 
+Write it per `references/writing.md` in the `flow-runtime` skill. The walkthrough is a **record**: append corrections, do not edit what an earlier stage recorded.
+
 Required headings: What changed, Why, Deviations from plan, Evidence, How to verify.
 
 - **Deviations** always exists. `none` if nothing diverged.

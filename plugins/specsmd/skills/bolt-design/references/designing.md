@@ -2,6 +2,8 @@
 
 No product code. Close caller-visible contracts. Dispatch on the **current stage's id and `produces`**.
 
+Write every artifact this stage produces per `references/writing.md` in the `flow-runtime` skill. A later implementer reads these files with no memory of this session, so each one names where its claims come from and stands on its own.
+
 ## 1. Load context
 
 1. `docs/specsmd/system/` docs whose claimed scope matches this bolt

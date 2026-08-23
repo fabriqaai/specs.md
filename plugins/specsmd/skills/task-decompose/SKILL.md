@@ -15,7 +15,7 @@ Turn an intent into vertical slices in that intent's `tasks.md`. Each slice is i
 
 Call this when the brief states the outcome clearly enough to slice. Write `tasks.md`. Then `bolt-design` groups those slices. Call it again to add slices.
 
-Follow `references/nlspec.md` in the `flow-runtime` skill (task / work-item register). Read the owning brief first. Do not contradict its outcome or Definition of Done. If two readings are interchangeable to a caller, pick one and name it. If they are not, ask.
+Follow `references/nlspec.md` in the `flow-runtime` skill for the task / work-item register, and `references/writing.md` in the `flow-runtime` skill for how any specsmd document is written. Read the owning brief first. Do not contradict its outcome or Definition of Done. If two readings are interchangeable to a caller, pick one and name it. If they are not, ask.
 
 ## Assess
 

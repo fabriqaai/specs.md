@@ -1,5 +1,7 @@
 # How to write an intent brief
 
+Write every document the flow produces per `references/writing.md` in the `flow-runtime` skill. This file adds what belongs in each section of a brief.
+
 The reader is a coding agent with **zero project context** who **guesses instead of asking**. Every gap becomes a wrong implementation. Write so two such agents, given only this brief, produce the same observable outcome.
 
 This is the **outcome layer**. Why + What + Done. How (defaults, recovery, algorithms) belongs on work items. If a sentence is only testable after you invent a slice, it does not belong here.

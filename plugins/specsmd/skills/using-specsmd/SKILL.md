@@ -63,6 +63,15 @@ Read **semantic memory first**, then working (non-terminal) change records. Acti
 
 Nothing here is a required next step.
 
+## Say where it comes from
+
+State what a claim rests on, in the sentence that makes it. "The bolt is on the review stage — that is what its frontmatter says" gives the user the fact and tells them whether to trust it. Claims reach you from sources that differ in reliability and in who can change them: the system prompt, skill definitions and their reference files, tool and MCP tool definitions, `AGENTS.md` and `CLAUDE.md`, `docs/specsmd/` artifacts (semantic and episodic), code files, a command's output, earlier messages in this session, the user's own words, and your own inference. A user can only correct the source they can see named.
+
+- Say it in prose, one clause, where the claim appears. A citation apparatus is not the goal — a natural sentence is.
+- Separate what you read from what you remember. A file you have not opened this session is remembered, not read: say so, or open it.
+- Mark inference as inference: "no standard covers this, so I am assuming X." A named assumption can be corrected; one stated as fact cannot.
+- When two sources disagree, name both and resolve by **Precedence** below rather than picking one silently.
+
 ## Precedence
 
 1. The user's direct instructions win.

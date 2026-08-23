@@ -125,8 +125,8 @@ describe('specsmd flow skills', () => {
     expect(body).toMatch(/two-implementer/i);
     expect(body).toMatch(/named freedoms/i);
     expect(body).toMatch(/extension point/);
-    expect(body).toMatch(/references\/writing\.md/);
-    const writing = readFileSync(join(SKILLS, 'plan-intent/references/writing.md'), 'utf8');
+    expect(body).toMatch(/references\/brief-writing\.md/);
+    const writing = readFileSync(join(SKILLS, 'plan-intent/references/brief-writing.md'), 'utf8');
     expect(writing).toMatch(/status quo/);
     expect(writing).toMatch(/No placeholders/);
     expect(writing).toMatch(/four parts/);
@@ -137,6 +137,44 @@ describe('specsmd flow skills', () => {
     expect(nlspec).toMatch(/Intent brief/);
     expect(nlspec).toMatch(/Work item/);
     expect(nlspec).toMatch(/tasks\.md/);
+  });
+
+  it('holds every document-writing skill to one writing standard', () => {
+    const writing = readFileSync(join(SKILLS, 'flow-runtime/references/writing.md'), 'utf8');
+    expect(writing).toMatch(/## Write for a reader with no history/);
+    expect(writing).toMatch(/does this stand alone/i);
+    expect(writing).toMatch(/## Say what to do/);
+    expect(writing).toMatch(/## Give the reason with the rule/);
+    expect(writing).toMatch(/## Use few examples, and balance them/);
+    expect(writing).toMatch(/## Name where each claim comes from/);
+    expect(writing).toMatch(/Mark inference as inference/);
+    // Records stay append-only: the delete rule must never reach the review ledger.
+    expect(writing).toMatch(/## Remove by deleting/);
+    expect(writing).toMatch(/prescriptive/i);
+    expect(writing).toMatch(/append-only/);
+    expect(writing).toMatch(/review-findings\.md/);
+
+    expect(skillBody('plan-intent')).toMatch(/references\/writing\.md/);
+    expect(skillBody('task-decompose')).toMatch(/references\/writing\.md/);
+    expect(skillBody('bolt-review')).toMatch(/references\/writing\.md/);
+    expect(skillBody('specsmd-init')).toMatch(/references\/writing\.md/);
+    const designing = readFileSync(join(SKILLS, 'bolt-design/references/designing.md'), 'utf8');
+    expect(designing).toMatch(/references\/writing\.md/);
+    const implementing = readFileSync(join(SKILLS, 'bolt-execute/references/implementing.md'), 'utf8');
+    expect(implementing).toMatch(/references\/writing\.md/);
+    expect(skillBody('flow-runtime')).toMatch(/references\/writing\.md/);
+  });
+
+  it('names the source of a claim instead of asserting it flat', () => {
+    const body = skillBody('using-specsmd');
+    expect(body).toMatch(/## Say where it comes from/);
+    expect(body).toMatch(/skill definitions/i);
+    expect(body).toMatch(/MCP tool definitions/);
+    expect(body).toMatch(/semantic and episodic/);
+    expect(body).toMatch(/read from what you remember/);
+    expect(body).toMatch(/Mark inference as inference/);
+    expect(body).toMatch(/citation apparatus is not the goal/);
+    expect(body).toMatch(/## Precedence/);
   });
 
   it('keeps every work item as a section in one tasks.md', () => {

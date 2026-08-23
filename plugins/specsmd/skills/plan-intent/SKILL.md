@@ -11,7 +11,7 @@ disable-model-invocation: true
 
 # Plan an intent
 
-Write an **intent-register nlspec** — the outcome layer. Follow `references/nlspec.md` in the `flow-runtime` skill and `references/writing.md` in this skill. Invocable at any time. Init is not required.
+Write an **intent-register nlspec** — the outcome layer. Follow `references/nlspec.md` in the `flow-runtime` skill, `references/writing.md` in the `flow-runtime` skill, and `references/brief-writing.md` in this skill. Invocable at any time. Init is not required.
 
 The brief is the source of truth for *why this change exists* and *what done looks like for the whole outcome*. `tasks.md` slices carry How (defaults, recovery, algorithms). Do not put How on the brief.
 
@@ -55,7 +55,7 @@ Present the brief **by section** (Problem → Outcome → Scope → Non-goals �
 
 ## 6. Write
 
-Create `docs/specsmd/intents/{nnn}-{slug}/brief.md` using `references/brief.md` in this skill. Fill it using `references/writing.md` in this skill. Next id is one more than the highest `{nnn}` already under `intents/`.
+Create `docs/specsmd/intents/{nnn}-{slug}/brief.md` using `references/brief.md` in this skill. Fill it using `references/brief-writing.md` in this skill. Next id is one more than the highest `{nnn}` already under `intents/`.
 
 Frontmatter:
 

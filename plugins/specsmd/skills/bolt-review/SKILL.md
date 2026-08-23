@@ -33,6 +33,8 @@ Work from the round's `review-brief.md` in the bolt folder when one exists (temp
 
 ## Report
 
+Write it per `references/writing.md` in the `flow-runtime` skill. The report is read by someone who did not sit through the review, so each finding stands on its own and names where its claim comes from.
+
 One entry per finding: **Severity / Where / Defect / Failure scenario / Evidence / Fix direction**. Fix direction is one sentence of intent, not a patch.
 
 Close the report with three lists: what you verified (commands and results), what you did not verify, and any recorded disposition in `review-findings.md` you believe is wrong, with evidence.

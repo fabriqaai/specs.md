@@ -40,6 +40,8 @@ docs/specsmd/
 
 Copy recipe files from `references/recipes/` in the `flow-runtime` skill as data.
 
+Write every file per `references/writing.md` in the `flow-runtime` skill — a standard that a later agent cannot act on is not a standard.
+
 Write **only** the ids in `standards.shipped` in `references/flow-contract.yaml` in the `flow-runtime` skill. Templates: `references/standards/{id}.md` in the `flow-runtime` skill for constitution and engineering; `references/nlspec.md` in the `flow-runtime` skill for nlspec (copy as-is — it is the flow writing standard, not inferred project law). Do not invent additional standard files.
 
 ### Lasting test
