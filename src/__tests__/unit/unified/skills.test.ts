@@ -207,7 +207,12 @@ describe('specsmd flow skills', () => {
     expect(implementing).toMatch(/Never weaken a gating criterion to match what was built/);
     expect(implementing).toMatch(/captured/);
     expect(implementing).toMatch(/accepted as-is/);
-    expect(implementing).toMatch(/append a dated row instead of reopening the bolt/);
+    expect(implementing).toMatch(/append a dated row instead of editing an existing one/);
+    // `open` must be able to resolve without breaking the append-only walkthrough rule.
+    expect(implementing).toMatch(/moves forward in place, `open → captured \| accepted as-is`/);
+    // A routing question is not the ceremony the Run section forbids.
+    expect(implementing).toMatch(/alters no observable behavior/);
+    expect(implementing).toMatch(/a caller exercising that task's behavior would meet the change/);
 
     const walkthrough = readFileSync(join(SKILLS, 'bolt-execute/references/walkthrough.md'), 'utf8');
     expect(walkthrough).toMatch(/## Unplanned changes/);
@@ -217,6 +222,8 @@ describe('specsmd flow skills', () => {
     const execute = skillBody('bolt-execute');
     expect(execute).toMatch(/Capture unplanned work/);
     expect(execute).toMatch(/unplanned change is still `open`/);
+    // A routing question is not the ceremony the Run section forbids.
+    expect(execute).toMatch(/Asking where a change belongs is not ceremony/);
     // A stale artifact is captured, not coded around.
     expect(skillBody('bolt-review')).toMatch(/the artifact is merely stale/);
   });

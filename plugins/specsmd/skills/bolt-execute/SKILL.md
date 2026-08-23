@@ -41,11 +41,13 @@ Ceremony does not apply here (`ceremony.applies_to: design`). Invoking this skil
 
 If `checkpoint_state` is `awaiting` on a non-design stage, set it to `not-required` and continue. Do not wait. Do not emit artifacts for approval. Do not ask to confirm, validate, or continue.
 
+Those are ceremony. Asking where a change belongs is not ceremony — **Capture unplanned work** below names the cases that earn a question.
+
 Follow `references/implementing.md` in this skill. The recipe snapshot is the only stage catalog.
 
 **Test first, cover always.** A gating criterion gets a failing check before product code, seen failing for the right reason. Every other behavior change gets a covering check in the same stage — no production file lands without one, an Evidence line naming the existing check that covers it, or a recorded decision exempting it (vendored or generated code).
 
-**Capture unplanned work.** Work no artifact asked for — a course correction, a forgotten requirement, a small change made along the way — goes into the walkthrough's `## Unplanned changes` as it happens. When its destination inside this bolt is clear, write it there and say what you wrote. When the work falls outside this bolt or two artifacts are plausible homes, ask once and act on the answer. Never rewrite a gating criterion to match what was built.
+**Capture unplanned work.** Work no artifact asked for — a course correction, a forgotten requirement, a small change made along the way — goes into the walkthrough's `## Unplanned changes` as it happens. When its destination inside this bolt is clear, write it there and say what you wrote. When the work falls outside this bolt or two artifacts are plausible homes, ask once and act on the answer. A change to a gating criterion or to `brief.md` is routed through `task-decompose` or `plan-intent`, never rewritten here to match what was built.
 
 **Review loop.** When the recipe's review stage carries `loop`, run review rounds per `references/implementing.md`: each round's reviewer is a fresh context following the `bolt-review` skill, findings adjudicate into `review-findings.md` with forward-only dispositions, and the loop closes on executable gates — the named suite plus an external anchor — never on a round returning no findings.
 

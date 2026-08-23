@@ -87,9 +87,9 @@ Applies when the review stage's recipe entry carries `loop`. Review is a lead ge
 
 Work reaches a bolt that no artifact asked for: a course correction mid-flight, a requirement nobody wrote down, a small change made because it was obviously needed. Left uncaptured, the artifacts describe a bolt the code no longer matches, and the next bolt plans from fiction.
 
-Record each one in the walkthrough's `## Unplanned changes` **when it happens**. Reconstructing a long session at the end loses the small ones, and the small ones are most of them.
+Record each one in the walkthrough's `## Unplanned changes` **when it happens**. Reconstructing a long session at the end loses the small ones, and the small ones are most of them. A change that alters no observable behavior — a rename, a comment, formatting — needs no row: this section keeps the artifacts and the behavior in step, and those changes move neither.
 
-Then place it. The destination decides whether to ask.
+Then place it. Work **extends** a task this bolt named when a caller exercising that task's behavior would meet the change; it falls **outside** when it serves an outcome no named task states. The destination decides whether to ask.
 
 **Clear destination inside this bolt — write it, then say what you wrote.** Do not stop for approval:
 
@@ -97,9 +97,10 @@ Then place it. The destination decides whether to ask.
 - behavior that extends a task this bolt named → add a Definition of Done line to that `tasks.md` section, marked as added during this bolt
 - a one-off with no future reader → the walkthrough row is the whole record
 
-**Outside this bolt, or the destination is ambiguous — ask once, then act on the answer.** One question, options, recommendation first, in the rhythm of `references/caller-contracts.md` in the `flow-runtime` skill:
+**Outside this bolt, or the destination is ambiguous — ask once, then act on the answer.** One question, options, recommendation first, in the rhythm of `references/caller-contracts.md` in the `flow-runtime` skill. A user who already named the destination has answered it: record it and carry on. Ask when:
 
 - the work falls outside every task this bolt named
+- both readings of extends-or-outside hold
 - two artifacts are plausible homes
 - it would change `brief.md` — the outcome belongs to `plan-intent`
 - it would rewrite an existing **gating** Definition of Done line
@@ -108,9 +109,9 @@ Never weaken a gating criterion to match what was built. A gating line that no l
 
 A change to a caller-visible contract — return, surfaces, set rule, shape, credential — is never captured here, in either tier. It reopens that hunt: tell the user and follow `bolt-design`, as §4 already requires. Capture records what a bolt did; it does not settle what two implementers would build.
 
-Each row carries a disposition: **captured** — an artifact now covers it, named in the row; **accepted as-is** — the user declined to capture it, and the row is the only record; **open** — no destination yet, which is a stop at complete.
+Each row carries a disposition: **captured** — an artifact now covers it, named in the row; **accepted as-is** — the user declined to capture it, and the row is the only record; **open** — no destination yet, which is a stop at complete. A disposition moves forward in place, `open → captured | accepted as-is`, and that cell is the only part of a row that changes. Everything else in the section is append-only.
 
-Once the bolt is complete, append a dated row instead of reopening the bolt. Substantial follow-on work is a new slice, not an amendment.
+Once the bolt is complete, append a dated row instead of editing an existing one or reopening the bolt. A post-completion row carries the same dispositions, and the change it records carries a covering check like any other. Substantial follow-on work is a new slice, not an amendment.
 
 ## 8. Walkthrough
 
