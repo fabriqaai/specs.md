@@ -8,7 +8,7 @@ They apply to every artifact the skills write: standards, briefs, tasks, plans, 
 
 ## Write for a reader with no history
 
-Every document stands alone. State its facts in full each time, because the reader has no access to the conversation, the earlier draft, or the session that decided anything.
+Every document stands alone from the conversation. State its local facts and link inherited contracts at their accepted paths so the reader can recover the necessary context without repeating those contracts.
 
 - Name the thing instead of pointing at it: "the bolt's recipe snapshot", not "the one picked earlier".
 - Spell out a term or abbreviation the first time it appears on the page, including the ones that feel obvious while writing.

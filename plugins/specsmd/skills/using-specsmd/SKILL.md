@@ -1,6 +1,6 @@
 ---
 name: using-specsmd
-description: Route product work in a specsmd project to its current intent, task or bolt. Load relevant context and preserve the requested phase and existing authorization.
+description: Skip standalone questions, read-only reviews and small self-contained edits unless explicitly requested. Route product work in a specsmd project for explicit flow requests, named intent/task/bolt continuation, or substantial delivery needing tracked planning and execution. Preserve the requested phase and existing authorization.
 license: MIT
 metadata:
   version: "1.0.0"
@@ -16,7 +16,11 @@ specsmd coordinates outcomes, tasks and execution under `docs/specsmd/`. Accepte
 
 ## When the flow applies
 
-For product behavior changes, inspect the active intent/task/bolt and resume the relevant phase. A clear request with settled requirements does not require another interview. Questions, read-only audits, documentation and skill maintenance do not automatically start a product-delivery ceremony. Honor the user's requested workflow and scope.
+Decide from the request and available conversation context before reading the memory bank. Use this flow for an explicit specsmd request, work already assigned to a named intent/task/bolt, or substantial product delivery that needs durable planning, coordinated slices and execution tracking.
+
+Handle standalone questions, explanations, read-only reviews, documentation/skill maintenance and small self-contained edits directly. A focused fix or minor UI change with settled scope does not need an intent just because it changes product behavior. Follow the owning code, relevant project contracts and required checks. Do not scan `docs/specsmd/`, invoke `specsmd-status`, or read this library's references merely to decide whether a simple request needs the flow. The directory's presence does not activate it; neither does an unrelated active bolt. If this skill was loaded for a direct request, return to that work without loading more flow context.
+
+When the request explicitly names the flow or continues its delivery work, inspect only the matching active artifacts and resume the relevant phase. A side question during that work does not restart planning. Honor a design-only, review-only or direct-work request; ask only about an unresolved material choice.
 
 Preserve prior answers and authorization available in the conversation and artifacts. On re-entry or compaction, resume from `current_stage`, `checkpoint_state` and the stored `recipe_snapshot`; do not infer phase from filenames or restart planning. If state is unclear, use `specsmd-status` for read-only orientation.
 

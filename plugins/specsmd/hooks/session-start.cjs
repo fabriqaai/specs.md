@@ -10,9 +10,9 @@ process.stdout.write(JSON.stringify({
   hookSpecificOutput: {
     hookEventName: 'SessionStart',
     additionalContext: [
-      'The unified specsmd flow is available. Load using-specsmd only when routing product work or resuming its active flow.',
-      'Read matching project context; reuse prior answers and task authorization. After compaction, resume from available conversation and artifact state rather than restarting an interview.',
-      'Preserve the requested phase and actual approval gates. Ask only about unresolved material choices; continue independent authorized work.',
+      'Use using-specsmd only when explicitly requested, continuing a named intent/task/bolt, or coordinating substantial product delivery.',
+      'Decide before loading the flow: standalone questions, read-only reviews and small self-contained edits stay direct; the memory-bank directory alone is not a trigger.',
+      'When the flow applies, reuse prior answers and authorization. After compaction resume matching artifacts; preserve phase and approval gates.',
     ].join(' '),
   },
 }));

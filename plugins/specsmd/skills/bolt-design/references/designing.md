@@ -28,9 +28,9 @@ Write every artifact this stage produces per `references/writing.md` in the `flo
 | `plan` or produces `plan.md` | Observable change + how we will know. Include `## Two-implementer`. | No |
 | `domain-model` or produces `domain-model.md` | Bounded context, ubiquitous language table, invariants. | No |
 | `design` or produces `design.md` | Observable contracts: shapes, defaults, errors, recovery. Field and error table. `## Two-implementer`. | No |
-| `decisions` or produces `decisions.md` | One file per decision under **this bolt's** `decisions/` folder. Index row on `docs/specsmd/decisions/index.md`. Rationale names the rejected alternative. A forbid without a required reading is a defect. | No |
+| `decisions` or produces `decisions.md` | Reference inherited decisions in `decisions.md`. Write each new or changed decision under **this bolt's** `decisions/` folder, with a discovery row on `docs/specsmd/decisions/index.md`. Rationale names the rejected alternative. A forbid without a required reading is a defect. | No |
 | `findings` or produces `findings.md` | What was tried, what is believed, what is unknown. | No |
-| `execute` / `implement` / `explore` / `test` / `review` / `walkthrough` | Stop. That is `bolt-execute`. | — |
+| `execute` / `implement` / `explore` / `test` / `review` / `walkthrough` | Follow `bolt-execute` when execution is already authorized and design gates passed; otherwise offer it at the requested phase boundary. | — |
 
 Honor `no_source_code`. Expired `time_box` completes into findings.
 
@@ -43,8 +43,8 @@ Before advancing off a design stage (plan, design, decisions, domain-model, find
 1. List still-open hunts: return, surfaces, set rule, shape, credential.
 2. Resolve each relevant check from prior answers, accepted contracts and owning code/tests. Ask only about a remaining material choice; settled checks can close immediately.
 3. Inherit and capture authorized decisions without repeated permission. A new scope change or contradiction needs the user's decision before changing the agreed contract.
-4. Write the decision under this bolt: `docs/specsmd/intents/{intent}/bolts/{bolt}/decisions/{id}.md`. Add a discovery row to `docs/specsmd/decisions/index.md` (title, summary, consult-when, path).
+4. For a new or changed decision, write `docs/specsmd/intents/{intent}/bolts/{bolt}/decisions/{id}.md` and add a discovery row to `docs/specsmd/decisions/index.md` (title, summary, consult-when, path). For an inherited decision, cite the accepted owner in the current artifact; the reference is sufficient and creates no new decision file or index row.
 5. Write `## Two-implementer` with `Open: none.` only when every hunt is closed.
-6. Two stories in the tree is a contradiction. Repair. Do not offer `bolt-execute`.
+6. Two stories in the active contract require repair before dependent execution. Resolve from accepted evidence or ask about the remaining material choice.
 
 The saved artifact must contain the resolved contracts; its review summary does not fill missing decisions. Use **Artifact review** in `references/transitions.md` in the `flow-runtime` skill to present it. Approval of a linked artifact accepts its saved revision, but cannot close a hunt left unresolved in that file.

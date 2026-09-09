@@ -2,7 +2,7 @@
 
 Write every document the flow produces per `references/writing.md` in the `flow-runtime` skill. This file adds what belongs in each section of a brief.
 
-The reader is a coding agent with **zero project context** who **guesses instead of asking**. Every gap becomes a wrong implementation. Write so two such agents, given only this brief, produce the same observable outcome.
+The reader has no memory of this conversation. State the outcome and reference accepted contracts by path so the reader can recover the relevant context without guessing.
 
 This is the **outcome layer**. Why + What + Done. How (defaults, recovery, algorithms) belongs on work items. If a sentence is only testable after you invent a slice, it does not belong here.
 
@@ -61,7 +61,7 @@ The bad sentence is a delivery vehicle. File trees and install commands are mech
 
 List what this change covers. Prefer a short table if the bound has parts. Do not list slices (that is decompose). Do not list modules.
 
-If the request names several independent outcomes, this is more than one intent. Stop. Name the outcomes. Write the first brief only.
+If the request names several independent outcomes, write a separate brief for each requested outcome. Follow the classification and scope rules in `SKILL.md`; ask about priority only when a material dependency or scope conflict remains unresolved.
 
 ## Non-goals = four parts each
 
@@ -131,7 +131,7 @@ Vacuum artifact: write the fact, not the history.
 > - [ ] Tests pass
 > - [ ] The code is clean
 
-Density check: if you cannot write the checkbox, you have not specified the outcome yet. Ask; do not pad.
+Density check: if you cannot write the checkbox, resolve from accepted context first. Save the known outcome with an explicit thin section and name any remaining material question; do not invent acceptance criteria.
 
 ## Two-implementer test
 
@@ -139,7 +139,7 @@ After the draft exists, read it as a stranger. Run the hunts in `references/call
 
 If the outcome has a caller (human or program), each hunt is either a fact in Outcome / DoD / a table, or a line under Named freedoms. Two procedures for the same set, or a forbid without a required reading, is a contradiction.
 
-If two implementers could pass every DoD line and a caller would still see different products, the brief is not done. Ask. Do not write the file.
+If two implementers could pass every DoD line and a caller would still see different products, assess whether an accepted contract or legitimate named freedom settles the difference. Save the brief with `status: draft` and explicit unresolved choices when it does not. Follow `references/caller-contracts.md` in the `flow-runtime` skill before asking; block acceptance and dependent implementation until the material choices are resolved. Review the saved file under **Artifact review** in that skill's `references/transitions.md`.
 
 ## Voice
 

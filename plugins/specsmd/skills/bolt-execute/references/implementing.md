@@ -30,7 +30,7 @@ Same scoped read path as design: matching `system/` documents, constitution + ne
 
 ## 4. Test first, cover always
 
-**Coverage floor.** Every behavior this stage adds or changes gets a covering check in the same stage. No production file lands without one — unless walkthrough **Evidence** names the existing check that covers it, or a recorded decision exempts it (vendored or generated code). Follow the **engineering** standard's verification rules. If that standard is missing or its verification rule is an unfilled placeholder, **stop** and say exactly that — which file, which field — and offer `specsmd-init`. Do not proceed testless.
+**Coverage floor.** Every behavior this stage adds or changes gets a covering check in the same stage, named existing coverage in walkthrough **Evidence**, or a recorded decision exempting it (vendored or generated code). Map evidence to changed behavior and owning boundaries. One check may cover several files; a file edit alone creates no additional evidence row. Follow the **engineering** standard's verification rules. If that standard is missing or its verification rule is an unfilled placeholder, **stop** and say exactly that — which file, which field — and offer `specsmd-init`. Do not proceed testless.
 
 **Gating criteria for new or changed behavior are test-first.** Existing passing checks can prove unchanged behavior; removal alone needs no new absence test. For each new or changed behavior criterion on the named tasks, one cycle:
 
@@ -41,15 +41,15 @@ Same scoped read path as design: matching `system/` documents, constitution + ne
 
 Record the failing-first observation for changed behavior and the existing evidence for unchanged criteria in walkthrough **Evidence**. For other behavior, order is free; coverage is not.
 
-**Case classes.** A behavior is covered when its checks observe:
+**Case classes.** Select checks for the changed contract and relevant risks:
 
 - the acceptance path
-- every refusal and error path
+- applicable refusal and error paths
 - boundaries — empty, zero, one, many, at-limit
 - absent or null input
 - replay or concurrent calls where the contract names idempotency
 
-A class that does not apply is dismissed in one Evidence line — never silently skipped.
+Omit irrelevant case classes from Evidence. Explain an unverified applicable case when it limits the completion claim; a missing gating check still blocks completion.
 
 Run the relevant existing checks. Fix failures caused by this change. Report unrelated baseline failures and continue independent authorized work; do not claim an affected required gate passed. Broaden verification for changed boundaries or unresolved risks, not simply because another stage starts.
 
@@ -57,9 +57,9 @@ If implementation reveals a new unresolved material caller contract, **stop depe
 
 ## 5. Prove
 
-1. Run the suite the engineering standard names.
+1. Run the relevant checks and any required suite the engineering standard names. Reuse passing results for the same state; repeat only after changes, failures or unresolved concerns justify it.
 2. Walk every **gating** Definition of Done line. Record the failing-first observation and observed vs expected in walkthrough **Evidence**.
-3. Walk the changed production files. Each is named in Evidence by its covering check, by the existing check that covers it, or by a recorded exemption. A file with none of these: do not complete.
+3. Review the diff for changed behavior and boundaries. Each is covered by a named check, existing evidence, or a recorded exemption. A changed behavior with none of these blocks completion.
 4. Do not complete while a gating line is unmet or the suite you own is red.
 
 Evidence lives in `walkthrough.md`. There is no separate test-report file.
@@ -68,7 +68,7 @@ Evidence lives in `walkthrough.md`. There is no separate test-report file.
 
 Applies when the review stage's recipe entry carries `loop`. Review is a lead generator; the loop closes on executable gates, **never on reviewer silence** — a round with no new findings does not end it, and a round with findings does not extend it past the budget. Each round:
 
-1. **Regression gate.** Re-run one or two checks already recorded green in Evidence. The previous round's fixes may have broken them; a regression is this round's first finding.
+1. **Regression gate.** After a round changes code, re-run the relevant checks recorded in Evidence; a regression is this round's first finding. Reuse passing results when the reviewed state is unchanged and no unresolved concern requires another run.
 2. **Brief.** Write `review-brief.md` in the bolt folder from `references/brief.md` in the `bolt-review` skill: change surface, read-first order, known-open list from the ledger, verification commands with expected results.
 3. **Review in a fresh context.** Each of the round's reviewers (`loop.reviewers`, default 1) follows the `bolt-review` skill in a context that has not seen this implementation work — a subagent when the harness has them, otherwise a new session pointed at the brief. The implementing context never grades its own work.
 4. **Adjudicate into the ledger.** Append findings to `review-findings.md` (template: `references/review-findings.md` in the `bolt-review` skill) under `## Round {n}`. Dispositions move **forward only**: `OPEN → FIXED | REFUTED | ACCEPTED`. Never rewrite or delete an earlier round's entries. `REFUTED` cites evidence, not preference. A finding is load-bearing only if it affects correctness or the stated requirements — do not chase advisory findings into over-engineering.
@@ -89,7 +89,7 @@ Work reaches a bolt that no artifact asked for: a course correction mid-flight, 
 
 Record each one in the walkthrough's `## Unplanned changes` **when it happens**. Reconstructing a long session at the end loses the small ones, and the small ones are most of them. A change that alters no observable behavior — a rename, a comment, formatting — needs no row: this section keeps the artifacts and the behavior in step, and those changes move neither.
 
-Then place it. Work **extends** a task this bolt named when a caller exercising that task's behavior would meet the change; it falls **outside** when it serves an outcome no named task states. The destination decides whether to ask.
+Then choose the owning artifact from accepted scope and project conventions. Work **extends** a task this bolt named when a caller exercising that task's behavior would meet the change; it falls **outside** when it serves an outcome no named task states. Routine placement is an implementation decision; an unresolved material choice about scope, caller behavior, authority or acceptance needs the user.
 
 **Clear destination inside this bolt — write it, then say what you wrote.** Do not stop for approval:
 
@@ -97,17 +97,17 @@ Then place it. Work **extends** a task this bolt named when a caller exercising 
 - behavior that extends a task this bolt named → add a Definition of Done line to that `tasks.md` section, marked as added during this bolt
 - a one-off with no future reader → the walkthrough row is the whole record
 
-**Outside this bolt, or the destination is ambiguous — ask once, then act on the answer.** One question, options, recommendation first, in the rhythm of `references/caller-contracts.md` in the `flow-runtime` skill. A user who already named the destination has answered it: record it and carry on. Ask when:
+**Unresolved material choice — ask once, then act on the answer.** Follow `references/caller-contracts.md` in the `flow-runtime` skill. Reuse prior answers and authorization; two plausible file locations alone do not need a question. Ask when evidence leaves a choice about:
 
-- the work falls outside every task this bolt named
-- both readings of extends-or-outside hold
-- two artifacts are plausible homes
-- it would change `brief.md` — the outcome belongs to `plan-intent`
-- it would rewrite an existing **gating** Definition of Done line
+- extending scope beyond the authorized outcome
+- incompatible caller behavior or authority
+- changing an accepted outcome or **gating** Definition of Done line
+
+Route authorized outcome edits through `plan-intent` and task acceptance edits through `task-decompose` in the same turn when the requested workflow includes them. Artifact routing preserves authorization and the selected gates; it does not create another permission requirement.
 
 Never weaken a gating criterion to match what was built. A gating line that no longer describes the wanted behavior is the user's decision, taken through `plan-intent` or `task-decompose`. Rewriting it here turns a defect into a requirement, and every bolt completes green.
 
-A change to a caller-visible contract — return, surfaces, set rule, shape, credential — is never captured here, in either tier. It reopens that hunt: tell the user and follow `bolt-design`, as §4 already requires. Capture records what a bolt did; it does not settle what two implementers would build.
+A new unresolved caller-visible contract — return, surfaces, set rule, shape, credential — returns dependent work to `bolt-design`, as §4 requires. A documentation omission already settled by accepted evidence can be captured directly; it creates no new hunt or decision.
 
 Each row carries a disposition: **captured** — an artifact now covers it, named in the row; **accepted as-is** — the user declined to capture it, and the row is the only record; **open** — no destination yet, which is a stop at complete. A disposition moves forward in place, `open → captured | accepted as-is`, and that cell is the only part of a row that changes. Everything else in the section is append-only.
 

@@ -40,6 +40,7 @@ Raise the tier with a recorded decision when violations recur.
 
 Keep these unless this project records stricter rules.
 
-- A gating Definition of Done line gets a failing check first — seen failing for the right reason before the product change.
-- Every behavior change carries a covering check observing: the acceptance path; every refusal and error path; boundaries (empty, zero, one, many, at-limit); absent or null input; replay where the contract names idempotency. A class that does not apply is dismissed in one Evidence line.
+- A gating Definition of Done line for new or changed behavior gets a failing check first — seen failing for the right reason before the product change. Existing passing evidence can prove unchanged behavior; removal alone requires no new absence test.
+- Every behavior change carries a covering check. Select applicable acceptance, refusal and error paths; boundaries (empty, zero, one, many, at-limit); absent or null input; and replay where the contract names idempotency. One check may cover several files; record evidence by changed behavior and boundary, omitting irrelevant case classes.
+- Run the relevant checks and required project suites. Reuse passing results for the same state; repeat or broaden only for changes, failures or unresolved concerns.
 - Name the exact checks that prove a work item before claiming it complete.

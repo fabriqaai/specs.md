@@ -183,6 +183,16 @@ describe('specsmd flow skills', () => {
     expect(body).toMatch(/## Precedence/);
   });
 
+  it('exposes the direct-work boundary before loading the workflow', () => {
+    expect(skillFrontmatter('using-specsmd')).toMatch(/small self-contained edits/);
+    expect(skillFrontmatter('using-specsmd')).toMatch(/standalone questions/);
+    expect(skillFrontmatter('using-specsmd')).toMatch(/explicit.*specsmd|specsmd.*explicit/);
+    expect(skillBody('using-specsmd')).toMatch(/before reading the memory bank/);
+    expect(skillBody('using-specsmd')).toMatch(/directory.*does not activate/);
+    expect(skillFrontmatter('specsmd-status')).toMatch(/delivery status/);
+    expect(skillFrontmatter('specsmd-status')).toMatch(/ordinary questions/);
+  });
+
   it('keeps every work item as a section in one tasks.md', () => {
     const template = readFileSync(join(SKILLS, 'task-decompose/references/task.md'), 'utf8');
     expect(template).toMatch(/- \[ \] \[\{id\}\]\(#\{id\}\)/);
@@ -199,10 +209,11 @@ describe('specsmd flow skills', () => {
     const implementing = readFileSync(join(SKILLS, 'bolt-execute/references/implementing.md'), 'utf8');
     expect(implementing).toMatch(/## \d+\. Capture unplanned work/);
     expect(implementing).toMatch(/when it happens/);
-    // Tiered by clarity: obvious destinations are written, ambiguous ones are asked.
+    // Placement follows settled ownership; only material choices need the user.
     expect(implementing).toMatch(/Do not stop for approval/);
     expect(implementing).toMatch(/ask once, then act on the answer/);
-    expect(implementing).toMatch(/two artifacts are plausible homes/);
+    expect(implementing).toMatch(/choose the owning artifact/i);
+    expect(implementing).toMatch(/unresolved material choice/);
     // The guardrail against laundering a defect into a requirement.
     expect(implementing).toMatch(/Never weaken a gating criterion to match what was built/);
     expect(implementing).toMatch(/captured/);
@@ -223,7 +234,7 @@ describe('specsmd flow skills', () => {
     expect(execute).toMatch(/Capture unplanned work/);
     expect(execute).toMatch(/unplanned change is still `open`/);
     // A routing question is not the ceremony the Run section forbids.
-    expect(execute).toMatch(/Asking where a change belongs is not ceremony/);
+    expect(execute).toMatch(/material choice/);
     // A stale artifact is captured, not coded around.
     expect(skillBody('bolt-review')).toMatch(/the artifact is merely stale/);
   });
@@ -293,6 +304,25 @@ describe('specsmd flow skills', () => {
     }
   });
 
+  it('saves every requested brief as a reviewable draft while material choices remain open', () => {
+    const brief = readFileSync(join(SKILLS, 'plan-intent/references/brief-writing.md'), 'utf8');
+    expect(brief).toMatch(/separate brief for each requested outcome/);
+    expect(brief).toMatch(/Save[\s\S]*status: draft/);
+    expect(brief).toMatch(/acceptance and dependent implementation/);
+    expect(brief).toMatch(/caller-contracts\.md/);
+  });
+
+  it('continues authorized decomposition without extending a limited phase request', () => {
+    expect(skillBody('bolt-design')).toMatch(/follow `task-decompose` in the same turn/);
+    expect(skillBody('bolt-design')).toMatch(/requested phase/);
+  });
+
+  it('references inherited decisions and records new or changed decisions', () => {
+    const design = readFileSync(join(SKILLS, 'bolt-design/references/designing.md'), 'utf8');
+    expect(design).toMatch(/new or changed decision/);
+    expect(design).toMatch(/cite the accepted/);
+  });
+
   it('keeps a coverage floor with test-first gating criteria', () => {
     const execute = skillBody('bolt-execute');
     expect(execute).toMatch(/covering check/);
@@ -305,7 +335,8 @@ describe('specsmd flow skills', () => {
     expect(implementing).toMatch(/order is free; coverage is not/);
     expect(implementing).toMatch(/empty, zero, one, many/);
     expect(implementing).toMatch(/absent or null input/);
-    expect(implementing).toMatch(/dismissed in one Evidence line/);
+    expect(implementing).toMatch(/One check may cover several files/);
+    expect(implementing).toMatch(/Omit irrelevant case classes/);
     expect(implementing).toMatch(/unfilled placeholder/);
     expect(implementing).toMatch(/Do not proceed testless/);
     const walkthrough = readFileSync(join(SKILLS, 'bolt-execute/references/walkthrough.md'), 'utf8');
@@ -317,7 +348,7 @@ describe('specsmd flow skills', () => {
     );
     expect(engineering).toMatch(/failing check first/);
     expect(engineering).toMatch(/empty, zero, one, many/);
-    expect(engineering).toMatch(/dismissed in one Evidence line/);
+    expect(engineering).toMatch(/One check may cover several files/);
   });
 
   it('keeps bolt-review a read-only lead generator', () => {

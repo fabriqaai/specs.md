@@ -26,7 +26,7 @@ acceptance. Do not activate a bolt under an unaccepted outcome.
 Resolve the intent from the request, named tasks and active context. Ask which intent only if more than one remains plausible after inspection.
 
 1. User asks only to draft or pre-group → **Draft**
-2. No active bolt on this intent and the user wants to start or design → **Start**. If the brief still has thin headings, offer `plan-intent`. If the outcome is captured and this intent has no `tasks.md` slices, write nothing and offer `task-decompose` so the bolt has slices to group.
+2. No active bolt on this intent and the user wants to start or design → **Start**. If the brief is thin, route to `plan-intent` within the authorized scope. If an accepted outcome has no `tasks.md` slices and the requested workflow includes decomposition, follow `task-decompose` in the same turn, then return here after its gates pass. When decomposition falls outside the requested phase, offer it and stop at that boundary.
 3. An active bolt whose `current_stage` is a design stage → **Run**
 4. `current_stage` is implement / execute / explore / test / review / walkthrough → route to `bolt-execute` when execution is already authorized; otherwise offer it. This design skill does not execute source changes.
 
@@ -90,7 +90,7 @@ work_items: [{id}, {id}]
 created: {ISO-8601}
 ```
 
-Set each named task to `status: active`. Set the owning intent to `active` if it was `pending`. Append this grouping choice to `grouping_history` on `project.md`.
+Set each named task to `status: active`. Set the owning intent to `active` if it was `pending`. Append this grouping choice to `grouping_history` on `project.md`, retaining only the last three choices as specified in `flow-runtime/references/transitions.md`. Each bolt retains its own full work-item grouping.
 
 Then continue to **Run** in the same invocation to prepare the current stage and present any required review. An awaiting checkpoint does not prevent writing its review artifacts.
 

@@ -18,6 +18,8 @@ describe('unified session routing', () => {
     expect(result.additionalContext).toContain('prior answers');
     expect(result.additionalContext).toContain('compaction');
     expect(result.additionalContext).toContain('only when');
+    expect(result.additionalContext).toContain('small self-contained edits');
+    expect(result.additionalContext).toContain('before loading');
     expect(result.additionalContext.length).toBeLessThan(1200);
   });
 

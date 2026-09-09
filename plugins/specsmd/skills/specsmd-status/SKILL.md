@@ -1,6 +1,6 @@
 ---
 name: specsmd-status
-description: Use when the user asks where the project stands, what to do next, or which specsmd flow is active — or when you need to route to the right flow skill and the project state is unclear. Reads docs/specsmd and suggests the next move without taking it.
+description: Use for delivery status requests about where the project stands, what to do next, or which specsmd flow is active. Orient when project state is unclear only if the flow is already relevant. Skip ordinary questions, debugging status and small direct edits. Reads docs/specsmd without taking the next step.
 license: MIT
 metadata:
   version: "1.0.0"
@@ -11,6 +11,10 @@ metadata:
 # specsmd Status
 
 Read-only orientation. Never write artifacts. Never invoke another skill. Never repair drift. Never warn, block, or nag if the user ignores every suggestion.
+
+Use only for delivery-state orientation. Answer a simple question or the progress
+of the current command directly from available evidence; do not inspect the
+memory bank just because the project contains one.
 
 ## Process
 

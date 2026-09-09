@@ -75,7 +75,7 @@ Do this yourself. Do not dispatch a reviewer.
 
 1. **Placeholder scan** — `TBD`, `TODO`, "appropriately", "as needed", empty headings. Fix or mark `*(thin)*`.
 2. **Closed loop** — every Outcome/Scope claim has a DoD line; every DoD line is grounded in Outcome or Scope.
-3. **Two-implementer** — run return / surfaces / set rule / shape / credential. Any hunt two agents could pass while a caller sees different products is a stop. Tighten, or name the freedom. Two stories in the tree: repair while the brief remains draft; do not accept contradictory requirements.
+3. **Two-implementer** — run return / surfaces / set rule / shape / credential. A material unresolved difference blocks acceptance and dependent implementation. Tighten from accepted evidence, name a legitimate freedom, or save the precise gap in the draft for review. Two stories in the tree: repair while the brief remains draft; do not accept contradictory requirements.
 4. **Non-goals** — each has name, what, why out, extension point.
 5. **Voice** — present tense, terms defined once, no synonyms, no history ("we decided").
 6. **Mechanism** — no files, modules, skills, recipes, languages in the body.
