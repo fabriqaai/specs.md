@@ -36,15 +36,15 @@ Honor `no_source_code`. Expired `time_box` completes into findings.
 
 ## 4. Two-implementer (required)
 
-Follow `references/caller-contracts.md` in the `flow-runtime` skill — **How to ask** and **Intent conflict**.
+Follow `references/caller-contracts.md` in the `flow-runtime` skill — **Resolve from evidence before asking** and **Intent conflict and capture**.
 
-Before advancing off a design stage that a later implementer will read (plan, design, decisions, domain-model):
+Before advancing off a design stage (plan, design, decisions, domain-model, findings), assess only the contracts relevant to its role. For findings, assess the authorized exploration and its evidence. Put research unknowns under What remains unknown; they block a dependent implementation until resolved, but do not keep the completed exploration open. Do not require findings before the exploration stage that produces them:
 
 1. List still-open hunts: return, surfaces, set rule, shape, credential.
-2. For each open hunt, **one question per turn**: options, what a caller observes under each, recommendation first. Wait.
-3. After each pick, check the brief and named tasks. Contradiction or needed inheritance → ask permission before editing the intent.
+2. Resolve each relevant check from prior answers, accepted contracts and owning code/tests. Ask only about a remaining material choice; settled checks can close immediately.
+3. Inherit and capture authorized decisions without repeated permission. A new scope change or contradiction needs the user's decision before changing the agreed contract.
 4. Write the decision under this bolt: `docs/specsmd/intents/{intent}/bolts/{bolt}/decisions/{id}.md`. Add a discovery row to `docs/specsmd/decisions/index.md` (title, summary, consult-when, path).
 5. Write `## Two-implementer` with `Open: none.` only when every hunt is closed.
 6. Two stories in the tree is a contradiction. Repair. Do not offer `bolt-execute`.
 
-Do not treat user approval of a *summary* as closing a hunt. The full artifact text is what implementers will read.
+The saved artifact must contain the resolved contracts; its review summary does not fill missing decisions. Use **Artifact review** in `references/transitions.md` in the `flow-runtime` skill to present it. Approval of a linked artifact accepts its saved revision, but cannot close a hunt left unresolved in that file.

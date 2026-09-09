@@ -1,6 +1,6 @@
 ---
 name: specsmd-init
-description: Use when a project has no docs/specsmd tree yet, or the user wants to initialize the specsmd flow. Asks autonomy bias, detects workspace shape, and records constitution plus one engineering standard.
+description: Use when a project has no docs/specsmd tree yet, or the user wants to initialize the specsmd flow. Reuses or defaults autonomy bias, detects workspace shape, and records lasting project standards.
 license: MIT
 metadata:
   version: "1.0.0"
@@ -11,7 +11,7 @@ disable-model-invocation: true
 
 # Initialize specsmd
 
-One required question: the project's **autonomy bias**.
+Use the project's existing or explicitly requested **autonomy bias**. Otherwise use `balanced` and state that default; a routine initialization needs no preference interview.
 
 | Bias | Meaning |
 |---|---|
@@ -48,7 +48,7 @@ Write **only** the ids in `standards.shipped` in `references/flow-contract.yaml`
 
 A rule belongs in constitution or engineering only if it will still be true after the current bolt and after the next five. Reject: this-bolt schema, table columns, agent operating procedure (AGENTS, charters, how to invoke skills), and implementation file names. Those go in a bolt decision, the spec, or AGENTS — not in `standards/`.
 
-In an existing codebase, infer constitution + engineering as invariants, show them, and confirm before writing. That confirmation is not a second required question. If nothing lasting can be inferred, write the seed rules from the templates and say so.
+In an existing codebase, infer constitution + engineering from accepted project rules and current evidence. Record confirmed invariants within the requested initialization. Ask before introducing a new material product rule; do not promote an incidental code pattern into law. If nothing lasting can be inferred, write the seed rules from the templates and say so.
 
 If `docs/specsmd/standards/` already has files, leave them. Do not replace or delete them.
 
@@ -59,5 +59,6 @@ Do not require a script. Write the files.
 State what now exists. Offer — without requiring — `plan-intent`.
 
 Declinable next (none required):
+
 - `plan-intent` — capture an outcome
 - `specsmd-status` — read the tree

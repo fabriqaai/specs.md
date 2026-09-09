@@ -1,20 +1,20 @@
 skill: using-specsmd
-description: Bootstrap — how and when to engage specsmd at session start, before other action.
+description: Route product work while preserving the requested phase and existing authorization.
 signatures:
-  - start of every session
-  - before any other response
-  - how and when to engage
+  - route product work
+  - requested phase
+  - existing authorization
   - specsmd project
 prompts:
   - id: new-session
-    text: I'm starting a new session in this specsmd project. What should I do first?
+    text: Route product work in this specsmd project using the accepted plan.
     expected: using-specsmd
   - id: how-to-use
-    text: How and when should I engage specsmd here before I write any code?
+    text: How do I use specsmd while preserving the requested phase?
     expected: using-specsmd
-  - id: establish-before-responding
-    text: This is a specsmd project. Establish how we work before any other response.
+  - id: resume-authorized
+    text: Resume our product work with the existing authorization after compaction.
     expected: using-specsmd
   - id: engage-flow
-    text: Before any other response, how and when do I engage specsmd flow skills?
+    text: Engage specsmd for the requested phase of this product work.
     expected: using-specsmd

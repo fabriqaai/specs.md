@@ -20,10 +20,11 @@ Skills write artifact bodies **and** frontmatter. Follow `references/flow-contra
 | File | What it settles |
 |---|---|
 | `references/flow-contract.yaml` | paths, status values, ceremony matrix, recipes list |
-| `references/transitions.md` | who may move which status, cascade, dynamic grouping |
+| `references/transitions.md` | saved-file artifact review, who may move which status, cascade, dynamic grouping |
 | `references/recipes/*.yaml` | stage catalogs (`default`, `ddd`, `spike`, `simple`, `autonomous`) |
 | `references/nlspec.md` | what belongs in intents and work items |
 | `references/writing.md` | how every specsmd document is written |
+| `references/caller-contracts.md` | infer settled contracts, ask only for material choices, preserve scope and review gates |
 | `references/standards/` | constitution and engineering templates |
 
 A bolt stores `recipe` plus `recipe_snapshot` at start. The snapshot does not change.

@@ -11,20 +11,24 @@ disable-model-invocation: true
 
 # Bolt design
 
-Draft, start, and the **no-code** recipe stages. Close caller-visible contracts. Do not write product code. When the next stage is implement / execute / explore, stop and offer `bolt-execute`.
+Draft, start, and the **no-code** recipe stages. Close caller-visible contracts. Do not write product code. When the next stage is implement / execute / explore, a design-only request stops. If the user already authorized the combined workflow, follow `bolt-execute` after required gates close.
 
 A bolt belongs to **exactly one intent**. Path: `docs/specsmd/intents/{intent}/bolts/{id}/`. Refuse a grouping that names tasks from another intent — name both intents and write nothing.
 
 You write artifact files **and** frontmatter. Follow `references/transitions.md` in the `flow-runtime` skill.
 
+If the owning brief has `status: draft`, route its review to `plan-intent` before
+starting or resuming delivery. Existing tasks or a filled-in brief do not grant
+acceptance. Do not activate a bolt under an unaccepted outcome.
+
 ## Dispatch
 
-If the user has not named an intent and more than one has pending or active work, ask which intent.
+Resolve the intent from the request, named tasks and active context. Ask which intent only if more than one remains plausible after inspection.
 
 1. User asks only to draft or pre-group → **Draft**
 2. No active bolt on this intent and the user wants to start or design → **Start**. If the brief still has thin headings, offer `plan-intent`. If the outcome is captured and this intent has no `tasks.md` slices, write nothing and offer `task-decompose` so the bolt has slices to group.
 3. An active bolt whose `current_stage` is a design stage → **Run**
-4. `current_stage` is implement / execute / explore / test / review / walkthrough → do not run those here. Offer `bolt-execute`.
+4. `current_stage` is implement / execute / explore / test / review / walkthrough → route to `bolt-execute` when execution is already authorized; otherwise offer it. This design skill does not execute source changes.
 
 ## Draft
 
@@ -40,7 +44,7 @@ If the chosen items' dependencies cycle, name the cycle. Write nothing else from
 
 Creates the execution container. Recipe and ceremony are recorded at creation and do not change.
 
-Calculate three offers from pending (not-on-an-active-bolt) tasks **on this intent**:
+Use the already authorized task set when specified. Otherwise select a coherent grouping from pending (not-on-an-active-bolt) tasks **on this intent**, using these available shapes:
 
 1. **Single** — one item
 2. **Batch** — items that share ceremony, or that the user names
@@ -48,7 +52,7 @@ Calculate three offers from pending (not-on-an-active-bolt) tasks **on this inte
 
 Recommend from autonomy bias (`autonomous` → wide, `controlled` → single, `balanced` → batch if more than two items). If `docs/specsmd/project.md` has `grouping_history` with three matching choices, pre-select that offer. The user may pick any offer or a custom set of items from this intent. Recipe: omit a recipe pick to take the complexity recommendation, or use a shipped or project-local id.
 
-If drafts exist on this intent, present exactly three options first: **adopt** a listed draft, **modify** a listed draft, **ignore** drafts for this start. Dismissing the prompt is **ignore**.
+For existing drafts the choices are **adopt**, **modify**, or **ignore**. Follow an explicit choice without re-asking. If no draft was requested and the authorized task set is clear, ignore drafts. Ask only if adopting or changing one would materially change the requested scope. Dismissing the prompt is **ignore**.
 
 - **Adopt** — copy the draft's work items and recipe; set the draft to `abandoned`
 - **Modify** — use the edited work items and recipe; leave the draft unless the user wants it consumed
@@ -88,7 +92,7 @@ created: {ISO-8601}
 
 Set each named task to `status: active`. Set the owning intent to `active` if it was `pending`. Append this grouping choice to `grouping_history` on `project.md`.
 
-Then continue to **Run** in the same invocation unless a gate is awaiting.
+Then continue to **Run** in the same invocation to prepare the current stage and present any required review. An awaiting checkpoint does not prevent writing its review artifacts.
 
 ## Run
 
@@ -96,9 +100,9 @@ Follow `references/designing.md` in this skill. The recipe snapshot is the only 
 
 Read the bolt frontmatter. Resume from `current_stage` and `checkpoint_state`. Do not infer the stage from which files exist.
 
-Load context first (semantic `system/` docs, constitution + nearest standards, `docs/specsmd/decisions/index.md`, the intent brief and named tasks). Show bolt progress. Then do **one** design stage.
+Load context first (semantic `system/` docs, constitution + nearest standards, `docs/specsmd/decisions/index.md`, the intent brief and named tasks). Show bolt progress. Continue eligible design stages in snapshot order until a required gate, a material blocker, a time box or the requested phase boundary.
 
-If `current_stage` is an implementation stage (empty `produces`, or id `execute` / `implement` / `explore` / `test` / `review` / `walkthrough`), stop. Offer `bolt-execute`.
+If `current_stage` is an implementation stage (empty `produces`, or id `execute` / `implement` / `explore` / `test` / `review` / `walkthrough`), respect the requested phase boundary. A design-only request stops; an already authorized combined workflow continues through `bolt-execute`.
 
 ### Ceremony while running
 
@@ -110,40 +114,47 @@ Gates are `ceremony.gates` in `references/flow-contract.yaml` in the `flow-runti
 | `confirm` | The first gateable design stage waits. |
 | `validate` | Every gateable design stage waits. |
 
-When `checkpoint_state` is `awaiting`:
+Use **Artifact review** in `references/transitions.md` in the `flow-runtime` skill. Complete and self-review the current stage's saved artifacts before
+presenting its gate. The prompt links those files with a concise summary.
 
-1. Write the stage's required artifacts if they are not already written.
-2. Emit the **full current text** of every artifact this stage produces in the same turn as the approval prompt. If the stage produces `plan.md`, emit the entire `plan.md` — not a summary, not a path, not an excerpt. A summary or path-only pointer does not count as review.
-3. Wait. Do not implement. Do not advance the stage. Do not start later stage work-producing side effects.
-4. On approval, set `checkpoint_state: granted`, then advance `current_stage` as below.
-
-Any non-approval reply leaves the gate `awaiting`. Denial phrases leave `awaiting`.
+When `checkpoint_state` is `awaiting`, requested revisions edit the same files.
+Do not advance the stage, implement, or start later stage side effects. Approval
+applies to the presented saved revision; substantive changes require review of
+the updated revision. On acceptance, set `checkpoint_state: granted` and advance
+without rewriting the approved artifacts. A non-approval reply leaves the gate
+`awaiting`.
 
 ### Each design stage
 
-If `checkpoint_state` is `awaiting`, this section does not apply — follow Ceremony while running above. Do not implement. Do not advance the stage.
-
-When `checkpoint_state` is `granted` or `not-required`:
+For a new or revised design stage:
 
 1. Dispatch from `references/designing.md` in this skill. Produce listed files under `docs/specsmd/intents/{intent}/bolts/{boltId}/`. Use a bundled template when the basename matches.
-2. The artifact is reviewable. Product specs stay in the brief and `tasks.md`.
-3. **Close hunts before advancing.** Follow `references/caller-contracts.md` in the `flow-runtime` skill — same rhythm as intent planning. One open hunt per turn. Offer A / B / C, explain what a caller observes under each, **recommend first**, wait. Do not batch. Do not write `Open: none.` in the same turn you first named the hunt.
-4. After each pick, check the intent brief and named tasks. If the pick contradicts them or the brief is silent and should inherit the choice, ask permission (change the pick / update the brief or task / name a freedom). Edit `brief.md` or `tasks.md` **only after an explicit yes**.
-5. Each closed hunt that is a real decision becomes a file at `docs/specsmd/intents/{intent}/bolts/{boltId}/decisions/{id}.md` (template `references/decision.md` in this skill). Append a row to `docs/specsmd/decisions/index.md`: title, one-line summary, consult-when, path. Also list it on this bolt's `decisions.md`.
-6. Write `## Two-implementer` with `Open: none.` only when every hunt is a chosen reading or a named freedom. Then append the stage to `stages_completed` and set the next `current_stage`.
+2. **Resolve from evidence before asking.** Follow `references/caller-contracts.md` in the `flow-runtime` skill. Inherit settled contracts, inspect current mechanics, and ask only about an unresolved material choice. A missing required answer blocks dependent work.
+3. Record authorized choices in the owning artifacts. If a choice changes scope or acceptance criteria or contradicts an accepted requirement, resolve the concrete difference before changing the contract. Never weaken a gate to fit implementation.
+4. Each closed hunt that is a real decision becomes a file under this bolt's `decisions/`, with its discovery row in `docs/specsmd/decisions/index.md` and a reference in this bolt's `decisions.md`.
+5. Write `## Two-implementer` with `Open: none.` only when every relevant hunt is resolved or a legitimate named freedom. Self-review the saved artifacts before requesting approval.
+6. If this stage has a required ungranted gate, set `checkpoint_state: awaiting` and follow Ceremony while running. Keep `current_stage` here until the saved revision is accepted. Otherwise use `not-required` and advance directly.
+
+After the stage's contracts close and its gate is `granted` or `not-required`,
+append the stage to `stages_completed` and set the next `current_stage`. Use the
+existing saved artifacts on resume; approval advances state without a second
+authoring pass. Determine the next stage's checkpoint from the ceremony; a grant
+for this stage does not grant a later `validate` gate.
 
 Autopilot still writes a plan when the recipe requires `plan.md`. Honor `no_source_code` and expired `time_box`.
 
-Do not write product source. Do not start `bolt-execute` as a chain.
+Do not write product source within this skill. For a design-only request, stop at that boundary. An already authorized combined workflow may proceed through `bolt-execute` after every required design gate is satisfied.
 
 ## Close
 
-State the bolt id, stage, and whether Two-implementer is `Open: none`. Offer at most three declinable next names. None is required. Do not invoke them.
+State the bolt id, stage, and whether Two-implementer is `Open: none`. Continue any next phase already authorized in the requested workflow after its gates pass. At the end of that scope, offer at most three optional next names without invoking them.
 
 Now exists:
+
 - `docs/specsmd/intents/{intent}/bolts/{id}/` design artifacts this invocation wrote
 
 Declinable next (none required):
+
 - `bolt-execute` — implement; it runs the rest without confirmation
 - `specsmd-status` — re-orient
 - `task-decompose` — add `tasks.md` slices

@@ -13,3 +13,9 @@
 ## Invariants
 
 {rules a caller can observe. present tense.}
+
+## Two-implementer
+
+{Resolved applicable contracts or precise inherited-contract references.}
+
+Open: {unresolved material choices; write none. only after assessment}

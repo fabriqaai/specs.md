@@ -20,4 +20,4 @@
 - Shape: {table or named freedom}
 - Credential: {chosen default or named freedom}
 
-Open: none.
+Open: {unresolved material choices; write none. only after assessment}

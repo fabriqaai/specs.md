@@ -1,6 +1,6 @@
 ---
 name: using-specsmd
-description: Use at the start of every session in a specsmd project, before any other response or action. Establishes how and when to engage the specsmd flow under docs/specsmd/.
+description: Route product work in a specsmd project to its current intent, task or bolt. Load relevant context and preserve the requested phase and existing authorization.
 license: MIT
 metadata:
   version: "1.0.0"
@@ -10,79 +10,41 @@ metadata:
 
 # Using specsmd
 
-<SUBAGENT-STOP>
-If you were dispatched as a subagent to execute one specific task, ignore this skill and do your task.
-</SUBAGENT-STOP>
+If dispatched for one bounded subtask, follow that assignment; do not restart the parent workflow.
 
-specsmd is the **specsmd flow**. Specifications under `docs/specsmd/` are the memory bank and the source of truth; code is derived from them.
+specsmd coordinates outcomes, tasks and execution under `docs/specsmd/`. Accepted requirements describe intended behavior; code, types and tests describe current mechanics. Follow the project's authority rules when they differ.
 
-## The rule
+## When the flow applies
 
-**Before writing product code, check whether this flow applies.** If the user asks to build, add, change, or fix behavior in a project that uses specsmd, follow the **Lifecycle** below. Do not jump straight to code because the request sounds small.
+For product behavior changes, inspect the active intent/task/bolt and resume the relevant phase. A clear request with settled requirements does not require another interview. Questions, read-only audits, documentation and skill maintenance do not automatically start a product-delivery ceremony. Honor the user's requested workflow and scope.
 
-If you are unsure of project state, invoke the `specsmd-status` skill. Never guess state from conversation memory.
+Preserve prior answers and authorization available in the conversation and artifacts. On re-entry or compaction, resume from `current_stage`, `checkpoint_state` and the stored `recipe_snapshot`; do not infer phase from filenames or restart planning. If state is unclear, use `specsmd-status` for read-only orientation.
 
 ## Lifecycle
 
-One outcome, then slices, then a bolt that designs and then builds.
+1. `specsmd-init` — if the memory bank is absent and initialization is needed.
+2. `plan-intent` — save and review the outcome brief. Stay here while it is `draft`, thin or still being decided; acceptance moves a new brief to `pending`.
+3. `task-decompose` — after the outcome is clear, write or extend its `tasks.md` slices.
+4. `bolt-design` — group tasks from one intent and produce the recipe's design artifacts. Resolve contracts using `flow-runtime/references/caller-contracts.md`; preserve the selected review gates.
+5. `bolt-execute` — after required design is accepted and `Open: none.`, implement, verify and record evidence.
+6. Complete the bolt, its named tasks, then the intent only when its tasks are terminal and required evidence exists.
 
-1. `specsmd-init` — once, if `docs/specsmd/` does not exist.
-2. `plan-intent` — write the brief (problem, outcome, what done looks like). Stay here while the outcome is thin or still being decided.
-3. `task-decompose` — after the outcome is clear, write that intent's `tasks.md`. Call again to add slices.
-4. `bolt-design` — after this intent has tasks, start a bolt. Close caller-visible contracts. Every confirmation lives here.
-5. `bolt-execute` — after design is accepted (`Open: none.`), implement, test, and walk through in one go.
-6. Complete — bolt, then named tasks, then the intent when every task on it is terminal.
-
-`specsmd-status` orients at any time. It writes nothing.
-
-## Shape of the flow
-
-- **Intent** — problem, outcome, scope, non-goals. No mechanism. File: `brief.md`.
-- **Task** — a vertical slice with a behavioral Definition of Done, as a `##` section in the intent's `tasks.md`. Complexity is decision load.
-- **Bolt** — the execution container, scoped to one intent. `bolt-design` writes plan/design and closes caller-visible contracts. `bolt-execute` implements only after those hunts are closed.
-
-Artifacts live in `docs/specsmd/`. State lives in YAML frontmatter. **Skills write that frontmatter** following `transitions.md` in the `flow-runtime` skill.
+Reviews link saved artifacts with a concise summary, following **Artifact review** in `flow-runtime/references/transitions.md`; approval advances their existing state. An explicit combined workflow may continue across phases within that authorization. A request for one phase stops at its boundary. `flow-runtime` is a reference library, not a next step; `specsmd-status` writes nothing. Skills write artifact frontmatter using `flow-runtime/references/transitions.md`.
 
 ## Read path
 
-Read **semantic memory first**, then working (non-terminal) change records. Active change records stay on the working read path. Do not open **episodic** artifacts unless a semantic document points at them or the user asks for history.
+Read relevant semantic and active task context before historical records. Search indexes first; load only matching `system/` scopes, the constitution and nearest standards, the current brief/tasks, and decisions whose `consult_when` applies. Use owning code and behavior tests for local mechanics. Open completed episodic records only when a current contract points there or the task asks for history.
 
-1. `docs/specsmd/system/`
-2. `docs/specsmd/standards/`
-3. `docs/specsmd/decisions/index.md` — discovery only. Decision files live on the bolt that made them (`docs/specsmd/intents/{intent}/bolts/{bolt}/decisions/`). Open a linked file only when `consult_when` matches or the user asks for history.
-
-## Skills (invoke by name, except this skill and `specsmd-status`)
-
-| Skill | When |
-|---|---|
-| `specsmd-init` | No `docs/specsmd/` tree yet |
-| `plan-intent` | Capture or keep shaping an outcome brief |
-| `task-decompose` | After the brief's outcome is captured; write or extend that intent's `tasks.md` |
-| `bolt-design` | This intent has `tasks.md` slices; start or continue design |
-| `bolt-execute` | Design is accepted; implement |
-
-Nothing here is a required next step.
+Initiative guidance has a lifetime. When a milestone ends, retain outstanding obligations in active tasks and promote only enduring contracts into the project's chosen current documentation. Archive the execution narrative; a completed foundation charter is not mandatory context forever. Use existing system registration fields to name applicability and the retirement condition; do not invent a second state system.
 
 ## Say where it comes from
 
-State what a claim rests on, in the sentence that makes it. "The bolt is on the review stage — that is what its frontmatter says" gives the user the fact and tells them whether to trust it. Claims reach you from sources that differ in reliability and in who can change them: the system prompt, skill definitions and their reference files, tool and MCP tool definitions, `AGENTS.md` and `CLAUDE.md`, `docs/specsmd/` artifacts (semantic and episodic), code files, a command's output, earlier messages in this session, the user's own words, and your own inference. A user can only correct the source they can see named.
-
-- Say it in prose, one clause, where the claim appears. A citation apparatus is not the goal — a natural sentence is.
-- Separate what you read from what you remember. A file you have not opened this session is remembered, not read: say so, or open it.
-- Mark inference as inference: "no standard covers this, so I am assuming X." A named assumption can be corrected; one stated as fact cannot.
-- When two sources disagree, name both and resolve by **Precedence** below rather than picking one silently.
+Distinguish what you read from what you remember. Name the relevant source when it changes how a claim should be trusted: current code/tests, accepted artifacts, skill definitions, MCP tool definitions or user instructions. Mark inference as inference when it affects the decision. A citation apparatus is not the goal; concise evidence is.
 
 ## Precedence
 
-1. The user's direct instructions win.
-2. Skills override default coding-agent behavior.
-3. Illegal state (unknown status token, complete without evidence) is refused in the skill — say what is missing.
+The user's direct instructions and task authorization govern skill use. Follow project authority and scope rules; skills do not silently amend product requirements. Illegal status tokens or completion without evidence remain errors. Ask only about an unresolved material choice, never for permission already given.
 
 ## Close
 
-This skill writes nothing.
-
-Declinable next (none required):
-- `specsmd-status` — read the tree
-- `plan-intent` — capture an outcome
-- `specsmd-init` — if the tree does not exist
+This skill writes nothing. Continue the requested work; do not emit an obligatory menu of next skills.

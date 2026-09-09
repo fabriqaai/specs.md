@@ -117,8 +117,8 @@ describe('specsmd flow skills', () => {
     expect(body).toMatch(/scope/i);
     expect(body).toMatch(/non-goals/i);
     expect(body).toMatch(/dividing question/);
-    expect(body).toMatch(/one question per turn/i);
-    expect(body).toMatch(/Wait for an explicit yes/);
+    expect(body).toMatch(/Resolve from evidence before asking/);
+    expect(body).toMatch(/Keep `status: draft` until the outcome is accepted/);
     expect(body).toMatch(/caller-contracts/);
     expect(body).toMatch(/return \/ surfaces \/ set rule \/ shape \/ credential/);
     expect(body).toMatch(/Self-review/);
@@ -176,7 +176,7 @@ describe('specsmd flow skills', () => {
     expect(body).toMatch(/## Say where it comes from/);
     expect(body).toMatch(/skill definitions/i);
     expect(body).toMatch(/MCP tool definitions/);
-    expect(body).toMatch(/semantic and episodic/);
+    expect(body).toMatch(/semantic[\s\S]*episodic/);
     expect(body).toMatch(/read from what you remember/);
     expect(body).toMatch(/Mark inference as inference/);
     expect(body).toMatch(/citation apparatus is not the goal/);
@@ -245,10 +245,10 @@ describe('specsmd flow skills', () => {
     expect(design).toMatch(/Do not write product code/);
     expect(design).toMatch(/Two-implementer/);
     expect(design).toMatch(/caller-contracts/);
-    expect(design).toMatch(/One open hunt per turn/);
-    expect(design).toMatch(/recommend first/);
-    expect(design).toMatch(/only after an explicit yes/);
-    expect(design).toMatch(/bolts\/\{boltId\}\/decisions\//);
+    expect(design).toMatch(/Resolve from evidence before asking/);
+    expect(design).toMatch(/already authorized/);
+    expect(design).toMatch(/scope or acceptance criteria/);
+    expect(design).toMatch(/under this bolt's `decisions\/`/);
     expect(design).toMatch(/decisions\/index\.md/);
     expect(execute).toMatch(/test first/i);
     expect(execute).toMatch(/No confirmation/);
@@ -268,6 +268,29 @@ describe('specsmd flow skills', () => {
     expect(implementing).toMatch(/longest matching/);
     expect(implementing).toMatch(/engineering/);
     expect(implementing).not.toMatch(/testing standard/);
+  });
+
+  it('routes material decisions through evidence and preserves authority', () => {
+    const policy = readFileSync(join(SKILLS, 'flow-runtime/references/caller-contracts.md'), 'utf8');
+    for (const rule of [
+      'Resolve from evidence before asking', 'prior answers', 'accepted decisions',
+      'owning code', 'material', 'independent work', 'same turn',
+      'Do not ask again', 'Never weaken a gating criterion',
+    ]) expect(policy).toContain(rule);
+    for (const name of ['plan-intent', 'task-decompose', 'bolt-design', 'bolt-execute']) {
+      expect(skillBody(name), name).toContain('caller-contracts.md');
+    }
+    expect(skillBody('bolt-design')).toContain('Continue eligible design stages');
+    expect(skillBody('bolt-design')).toContain('design-only');
+    expect(skillBody('using-specsmd')).toContain('compaction');
+  });
+
+  it('design templates declare unresolved contract checks until assessed', () => {
+    for (const name of ['plan', 'design', 'domain-model', 'decisions', 'findings']) {
+      const template = readFileSync(join(SKILLS, `bolt-design/references/${name}.md`), 'utf8');
+      expect(template, name).toContain('## Two-implementer');
+      expect(template, name).toContain('Open: {');
+    }
   });
 
   it('keeps a coverage floor with test-first gating criteria', () => {
@@ -367,12 +390,24 @@ describe('specsmd flow skills', () => {
     expect(body).toMatch(/Dismissing the prompt is \*\*ignore\*\*/);
   });
 
-  it('requires genuine review of the full plan text', () => {
+  it('uses the shared saved-file review policy before advancing a design gate', () => {
+    const transitions = readFileSync(join(SKILLS, 'flow-runtime/references/transitions.md'), 'utf8');
+    expect(transitions).toMatch(/approval\.review/);
+    expect(transitions).toMatch(/saved revision/i);
+    expect(transitions).toMatch(/substantive.*change[\s\S]*awaiting/i);
+    expect(transitions).toMatch(/without regenerating/i);
     const body = skillBody('bolt-design');
-    expect(body).toMatch(/full current text/i);
-    expect(body).toMatch(/not a summary/i);
-    expect(body).toMatch(/this section does not apply/);
+    expect(body).toMatch(/Artifact review/);
     expect(body).toMatch(/Do not advance the stage/);
+    expect(body).toMatch(/granted[\s\S]*without rewriting/i);
+  });
+
+  it('keeps an unaccepted brief out of decomposition and execution', () => {
+    expect(skillBody('plan-intent')).toMatch(/status: draft/);
+    for (const name of ['task-decompose', 'bolt-design', 'bolt-execute']) {
+      expect(skillBody(name), name).toMatch(/brief[\s\S]*status: draft[\s\S]*plan-intent/);
+    }
+    expect(skillBody('specsmd-status')).toMatch(/draft brief[\s\S]*plan-intent/);
   });
 
   it('init writes constitution plus one engineering standard and copies nlspec', () => {
@@ -399,7 +434,7 @@ describe('specsmd flow skills', () => {
     expect(body).toMatch(/`task-decompose`/);
     expect(body).toMatch(/`bolt-design`/);
     expect(body).toMatch(/`bolt-execute`/);
-    expect(body).toMatch(/Stay here while the outcome is thin/);
+    expect(body).toMatch(/Stay here while it is `draft`, thin/);
     expect(body).toMatch(/after the outcome is clear/);
   });
 
@@ -412,7 +447,7 @@ describe('specsmd flow skills', () => {
     );
     expect(body).toMatch(/Never suggest `flow-runtime`/);
     expect(body).toMatch(/unfinished brief.*`plan-intent`/s);
-    expect(body).toMatch(/Outcome captured.*`task-decompose`/);
+    expect(body).toMatch(/Accepted outcome.*`task-decompose`/);
   });
 
   it('recommends a recipe from complexity when the user omits one', () => {

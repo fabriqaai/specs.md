@@ -12,13 +12,43 @@ Never write `in-progress`, `completed`, or `done`.
 
 | From | To | Skill |
 |---|---|---|
-| (none) | `pending` | `plan-intent`, `task-decompose` |
-| (none) | `draft` | `bolt-design` |
+| (none) | `draft` | `plan-intent` (new brief), `bolt-design` (optional bolt proposal) |
+| `draft` | `pending` | `plan-intent` (brief accepted) |
+| (none) | `pending` | `task-decompose` (under an accepted brief) |
 | `draft` | `active` | `bolt-design` (adopt) |
 | `draft` | `abandoned` | `bolt-design` (adopt consumes the draft) |
 | `pending` | `active` | `bolt-design` (items named on the new bolt) |
 | `active` | `complete` | `bolt-execute` (bolt, then cascade items, then intent if all items terminal) |
 | any non-terminal | `abandoned` | any shaping skill when the user abandons the work |
+
+A draft brief is an unaccepted outcome, even when all headings are filled.
+Decomposition, bolt activation and execution require an accepted brief. Explicit
+prior authorization to capture settled requirements permits the brief to become
+`pending` in the same turn. A project autonomy bias alone does not accept a brief.
+Existing accepted briefs retain their lifecycle status for authorized edits.
+
+## Artifact review
+
+Follow `approval.review` in `flow-contract.yaml` for briefs and gated design stages.
+The saved files are the review artifact; the chat presents links and a short
+summary of the outcome, material choices and gating acceptance criteria. Include
+the full text inline only when the user requests it. Write and self-review the
+complete draft at its target path before requesting approval; do not create a
+second chat copy, temporary review document or separate per-stage status system.
+
+Approval applies to the saved revision presented at those links. Before accepting,
+read the current artifact and check for substantive changes since presentation.
+If it changed, summarize the changes and keep the brief `draft` or checkpoint
+`awaiting` until that revision is accepted. If re-entry or compaction leaves the
+reviewed revision uncertain, do not infer approval for the current contents.
+Requested edits update the same file; a denial or silence does not grant approval.
+
+Acceptance changes workflow metadata without regenerating the reviewed body:
+new brief `draft` → `pending`; gated design `awaiting` → `granted` on the parent
+bolt. Stage documents inherit the parent's state. Do not advance a gated stage
+before approval or treat approval as closing unresolved caller contracts. After
+acceptance, continue only the already-authorized workflow. Autopilot writes the
+same required artifacts and advances without routine approval prompts.
 
 ## Bolt fields the execute path maintains
 
@@ -36,7 +66,7 @@ A bolt lives at `docs/specsmd/intents/{intent}/bolts/{id}/`. It is scoped to one
 
 ## Dynamic grouping (FIRE flexibility)
 
-At start, calculate three offers from pending (unbolted) work items **on the chosen intent**:
+At start, use the user's named work items. Otherwise choose a coherent group of pending (unbolted) work items **on the chosen intent**, using these shapes without a mandatory grouping interview:
 
 1. **Single** — one item
 2. **Batch** — items that share ceremony (or that the user names)
@@ -66,6 +96,6 @@ Read `ceremony.gates` and `ceremony.applies_to` from `flow-contract.yaml`. Gates
 - `confirm` — wait on the first gateable design stage
 - `validate` — wait on every gateable design stage
 
-Waiting means: write the stage artifacts, emit their **full current text** (not a summary), and stop until the user approves. Then set `checkpoint_state: granted` and advance `current_stage`.
+Waiting uses **Artifact review** above: save the stage artifacts, link them with a concise summary, and keep `checkpoint_state: awaiting` until that saved revision is approved. Then set `checkpoint_state: granted` and advance `current_stage` without rewriting the approved artifacts.
 
-Invoking `bolt-execute` is the go-ahead. That skill runs remaining implement stages without confirmation.
+Invoking `bolt-execute`, or explicit authorization for the combined workflow, is the go-ahead. That skill runs remaining implement stages without confirmation. A design-only request still stops before implementation. Resolve clarification questions through `caller-contracts.md`; evidence-backed answers are not extra ceremony gates.

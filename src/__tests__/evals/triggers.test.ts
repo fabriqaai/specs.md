@@ -68,7 +68,7 @@ describe('trigger evals', () => {
         [
           '---',
           'name: using-specsmd',
-          'description: Use at the start of every session in a specsmd project, before any other response or action. Establishes how and when to engage specsmd flow skills.',
+          'description: Route product work in a specsmd project. Preserve the requested phase and existing authorization.',
           '---',
           '',
           '# Using specsmd',

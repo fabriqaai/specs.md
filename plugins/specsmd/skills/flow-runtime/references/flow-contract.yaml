@@ -3,7 +3,7 @@
 # Skills read this file and write matching frontmatter. There are no state scripts.
 
 id: specsmd-flow
-version: "0.4.0"
+version: "0.5.0"
 artifact_root: docs/specsmd
 memory_bank: docs/specsmd
 
@@ -143,6 +143,11 @@ checkpoint_state:
   default: none
 
 approval:
+  review:
+    source: saved_files
+    chat: links_and_summary
+    full_text: on_request
+    scope: saved_revision
   grant:
     - yes
     - y
@@ -192,6 +197,10 @@ artifact_types:
       - created
   intent:
     path: intents/{id}/brief.md
+    initial_status: draft
+    approval_transition:
+      from: draft
+      to: pending
     identifier_pattern: intent
     memory_class: change_record
     fields:

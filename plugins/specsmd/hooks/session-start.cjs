@@ -1,36 +1,18 @@
 #!/usr/bin/env node
-/**
- * SessionStart hook: injects using-specsmd so the session engages the unified flow.
- * Never breaks session start.
- */
+// SessionStart routes to the unified flow without injecting the full skill.
 const fs = require('fs');
 const path = require('path');
-
 const pluginRoot = process.env.CLAUDE_PLUGIN_ROOT || path.resolve(__dirname, '..');
-const skillPath = path.join(pluginRoot, 'skills', 'using-specsmd', 'SKILL.md');
-
-let body = '';
 try {
-  const raw = fs.readFileSync(skillPath, 'utf8');
-  body = raw.replace(/^---\n[\s\S]*?\n---\n/, '');
-} catch {
-  process.exit(0);
-}
-
-const context = [
-  '<IMPORTANT>',
-  'This project uses specsmd (unified bolt flow).',
-  "Below is the full content of the 'using-specsmd' skill — your introduction to working in this project. For all other specsmd skills, use the Skill tool:",
-  '',
-  body.trim(),
-  '</IMPORTANT>',
-].join('\n');
-
-process.stdout.write(
-  JSON.stringify({
-    hookSpecificOutput: {
-      hookEventName: 'SessionStart',
-      additionalContext: context,
-    },
-  })
-);
+  fs.accessSync(path.join(pluginRoot, 'skills/using-specsmd/SKILL.md'), fs.constants.R_OK);
+} catch { process.exit(0); }
+process.stdout.write(JSON.stringify({
+  hookSpecificOutput: {
+    hookEventName: 'SessionStart',
+    additionalContext: [
+      'The unified specsmd flow is available. Load using-specsmd only when routing product work or resuming its active flow.',
+      'Read matching project context; reuse prior answers and task authorization. After compaction, resume from available conversation and artifact state rather than restarting an interview.',
+      'Preserve the requested phase and actual approval gates. Ask only about unresolved material choices; continue independent authorized work.',
+    ].join(' '),
+  },
+}));

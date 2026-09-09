@@ -4,7 +4,7 @@ Product code only after design hunts are closed. No ceremony. Do not wait for co
 
 ## 1. Load context
 
-Same read path as design: `system/`, constitution + nearest standards, decisions index, brief, named tasks, this bolt's frontmatter. Apply the **longest matching** standards scope. Constitution always applies.
+Same scoped read path as design: matching `system/` documents, constitution + nearest standards, relevant decisions, brief, named tasks, this bolt's frontmatter. Apply the **longest matching** standards scope. Constitution always applies.
 
 **Existing code:** read before write. Match naming and patterns. Preserve existing tests.
 
@@ -32,14 +32,14 @@ Same read path as design: `system/`, constitution + nearest standards, decisions
 
 **Coverage floor.** Every behavior this stage adds or changes gets a covering check in the same stage. No production file lands without one — unless walkthrough **Evidence** names the existing check that covers it, or a recorded decision exempts it (vendored or generated code). Follow the **engineering** standard's verification rules. If that standard is missing or its verification rule is an unfilled placeholder, **stop** and say exactly that — which file, which field — and offer `specsmd-init`. Do not proceed testless.
 
-**Gating criteria are test-first.** For each gating criterion on the named tasks, one cycle:
+**Gating criteria for new or changed behavior are test-first.** Existing passing checks can prove unchanged behavior; removal alone needs no new absence test. For each new or changed behavior criterion on the named tasks, one cycle:
 
 1. Write a failing check that observes that criterion.
-2. Run it. See it fail for the right reason. If it passes, the check is wrong.
+2. Run it. See it fail for the right reason. If it already passes, inspect whether the desired behavior already exists; do not create an artificial failure.
 3. Change the smallest amount of product behavior that makes the check pass.
 4. Run again. Pass. Do not add behavior the criterion does not require.
 
-Record the failing-first observation for each gating line in walkthrough **Evidence**. Never skip the failing check for a gating criterion. For other behavior, order is free; coverage is not.
+Record the failing-first observation for changed behavior and the existing evidence for unchanged criteria in walkthrough **Evidence**. For other behavior, order is free; coverage is not.
 
 **Case classes.** A behavior is covered when its checks observe:
 
@@ -51,9 +51,9 @@ Record the failing-first observation for each gating line in walkthrough **Evide
 
 A class that does not apply is dismissed in one Evidence line — never silently skipped.
 
-Then run the existing suite. A red suite you did not cause is a stop. A red suite you caused, you fix.
+Run the relevant existing checks. Fix failures caused by this change. Report unrelated baseline failures and continue independent authorized work; do not claim an affected required gate passed. Broaden verification for changed boundaries or unresolved risks, not simply because another stage starts.
 
-If implement would require choosing return, surfaces, set rule, shape, or credential and design did not close that hunt, **stop**. Tell the user the hunt is open and follow `bolt-design`.
+If implementation reveals a new unresolved material caller contract, **stop dependent work** and use `references/caller-contracts.md` in `flow-runtime`. Inherit settled return, surfaces, set rule, shape and credential decisions. Tell the user the hunt is open and follow `bolt-design`.
 
 ## 5. Prove
 

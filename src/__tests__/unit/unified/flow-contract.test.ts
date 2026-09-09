@@ -97,6 +97,26 @@ describe('flow contract', () => {
     expect(readFileSync(join(REFERENCES, 'nlspec.md'), 'utf8')).toMatch(/^---\nid: nlspec/m);
   });
 
+  it('keeps artifact review on saved files and the presented revision', () => {
+    expect(contract.approval.review).toEqual({
+      source: 'saved_files',
+      chat: 'links_and_summary',
+      full_text: 'on_request',
+      scope: 'saved_revision',
+    });
+  });
+
+  it('accepts a saved intent draft through the existing status vocabulary', () => {
+    const intent = contract.artifact_types.intent;
+    expect(intent.initial_status).toBe('draft');
+    expect(intent.approval_transition).toEqual({ from: 'draft', to: 'pending' });
+    for (const status of Object.values(intent.approval_transition)) {
+      expect(contract.status.values).toContain(status);
+      expect(contract.status.terminal).not.toContain(status);
+    }
+    expect(contract.artifact_types.stage_artifact.status_source).toBe('parent_bolt');
+  });
+
   it('maps complexity to recipe in the contract', () => {
     expect(contract.recipe.recommend_from_complexity).toEqual({
       low: 'simple',

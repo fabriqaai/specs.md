@@ -14,13 +14,13 @@ Read-only orientation. Never write artifacts. Never invoke another skill. Never 
 
 ## Process
 
-Read `docs/specsmd/` directly (project, intents with their `tasks.md` and bolts, decisions index, system). The files are the source of truth.
+Read current project and relevant intent/task/bolt metadata directly. Use indexes to locate matching system scopes and decisions; do not open every historical artifact. The files establish workflow state; completion metadata alone does not prove a live surface.
 
 ## Report
 
 Present **semantic memory first** (`read_path`): `system/`, `standards/`, and the decisions index. Do not open episodic artifacts unless a semantic document refers to them or the user asks for history.
 
-Then present three lenses. Empty lenses stay visible.
+For a general status request, present the relevant lenses below; omit empty ones. For a focused status request, answer that scope directly.
 
 - **Shaping** — intents and `tasks.md` slices not named on any non-draft bolt
 - **Building** — active bolts, with stage and checkpoint
@@ -30,7 +30,7 @@ Then health: illegal status tokens, missing `docs/specsmd/`, cascade drift you c
 
 Then suggested next moves in this order; do not re-rank: awaiting gate → active bolt → unfinished brief → captured outcome without tasks → unbolted tasks → drafts → empty tree. Integrity findings stay in health — they are not a next skill. Do not take a suggestion. Never suggest `flow-runtime`.
 
-Map those situations: unfinished brief (thin headings or the outcome still being decided) → `plan-intent`. Outcome captured and this intent has no `tasks.md` → `task-decompose`. Unbolted tasks → `bolt-design`.
+An unaccepted draft brief is an awaiting outcome review and routes to `plan-intent`, even with complete headings or existing tasks. Show its file link and state; do not suggest starting dependent work. Map other situations: unfinished brief (thin headings or the outcome still being decided) → `plan-intent`. Accepted outcome and this intent has no `tasks.md` → `task-decompose`. Unbolted tasks → `bolt-design`.
 
 ## Constraints
 

@@ -15,7 +15,11 @@ Turn an intent into vertical slices in that intent's `tasks.md`. Each slice is i
 
 Call this when the brief states the outcome clearly enough to slice. Write `tasks.md`. Then `bolt-design` groups those slices. Call it again to add slices.
 
-Follow `references/nlspec.md` in the `flow-runtime` skill for the task / work-item register, and `references/writing.md` in the `flow-runtime` skill for how any specsmd document is written. Read the owning brief first. Do not contradict its outcome or Definition of Done. If two readings are interchangeable to a caller, pick one and name it. If they are not, ask.
+Follow `references/nlspec.md` in the `flow-runtime` skill for the task / work-item register, and `references/writing.md` in the `flow-runtime` skill for how any specsmd document is written. Read the owning brief first. Do not contradict its outcome or Definition of Done. Resolve from evidence before asking per `references/caller-contracts.md` in the `flow-runtime` skill. Inherit accepted behavior and choose routine mechanics; ask only about unresolved material scope or contract choices.
+
+If the owning brief has `status: draft`, keep its review in `plan-intent`; do not
+write task slices from an unaccepted outcome. A complete-looking draft is still
+draft. Resume decomposition after acceptance, within the user's requested scope.
 
 ## Assess
 
@@ -66,12 +70,14 @@ Refuse a dependency cycle: if A depends on B and B on A, write nothing for that 
 
 ## Close
 
-List the task sections that now exist. Offer at most three declinable next names. None is required. Do not invoke them.
+List the task sections that now exist. Continue any next phase already authorized in the requested workflow after its gates pass. At the end of that scope, offer at most three optional next names without invoking them.
 
 Now exists:
+
 - `docs/specsmd/intents/{intentId}/tasks.md` (new or updated sections; `ceremony_suggested` recorded)
 
 Declinable next (none required):
+
 - `bolt-design` — start a bolt on this intent
 - `plan-intent` — capture another outcome
 - `specsmd-status` — re-orient

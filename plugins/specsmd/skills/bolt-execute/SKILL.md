@@ -17,6 +17,10 @@ A bolt belongs to **exactly one intent**. Path: `docs/specsmd/intents/{intent}/b
 
 You write artifact files **and** frontmatter. Follow `references/transitions.md` in the `flow-runtime` skill.
 
+If the owning brief has `status: draft`, follow `plan-intent` to resolve its
+review before executing. Do not use an existing bolt or prior stage approval to
+bypass acceptance of the outcome.
+
 ## Gate — is design done?
 
 A stage is **design-class** when its id or a produced file is listed under `ceremony` in `references/flow-contract.yaml` in the `flow-runtime` skill. Design is **done** only when all of these are true:
@@ -24,16 +28,16 @@ A stage is **design-class** when its id or a produced file is listed under `cere
 1. A `bolt.md` exists on the named intent.
 2. `current_stage` is not design-class.
 3. `checkpoint_state` is not `awaiting` on a design-class stage.
-4. Every design-class artifact this recipe **produced** has `## Two-implementer` with `Open: none.` Do not require artifacts the recipe does not produce.
+4. Every prerequisite design-class artifact this recipe **produced** before `current_stage` has `## Two-implementer` with `Open: none.` Do not require artifacts the recipe does not produce or has not reached; a spike explores before findings.
 
 If there is no bolt, or any check fails:
 
 1. **Tell the user** design is not done. List what failed: missing bolt, current stage, awaiting gate, missing `## Two-implementer`, or each hunt that is still open.
 2. Say you are starting `bolt-design` now so those hunts can close. Do not write product code.
-3. **Follow the `bolt-design` skill now** (read that skill and continue this turn). One hunt per turn, options with explanations, recommendation first.
+3. **Follow the `bolt-design` skill now** (read that skill and continue this turn). Resolve from evidence before asking per `flow-runtime/references/caller-contracts.md`; do not reopen settled choices for another interview.
 4. Do not continue this skill's **Run** until the gate above is true.
 
-Leftover hunts become named freedoms only on the design artifact, with the user's pick — not by skipping this gate.
+A missing heading can be repaired from accepted evidence in design; a substantive missing decision remains open. Never manufacture a named freedom to skip this gate.
 
 ## Run
 
@@ -45,7 +49,7 @@ Those are ceremony. Asking where a change belongs is not ceremony — **Capture 
 
 Follow `references/implementing.md` in this skill. The recipe snapshot is the only stage catalog.
 
-**Test first, cover always.** A gating criterion gets a failing check before product code, seen failing for the right reason. Every other behavior change gets a covering check in the same stage — no production file lands without one, an Evidence line naming the existing check that covers it, or a recorded decision exempting it (vendored or generated code).
+**Test first, cover always.** A gating criterion for new or changed behavior gets a failing check before product code, seen failing for the right reason. Existing passing evidence may prove unchanged behavior; removal alone requires no new absence test. Every other behavior change gets a covering check in the same stage — no production file lands without one, an Evidence line naming the existing check that covers it, or a recorded decision exempting it (vendored or generated code).
 
 **Capture unplanned work.** Work no artifact asked for — a course correction, a forgotten requirement, a small change made along the way — goes into the walkthrough's `## Unplanned changes` as it happens. When its destination inside this bolt is clear, write it there and say what you wrote. When the work falls outside this bolt or two artifacts are plausible homes, ask once and act on the answer. A change to a gating criterion or to `brief.md` is routed through `task-decompose` or `plan-intent`, never rewritten here to match what was built.
 
@@ -58,11 +62,11 @@ Run **every remaining non-design stage** in snapshot order in this invocation. A
 Stop early only when:
 
 - a caller-visible hunt reopens — tell the user and follow `bolt-design` now
-- a red suite you did not cause — stop and say so
+- a required verification fails — block the affected completion claim, report the failure and continue independent authorized work; do not fix unrelated failures without scope
 - a load-bearing review finding — do not complete; say what failed
 - required evidence is missing — do not complete; say what is missing
 
-If the next stage is design-class, stop and offer `bolt-design`. Do not run it as a chain (unless this invocation started because the design-done gate failed).
+If the next stage is design-class, follow `bolt-design` for that stage within the authorized execution workflow, respecting its required gates, then resume. Do not reopen completed stages. Research unknowns in spike findings are not permission to implement a new product change.
 
 Honor expired `time_box`. Do not invent design.
 
@@ -79,9 +83,11 @@ On complete: bolt `status: complete`, `current_stage: null`, stamp `completed`. 
 State what this invocation did. Offer at most three declinable next names. None is required. Do not invoke them.
 
 Now exists:
+
 - `docs/specsmd/intents/{intent}/bolts/{id}/` artifacts this invocation wrote
 
 Declinable next (none required):
+
 - `specsmd-status` — re-orient
 - `bolt-design` — if a contract hunt reopened
 - `plan-intent` — a different outcome
