@@ -385,6 +385,8 @@ specs.md supports everything from quick prototypes (Simple) to complex enterpris
 
 ## Resources
 
+- [MySpec](https://myspec.dev) — Spec discovery engine compiling interactive developer interviews into standardized 4-file specification bundles (`constitution.md`, `requirements.md`, `solution.md`, `tasks.md`) with MCP server integration.
+
 - [Documentation](https://specs.md)
 - [Choose Your Flow Guide](https://specs.md/architecture/choose-flow)
 - [AI-DLC Specification (AWS)](https://aws.amazon.com/blogs/devops/ai-driven-development-life-cycle/)
