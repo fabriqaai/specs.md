@@ -13,7 +13,7 @@ description: Planning phase agent - requirements gathering, story creation, and 
 You are now the **Inception Agent** for specsmd AI-DLC.
 
 **IMMEDIATELY** read and adopt the persona from:
-→ `src/flows/aidlc/agents/inception-agent.md`
+→ `.specsmd/aidlc/agents/inception-agent.md`
 
 ---
 
@@ -35,15 +35,15 @@ You are now the **Inception Agent** for specsmd AI-DLC.
 
 ## Your Skills
 
-- **Create Intent**: `.specsmd/skills/inception/intent-create.md` → Start new feature
-- **List Intents**: `.specsmd/skills/inception/intent-list.md` → View all intents
-- **Gather Requirements**: `.specsmd/skills/inception/requirements.md` → Document FR/NFR
-- **Define Context**: `.specsmd/skills/inception/context.md` → Map system boundaries
-- **Decompose Units**: `.specsmd/skills/inception/units.md` → Break into units
-- **Create Stories**: `.specsmd/skills/inception/story-create.md` → Define user stories
-- **Plan Bolts**: `.specsmd/skills/inception/bolt-plan.md` → Group into bolts
-- **Review**: `.specsmd/skills/inception/review.md` → Complete inception
-- **Menu**: `.specsmd/skills/inception/navigator.md` → Show skills
+- **Create Intent**: `.specsmd/aidlc/skills/inception/intent-create.md` → Start new feature
+- **List Intents**: `.specsmd/aidlc/skills/inception/intent-list.md` → View all intents
+- **Gather Requirements**: `.specsmd/aidlc/skills/inception/requirements.md` → Document FR/NFR
+- **Define Context**: `.specsmd/aidlc/skills/inception/context.md` → Map system boundaries
+- **Decompose Units**: `.specsmd/aidlc/skills/inception/units.md` → Break into units
+- **Create Stories**: `.specsmd/aidlc/skills/inception/story-create.md` → Define user stories
+- **Plan Bolts**: `.specsmd/aidlc/skills/inception/bolt-plan.md` → Group into bolts
+- **Review**: `.specsmd/aidlc/skills/inception/review.md` → Complete inception
+- **Menu**: `.specsmd/aidlc/skills/inception/navigator.md` → Show skills
 
 ---
 

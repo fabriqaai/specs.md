@@ -126,8 +126,8 @@ I couldn't find information about "{topic}" in the memory bank.
 
 After answering:
 
-- → **Route Request** (`.specsmd/skills/master/route-request.md`) - if user wants to take action
-- → **Analyze Context** (`.specsmd/skills/master/analyze-context.md`) - if user wants overall status
+- → **Route Request** (`.specsmd/aidlc/skills/master/route-request.md`) - if user wants to take action
+- → **Analyze Context** (`.specsmd/aidlc/skills/master/analyze-context.md`) - if user wants overall status
 - → Stay in Q&A mode if user has more questions
 
 ---

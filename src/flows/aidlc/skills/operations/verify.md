@@ -209,8 +209,8 @@ On failure:
 
 After verification:
 
-- → **Monitor** (`.specsmd/skills/operations/monitor.md`) - if verified and final environment
-- → **Deploy** (`.specsmd/skills/operations/deploy.md`) - to next environment if verified
+- → **Monitor** (`.specsmd/aidlc/skills/operations/monitor.md`) - if verified and final environment
+- → **Deploy** (`.specsmd/aidlc/skills/operations/deploy.md`) - to next environment if verified
 - → **Rollback** - if verification fails (deploy previous version)
 
 ---

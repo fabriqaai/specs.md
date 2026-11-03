@@ -170,8 +170,8 @@ All {n} stories implemented and tested.
 
 After viewing status:
 
-- → **Bolt Start** (`.specsmd/skills/construction/bolt-start.md`) - continue the bolt
-- → **Bolt List** (`.specsmd/skills/construction/bolt-list.md`) - view other bolts
+- → **Bolt Start** (`.specsmd/aidlc/skills/construction/bolt-start.md`) - continue the bolt
+- → **Bolt List** (`.specsmd/aidlc/skills/construction/bolt-list.md`) - view other bolts
 - → **Operations Agent** - if all bolts for unit are complete
 
 ---

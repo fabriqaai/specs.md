@@ -225,8 +225,8 @@ Provide a structured analysis:
 
 After analysis, either:
 
-- → **Route Request** (`.specsmd/skills/master/route-request.md`) - to direct user to specialist agent
-- → **Answer Question** (`.specsmd/skills/master/answer-question.md`) - if user has questions about state
+- → **Route Request** (`.specsmd/aidlc/skills/master/route-request.md`) - to direct user to specialist agent
+- → **Answer Question** (`.specsmd/aidlc/skills/master/answer-question.md`) - if user has questions about state
 
 ---
 

@@ -266,8 +266,8 @@ If trying to create a standard before its dependency:
 
 After project initialization:
 
-- → **Inception Agent** (`.specsmd/agents/inception-agent.md`) - to create first intent
-- → **Analyze Context** (`.specsmd/skills/master/analyze-context.md`) - if user wants to see project state
+- → **Inception Agent** (`.specsmd/aidlc/agents/inception-agent.md`) - to create first intent
+- → **Analyze Context** (`.specsmd/aidlc/skills/master/analyze-context.md`) - if user wants to see project state
 - → **Project Init** again - to add optional standards later
 
 ---
