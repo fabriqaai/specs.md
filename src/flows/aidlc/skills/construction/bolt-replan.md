@@ -330,8 +330,8 @@ After splitting 002-auth-service:
 
 After replanning:
 
-- → **Bolt Start** (`.specsmd/skills/construction/bolt-start.md`) - continue execution
-- → **Bolt Status** (`.specsmd/skills/construction/bolt-status.md`) - verify changes
+- → **Bolt Start** (`.specsmd/aidlc/skills/construction/bolt-start.md`) - continue execution
+- → **Bolt Status** (`.specsmd/aidlc/skills/construction/bolt-status.md`) - verify changes
 - → **Inception Agent** - if major scope change requires new stories
 
 ---

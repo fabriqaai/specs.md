@@ -112,8 +112,8 @@ After routing:
 
 If user declines routing:
 
-- → **Answer Question** (`.specsmd/skills/master/answer-question.md`) - clarify their needs
-- → **Explain Flow** (`.specsmd/skills/master/explain-flow.md`) - explain the methodology
+- → **Answer Question** (`.specsmd/aidlc/skills/master/answer-question.md`) - clarify their needs
+- → **Explain Flow** (`.specsmd/aidlc/skills/master/explain-flow.md`) - explain the methodology
 
 ---
 

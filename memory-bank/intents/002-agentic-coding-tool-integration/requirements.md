@@ -34,7 +34,7 @@ Provide seamless integration with multiple agentic coding tools (Claude Code, Cu
 ### FR-3: File Installation
 
 - FR-3.1: For Claude Code: Install slash commands to `.claude/commands/`
-- FR-3.2: For Claude Code: Install agents to `.claude/agents/`
+- FR-3.2: For Claude Code: Do not install agents to `.claude/agents/`, and remove the `specsmd-*` copies earlier versions put there (command files are activation prompts without `name:` frontmatter, so Claude Code doesn't load them as subagents)
 - FR-3.3: For Cursor: Install rules to `.cursor/rules/` (`.mdc` format with frontmatter)
 - FR-3.4: For GitHub Copilot: Install agents to `.github/agents/` (`.agent.md` format)
 - FR-3.5: For Google Antigravity: Install agents to `.agent/agents/`

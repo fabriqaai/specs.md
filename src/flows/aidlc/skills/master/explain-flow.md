@@ -144,8 +144,8 @@ Provide a tailored explanation based on the user's question:
 
 After explanation:
 
-- → **Route Request** (`.specsmd/skills/master/route-request.md`) - if user wants to proceed
-- → **Answer Question** (`.specsmd/skills/master/answer-question.md`) - if user has more questions
+- → **Route Request** (`.specsmd/aidlc/skills/master/route-request.md`) - if user wants to proceed
+- → **Answer Question** (`.specsmd/aidlc/skills/master/answer-question.md`) - if user has more questions
 
 ---
 

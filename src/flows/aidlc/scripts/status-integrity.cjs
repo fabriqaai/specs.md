@@ -13,9 +13,10 @@
  * Cross-platform: Works on Linux, macOS, Windows via Node.js
  */
 
-const fs = require('fs-extra');
+const fs = require('fs').promises;
 const path = require('path');
-const yaml = require('js-yaml');
+// Bundled copy: user projects don't have specsmd's dependencies installed.
+const yaml = require('./vendor/js-yaml.cjs');
 
 // Theme colors for output
 const colors = {
@@ -33,6 +34,18 @@ const MEMORY_BANK_DIR = 'memory-bank';
 const BOLTS_DIR = path.join(MEMORY_BANK_DIR, 'bolts');
 const INTENTS_DIR = path.join(MEMORY_BANK_DIR, 'intents');
 const MAINTENANCE_LOG = path.join(MEMORY_BANK_DIR, 'maintenance-log.md');
+
+/**
+ * Check whether a file or directory exists
+ */
+async function pathExists(filePath) {
+    try {
+        await fs.access(filePath);
+        return true;
+    } catch {
+        return false;
+    }
+}
 
 /**
  * Extract frontmatter from a markdown file
@@ -83,7 +96,7 @@ function getTimestamp() {
 async function readBolt(boltDir) {
     const boltPath = path.join(BOLTS_DIR, boltDir, 'bolt.md');
 
-    if (!await fs.pathExists(boltPath)) {
+    if (!await pathExists(boltPath)) {
         return null;
     }
 
@@ -109,12 +122,12 @@ async function readBolt(boltDir) {
 async function findStoryFile(intent, unit, storyId) {
     let storyPath = path.join(INTENTS_DIR, intent, 'units', unit, 'stories', `${storyId}.md`);
 
-    if (await fs.pathExists(storyPath)) {
+    if (await pathExists(storyPath)) {
         return storyPath;
     }
 
     storyPath = path.join(INTENTS_DIR, intent, 'units', unit, 'stories', storyId);
-    if (await fs.pathExists(storyPath)) {
+    if (await pathExists(storyPath)) {
         return storyPath;
     }
 
@@ -190,7 +203,7 @@ async function checkUnitStatus(unit, intent) {
     const inconsistencies = [];
     const unitBriefPath = path.join(INTENTS_DIR, intent, 'units', unit, 'unit-brief.md');
 
-    if (!await fs.pathExists(unitBriefPath)) {
+    if (!await pathExists(unitBriefPath)) {
         return [];
     }
 
@@ -209,7 +222,7 @@ async function checkUnitStatus(unit, intent) {
 
     for (const boltDir of boltDirs) {
         const boltPath = path.join(BOLTS_DIR, boltDir, 'bolt.md');
-        if (await fs.pathExists(boltPath)) {
+        if (await pathExists(boltPath)) {
             const content = await fs.readFile(boltPath, 'utf8');
             const frontmatter = extractFrontmatter(content);
             if (frontmatter && frontmatter.unit === unit) {
@@ -262,7 +275,7 @@ async function checkIntentStatus(intent) {
     const inconsistencies = [];
     const requirementsPath = path.join(INTENTS_DIR, intent, 'requirements.md');
 
-    if (!await fs.pathExists(requirementsPath)) {
+    if (!await pathExists(requirementsPath)) {
         return [];
     }
 
@@ -277,7 +290,7 @@ async function checkIntentStatus(intent) {
 
     // Find all units for this intent
     const unitsDir = path.join(INTENTS_DIR, intent, 'units');
-    if (!await fs.pathExists(unitsDir)) {
+    if (!await pathExists(unitsDir)) {
         return [];
     }
 
@@ -286,7 +299,7 @@ async function checkIntentStatus(intent) {
 
     for (const unitDir of unitDirs) {
         const unitBriefPath = path.join(unitsDir, unitDir, 'unit-brief.md');
-        if (await fs.pathExists(unitBriefPath)) {
+        if (await pathExists(unitBriefPath)) {
             const content = await fs.readFile(unitBriefPath, 'utf8');
             const frontmatter = extractFrontmatter(content);
             if (frontmatter) {
@@ -428,7 +441,7 @@ async function logToMaintenanceLog(fixedItems) {
     const timestamp = new Date().toISOString();
 
     let logContent = '';
-    if (await fs.pathExists(MAINTENANCE_LOG)) {
+    if (await pathExists(MAINTENANCE_LOG)) {
         logContent = await fs.readFile(MAINTENANCE_LOG, 'utf8');
     }
 
@@ -463,7 +476,7 @@ async function statusIntegrity(fix = false) {
     const intents = [];
 
     // Step 1: Scan all bolts
-    if (await fs.pathExists(BOLTS_DIR)) {
+    if (await pathExists(BOLTS_DIR)) {
         const boltDirs = await fs.readdir(BOLTS_DIR).catch(() => []);
 
         for (const boltDir of boltDirs) {
@@ -489,7 +502,7 @@ async function statusIntegrity(fix = false) {
     // Step 3: Check unit status
     console.log(`${colors.dim}[2/3] Checking unit status...${colors.reset}`);
     for (const intent of intents) {
-        if (await fs.pathExists(path.join(INTENTS_DIR, intent, 'units'))) {
+        if (await pathExists(path.join(INTENTS_DIR, intent, 'units'))) {
             const unitDirs = await fs.readdir(path.join(INTENTS_DIR, intent, 'units')).catch(() => []);
 
             for (const unit of unitDirs) {

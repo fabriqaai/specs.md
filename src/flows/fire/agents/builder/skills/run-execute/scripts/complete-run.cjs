@@ -26,7 +26,8 @@
 
 const fs = require('fs');
 const path = require('path');
-const yaml = require('yaml');
+// Bundled copy: user projects don't have specsmd's dependencies installed.
+const yaml = require('./vendor/yaml.cjs');
 
 // =============================================================================
 // Error Helper

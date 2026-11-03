@@ -124,9 +124,10 @@
  * ═══════════════════════════════════════════════════════════════════════════════
  */
 
-const fs = require('fs-extra');
+const fs = require('fs').promises;
 const path = require('path');
-const yaml = require('js-yaml');
+// Bundled copy: user projects don't have specsmd's dependencies installed.
+const yaml = require('./vendor/js-yaml.cjs');
 
 // Theme colors for output
 const colors = {
@@ -143,6 +144,18 @@ const colors = {
 const MEMORY_BANK_DIR = 'memory-bank';
 const BOLTS_DIR = path.join(MEMORY_BANK_DIR, 'bolts');
 const INTENTS_DIR = path.join(MEMORY_BANK_DIR, 'intents');
+
+/**
+ * Check whether a file or directory exists
+ */
+async function pathExists(filePath) {
+    try {
+        await fs.access(filePath);
+        return true;
+    } catch {
+        return false;
+    }
+}
 
 /**
  * Extract frontmatter from a markdown file
@@ -203,7 +216,7 @@ async function readBolt(boltId) {
 
     const boltPath = path.join(BOLTS_DIR, boltDir, 'bolt.md');
 
-    if (!await fs.pathExists(boltPath)) {
+    if (!await pathExists(boltPath)) {
         throw new Error(`Bolt file not found: ${boltPath}`);
     }
 
@@ -234,32 +247,32 @@ async function findStoryFile(intent, unit, storyId) {
     // Try with .md extension (direct path)
     let storyPath = path.join(INTENTS_DIR, intent, 'units', unit, 'stories', `${storyId}.md`);
 
-    if (await fs.pathExists(storyPath)) {
+    if (await pathExists(storyPath)) {
         return storyPath;
     }
 
     // Try without extension if storyId already has it
     storyPath = path.join(INTENTS_DIR, intent, 'units', unit, 'stories', storyId);
-    if (await fs.pathExists(storyPath)) {
+    if (await pathExists(storyPath)) {
         return storyPath;
     }
 
     // Try to find unit directory with prefix (e.g., unit=analytics-tracker could be 001-analytics-tracker)
     const intentUnitsDir = path.join(INTENTS_DIR, intent, 'units');
-    if (await fs.pathExists(intentUnitsDir)) {
+    if (await pathExists(intentUnitsDir)) {
         const unitDirs = await fs.readdir(intentUnitsDir).catch(() => []);
 
         for (const unitDir of unitDirs) {
             // Check if directory name ends with the unit name (handles numeric prefixes)
             if (unitDir === unit || unitDir.endsWith(`-${unit}`)) {
                 storyPath = path.join(intentUnitsDir, unitDir, 'stories', `${storyId}.md`);
-                if (await fs.pathExists(storyPath)) {
+                if (await pathExists(storyPath)) {
                     return storyPath;
                 }
 
                 // Also try fuzzy match - story ID might be embedded in filename
                 const storiesDir = path.join(intentUnitsDir, unitDir, 'stories');
-                if (await fs.pathExists(storiesDir)) {
+                if (await pathExists(storiesDir)) {
                     const storyFiles = await fs.readdir(storiesDir).catch(() => []);
 
                     // Look for files that start with the story ID or contain it
@@ -387,7 +400,7 @@ async function updateUnitStatus(bolt) {
 
     for (const boltDir of boltDirs) {
         const boltPath = path.join(BOLTS_DIR, boltDir, 'bolt.md');
-        if (await fs.pathExists(boltPath)) {
+        if (await pathExists(boltPath)) {
             const content = await fs.readFile(boltPath, 'utf8');
             const frontmatter = extractFrontmatter(content);
             if (frontmatter && frontmatter.unit === unit) {
@@ -404,7 +417,7 @@ async function updateUnitStatus(bolt) {
     // Find unit brief
     const unitBriefPath = path.join(INTENTS_DIR, intent, 'units', unit, 'unit-brief.md');
 
-    if (!await fs.pathExists(unitBriefPath)) {
+    if (!await pathExists(unitBriefPath)) {
         console.log(`\n${colors.dim}Unit brief not found, skipping unit status update${colors.reset}`);
         return { updated: false };
     }
@@ -450,7 +463,7 @@ async function updateIntentStatus(bolt) {
     const intentPath = path.join(INTENTS_DIR, intent);
     const unitsDir = path.join(intentPath, 'units');
 
-    if (!await fs.pathExists(unitsDir)) {
+    if (!await pathExists(unitsDir)) {
         console.log(`${colors.dim}No units directory found for intent${colors.reset}`);
         return { updated: false };
     }
@@ -460,7 +473,7 @@ async function updateIntentStatus(bolt) {
 
     for (const unitDir of unitDirs) {
         const unitBriefPath = path.join(unitsDir, unitDir, 'unit-brief.md');
-        if (await fs.pathExists(unitBriefPath)) {
+        if (await pathExists(unitBriefPath)) {
             const content = await fs.readFile(unitBriefPath, 'utf8');
             const frontmatter = extractFrontmatter(content);
             if (frontmatter) {
@@ -474,7 +487,7 @@ async function updateIntentStatus(bolt) {
     // Find requirements file
     const requirementsPath = path.join(intentPath, 'requirements.md');
 
-    if (!await fs.pathExists(requirementsPath)) {
+    if (!await pathExists(requirementsPath)) {
         console.log(`${colors.dim}Requirements file not found, skipping intent status update${colors.reset}`);
         return { updated: false };
     }

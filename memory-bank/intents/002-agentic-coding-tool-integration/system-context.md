@@ -37,8 +37,7 @@ This document defines the boundaries and integration points for the Agentic Codi
 │  │                    Project Directory                         │   │
 │  │  ┌─────────────┐  ┌───────────────────┐  ┌──────────────┐   │   │
 │  │  │  .specsmd/  │  │.claude/commands/  │  │memory-bank/  │   │   │
-│  │  │  (runtime)  │  │.claude/agents/    │  │ (artifacts)  │   │   │
-│  │  │             │  │.cursor/rules/     │  │              │   │   │
+│  │  │  (runtime)  │  │.cursor/rules/     │  │ (artifacts)  │   │   │
 │  │  │             │  │.github/agents/    │  │              │   │   │
 │  │  │             │  │.agent/agents/     │  │              │   │   │
 │  │  └─────────────┘  └───────────────────┘  └──────────────┘   │   │
@@ -53,9 +52,9 @@ This document defines the boundaries and integration points for the Agentic Codi
 ### Claude Code
 
 - **Type**: AI-powered coding assistant
-- **Integration**: Slash commands in `.claude/commands/` + agents in `.claude/agents/`
-- **Interface**: `/specsmd*` commands and Claude-invoked agents
-- **Features**: Supports both user-invoked commands and AI-delegated agents
+- **Integration**: Slash commands in `.claude/commands/`
+- **Interface**: `/specsmd*` commands
+- **Features**: Commands run in the main conversation, so agents can stop at user checkpoints (subagents can't ask the user questions)
 
 ### Cursor
 
@@ -113,7 +112,7 @@ InstallerFactory creates appropriate installer(s)
          ▼
 Installer copies:
   - Command/rule files to tool directory
-  - Agent files (for Claude Code: .claude/agents/, for Copilot: .github/agents/)
+  - Agent files (for Copilot: .github/agents/)
   - .specsmd/ runtime files
   - memory-bank/ structure (via project-init)
          │
@@ -136,8 +135,8 @@ Each tool expects specific file formats:
 
 **Claude Code Agents** (`.claude/agents/*.md`)
 
-- Same content as commands, sourced from `commands/` folder
-- Content references full agent definition in `.specsmd/aidlc/agents/`
+- Not installed. Claude Code subagents need `name:` frontmatter and can't ask the user questions, so the command files don't work there
+- The installer removes `specsmd-*` copies that earlier versions installed
 
 **Cursor Rules** (`.cursor/rules/*.mdc`)
 
@@ -156,7 +155,7 @@ Each tool expects specific file formats:
 
 | Tool | Commands/Rules Path | Agents/Subagents Path |
 |------|---------------------|----------------------|
-| Claude Code | `.claude/commands/` | `.claude/agents/` |
+| Claude Code | `.claude/commands/` | — |
 | Cursor | `.cursor/rules/` (MDC) | — |
 | GitHub Copilot | — | `.github/agents/` |
 | Google Antigravity | — | `.agent/agents/` |

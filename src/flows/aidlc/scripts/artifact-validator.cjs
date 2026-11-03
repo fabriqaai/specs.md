@@ -17,9 +17,10 @@
  * Cross-platform: Works on Linux, macOS, Windows via Node.js
  */
 
-const fs = require('fs-extra');
+const fs = require('fs').promises;
 const path = require('path');
-const yaml = require('js-yaml');
+// Bundled copy: user projects don't have specsmd's dependencies installed.
+const yaml = require('./vendor/js-yaml.cjs');
 
 // Theme colors for output
 const colors = {
@@ -36,6 +37,18 @@ const colors = {
 const MEMORY_BANK_DIR = 'memory-bank';
 const INTENTS_DIR = path.join(MEMORY_BANK_DIR, 'intents');
 const BOLTS_DIR = path.join(MEMORY_BANK_DIR, 'bolts');
+
+/**
+ * Check whether a file or directory exists
+ */
+async function pathExists(filePath) {
+    try {
+        await fs.access(filePath);
+        return true;
+    } catch {
+        return false;
+    }
+}
 
 /**
  * Extract frontmatter from a markdown file
@@ -108,7 +121,7 @@ class ArtifactValidator {
         let issues = 0;
 
         // Check intent folders
-        if (await fs.pathExists(INTENTS_DIR)) {
+        if (await pathExists(INTENTS_DIR)) {
             const intentDirs = await fs.readdir(INTENTS_DIR);
             for (const dir of intentDirs) {
                 if (!patterns.intent.test(dir)) {
@@ -126,7 +139,7 @@ class ArtifactValidator {
         }
 
         // Check bolt folders
-        if (await fs.pathExists(BOLTS_DIR)) {
+        if (await pathExists(BOLTS_DIR)) {
             const boltDirs = await fs.readdir(BOLTS_DIR);
             for (const dir of boltDirs) {
                 if (!patterns.bolt.test(dir)) {
@@ -144,11 +157,11 @@ class ArtifactValidator {
         }
 
         // Check unit folders and story files recursively
-        if (await fs.pathExists(INTENTS_DIR)) {
+        if (await pathExists(INTENTS_DIR)) {
             const intentDirs = await fs.readdir(INTENTS_DIR);
             for (const intentDir of intentDirs) {
                 const unitsDir = path.join(INTENTS_DIR, intentDir, 'units');
-                if (await fs.pathExists(unitsDir)) {
+                if (await pathExists(unitsDir)) {
                     const unitDirs = await fs.readdir(unitsDir);
                     for (const unitDir of unitDirs) {
                         // Check unit folder pattern
@@ -166,7 +179,7 @@ class ArtifactValidator {
 
                         // Check story files
                         const storiesDir = path.join(unitsDir, unitDir, 'stories');
-                        if (await fs.pathExists(storiesDir)) {
+                        if (await pathExists(storiesDir)) {
                             const storyFiles = await fs.readdir(storiesDir);
                             for (const storyFile of storyFiles) {
                                 if (path.extname(storyFile) === '.md') {
@@ -201,15 +214,15 @@ class ArtifactValidator {
         let issues = 0;
 
         // Check story files: id should match filename
-        if (await fs.pathExists(INTENTS_DIR)) {
+        if (await pathExists(INTENTS_DIR)) {
             const intentDirs = await fs.readdir(INTENTS_DIR);
             for (const intentDir of intentDirs) {
                 const unitsDir = path.join(INTENTS_DIR, intentDir, 'units');
-                if (await fs.pathExists(unitsDir)) {
+                if (await pathExists(unitsDir)) {
                     const unitDirs = await fs.readdir(unitsDir);
                     for (const unitDir of unitDirs) {
                         const storiesDir = path.join(unitsDir, unitDir, 'stories');
-                        if (await fs.pathExists(storiesDir)) {
+                        if (await pathExists(storiesDir)) {
                             const storyFiles = (await fs.readdir(storiesDir)).filter(f => path.extname(f) === '.md');
                             for (const storyFile of storyFiles) {
                                 const storyPath = path.join(storiesDir, storyFile);
@@ -240,11 +253,11 @@ class ArtifactValidator {
         }
 
         // Check bolt files: id should match folder name
-        if (await fs.pathExists(BOLTS_DIR)) {
+        if (await pathExists(BOLTS_DIR)) {
             const boltDirs = await fs.readdir(BOLTS_DIR);
             for (const boltDir of boltDirs) {
                 const boltPath = path.join(BOLTS_DIR, boltDir, 'bolt.md');
-                if (await fs.pathExists(boltPath)) {
+                if (await pathExists(boltPath)) {
                     const content = await fs.readFile(boltPath, 'utf8');
                     const frontmatter = extractFrontmatter(content);
 
@@ -279,11 +292,11 @@ class ArtifactValidator {
         let issues = 0;
 
         // Check bolt story references
-        if (await fs.pathExists(BOLTS_DIR)) {
+        if (await pathExists(BOLTS_DIR)) {
             const boltDirs = await fs.readdir(BOLTS_DIR);
             for (const boltDir of boltDirs) {
                 const boltPath = path.join(BOLTS_DIR, boltDir, 'bolt.md');
-                if (await fs.pathExists(boltPath)) {
+                if (await pathExists(boltPath)) {
                     const content = await fs.readFile(boltPath, 'utf8');
                     const frontmatter = extractFrontmatter(content);
 
@@ -294,7 +307,7 @@ class ArtifactValidator {
                         // Check each story reference exists
                         for (const storyId of frontmatter.stories || []) {
                             const storyPath = path.join(INTENTS_DIR, intent, 'units', unit, 'stories', `${storyId}.md`);
-                            if (!await fs.pathExists(storyPath)) {
+                            if (!await pathExists(storyPath)) {
                                 this.addResult({
                                     type: 'reference',
                                     severity: 'error',
@@ -312,7 +325,7 @@ class ArtifactValidator {
                         // Check unit folder exists
                         if (unit) {
                             const unitPath = path.join(INTENTS_DIR, intent, 'units', unit);
-                            if (!await fs.pathExists(unitPath)) {
+                            if (!await pathExists(unitPath)) {
                                 this.addResult({
                                     type: 'reference',
                                     severity: 'error',
@@ -330,7 +343,7 @@ class ArtifactValidator {
                         // Check intent folder exists
                         if (intent) {
                             const intentPath = path.join(INTENTS_DIR, intent);
-                            if (!await fs.pathExists(intentPath)) {
+                            if (!await pathExists(intentPath)) {
                                 this.addResult({
                                     type: 'reference',
                                     severity: 'error',
@@ -407,7 +420,7 @@ class ArtifactValidator {
 
         // Check all markdown files in memory-bank
         const checkDir = async (dir) => {
-            if (!await fs.pathExists(dir)) return;
+            if (!await pathExists(dir)) return;
             const entries = await fs.readdir(dir, { withFileTypes: true });
             for (const entry of entries) {
                 const fullPath = path.join(dir, entry.name);

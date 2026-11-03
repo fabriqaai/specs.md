@@ -2,7 +2,7 @@
 
 ## Overview
 
-The Claude Code Installer handles installation of specsmd to Claude Code, including both slash commands (`.claude/commands/`) and agents (`.claude/agents/`).
+The Claude Code Installer handles installation of specsmd to Claude Code as slash commands (`.claude/commands/`). It also removes the `.claude/agents/` copies that earlier versions installed.
 
 ---
 
@@ -12,7 +12,7 @@ The Claude Code Installer handles installation of specsmd to Claude Code, includ
 
 - Claude Code detection
 - Command file installation to `.claude/commands/`
-- Agent file installation to `.claude/agents/`
+- Removal of legacy agent copies from `.claude/agents/`
 - Claude Code specific configuration
 
 ### Out of Scope
@@ -35,7 +35,7 @@ src/lib/installers/
 
 ```text
 src/flows/aidlc/
-└── commands/              ← Serves as both commands and agents
+└── commands/              ← Installed as slash commands
     ├── master-agent.md
     ├── inception-agent.md
     ├── construction-agent.md
@@ -47,14 +47,8 @@ src/flows/aidlc/
 ```text
 project-root/
 └── .claude/
-    ├── commands/                              ← Slash commands
-    │   ├── specsmd-master-agent.md            → /specsmd-master-agent
-    │   ├── specsmd-inception-agent.md
-    │   ├── specsmd-construction-agent.md
-    │   └── specsmd-operations-agent.md
-    │
-    └── agents/                                ← Agents
-        ├── specsmd-master-agent.md
+    └── commands/                              ← Slash commands
+        ├── specsmd-master-agent.md            → /specsmd-master-agent
         ├── specsmd-inception-agent.md
         ├── specsmd-construction-agent.md
         └── specsmd-operations-agent.md
@@ -66,7 +60,7 @@ project-root/
 
 ### ClaudeInstaller Class
 
-Extends `ToolInstaller` and overrides `installCommands()` to also install agents.
+Extends `ToolInstaller`. `installCommands()` installs commands via the parent class, then calls `removeLegacyFiles()`. Uninstall calls `removeLegacyFiles()` as well.
 
 ### Properties
 
@@ -75,7 +69,7 @@ Extends `ToolInstaller` and overrides `installCommands()` to also install agents
 | `key` | `'claude'` | Unique identifier for factory lookup |
 | `name` | `'Claude Code'` | Display name in CLI |
 | `commandsDir` | `'.claude/commands'` | Where to install command files |
-| `agentsDir` | `'.claude/agents'` | Where to install agent files |
+| `legacyAgentsDir` | `'.claude/agents'` | Where earlier versions copied the commands |
 | `detectPath` | `'.claude'` | Directory to check for detection |
 
 ### Detection Logic
@@ -85,67 +79,17 @@ Claude Code is detected if `.claude/` directory exists in the project root.
 ### Installation Process
 
 1. Install commands to `.claude/commands/` (via parent class)
-2. Install agents to `.claude/agents/` (uses commands folder as source)
-
-### Implementation
-
-```javascript
-const ToolInstaller = require('./ToolInstaller');
-const fs = require('fs-extra');
-const path = require('path');
-
-class ClaudeInstaller extends ToolInstaller {
-    get key() { return 'claude'; }
-    get name() { return 'Claude Code'; }
-    get commandsDir() { return '.claude/commands'; }
-    get agentsDir() { return '.claude/agents'; }
-    get detectPath() { return '.claude'; }
-
-    async installCommands(flowPath, config) {
-        // Install commands (default behavior)
-        const installedCommands = await super.installCommands(flowPath, config);
-        // Install agents (from commands folder)
-        const installedAgents = await this.installAgents(flowPath, config);
-        return [...installedCommands, ...installedAgents];
-    }
-
-    async installAgents(flowPath, config) {
-        await fs.ensureDir(this.agentsDir);
-        const commandsSourceDir = path.join(flowPath, 'commands');
-
-        if (!await fs.pathExists(commandsSourceDir)) return [];
-
-        const agentFiles = await fs.readdir(commandsSourceDir);
-        const installedFiles = [];
-
-        for (const agentFile of agentFiles) {
-            if (agentFile.endsWith('.md')) {
-                const sourcePath = path.join(commandsSourceDir, agentFile);
-                const prefix = config?.command?.prefix ? `${config.command.prefix}-` : '';
-                const targetFileName = `specsmd-${prefix}${agentFile}`;
-                const targetPath = path.join(this.agentsDir, targetFileName);
-                await fs.copy(sourcePath, targetPath);
-                installedFiles.push(targetFileName);
-            }
-        }
-        return installedFiles;
-    }
-}
-```
+2. Remove `.claude/agents/specsmd-<command>.md` files, where `<command>` is a command file of any flow. Other files in `.claude/agents/` are left alone.
 
 ---
 
-## Commands vs Agents
+## Why No Agents
 
-| Feature | Commands | Agents |
-|---------|----------|--------|
-| Location | `.claude/commands/` | `.claude/agents/` |
-| Invocation | `/specsmd-master-agent` | Natural language or explicit |
-| Context | Shared with main conversation | Isolated context window |
-| Parallelism | Sequential | Up to 10 concurrent |
-| Source | `commands/` folder | `commands/` folder |
+Earlier versions copied each command file into `.claude/agents/` as well. That never worked:
 
-Both commands and agents are sourced from the same `commands/` folder, with the same content installed to both directories.
+- Claude Code subagents need `name:` frontmatter. The command files only have `description:`, so Claude Code skipped them.
+- The command body is an activation prompt ("read and adopt the persona from..."), not a subagent definition.
+- Subagents run in an isolated context and can't ask the user questions, while the flow agents stop at user checkpoints.
 
 ---
 
@@ -164,13 +108,13 @@ Both commands and agents are sourced from the same `commands/` folder, with the 
 - THEN `.claude/commands/specsmd-*.md` files exist
 - AND files contain command definitions
 
-### AC-3: Agent Installation
+### AC-3: No Agent Installation
 
 - GIVEN user selects Claude Code
 - WHEN installation completes
-- THEN `.claude/agents/specsmd-*.md` files exist
-- AND files contain agent activation content
-- AND files reference full agents in `.specsmd/aidlc/agents/`
+- THEN no files are written to `.claude/agents/`
+- AND `specsmd-<command>.md` copies left there by earlier versions are removed
+- AND other files in `.claude/agents/` are kept
 
 ### AC-4: Non-Detection
 
@@ -178,3 +122,10 @@ Both commands and agents are sourced from the same `commands/` folder, with the 
 - WHEN detectTools() runs
 - THEN Claude Code is NOT listed as detected
 - BUT user can still select it manually
+
+### AC-5: Uninstall
+
+- GIVEN specsmd was installed for Claude Code
+- WHEN uninstall runs
+- THEN `.claude/commands/specsmd-*` files are removed
+- AND `specsmd-<command>.md` copies in `.claude/agents/` are removed

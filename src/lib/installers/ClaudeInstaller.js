@@ -2,7 +2,7 @@ const ToolInstaller = require('./ToolInstaller');
 const fs = require('fs-extra');
 const path = require('path');
 const CLIUtils = require('../cli-utils');
-const { theme } = CLIUtils;
+const { FLOWS } = require('../constants');
 
 class ClaudeInstaller extends ToolInstaller {
     get key() {
@@ -17,7 +17,13 @@ class ClaudeInstaller extends ToolInstaller {
         return path.join('.claude', 'commands');
     }
 
-    get agentsDir() {
+    /**
+     * Older versions also copied every command file into .claude/agents/.
+     * Those copies have no `name:` frontmatter, so Claude Code skips them, and
+     * subagents can't hold the checkpoint conversations the flow agents need.
+     * Slash commands are the only Claude Code entry point.
+     */
+    get legacyAgentsDir() {
         return path.join('.claude', 'agents');
     }
 
@@ -25,60 +31,46 @@ class ClaudeInstaller extends ToolInstaller {
         return '.claude';
     }
 
-    /**
-     * Override to install both commands and agents
-     */
     async installCommands(flowPath, config) {
-        // Install commands (default behavior)
         const installedCommands = await super.installCommands(flowPath, config);
-
-        // Install agents
-        const installedAgents = await this.installAgents(flowPath, config);
-
-        return [...installedCommands, ...installedAgents];
+        await this.removeLegacyFiles();
+        return installedCommands;
     }
 
     /**
-     * Install agents to .claude/agents/
-     * Uses the commands folder as source (same files serve as both commands and agents)
+     * Remove the .claude/agents/ copies written by older versions.
+     * Only file names that a flow command produces are removed.
      */
-    async installAgents(flowPath, config) {
-        const targetAgentsDir = this.agentsDir;
-        console.log(theme.dim(`  Installing agents to ${targetAgentsDir}/...`));
-        await fs.ensureDir(targetAgentsDir);
-
-        const commandsSourceDir = path.join(flowPath, 'commands');
-
-        if (!await fs.pathExists(commandsSourceDir)) {
-            console.log(theme.dim(`  No commands folder found at ${commandsSourceDir}`));
+    async removeLegacyFiles() {
+        const agentsDir = this.legacyAgentsDir;
+        if (!await fs.pathExists(agentsDir)) {
             return [];
         }
 
-        const agentFiles = await fs.readdir(commandsSourceDir);
-        const installedFiles = [];
-
-        for (const agentFile of agentFiles) {
-            if (agentFile.endsWith('.md')) {
-                try {
-                    const sourcePath = path.join(commandsSourceDir, agentFile);
-                    const prefix = (config && config.command && config.command.prefix) ? `${config.command.prefix}-` : '';
-                    const targetFileName = `specsmd-${prefix}${agentFile}`;
-                    const targetPath = path.join(targetAgentsDir, targetFileName);
-
-                    const content = await fs.readFile(sourcePath, 'utf8');
-                    await fs.outputFile(targetPath, content, 'utf8');
-                    installedFiles.push(targetFileName);
-                } catch (err) {
-                    console.log(theme.warning(`  Failed to install agent ${agentFile}: ${err.message}`));
+        const legacyNames = new Set();
+        for (const flow of Object.values(FLOWS)) {
+            const commandsSourceDir = path.join(__dirname, '..', '..', 'flows', flow.path, 'commands');
+            if (!await fs.pathExists(commandsSourceDir)) continue;
+            for (const cmdFile of await fs.readdir(commandsSourceDir)) {
+                if (cmdFile.endsWith('.md')) {
+                    legacyNames.add(`specsmd-${cmdFile}`);
                 }
             }
         }
 
-        if (installedFiles.length > 0) {
-            CLIUtils.displayStatus('', `Installed ${installedFiles.length} agents for ${this.name}`, 'success');
+        const removedFiles = [];
+        for (const file of await fs.readdir(agentsDir)) {
+            if (legacyNames.has(file)) {
+                await fs.remove(path.join(agentsDir, file));
+                removedFiles.push(file);
+            }
         }
 
-        return installedFiles;
+        if (removedFiles.length > 0) {
+            CLIUtils.displayStatus('', `Removed ${removedFiles.length} legacy agent files from ${agentsDir}/`, 'success');
+        }
+
+        return removedFiles;
     }
 }
 

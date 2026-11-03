@@ -376,6 +376,7 @@ async function uninstall() {
             }
           }
         }
+        await installer.removeLegacyFiles();
       }
     }
 

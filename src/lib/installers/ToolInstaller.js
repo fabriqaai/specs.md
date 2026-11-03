@@ -71,6 +71,14 @@ class ToolInstaller {
         CLIUtils.displayStatus('', `Installed ${installedFiles.length} commands for ${this.name}`, 'success');
         return installedFiles;
     }
+
+    /**
+     * Remove files that older versions installed outside commandsDir.
+     * Called on uninstall; override when a tool has such files.
+     */
+    async removeLegacyFiles() {
+        return [];
+    }
 }
 
 module.exports = ToolInstaller;
