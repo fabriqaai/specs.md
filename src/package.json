@@ -14,6 +14,7 @@
     "lint:md:fix": "markdownlint 'flows/**/*.md' --config ../.markdownlint.yaml --fix",
     "sync:webview-bundle": "node scripts/sync-webview-bundle.cjs",
     "check:webview-bundle": "node scripts/check-webview-bundle-sync.cjs",
+    "vendor:flow-deps": "node scripts/vendor-flow-deps.cjs",
     "prepack": "npm run check:webview-bundle",
     "validate:all": "npm run test && npm run lint:md && npm run check:webview-bundle"
   },
@@ -65,6 +66,7 @@
   "devDependencies": {
     "@types/js-yaml": "^4.0.9",
     "@types/node": "^24.10.2",
+    "esbuild": "^0.25.12",
     "glob": "^13.0.0",
     "markdownlint": "^0.40.0",
     "markdownlint-cli": "^0.46.0",
